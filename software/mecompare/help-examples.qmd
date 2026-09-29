@@ -1,0 +1,1429 @@
+---
+title: "Examples from the help file"
+subtitle: "The examples at the end of help mecompare, run in full"
+---
+
+These are the examples from the end of the [help file](help.html), in the
+same order, with their output. They use Stata's `nlsw88` data; every line can
+be pasted into Stata as is.
+
+## Fit and store the models, then compare marginal effects
+
+Factor syntax is required for the regression models; it is optional for
+`mecompare`.
+
+```{.stata-run}
+. sysuse nlsw88, clear
+(NLSW, 1988 extract)
+
+. 
+. logit union i.married age i.race hours i.collgrad, vce(robust)
+
+Iteration 0:  Log pseudolikelihood = -1046.3424  
+Iteration 1:  Log pseudolikelihood = -1026.8839  
+Iteration 2:  Log pseudolikelihood =  -1026.721  
+Iteration 3:  Log pseudolikelihood =  -1026.721  
+
+Logistic regression                                     Number of obs =  1,877
+                                                        Wald chi2(6)  =  38.14
+                                                        Prob > chi2   = 0.0000
+Log pseudolikelihood = -1026.721                        Pseudo R2     = 0.0188
+
+-------------------------------------------------------------------------------
+              |               Robust
+        union | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+      married |
+     Married  |     -0.137      0.116   -1.175   0.240       -0.364       0.091
+          age |      0.014      0.018    0.764   0.445       -0.021       0.049
+              |
+         race |
+       Black  |      0.428      0.122    3.512   0.000        0.189       0.667
+       Other  |      0.521      0.453    1.149   0.251       -0.368       1.409
+              |
+        hours |      0.010      0.006    1.836   0.066       -0.001       0.021
+              |
+     collgrad |
+College grad  |      0.526      0.120    4.368   0.000        0.290       0.762
+        _cons |     -2.231      0.757   -2.948   0.003       -3.714      -0.748
+-------------------------------------------------------------------------------
+
+. est store basemod
+
+. 
+. logit union i.married age i.race hours i.collgrad wage, vce(robust)
+
+Iteration 0:  Log pseudolikelihood = -1046.3424  
+Iteration 1:  Log pseudolikelihood = -1013.2125  
+Iteration 2:  Log pseudolikelihood = -1012.7232  
+Iteration 3:  Log pseudolikelihood = -1012.7232  
+
+Logistic regression                                     Number of obs =  1,877
+                                                        Wald chi2(7)  =  65.25
+                                                        Prob > chi2   = 0.0000
+Log pseudolikelihood = -1012.7232                       Pseudo R2     = 0.0321
+
+-------------------------------------------------------------------------------
+              |               Robust
+        union | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+      married |
+     Married  |     -0.099      0.117   -0.846   0.398       -0.329       0.131
+          age |      0.014      0.018    0.780   0.435       -0.021       0.050
+              |
+         race |
+       Black  |      0.502      0.123    4.083   0.000        0.261       0.742
+       Other  |      0.474      0.490    0.966   0.334       -0.487       1.435
+              |
+        hours |      0.008      0.006    1.342   0.180       -0.004       0.019
+              |
+     collgrad |
+College grad  |      0.282      0.132    2.132   0.033        0.023       0.542
+         wage |      0.071      0.013    5.376   0.000        0.045       0.097
+        _cons |     -2.698      0.774   -3.486   0.000       -4.215      -1.181
+-------------------------------------------------------------------------------
+
+. est store medmod
+
+. 
+. mecompare age collgrad race hours, models(basemod medmod)
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_basemod=1877) (N_medmod=1877)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                         basemod |     1      0.002      0.003      0.445
+                          medmod |     2      0.003      0.003      0.435
+                      Difference |     3     -0.000      0.000      0.906
+---------------------------------+---------------------------------------
+collgrad                         |                                       
+    College gra - Not colleg     |                                       
+                         basemod |     4      0.102      0.024      0.000
+                          medmod |     5      0.052      0.025      0.039
+                      Difference |     6      0.050      0.009      0.000
+---------------------------------+---------------------------------------
+race                             |                                       
+               Black - White     |                                       
+                         basemod |     7      0.081      0.024      0.001
+                          medmod |     8      0.094      0.024      0.000
+                      Difference |     9     -0.013      0.003      0.000
+               Other - White     |                                       
+                         basemod |    10      0.101      0.097      0.299
+                          medmod |    11      0.088      0.101      0.380
+                      Difference |    12      0.012      0.014      0.391
+---------------------------------+---------------------------------------
+hours + 1 (centered)             |                                       
+                         basemod |    13      0.002      0.001      0.066
+                          medmod |    14      0.001      0.001      0.179
+                      Difference |    15      0.000      0.000      0.009
+
+```
+
+## Amount of change for continuous variables
+
+```{.stata-run}
+. mecompare age collgrad race hours, models(basemod medmod) amount(sd)
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_basemod=1877) (N_medmod=1877)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + SD (centered)              |                                       
+                         basemod |     1      0.008      0.010      0.445
+                          medmod |     2      0.008      0.010      0.435
+                      Difference |     3     -0.000      0.001      0.906
+---------------------------------+---------------------------------------
+collgrad                         |                                       
+    College gra - Not colleg     |                                       
+                         basemod |     4      0.102      0.024      0.000
+                          medmod |     5      0.052      0.025      0.039
+                      Difference |     6      0.050      0.009      0.000
+---------------------------------+---------------------------------------
+race                             |                                       
+               Black - White     |                                       
+                         basemod |     7      0.081      0.024      0.001
+                          medmod |     8      0.094      0.024      0.000
+                      Difference |     9     -0.013      0.003      0.000
+               Other - White     |                                       
+                         basemod |    10      0.101      0.097      0.299
+                          medmod |    11      0.088      0.101      0.380
+                      Difference |    12      0.012      0.014      0.391
+---------------------------------+---------------------------------------
+hours + SD (centered)            |                                       
+                         basemod |    13      0.018      0.010      0.066
+                          medmod |    14      0.014      0.010      0.179
+                      Difference |    15      0.005      0.002      0.009
+
+. mecompare age collgrad race hours, models(basemod medmod) amount(sd 10)
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_basemod=1877) (N_medmod=1877)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + SD (centered)              |                                       
+                         basemod |     1      0.008      0.010      0.445
+                          medmod |     2      0.008      0.010      0.435
+                      Difference |     3     -0.000      0.001      0.906
+---------------------------------+---------------------------------------
+collgrad                         |                                       
+    College gra - Not colleg     |                                       
+                         basemod |     4      0.102      0.024      0.000
+                          medmod |     5      0.052      0.025      0.039
+                      Difference |     6      0.050      0.009      0.000
+---------------------------------+---------------------------------------
+race                             |                                       
+               Black - White     |                                       
+                         basemod |     7      0.081      0.024      0.001
+                          medmod |     8      0.094      0.024      0.000
+                      Difference |     9     -0.013      0.003      0.000
+               Other - White     |                                       
+                         basemod |    10      0.101      0.097      0.299
+                          medmod |    11      0.088      0.101      0.380
+                      Difference |    12      0.012      0.014      0.391
+---------------------------------+---------------------------------------
+hours + 10 (centered)            |                                       
+                         basemod |    13      0.019      0.010      0.066
+                          medmod |    14      0.014      0.010      0.179
+                      Difference |    15      0.005      0.002      0.009
+
+```
+
+`amount(rate)` gives the instantaneous rate of change; `amount(dydx)` and
+`amount(slope)` are synonyms.
+
+```{.stata-run}
+. mecompare age hours, models(basemod medmod) amount(rate)
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_basemod=1877) (N_medmod=1877)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age(rate)                        |                                       
+                         basemod |     1      0.002      0.003      0.445
+                          medmod |     2      0.003      0.003      0.435
+                      Difference |     3     -0.000      0.000      0.906
+---------------------------------+---------------------------------------
+hours(rate)                      |                                       
+                         basemod |     4      0.002      0.001      0.066
+                          medmod |     5      0.001      0.001      0.179
+                      Difference |     6      0.000      0.000      0.009
+
+. mecompare age hours, models(basemod medmod) amount(range)
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_basemod=1877) (N_medmod=1877)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age(min-max)                     |                                       
+                         basemod |     1      0.030      0.039      0.447
+                          medmod |     2      0.030      0.039      0.437
+                      Difference |     3     -0.001      0.005      0.906
+---------------------------------+---------------------------------------
+hours(min-max)                   |                                       
+                         basemod |     4      0.148      0.081      0.068
+                          medmod |     5      0.111      0.083      0.183
+                      Difference |     6      0.037      0.014      0.009
+
+```
+
+## Labeling the models
+
+```{.stata-run}
+. mecompare age collgrad race hours, models(basemod medmod) mod1name(Base Model) mod2name(Mediation 
+> Model)
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_Base Model=1877) (N_Mediation Model=1877)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                      Base Model |     1      0.002      0.003      0.445
+                 Mediation Model |     2      0.003      0.003      0.435
+                      Difference |     3     -0.000      0.000      0.906
+---------------------------------+---------------------------------------
+collgrad                         |                                       
+    College gra - Not colleg     |                                       
+                      Base Model |     4      0.102      0.024      0.000
+                 Mediation Model |     5      0.052      0.025      0.039
+                      Difference |     6      0.050      0.009      0.000
+---------------------------------+---------------------------------------
+race                             |                                       
+               Black - White     |                                       
+                      Base Model |     7      0.081      0.024      0.001
+                 Mediation Model |     8      0.094      0.024      0.000
+                      Difference |     9     -0.013      0.003      0.000
+               Other - White     |                                       
+                      Base Model |    10      0.101      0.097      0.299
+                 Mediation Model |    11      0.088      0.101      0.380
+                      Difference |    12      0.012      0.014      0.391
+---------------------------------+---------------------------------------
+hours + 1 (centered)             |                                       
+                      Base Model |    13      0.002      0.001      0.066
+                 Mediation Model |    14      0.001      0.001      0.179
+                      Difference |    15      0.000      0.000      0.009
+
+```
+
+## Effects within levels of a variable (by, over)
+
+```{.stata-run}
+. mecompare age race, models(basemod medmod) over(collgrad)
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_basemod=1877) (N_medmod=1877)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+        basemod Not college grad |     1      0.002      0.003      0.445
+            basemod College grad |     2      0.003      0.004      0.445
+         medmod Not college grad |     3      0.002      0.003      0.435
+             medmod College grad |     4      0.003      0.004      0.435
+     Difference Not college grad |     5     -0.000      0.000      0.884
+         Difference College grad |     6     -0.000      0.000      0.960
+---------------------------------+---------------------------------------
+race                             |                                       
+               Black - White     |                                       
+        basemod Not college grad |     7      0.076      0.023      0.001
+            basemod College grad |     8      0.096      0.028      0.001
+         medmod Not college grad |     9      0.089      0.023      0.000
+             medmod College grad |    10      0.110      0.028      0.000
+     Difference Not college grad |    11     -0.013      0.003      0.000
+         Difference College grad |    12     -0.014      0.004      0.000
+               Other - White     |                                       
+        basemod Not college grad |    13      0.095      0.093      0.307
+            basemod College grad |    14      0.118      0.109      0.279
+         medmod Not college grad |    15      0.083      0.096      0.387
+             medmod College grad |    16      0.104      0.114      0.362
+     Difference Not college grad |    17      0.012      0.014      0.400
+         Difference College grad |    18      0.015      0.016      0.372
+
+. mecompare age race, models(basemod medmod) by(collgrad)
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_basemod=1877) (N_medmod=1877)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+        basemod Not college grad |     1      0.002      0.003      0.445
+            basemod College grad |     2      0.003      0.004      0.445
+         medmod Not college grad |     3      0.002      0.003      0.435
+             medmod College grad |     4      0.003      0.004      0.435
+     Difference Not college grad |     5     -0.000      0.000      0.751
+         Difference College grad |     6      0.000      0.001      0.777
+---------------------------------+---------------------------------------
+race                             |                                       
+               Black - White     |                                       
+        basemod Not college grad |     7      0.077      0.023      0.001
+            basemod College grad |     8      0.096      0.028      0.001
+         medmod Not college grad |     9      0.092      0.023      0.000
+             medmod College grad |    10      0.103      0.027      0.000
+     Difference Not college grad |    11     -0.015      0.004      0.000
+         Difference College grad |    12     -0.008      0.004      0.039
+               Other - White     |                                       
+        basemod Not college grad |    13      0.095      0.093      0.307
+            basemod College grad |    14      0.118      0.109      0.280
+         medmod Not college grad |    15      0.086      0.099      0.384
+             medmod College grad |    16      0.097      0.109      0.372
+     Difference Not college grad |    17      0.009      0.015      0.522
+         Difference College grad |    18      0.021      0.016      0.191
+
+. mecompare age race, models(basemod medmod) by(collgrad married)
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_basemod=1877) (N_medmod=1877)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+    basemod Not college grad Sin |     1      0.002      0.003      0.444
+    basemod Not college grad Mar |     2      0.002      0.003      0.445
+     basemod College grad Single |     3      0.003      0.004      0.445
+    basemod College grad Married |     4      0.003      0.004      0.446
+    medmod Not college grad Sing |     5      0.003      0.003      0.434
+    medmod Not college grad Marr |     6      0.002      0.003      0.435
+      medmod College grad Single |     7      0.003      0.004      0.435
+     medmod College grad Married |     8      0.003      0.004      0.435
+     Difference Not college grad |     9     -0.000      0.000      0.816
+     Difference Not college grad |    10     -0.000      0.000      0.716
+    Difference College grad Sing |    11      0.000      0.001      0.763
+    Difference College grad Marr |    12      0.000      0.001      0.783
+---------------------------------+---------------------------------------
+race                             |                                       
+               Black - White     |                                       
+    basemod Not college grad Sin |    13      0.080      0.023      0.001
+    basemod Not college grad Mar |    14      0.075      0.023      0.001
+     basemod College grad Single |    15      0.098      0.029      0.001
+    basemod College grad Married |    16      0.094      0.028      0.001
+    medmod Not college grad Sing |    17      0.095      0.024      0.000
+    medmod Not college grad Marr |    18      0.090      0.023      0.000
+      medmod College grad Single |    19      0.106      0.027      0.000
+     medmod College grad Married |    20      0.102      0.027      0.000
+     Difference Not college grad |    21     -0.014      0.004      0.000
+     Difference Not college grad |    22     -0.016      0.004      0.000
+    Difference College grad Sing |    23     -0.008      0.004      0.056
+    Difference College grad Marr |    24     -0.008      0.004      0.035
+               Other - White     |                                       
+    basemod Not college grad Sin |    25      0.100      0.097      0.304
+    basemod Not college grad Mar |    26      0.093      0.092      0.309
+     basemod College grad Single |    27      0.121      0.111      0.276
+    basemod College grad Married |    28      0.116      0.108      0.283
+    medmod Not college grad Sing |    29      0.089      0.101      0.382
+    medmod Not college grad Marr |    30      0.085      0.097      0.385
+      medmod College grad Single |    31      0.100      0.111      0.370
+     medmod College grad Married |    32      0.096      0.108      0.374
+     Difference Not college grad |    33      0.011      0.015      0.459
+     Difference Not college grad |    34      0.008      0.015      0.561
+    Difference College grad Sing |    35      0.021      0.016      0.187
+    Difference College grad Marr |    36      0.020      0.016      0.195
+
+```
+
+Whether an effect differs across the levels (a test of interaction), jointly
+and for one pair:
+
+```{.stata-run}
+. mecompare age, models(basemod) by(race)
+
+
+Predicting: Pr(union)
+
+Marginal effects (N_basemod=1877)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                           White |     1      0.002      0.003      0.444
+                           Black |     2      0.003      0.004      0.446
+                           Other |     3      0.003      0.004      0.447
+
+. metest 1 = 2 = 3
+
+Tests of equality
+
+                                 |      chi2         df     pvalue 
+---------------------------------+--------------------------------
+  age_ra~1 = age_ra~2 = age_ra~3 |     0.547      2.000      0.761 
+
+. metest 1 - 2
+
+                                 |  estimate         se     pvalue 
+---------------------------------+--------------------------------
+         age_race_1 - age_race_2 |    -0.001      0.001      0.461 
+
+```
+
+For a nominal variable, one equality per contrast:
+
+```{.stata-run}
+. mecompare race, models(basemod) by(collgrad)
+
+
+Predicting: Pr(union)
+
+Marginal effects (N_basemod=1877)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+race                             |                                       
+               Black - White     |                                       
+                Not college grad |     1      0.077      0.023      0.001
+                    College grad |     2      0.096      0.028      0.001
+               Other - White     |                                       
+                Not college grad |     3      0.095      0.093      0.307
+                    College grad |     4      0.118      0.109      0.280
+
+. metest (1 = 2) (3 = 4)
+
+Tests of equality
+
+                                 |      chi2         df     pvalue 
+---------------------------------+--------------------------------
+  (rac~0 = rac~1)(rac~0 = rac~1) |     7.978      2.000      0.019 
+
+```
+
+## Values of the focal variables and covariates, including lists of values
+
+```{.stata-run}
+. mecompare age race, models(basemod medmod) atmeans
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_basemod=1877) (N_medmod=1877)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                         basemod |     1      0.002      0.003      0.445
+                          medmod |     2      0.003      0.003      0.435
+                      Difference |     3     -0.000      0.000      0.865
+---------------------------------+---------------------------------------
+race                             |                                       
+               Black - White     |                                       
+                         basemod |     4      0.082      0.024      0.001
+                          medmod |     5      0.096      0.025      0.000
+                      Difference |     6     -0.014      0.004      0.000
+               Other - White     |                                       
+                         basemod |     7      0.102      0.098      0.301
+                          medmod |     8      0.090      0.103      0.383
+                      Difference |     9      0.012      0.015      0.438
+
+. mecompare age, models(basemod) start(age=(35 40 45))
+
+
+Predicting: Pr(union)
+
+Marginal effects (N_basemod=1877)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                           at 35 |     1      0.002      0.003      0.431
+                           at 40 |     2      0.002      0.003      0.447
+                           at 45 |     3      0.003      0.003      0.461
+
+. mecompare age, models(basemod) start(age=35) end(age=40)
+
+
+Predicting: Pr(union)
+
+Marginal effects (N_basemod=1877)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age 35 to 40                     |                                       
+                         basemod |     1      0.012      0.016      0.439
+
+. mecompare age, models(basemod) start(age=(35 40)) end(age=(40 45))
+
+
+Predicting: Pr(union)
+
+Marginal effects (N_basemod=1877)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age                              |                                       
+                        35 to 40 |     1      0.012      0.016      0.439
+                        40 to 45 |     2      0.013      0.017      0.454
+
+. mecompare age race, models(basemod medmod) covariates(hours=(20 40 60))
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_basemod=1877) (N_medmod=1877)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                basemod hours=20 |     1      0.002      0.003      0.445
+                basemod hours=40 |     2      0.003      0.003      0.445
+                basemod hours=60 |     3      0.003      0.004      0.445
+                 medmod hours=20 |     4      0.002      0.003      0.435
+                 medmod hours=40 |     5      0.003      0.003      0.435
+                 medmod hours=60 |     6      0.003      0.004      0.435
+             Difference hours=20 |     7     -0.000      0.000      0.792
+             Difference hours=40 |     8     -0.000      0.000      0.922
+             Difference hours=60 |     9      0.000      0.000      0.973
+---------------------------------+---------------------------------------
+race                             |                                       
+               Black - White     |                                       
+                basemod hours=20 |    10      0.074      0.022      0.001
+                basemod hours=40 |    11      0.082      0.024      0.001
+                basemod hours=60 |    12      0.090      0.027      0.001
+                 medmod hours=20 |    13      0.088      0.023      0.000
+                 medmod hours=40 |    14      0.095      0.024      0.000
+                 medmod hours=60 |    15      0.101      0.026      0.000
+             Difference hours=20 |    16     -0.014      0.004      0.000
+             Difference hours=40 |    17     -0.013      0.003      0.000
+             Difference hours=60 |    18     -0.012      0.004      0.001
+               Other - White     |                                       
+                basemod hours=20 |    19      0.093      0.091      0.309
+                basemod hours=40 |    20      0.102      0.098      0.298
+                basemod hours=60 |    21      0.111      0.104      0.288
+                 medmod hours=20 |    22      0.083      0.096      0.387
+                 medmod hours=40 |    23      0.089      0.102      0.379
+                 medmod hours=60 |    24      0.095      0.107      0.373
+             Difference hours=20 |    25      0.010      0.014      0.483
+             Difference hours=40 |    26      0.013      0.015      0.379
+             Difference hours=60 |    27      0.015      0.015      0.317
+
+```
+
+## Summary measures for nominal variables
+
+```{.stata-run}
+. mecompare race, models(basemod medmod) pwcompare
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_basemod=1877) (N_medmod=1877)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+race                             |                                       
+               Black - White     |                                       
+                         basemod |     1      0.081      0.024      0.001
+                          medmod |     2      0.094      0.024      0.000
+                      Difference |     3     -0.013      0.003      0.000
+               Other - White     |                                       
+                         basemod |     4      0.101      0.097      0.299
+                          medmod |     5      0.088      0.101      0.380
+                      Difference |     6      0.012      0.014      0.391
+               Other - Black     |                                       
+                         basemod |     7      0.020      0.099      0.843
+                          medmod |     8     -0.006      0.102      0.955
+                      Difference |     9      0.025      0.015      0.088
+
+. mecompare race, models(basemod) meineq(weighted)
+
+
+Predicting: Pr(union)
+
+Marginal effects (N_basemod=1877)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+race                             |                                       
+                   ME Inequality |     1      0.080      0.050      0.113
+               Black - White     |                                       
+                         basemod |     2      0.081      0.024      0.001
+               Other - White     |                                       
+                         basemod |     3      0.101      0.097      0.299
+
+. mecompare race, models(basemod medmod) meineq(all)
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_basemod=1877) (N_medmod=1877)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+race                             |                                       
+               ME Inequality     |                                       
+                         basemod |     1      0.080      0.050      0.113
+                          medmod |     2      0.080      0.028      0.004
+                      Difference |     3      0.000      0.027      0.998
+              Unwgt ME Ineq.     |                                       
+                         basemod |     4      0.067      0.065      0.299
+                          medmod |     5      0.063      0.016      0.000
+                      Difference |     6      0.004      0.066      0.946
+               Black - White     |                                       
+                         basemod |     7      0.081      0.024      0.001
+                          medmod |     8      0.094      0.024      0.000
+                      Difference |     9     -0.013      0.003      0.000
+               Other - White     |                                       
+                         basemod |    10      0.101      0.097      0.299
+                          medmod |    11      0.088      0.101      0.380
+                      Difference |    12      0.012      0.014      0.391
+
+```
+
+## Total ME, which sums effects across outcome categories
+
+For example, with an ordinal outcome:
+
+```{.stata-run}
+. egen hours_ord = cut(hours), at(0 30 40 50 81)
+(4 missing values generated)
+
+. ologit hours_ord c.age i.married i.race, vce(robust)
+
+Iteration 0:  Log pseudolikelihood = -2558.0934  
+Iteration 1:  Log pseudolikelihood = -2535.2485  
+Iteration 2:  Log pseudolikelihood = -2535.1689  
+Iteration 3:  Log pseudolikelihood = -2535.1689  
+
+Ordered logistic regression                             Number of obs =  2,242
+                                                        Wald chi2(4)  =  46.67
+                                                        Prob > chi2   = 0.0000
+Log pseudolikelihood = -2535.1689                       Pseudo R2     = 0.0090
+
+------------------------------------------------------------------------------
+             |               Robust
+   hours_ord | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         age |     -0.031      0.013   -2.352   0.019       -0.057      -0.005
+             |
+     married |
+    Married  |     -0.523      0.085   -6.150   0.000       -0.690      -0.357
+             |
+        race |
+      Black  |      0.080      0.084    0.947   0.344       -0.086       0.246
+      Other  |      0.291      0.429    0.679   0.497       -0.549       1.131
+-------------+----------------------------------------------------------------
+       /cut1 |     -3.193      0.528                        -4.228      -2.159
+       /cut2 |     -2.207      0.527                        -3.240      -1.174
+       /cut3 |      0.793      0.526                        -0.237       1.823
+------------------------------------------------------------------------------
+
+. mecompare age married race, totalme
+
+
+Predicting: Pr(hours_ord)
+
+Marginal effects (N_m1=2242)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                        Total ME |     1      0.007      0.003      0.018
+                  Outcome 0 - m1 |     2      0.004      0.002      0.019
+                 Outcome 30 - m1 |     3      0.003      0.001      0.018
+                 Outcome 40 - m1 |     4     -0.004      0.002      0.019
+                 Outcome 50 - m1 |     5     -0.003      0.001      0.019
+---------------------------------+---------------------------------------
+married                          |                                       
+            Married - Single     |                                       
+                        Total ME |     6      0.114      0.018      0.000
+                  Outcome 0 - m1 |     7      0.067      0.011      0.000
+                 Outcome 30 - m1 |     8      0.047      0.008      0.000
+                 Outcome 40 - m1 |     9     -0.068      0.011      0.000
+                 Outcome 50 - m1 |    10     -0.045      0.008      0.000
+---------------------------------+---------------------------------------
+race                             |                                       
+                  Total ME Ineq. |    11      0.038      0.045      0.400
+               Black - White     |                                       
+                  Outcome 0 - m1 |    12     -0.011      0.011      0.340
+                 Outcome 30 - m1 |    13     -0.007      0.007      0.345
+                 Outcome 40 - m1 |    14      0.011      0.011      0.340
+                 Outcome 50 - m1 |    15      0.007      0.007      0.346
+               Other - White     |                                       
+                  Outcome 0 - m1 |    16     -0.036      0.048      0.452
+                 Outcome 30 - m1 |    17     -0.025      0.038      0.502
+                 Outcome 40 - m1 |    18      0.035      0.043      0.410
+                 Outcome 50 - m1 |    19      0.026      0.043      0.542
+
+```
+
+## Comparing models fit over distinct groups
+
+```{.stata-run}
+. logit union age hours i.collgrad if south==1, vce(robust)
+
+Iteration 0:  Log pseudolikelihood =  -364.3358  
+Iteration 1:  Log pseudolikelihood = -361.88094  
+Iteration 2:  Log pseudolikelihood = -361.86467  
+Iteration 3:  Log pseudolikelihood = -361.86467  
+
+Logistic regression                                     Number of obs =    798
+                                                        Wald chi2(3)  =   4.95
+                                                        Prob > chi2   = 0.1758
+Log pseudolikelihood = -361.86467                       Pseudo R2     = 0.0068
+
+-------------------------------------------------------------------------------
+              |               Robust
+        union | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+          age |     -0.033      0.030   -1.104   0.270       -0.091       0.026
+        hours |      0.017      0.010    1.681   0.093       -0.003       0.037
+              |
+     collgrad |
+College grad  |      0.183      0.212    0.861   0.389       -0.233       0.598
+        _cons |     -1.012      1.228   -0.824   0.410       -3.418       1.394
+-------------------------------------------------------------------------------
+
+. est store msouth
+
+. logit union age hours i.collgrad if south==0, vce(robust)
+
+Iteration 0:  Log pseudolikelihood = -660.22034  
+Iteration 1:  Log pseudolikelihood = -647.21277  
+Iteration 2:  Log pseudolikelihood = -647.13776  
+Iteration 3:  Log pseudolikelihood = -647.13776  
+
+Logistic regression                                     Number of obs =  1,079
+                                                        Wald chi2(3)  =  26.00
+                                                        Prob > chi2   = 0.0000
+Log pseudolikelihood = -647.13776                       Pseudo R2     = 0.0198
+
+-------------------------------------------------------------------------------
+              |               Robust
+        union | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+          age |      0.032      0.022    1.445   0.148       -0.012       0.076
+        hours |      0.015      0.006    2.344   0.019        0.002       0.027
+              |
+     collgrad |
+College grad  |      0.613      0.148    4.152   0.000        0.324       0.902
+        _cons |     -2.838      0.923   -3.075   0.002       -4.647      -1.029
+-------------------------------------------------------------------------------
+
+. est store mnonsouth
+
+. 
+. mecompare age hours collgrad, models(msouth mnonsouth) groups groupnames(South NonSouth)
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_South=798) (N_NonSouth=1079)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                           South |     1     -0.005      0.004      0.269
+                        NonSouth |     2      0.007      0.005      0.147
+                      Difference |     3     -0.011      0.006      0.069
+---------------------------------+---------------------------------------
+hours + 1 (centered)             |                                       
+                           South |     4      0.002      0.001      0.092
+                        NonSouth |     5      0.003      0.001      0.018
+                      Difference |     6     -0.001      0.002      0.733
+---------------------------------+---------------------------------------
+collgrad                         |                                       
+    College gra - Not colleg     |                                       
+                           South |     7      0.026      0.032      0.402
+                        NonSouth |     8      0.134      0.033      0.000
+                      Difference |     9     -0.108      0.046      0.019
+
+```
+
+## Cross-family comparison (same number of predictions)
+
+```{.stata-run}
+. logit union i.married age i.race hours i.collgrad, vce(robust)
+
+Iteration 0:  Log pseudolikelihood = -1046.3424  
+Iteration 1:  Log pseudolikelihood = -1026.8839  
+Iteration 2:  Log pseudolikelihood =  -1026.721  
+Iteration 3:  Log pseudolikelihood =  -1026.721  
+
+Logistic regression                                     Number of obs =  1,877
+                                                        Wald chi2(6)  =  38.14
+                                                        Prob > chi2   = 0.0000
+Log pseudolikelihood = -1026.721                        Pseudo R2     = 0.0188
+
+-------------------------------------------------------------------------------
+              |               Robust
+        union | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+      married |
+     Married  |     -0.137      0.116   -1.175   0.240       -0.364       0.091
+          age |      0.014      0.018    0.764   0.445       -0.021       0.049
+              |
+         race |
+       Black  |      0.428      0.122    3.512   0.000        0.189       0.667
+       Other  |      0.521      0.453    1.149   0.251       -0.368       1.409
+              |
+        hours |      0.010      0.006    1.836   0.066       -0.001       0.021
+              |
+     collgrad |
+College grad  |      0.526      0.120    4.368   0.000        0.290       0.762
+        _cons |     -2.231      0.757   -2.948   0.003       -3.714      -0.748
+-------------------------------------------------------------------------------
+
+. est store logitmod
+
+. regress union i.married age i.race hours i.collgrad, vce(robust)
+
+Linear regression                               Number of obs     =      1,877
+                                                F(6, 1870)        =       6.28
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.0212
+                                                Root MSE          =     .42665
+
+-------------------------------------------------------------------------------
+              |               Robust
+        union | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+      married |
+     Married  |     -0.025      0.022   -1.156   0.248       -0.068       0.018
+          age |      0.002      0.003    0.755   0.451       -0.004       0.009
+              |
+         race |
+       Black  |      0.080      0.024    3.366   0.001        0.034       0.127
+       Other  |      0.102      0.098    1.043   0.297       -0.090       0.295
+              |
+        hours |      0.002      0.001    1.862   0.063       -0.000       0.004
+              |
+     collgrad |
+College grad  |      0.102      0.024    4.181   0.000        0.054       0.149
+        _cons |      0.052      0.136    0.383   0.702       -0.214       0.318
+-------------------------------------------------------------------------------
+
+. est store lpmmod
+
+. 
+. mecompare age race, models(logitmod lpmmod)
+
+
+Predicting: Pr(union) (logitmod), Linear prediction (lpmmod)
+
+Marginal effects and cross-model differences (N_logitmod=1877) (N_lpmmod=1877)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                        logitmod |     1      0.002      0.003      0.445
+                          lpmmod |     2      0.002      0.003      0.450
+                      Difference |     3      0.000      0.000      0.522
+---------------------------------+---------------------------------------
+race                             |                                       
+               Black - White     |                                       
+                        logitmod |     4      0.081      0.024      0.001
+                          lpmmod |     5      0.080      0.024      0.001
+                      Difference |     6      0.001      0.001      0.195
+               Other - White     |                                       
+                        logitmod |     7      0.101      0.097      0.299
+                          lpmmod |     8      0.102      0.098      0.296
+                      Difference |     9     -0.001      0.002      0.550
+
+```
+
+## Choosing the prediction
+
+With one model, any prediction `margins` allows; a count model offers several.
+
+```{.stata-run}
+. nbreg hours c.age i.collgrad i.race, vce(robust)
+
+Fitting Poisson model:
+
+Iteration 0:  Log pseudolikelihood = -9931.8038  
+Iteration 1:  Log pseudolikelihood = -9931.8038  
+
+Fitting constant-only model:
+
+Iteration 0:  Log pseudolikelihood = -10380.709  
+Iteration 1:  Log pseudolikelihood = -9009.4719  
+Iteration 2:  Log pseudolikelihood = -8762.6327  
+Iteration 3:  Log pseudolikelihood = -8756.0008  
+Iteration 4:  Log pseudolikelihood = -8755.9996  
+Iteration 5:  Log pseudolikelihood = -8755.9996  
+
+Fitting full model:
+
+Iteration 0:  Log pseudolikelihood = -8746.2573  
+Iteration 1:  Log pseudolikelihood = -8746.2051  
+Iteration 2:  Log pseudolikelihood = -8746.2051  
+
+Negative binomial regression                            Number of obs =  2,242
+                                                        Wald chi2(4)  =  26.60
+Dispersion: mean                                        Prob > chi2   = 0.0000
+Log pseudolikelihood = -8746.2051                       Pseudo R2     = 0.0011
+
+-------------------------------------------------------------------------------
+              |               Robust
+        hours | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+          age |     -0.002      0.002   -1.107   0.268       -0.006       0.002
+              |
+     collgrad |
+College grad  |      0.059      0.015    4.007   0.000        0.030       0.088
+              |
+         race |
+       Black  |      0.036      0.011    3.208   0.001        0.014       0.058
+       Other  |     -0.009      0.061   -0.151   0.880       -0.129       0.110
+              |
+        _cons |      3.678      0.076   48.202   0.000        3.528       3.827
+--------------+----------------------------------------------------------------
+     /lnalpha |     -2.609      0.084                        -2.773      -2.445
+--------------+----------------------------------------------------------------
+        alpha |      0.074      0.006                         0.062       0.087
+-------------------------------------------------------------------------------
+
+. est store cntbase
+
+. 
+. mecompare age collgrad race, models(cntbase)
+
+
+Predicting: Predicted number of events
+
+Marginal effects (N_cntbase=2242)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                         cntbase |     1     -0.080      0.072      0.268
+---------------------------------+---------------------------------------
+collgrad                         |                                       
+    College gra - Not colleg     |                                       
+                         cntbase |     2      2.228      0.566      0.000
+---------------------------------+---------------------------------------
+race                             |                                       
+               Black - White     |                                       
+                         cntbase |     3      1.360      0.425      0.001
+               Other - White     |                                       
+                         cntbase |     4     -0.338      2.227      0.879
+
+. mecompare age collgrad race, models(cntbase) predict(n)
+
+
+Predicting: Predicted number of events
+
+Marginal effects (N_cntbase=2242)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                         cntbase |     1     -0.080      0.072      0.268
+---------------------------------+---------------------------------------
+collgrad                         |                                       
+    College gra - Not colleg     |                                       
+                         cntbase |     2      2.228      0.566      0.000
+---------------------------------+---------------------------------------
+race                             |                                       
+               Black - White     |                                       
+                         cntbase |     3      1.360      0.425      0.001
+               Other - White     |                                       
+                         cntbase |     4     -0.338      2.227      0.879
+
+. mecompare age collgrad race, models(cntbase) predict(ir)
+
+
+Predicting: Predicted incidence rate
+
+Marginal effects (N_cntbase=2242)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                         cntbase |     1     -0.080      0.072      0.268
+---------------------------------+---------------------------------------
+collgrad                         |                                       
+    College gra - Not colleg     |                                       
+                         cntbase |     2      2.228      0.566      0.000
+---------------------------------+---------------------------------------
+race                             |                                       
+               Black - White     |                                       
+                         cntbase |     3      1.360      0.425      0.001
+               Other - White     |                                       
+                         cntbase |     4     -0.338      2.227      0.879
+
+. mecompare age collgrad race, models(cntbase) predict(pr(0))
+
+
+Predicting: Pr(hours=0)
+
+Marginal effects (N_cntbase=2242)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                         cntbase |     1      0.000      0.000      0.356
+---------------------------------+---------------------------------------
+collgrad                         |                                       
+    College gra - Not colleg     |                                       
+                         cntbase |     2     -0.000      0.000      0.138
+---------------------------------+---------------------------------------
+race                             |                                       
+               Black - White     |                                       
+                         cntbase |     3     -0.000      0.000      0.189
+               Other - White     |                                       
+                         cntbase |     4      0.000      0.000      0.885
+
+```
+
+With two or more models, any prediction returning one quantity per model:
+
+```{.stata-run}
+. nbreg hours c.age i.collgrad i.race i.married, vce(robust)
+
+Fitting Poisson model:
+
+Iteration 0:  Log pseudolikelihood = -9871.3821  
+Iteration 1:  Log pseudolikelihood = -9871.3821  
+
+Fitting constant-only model:
+
+Iteration 0:  Log pseudolikelihood = -10380.709  
+Iteration 1:  Log pseudolikelihood = -9009.4719  
+Iteration 2:  Log pseudolikelihood = -8762.6327  
+Iteration 3:  Log pseudolikelihood = -8756.0008  
+Iteration 4:  Log pseudolikelihood = -8755.9996  
+Iteration 5:  Log pseudolikelihood = -8755.9996  
+
+Fitting full model:
+
+Iteration 0:  Log pseudolikelihood = -8730.3403  
+Iteration 1:  Log pseudolikelihood = -8729.9693  
+Iteration 2:  Log pseudolikelihood = -8729.9693  
+
+Negative binomial regression                            Number of obs =  2,242
+                                                        Wald chi2(5)  =  77.10
+Dispersion: mean                                        Prob > chi2   = 0.0000
+Log pseudolikelihood = -8729.9693                       Pseudo R2     = 0.0030
+
+-------------------------------------------------------------------------------
+              |               Robust
+        hours | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+          age |     -0.003      0.002   -1.319   0.187       -0.006       0.001
+              |
+     collgrad |
+College grad  |      0.058      0.015    3.931   0.000        0.029       0.086
+              |
+         race |
+       Black  |      0.019      0.011    1.630   0.103       -0.004       0.041
+       Other  |     -0.009      0.061   -0.141   0.888       -0.129       0.112
+              |
+      married |
+     Married  |     -0.081      0.012   -6.988   0.000       -0.103      -0.058
+        _cons |      3.749      0.076   49.502   0.000        3.600       3.897
+--------------+----------------------------------------------------------------
+     /lnalpha |     -2.632      0.084                        -2.797      -2.467
+--------------+----------------------------------------------------------------
+        alpha |      0.072      0.006                         0.061       0.085
+-------------------------------------------------------------------------------
+
+. est store cntmed
+
+. 
+. mecompare age collgrad race, models(cntbase cntmed) predict(n)
+
+
+Predicting: Predicted mean of hours
+
+Marginal effects and cross-model differences (N_cntbase=2242) (N_cntmed=2242)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                         cntbase |     1     -0.080      0.072      0.268
+                          cntmed |     2     -0.095      0.072      0.187
+                      Difference |     3      0.015      0.010      0.156
+---------------------------------+---------------------------------------
+collgrad                         |                                       
+    College gra - Not colleg     |                                       
+                         cntbase |     4      2.228      0.566      0.000
+                          cntmed |     5      2.174      0.562      0.000
+                      Difference |     6      0.054      0.076      0.475
+---------------------------------+---------------------------------------
+race                             |                                       
+               Black - White     |                                       
+                         cntbase |     7      1.360      0.425      0.001
+                          cntmed |     8      0.695      0.427      0.104
+                      Difference |     9      0.665      0.116      0.000
+               Other - White     |                                       
+                         cntbase |    10     -0.338      2.227      0.879
+                          cntmed |    11     -0.319      2.255      0.888
+                      Difference |    12     -0.019      0.277      0.945
+
+```
+
+## Passing an option to margins, e.g. effects in percentage points
+
+```{.stata-run}
+. mecompare age race, models(basemod) marginsopt(expression(100*predict(pr)))
+
+
+Predicting: 100*predict(pr)
+
+Marginal effects (N_basemod=1877)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                         basemod |     1      0.247      0.324      0.445
+---------------------------------+---------------------------------------
+race                             |                                       
+               Black - White     |                                       
+                         basemod |     2      8.121      2.398      0.001
+               Other - White     |                                       
+                         basemod |     3     10.086      9.715      0.299
+
+```
+
+## Four nested models and custom comparisons with metest
+
+```{.stata-run}
+. use https://tdmize.github.io/data/data/gss_cme, clear
+(gss_cme.dta | GSS 1972 - 2016 Weighted | 2018-07-10)
+
+. drop if year < 2000
+(38,116 observations deleted)
+
+. drop if employed != 1
+(9,556 observations deleted)
+
+. drop if missing(vhappy, college, wages, occprest, age, married, parent, woman, conserv, reltrad)
+(5,578 observations deleted)
+
+. 
+. logit vhappy i.college, vce(robust)
+
+Iteration 0:  Log pseudolikelihood =  -5696.026  
+Iteration 1:  Log pseudolikelihood = -5671.3965  
+Iteration 2:  Log pseudolikelihood = -5671.3676  
+Iteration 3:  Log pseudolikelihood = -5671.3676  
+
+Logistic regression                                     Number of obs =  9,216
+                                                        Wald chi2(1)  =  49.71
+                                                        Prob > chi2   = 0.0000
+Log pseudolikelihood = -5671.3676                       Pseudo R2     = 0.0043
+
+---------------------------------------------------------------------------------
+                |               Robust
+         vhappy | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+----------------+----------------------------------------------------------------
+        college |
+College Degree  |      0.331      0.047    7.051   0.000        0.239       0.423
+          _cons |     -0.923      0.028  -32.493   0.000       -0.979      -0.867
+---------------------------------------------------------------------------------
+
+. estimates store m1
+
+. logit vhappy i.college i.married i.parent i.woman i.conserv i.reltrad i.year c.age##c.age, vce(rob
+> ust)
+
+Iteration 0:  Log pseudolikelihood =  -5696.026  
+Iteration 1:  Log pseudolikelihood =  -5415.347  
+Iteration 2:  Log pseudolikelihood = -5412.2188  
+Iteration 3:  Log pseudolikelihood = -5412.2175  
+Iteration 4:  Log pseudolikelihood = -5412.2175  
+
+Logistic regression                                     Number of obs =  9,216
+                                                        Wald chi2(21) = 537.23
+                                                        Prob > chi2   = 0.0000
+Log pseudolikelihood = -5412.2175                       Pseudo R2     = 0.0498
+
+-----------------------------------------------------------------------------------
+                  |               Robust
+           vhappy | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+------------------+----------------------------------------------------------------
+          college |
+  College Degree  |      0.293      0.051    5.770   0.000        0.194       0.393
+                  |
+          married |
+         Married  |      0.997      0.052   19.176   0.000        0.895       1.099
+                  |
+           parent |
+          Parent  |     -0.063      0.059   -1.059   0.290       -0.179       0.053
+                  |
+            woman |
+           Women  |      0.084      0.047    1.779   0.075       -0.009       0.177
+                  |
+          conserv |
+    Conservative  |      0.195      0.050    3.880   0.000        0.097       0.294
+                  |
+          reltrad |
+   Mainline Prot  |     -0.095      0.077   -1.230   0.219       -0.245       0.056
+Black Protestant  |     -0.168      0.100   -1.673   0.094       -0.365       0.029
+        Catholic  |     -0.133      0.065   -2.037   0.042       -0.260      -0.005
+          Jewish  |     -0.596      0.194   -3.079   0.002       -0.976      -0.217
+     Other Faith  |     -0.283      0.111   -2.548   0.011       -0.500      -0.065
+   Nonaffiliated  |     -0.258      0.073   -3.517   0.000       -0.402      -0.114
+                  |
+             year |
+            2002  |      0.056      0.102    0.552   0.581       -0.143       0.256
+            2004  |     -0.072      0.105   -0.686   0.493       -0.279       0.134
+            2006  |     -0.147      0.084   -1.739   0.082       -0.312       0.019
+            2008  |     -0.120      0.095   -1.263   0.207       -0.307       0.066
+            2010  |     -0.233      0.098   -2.371   0.018       -0.425      -0.040
+            2012  |     -0.068      0.097   -0.704   0.481       -0.258       0.122
+            2014  |      0.081      0.088    0.925   0.355       -0.091       0.253
+            2016  |     -0.032      0.088   -0.368   0.713       -0.205       0.140
+                  |
+              age |     -0.042      0.011   -3.723   0.000       -0.064      -0.020
+                  |
+      c.age#c.age |      0.000      0.000    3.709   0.000        0.000       0.001
+                  |
+            _cons |     -0.439      0.242   -1.814   0.070       -0.913       0.035
+-----------------------------------------------------------------------------------
+
+. estimates store m2
+
+. logit vhappy i.college c.wages i.married i.parent i.woman i.conserv i.reltrad i.year c.age##c.age,
+>  vce(robust)
+
+Iteration 0:  Log pseudolikelihood =  -5696.026  
+Iteration 1:  Log pseudolikelihood =   -5397.02  
+Iteration 2:  Log pseudolikelihood = -5393.5302  
+Iteration 3:  Log pseudolikelihood = -5393.5286  
+Iteration 4:  Log pseudolikelihood = -5393.5286  
+
+Logistic regression                                     Number of obs =  9,216
+                                                        Wald chi2(22) = 568.57
+                                                        Prob > chi2   = 0.0000
+Log pseudolikelihood = -5393.5286                       Pseudo R2     = 0.0531
+
+-----------------------------------------------------------------------------------
+                  |               Robust
+           vhappy | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+------------------+----------------------------------------------------------------
+          college |
+  College Degree  |      0.178      0.054    3.273   0.001        0.071       0.285
+            wages |      0.011      0.002    6.055   0.000        0.007       0.015
+                  |
+          married |
+         Married  |      0.979      0.052   18.761   0.000        0.877       1.081
+                  |
+           parent |
+          Parent  |     -0.073      0.059   -1.235   0.217       -0.189       0.043
+                  |
+            woman |
+           Women  |      0.138      0.048    2.844   0.004        0.043       0.232
+                  |
+          conserv |
+    Conservative  |      0.184      0.050    3.638   0.000        0.085       0.282
+                  |
+          reltrad |
+   Mainline Prot  |     -0.108      0.077   -1.401   0.161       -0.259       0.043
+Black Protestant  |     -0.161      0.101   -1.605   0.108       -0.359       0.036
+        Catholic  |     -0.148      0.065   -2.277   0.023       -0.276      -0.021
+          Jewish  |     -0.704      0.198   -3.565   0.000       -1.092      -0.317
+     Other Faith  |     -0.303      0.111   -2.720   0.007       -0.522      -0.085
+   Nonaffiliated  |     -0.283      0.074   -3.842   0.000       -0.428      -0.139
+                  |
+             year |
+            2002  |      0.050      0.102    0.493   0.622       -0.150       0.251
+            2004  |     -0.088      0.106   -0.830   0.406       -0.295       0.119
+            2006  |     -0.150      0.084   -1.774   0.076       -0.315       0.016
+            2008  |     -0.123      0.096   -1.283   0.200       -0.310       0.065
+            2010  |     -0.222      0.099   -2.252   0.024       -0.415      -0.029
+            2012  |     -0.055      0.097   -0.571   0.568       -0.246       0.135
+            2014  |      0.090      0.088    1.023   0.306       -0.083       0.263
+            2016  |     -0.030      0.088   -0.345   0.730       -0.203       0.142
+                  |
+              age |     -0.052      0.011   -4.568   0.000       -0.074      -0.030
+                  |
+      c.age#c.age |      0.001      0.000    4.393   0.000        0.000       0.001
+                  |
+            _cons |     -0.332      0.243   -1.364   0.172       -0.808       0.145
+-----------------------------------------------------------------------------------
+
+. estimates store m3
+
+. logit vhappy i.college c.wages c.occprest i.married i.parent i.woman i.conserv i.reltrad i.year c.
+> age##c.age, vce(robust)
+
+Iteration 0:  Log pseudolikelihood =  -5696.026  
+Iteration 1:  Log pseudolikelihood = -5390.3082  
+Iteration 2:  Log pseudolikelihood = -5386.6127  
+Iteration 3:  Log pseudolikelihood = -5386.6108  
+Iteration 4:  Log pseudolikelihood = -5386.6108  
+
+Logistic regression                                     Number of obs =  9,216
+                                                        Wald chi2(23) = 575.85
+                                                        Prob > chi2   = 0.0000
+Log pseudolikelihood = -5386.6108                       Pseudo R2     = 0.0543
+
+-----------------------------------------------------------------------------------
+                  |               Robust
+           vhappy | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+------------------+----------------------------------------------------------------
+          college |
+  College Degree  |      0.096      0.058    1.640   0.101       -0.019       0.210
+            wages |      0.010      0.002    5.072   0.000        0.006       0.013
+         occprest |      0.007      0.002    3.778   0.000        0.004       0.011
+                  |
+          married |
+         Married  |      0.970      0.052   18.568   0.000        0.867       1.072
+                  |
+           parent |
+          Parent  |     -0.069      0.059   -1.166   0.244       -0.185       0.047
+                  |
+            woman |
+           Women  |      0.126      0.049    2.587   0.010        0.030       0.221
+                  |
+          conserv |
+    Conservative  |      0.185      0.051    3.656   0.000        0.086       0.284
+                  |
+          reltrad |
+   Mainline Prot  |     -0.115      0.077   -1.493   0.136       -0.266       0.036
+Black Protestant  |     -0.151      0.101   -1.498   0.134       -0.348       0.047
+        Catholic  |     -0.143      0.065   -2.201   0.028       -0.271      -0.016
+          Jewish  |     -0.711      0.199   -3.574   0.000       -1.101      -0.321
+     Other Faith  |     -0.307      0.112   -2.749   0.006       -0.526      -0.088
+   Nonaffiliated  |     -0.282      0.074   -3.819   0.000       -0.426      -0.137
+                  |
+             year |
+            2002  |      0.054      0.102    0.526   0.599       -0.146       0.254
+            2004  |     -0.089      0.106   -0.839   0.401       -0.295       0.118
+            2006  |     -0.145      0.084   -1.714   0.087       -0.310       0.021
+            2008  |     -0.118      0.096   -1.233   0.218       -0.305       0.070
+            2010  |     -0.214      0.099   -2.166   0.030       -0.407      -0.020
+            2012  |     -0.054      0.097   -0.551   0.581       -0.244       0.137
+            2014  |      0.098      0.088    1.115   0.265       -0.075       0.271
+            2016  |     -0.021      0.088   -0.237   0.812       -0.194       0.152
+                  |
+              age |     -0.054      0.011   -4.731   0.000       -0.076      -0.031
+                  |
+      c.age#c.age |      0.001      0.000    4.571   0.000        0.000       0.001
+                  |
+            _cons |     -0.569      0.251   -2.270   0.023       -1.060      -0.078
+-----------------------------------------------------------------------------------
+
+. estimates store m4
+
+. 
+. mecompare college, models(m1 m2 m3 m4)
+
+
+Predicting: Pr(vhappy)
+
+Marginal effects across models (N_m1=9216) (N_m2=9216) (N_m3=9216) (N_m4=9216)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+college                          |                                       
+    College Deg - No Col Deg     |                                       
+                              m1 |     1      0.072      0.010      0.000
+                              m2 |     2      0.060      0.011      0.000
+                              m3 |     3      0.036      0.011      0.001
+                              m4 |     4      0.019      0.012      0.103
+
+```
+
+Use `metest` to calculate the cross-model tests. Here, whether the effect
+diminishes in each subsequent model.
+
+```{.stata-run}
+. metest 1 - 2
+
+                                 |  estimate         se     pvalue 
+---------------------------------+--------------------------------
+college                          |                                
+                         m1 - m2 |     0.012      0.004      0.003 
+
+. metest 2 - 3, add
+
+                                 |  estimate         se     pvalue 
+---------------------------------+--------------------------------
+college                          |                                
+                         m1 - m2 |     0.012      0.004      0.003 
+                         m2 - m3 |     0.024      0.004      0.000 
+
+. metest 3 - 4, add
+
+                                 |  estimate         se     pvalue 
+---------------------------------+--------------------------------
+college                          |                                
+                         m1 - m2 |     0.012      0.004      0.003 
+                         m2 - m3 |     0.024      0.004      0.000 
+                         m3 - m4 |     0.017      0.004      0.000 
+
+```

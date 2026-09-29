@@ -1,0 +1,1079 @@
+---
+title: "Options"
+subtitle: "Every mecompare option, with an example of each"
+---
+
+This page runs each option of `mecompare` on Stata's `nlsw88` data, in the
+order of the [help file](help.html). The [Getting
+started](getting-started.html) page explains how to read the table.
+
+```{.stata-run}
+. sysuse nlsw88, clear
+(NLSW, 1988 extract)
+
+. drop if missing(union, married, age, race, hours, collgrad, ttl_exp, grade, wage)
+(371 observations deleted)
+
+. 
+. quietly logit union i.married age i.race hours i.collgrad, vce(robust)
+
+. estimates store m1
+
+. 
+. quietly logit union i.married age i.race hours i.collgrad wage grade, vce(robust)
+
+. estimates store m2
+
+```
+
+## Syntax
+
+```stata
+mecompare [varlist] [if] [in] [weight] [, models(name1 [name2]) options]
+```
+
+With no *varlist*, marginal effects are computed for every variable in the
+model(s). Factor-variable notation (`i.`, `c.`) is required on the stored
+models.
+
+## `models()` -- one model, several, or none
+
+`models()` names the stored estimates. One name will calculate that model's 
+marginal effects. Two names will calculate each model's marginal effects and 
+automatically calculate the cross-model difference. With three or more names
+the table lists every model's marginal effects, one set of rows per model,
+and reports no differences: choose the comparisons you want and test them
+with `metest` (e.g. `metest 1 - 2`), as in
+[tests across three or more models](../metest/many-models.html).
+
+If names are omitted, `mecompare` then uses the estimates in memory, which 
+are either the single model just fit (labeled `m1` in the `mecompare` output) 
+or, after [`suest2`](../suest2/index.html), the models of that system.
+
+```{.stata-run}
+. mecompare i.married age, models(m1 m2)
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_m1=1875) (N_m2=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+married                          |                                       
+            Married - Single     |                                       
+                              m1 |     1     -0.026      0.022      0.222
+                              m2 |     2     -0.019      0.021      0.370
+                      Difference |     3     -0.007      0.003      0.017
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                              m1 |     4      0.003      0.003      0.427
+                              m2 |     5      0.003      0.003      0.410
+                      Difference |     6     -0.000      0.000      0.847
+
+```
+
+```{.stata-run}
+. mecompare i.married age, models(m2)
+
+
+Predicting: Pr(union)
+
+Marginal effects (N_m2=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+married                          |                                       
+            Married - Single     |                                       
+                              m2 |     1     -0.019      0.021      0.370
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                              m2 |     2      0.003      0.003      0.410
+
+```
+
+With no varlist, marginal effects are calculated for every predictor:
+
+```{.stata-run}
+. mecompare, models(m1 m2)
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_m1=1875) (N_m2=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+married                          |                                       
+            Married - Single     |                                       
+                              m1 |     1     -0.026      0.022      0.222
+                              m2 |     2     -0.019      0.021      0.370
+                      Difference |     3     -0.007      0.003      0.017
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                              m1 |     4      0.003      0.003      0.427
+                              m2 |     5      0.003      0.003      0.410
+                      Difference |     6     -0.000      0.000      0.847
+---------------------------------+---------------------------------------
+race                             |                                       
+               Black - White     |                                       
+                              m1 |     7      0.079      0.024      0.001
+                              m2 |     8      0.093      0.024      0.000
+                      Difference |     9     -0.014      0.004      0.002
+               Other - White     |                                       
+                              m1 |    10      0.101      0.097      0.300
+                              m2 |    11      0.089      0.101      0.377
+                      Difference |    12      0.012      0.015      0.444
+---------------------------------+---------------------------------------
+hours + 1 (centered)             |                                       
+                              m1 |    13      0.002      0.001      0.067
+                              m2 |    14      0.001      0.001      0.185
+                      Difference |    15      0.000      0.000      0.009
+---------------------------------+---------------------------------------
+collgrad                         |                                       
+    College gra - Not colleg     |                                       
+                              m1 |    16      0.102      0.024      0.000
+                              m2 |    17      0.046      0.039      0.234
+                      Difference |    18      0.056      0.032      0.085
+---------------------------------+---------------------------------------
+wage + 1 (centered)              |                                       
+                              m1 |                                       
+                              m2 |    19      0.013      0.002      0.000
+                      Difference |                                       
+---------------------------------+---------------------------------------
+grade + 1 (centered)             |                                       
+                              m1 |                                       
+                              m2 |    20      0.001      0.007      0.830
+                      Difference |                                       
+
+```
+
+## Supported models
+
+`mecompare` accepts one or more models from the following families (see also
+the [help file](help.html#estimators)).
+
+### Ordinary single-level models
+
+`regress`; `logit` and `logistic`; `probit`; `poisson`; `nbreg`; `ologit`;
+`oprobit`; and `mlogit`.
+
+`glm`; `cloglog`; `tobit`; `intreg`; maximum-likelihood `heckman`; and
+parametric `streg`, all parametric distributions.
+
+`gologit2`, all forms.
+
+`ivregress 2sls`. `fracreg` with estimators logit and probit.
+
+`betareg`, all four links; `truncreg`; `hetprobit`; `zip` and `zinb`, both
+inflation links; and `biprobit`.
+
+`ivprobit` and `ivtobit`.
+
+### Panel models
+
+`xtreg` with estimators mle, fe, be, re, and pa. `xtreg, cre` is not
+supported; the correlated random effects (Mundlak) specification is fit with
+the `re` estimator instead, as described in the
+[help file](help.html#cre).
+
+`xtlogit` with estimators re, fe, and pa. `xtprobit` with estimators re and
+pa. `xtcloglog` with estimators re and pa; the re estimator requires
+`intpoints(24)` or more.
+
+`xtologit` and `xtoprobit`.
+
+`xtmlogit` with estimators re and fe.
+
+`xtpoisson` with estimators re (normal or gamma random effects), fe, and
+pa. `xtnbreg` with estimators re and pa; `xtnbreg, fe` is not supported.
+
+Marginal effects after the fixed-effects (`fe`) estimators have known
+problems, especially for categorical outcomes; the help file's section on
+[correlated random effects](help.html#cre) gives the alternative, and the
+[within-person effects](examples/within-person.html) example shows it.
+
+### Multilevel models
+
+`mixed, mle`; `melogit`; `meprobit`; `mecloglog`; `mepoisson`; `menbreg`;
+`meologit`; `meoprobit`; and `mestreg`, all parametric distributions.
+
+`meglm` with the family-link pairs Gaussian-identity and Gamma-log.
+
+After `streg` and `mestreg` the marginal effects are changes in a predicted
+survival time -- the median after `streg`, the mean after `mestreg` -- and a
+note under the table says which; see [Survival models](help.html#survival)
+in the help file.
+
+### Which models can be compared
+
+Models can be compared when they all return the same number of predictions:
+e.g., two logits, a `logit` and a `regress`, a `logit` and a `melogit`, or an
+`ologit` and an `mlogit` with the same outcome categories. Each model uses its
+own default prediction, or the one given in `predict()`, so a `logit` vs
+`regress` comparison contrasts predicted probabilities with linear predictions.
+
+### Survey, multiply imputed, and weighted models
+
+Models may be fit with the `svy:`, `mi estimate, post:`, or
+`mi estimate: svy:` prefixes, specified on the stored models rather than on
+`mecompare`; all models in a comparison must carry the same prefixes, and
+`mi estimate` requires the user-written `mimrgns` package. Weights can
+instead be applied on the stored models (`logit y x [pw=w]`, the same weight
+on every model), and multilevel models need a stage weight as well. The
+[help file](help.html#svy_mi) has the details.
+
+## `statistics()` -- which columns to show
+
+The default columns are the estimate, its standard error, and the p-value.
+`statistics()` takes any of `estimate`, `se`, `pvalue`, `z`, `ll`, `ul`, or
+`all`.
+
+```{.stata-run}
+. mecompare i.married age, models(m1 m2) statistics(est se ll ul)
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_m1=1875) (N_m2=1875)
+
+                                 |  ME #   Estimate  Robust SE      CI LL      CI UL
+---------------------------------+--------------------------------------------------
+married                          |                                                  
+            Married - Single     |                                                  
+                              m1 |     1     -0.026      0.022     -0.069      0.016
+                              m2 |     2     -0.019      0.021     -0.061      0.023
+                      Difference |     3     -0.007      0.003     -0.013     -0.001
+---------------------------------+--------------------------------------------------
+age + 1 (centered)               |                                                  
+                              m1 |     4      0.003      0.003     -0.004      0.009
+                              m2 |     5      0.003      0.003     -0.004      0.009
+                      Difference |     6     -0.000      0.000     -0.001      0.001
+
+```
+
+## `amount()`, `centered`, `uncentered` -- the size of a continuous change
+
+For a continuous variable the default is a one-unit change, centered on the
+observed value (half a unit below to half a unit above). `amount()` takes a
+number, `sd`, `2sd`, `trimrange` (5th to 95th percentile), `range` (minimum
+to maximum), `p#-p#` (from one percentile to another, e.g. `p10-p90`), or
+`rate` (the instantaneous rate of change, `dydx` in `margins`). If a single value is listed
+in `amount()`, it is applied to all continuous variables. When multiple values 
+are listed in `amount()`, they are applied in the order of the continuous 
+variables in the *varlist*.
+
+```{.stata-run}
+. mecompare age hours, models(m1 m2) amount(sd)
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_m1=1875) (N_m2=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + SD (centered)              |                                       
+                              m1 |     1      0.008      0.010      0.427
+                              m2 |     2      0.008      0.010      0.410
+                      Difference |     3     -0.000      0.001      0.847
+---------------------------------+---------------------------------------
+hours + SD (centered)            |                                       
+                              m1 |     4      0.018      0.010      0.067
+                              m2 |     5      0.014      0.010      0.185
+                      Difference |     6      0.005      0.002      0.009
+
+```
+
+```{.stata-run}
+. mecompare age hours, models(m1 m2) amount(10 sd)
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_m1=1875) (N_m2=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 10 (centered)              |                                       
+                              m1 |     1      0.026      0.032      0.427
+                              m2 |     2      0.027      0.032      0.410
+                      Difference |     3     -0.001      0.005      0.847
+---------------------------------+---------------------------------------
+hours + SD (centered)            |                                       
+                              m1 |     4      0.018      0.010      0.067
+                              m2 |     5      0.014      0.010      0.185
+                      Difference |     6      0.005      0.002      0.009
+
+```
+
+```{.stata-run}
+. mecompare age, models(m1 m2) amount(rate)
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_m1=1875) (N_m2=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age(rate)                        |                                       
+                              m1 |     1      0.003      0.003      0.427
+                              m2 |     2      0.003      0.003      0.410
+                      Difference |     3     -0.000      0.000      0.847
+
+```
+
+```{.stata-run}
+. mecompare age, models(m1 m2) amount(p10-p90)
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_m1=1875) (N_m2=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age(10-90%)                      |                                       
+                              m1 |     1      0.023      0.029      0.428
+                              m2 |     2      0.024      0.029      0.411
+                      Difference |     3     -0.001      0.004      0.847
+
+```
+
+Multiple amounts for one variable can be specified in parentheses, with each
+effect reported in its own rows. E.g., `amount((one sd rate))` would apply all
+three to every continuous variable. Whereas `amount((one sd) 5)` gives the
+first continuous variable in *varlist* two amounts (one and sd) and the second
+continuous variable one amount (5). A list in parentheses cannot be combined
+with a value list in `start()` or with `end()`.
+
+```{.stata-run}
+. mecompare age, models(m1) amount((one sd rate))
+
+
+Predicting: Pr(union)
+
+Marginal effects (N_m1=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                              m1 |     1      0.003      0.003      0.427
+---------------------------------+---------------------------------------
+age + SD (centered)              |                                       
+                              m1 |     2      0.008      0.010      0.427
+---------------------------------+---------------------------------------
+age(rate)                        |                                       
+                              m1 |     3      0.003      0.003      0.427
+
+```
+
+```{.stata-run}
+. mecompare age hours, models(m1) amount((one sd) 5)
+
+
+Predicting: Pr(union)
+
+Marginal effects (N_m1=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                              m1 |     1      0.003      0.003      0.427
+---------------------------------+---------------------------------------
+age + SD (centered)              |                                       
+                              m1 |     2      0.008      0.010      0.427
+---------------------------------+---------------------------------------
+hours + 5 (centered)             |                                       
+                              m1 |     3      0.009      0.005      0.067
+
+```
+
+`uncentered` makes the change start at the observed value and end at that 
+value plus the `amount()` (from *x* to *x* + amount) rather than being 
+centered on it. The two conventions give different numbers whenever the 
+effect is nonlinear. Especially for larger changes like `sd`, we recommend 
+using the default of centered changes.
+
+```{.stata-run}
+. mecompare age, models(m1 m2) amount(sd) uncentered
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_m1=1875) (N_m2=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + SD (uncentered)            |                                       
+                              m1 |     1      0.008      0.010      0.432
+                              m2 |     2      0.008      0.010      0.415
+                      Difference |     3     -0.000      0.001      0.847
+
+```
+
+## `start()` and `end()` -- where the change begins and ends
+
+By default each observation's own value is the starting point. `start()`
+sets it: a value, `atmeans`, or a list of values for one variable, which
+gives one numbered row set per value so that `metest` can compare them.
+
+```{.stata-run}
+. mecompare age, models(m1 m2) start(age=40) amount(5)
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_m1=1875) (N_m2=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 5 (centered)               |                                       
+                              m1 |     1      0.013      0.016      0.430
+                              m2 |     2      0.013      0.016      0.412
+                      Difference |     3     -0.000      0.002      0.847
+
+```
+
+```{.stata-run}
+. mecompare age, models(m1) start(age=(35 40 45)) amount(5)
+
+
+Predicting: Pr(union)
+
+Marginal effects (N_m1=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 5 (centered)               |                                       
+                           at 35 |     1      0.012      0.015      0.413
+                           at 40 |     2      0.013      0.016      0.430
+                           at 45 |     3      0.013      0.017      0.444
+
+```
+
+`end()` sets where the change ends, with `start()`: `start(age=35) end(age=40)`
+is the change from 35 to 40 (`amount()` and centering do not apply to that
+variable). With a list in both, the values pair up: `start(age=(35 40))
+end(age=(40 45))` gives one row for 35 to 40 and one for 40 to 45.
+
+```{.stata-run}
+. mecompare age, models(m1) start(age=35) end(age=40)
+
+
+Predicting: Pr(union)
+
+Marginal effects (N_m1=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age 35 to 40                     |                                       
+                              m1 |     1      0.013      0.016      0.422
+
+. mecompare age, models(m1) start(age=(35 40)) end(age=(40 45))
+
+
+Predicting: Pr(union)
+
+Marginal effects (N_m1=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age                              |                                       
+                        35 to 40 |     1      0.013      0.016      0.422
+                        40 to 45 |     2      0.013      0.017      0.437
+
+```
+
+## `cochange()` -- variables that change along with the focal variable
+
+`cochange(varlist)` specifies variables that change along with the focal
+variable instead of being held constant, e.g. mediators. The table then
+reports two marginal effects of the focal variable: the usual one, and one
+labeled *with co-change* in which the co-change variables change too.
+`metest` can be used to test the difference between the two. Only one focal
+variable may be given in the *varlist*.
+
+`start()` and `end()` set the values the co-change variables change from and
+to. Here, the effect of a college degree, and the effect of a college degree
+when the hourly wage also changes from 6 to 9 dollars:
+
+```{.stata-run}
+. quietly logit union age hours wage ttl_exp i.race i.collgrad i.married, vce(robust)
+
+. estimates store m3
+
+. 
+. mecompare i.collgrad, models(m3) cochange(wage) start(wage=6) end(wage=9)
+
+
+Predicting: Pr(union)
+
+Marginal effects (N_m3=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+collgrad                         |                                       
+    College gra - Not colleg     |                                       
+                              m3 |     1      0.052      0.025      0.040
+---------------------------------+---------------------------------------
+collgrad with co-change          |                                       
+                              m3 |     2      0.093      0.024      0.000
+
+
+NOTE: collgrad with co-change: collgrad 0 to 1; wage 6 to 9.
+
+. metest 2 - 1
+
+                                 |  estimate         se     pvalue 
+---------------------------------+--------------------------------
+             cochange - collgrad |     0.041      0.008      0.000 
+
+```
+
+Without `start()` and `end()`, co-change variables change as focal variables
+do (see `amount()`). Here, age and total work experience both increase by
+five years:
+
+```{.stata-run}
+. mecompare age, models(m3) cochange(ttl_exp) amount(5)
+
+
+Predicting: Pr(union)
+
+Marginal effects (N_m3=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 5 (centered)               |                                       
+                              m3 |     1      0.014      0.016      0.376
+---------------------------------+---------------------------------------
+age with co-change               |                                       
+                              m3 |     2      0.008      0.019      0.678
+
+
+NOTE: age with co-change: age + 5 (centered); ttl_exp + 5 (centered).
+
+```
+
+A nominal focal or co-change variable with three or more categories needs the
+two levels it changes between in `start()` and `end()`, e.g. `start(race=1)
+end(race=2)`. `cochange()` cannot be combined with a *numlist* of values in
+`start()` or `end()`, multiple amounts for one variable in `amount()`,
+`amount(rate)`, `groupsd`, `pwcompare`, or `mcompare()`. The
+[generalized marginal effects](generalized.html) page has a longer example.
+
+## `covariates()` and `atmeans` -- values of the other variables
+
+Covariates are the model's other independent variables, not included in the 
+*varlist*. By default they stay at their
+observed values and the effect is averaged over the sample. `covariates()`
+fixes them: `covariates(atmeans)` (or just `atmeans`) at their means,
+`covariates(married=1)` at a value, and a list for one covariate --
+`covariates(hours=(20 40 60))` -- gives one row set per value, each a
+counterfactual with the whole sample set to that value.
+
+```{.stata-run}
+. mecompare i.married, models(m1 m2) atmeans
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_m1=1875) (N_m2=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+married                          |                                       
+            Married - Single     |                                       
+                              m1 |     1     -0.027      0.022      0.222
+                              m2 |     2     -0.019      0.022      0.370
+                      Difference |     3     -0.007      0.003      0.019
+
+```
+
+```{.stata-run}
+. mecompare i.married, models(m2) covariates(hours=(20 40 60))
+
+
+Predicting: Pr(union)
+
+Marginal effects (N_m2=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+married                          |                                       
+            Married - Single     |                                       
+                        hours=20 |     1     -0.018      0.020      0.375
+                        hours=40 |     2     -0.019      0.021      0.369
+                        hours=60 |     3     -0.021      0.023      0.366
+
+. metest 1 = 2 = 3
+
+Tests of equality
+
+                                 |      chi2         df     pvalue 
+---------------------------------+--------------------------------
+  marri~20 = marri~40 = marri~60 |     0.896      2.000      0.639 
+
+```
+
+## `by()` and `over()` -- effects within levels of another variable
+
+`by(varlist)` reports the marginal effect at each level of a binary or
+nominal moderator, computed as a counterfactual (everyone set to that level,
+then averaged); `over(varlist)` computes it within each observed subgroup
+instead. Both can take more than one variable. For a continuous moderator,
+`covariates(z=(numlist))` plays the same role as `by()`. The
+[interactions pages](interactions/index.html) show how to use these to simplify 
+tests of interaction.
+
+```{.stata-run}
+. mecompare age, models(m1 m2) by(collgrad)
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_m1=1875) (N_m2=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+             m1 Not college grad |     1      0.002      0.003      0.427
+                 m1 College grad |     2      0.003      0.004      0.428
+             m2 Not college grad |     3      0.003      0.003      0.410
+                 m2 College grad |     4      0.003      0.004      0.411
+     Difference Not college grad |     5     -0.000      0.000      0.705
+         Difference College grad |     6      0.000      0.001      0.792
+
+```
+
+```{.stata-run}
+. mecompare age, models(m1 m2) over(collgrad)
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_m1=1875) (N_m2=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+             m1 Not college grad |     1      0.002      0.003      0.427
+                 m1 College grad |     2      0.003      0.004      0.428
+             m2 Not college grad |     3      0.003      0.003      0.410
+                 m2 College grad |     4      0.003      0.004      0.410
+     Difference Not college grad |     5     -0.000      0.000      0.827
+         Difference College grad |     6     -0.000      0.001      0.896
+
+```
+
+## `pwcompare` -- all pairwise contrasts of a nominal variable
+
+For an `i.` variable the default rows contrast each level with the base
+level. `pwcompare` reports every pair.
+
+```{.stata-run}
+. mecompare i.race, models(m1 m2) pwcompare
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_m1=1875) (N_m2=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+race                             |                                       
+               Black - White     |                                       
+                              m1 |     1      0.079      0.024      0.001
+                              m2 |     2      0.093      0.024      0.000
+                      Difference |     3     -0.014      0.004      0.002
+               Other - White     |                                       
+                              m1 |     4      0.101      0.097      0.300
+                              m2 |     5      0.089      0.101      0.377
+                      Difference |     6      0.012      0.015      0.444
+               Other - Black     |                                       
+                              m1 |     7      0.021      0.099      0.829
+                              m2 |     8     -0.004      0.103      0.970
+                      Difference |     9      0.025      0.015      0.098
+
+```
+
+## `mcompare()` -- adjusting for multiple comparisons
+
+`mcompare(method)` adjusts the p-values (and confidence intervals, when
+shown) of the contrasts of nominal focal variables for multiple comparisons;
+*method* is `bonferroni` or `sidak`. A variable's contrasts within one model
+form a set, and its Difference rows form a set of their own. The estimates,
+`e(b)` and `e(V)` do not change.
+
+```{.stata-run}
+. mecompare i.race, models(m1 m2) pwcompare mcompare(bonferroni)
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_m1=1875) (N_m2=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+race                             |                                       
+               Black - White     |                                       
+                              m1 |     1      0.079      0.024      0.003
+                              m2 |     2      0.093      0.024      0.000
+                      Difference |     3     -0.014      0.004      0.007
+               Other - White     |                                       
+                              m1 |     4      0.101      0.097      0.900
+                              m2 |     5      0.089      0.101      1.000
+                      Difference |     6      0.012      0.015      1.000
+               Other - Black     |                                       
+                              m1 |     7      0.021      0.099      1.000
+                              m2 |     8     -0.004      0.103      1.000
+                      Difference |     9      0.025      0.015      0.293
+
+
+NOTE: p-values (and CIs) of the contrasts are Bonferroni-adjusted within each variable and model; th
+> e Difference rows are adjusted as a set of their own.
+
+```
+
+## `meinequality` and `totalme` -- summary measures
+
+`meinequality` adds the marginal-effect inequality summary of
+[`meinequality`](../meinequality/index.html) above a nominal variable's
+contrasts (`weighted`, the default, `unweighted`, or `all`). `totalme` adds
+the Total Marginal Effect of [`totalme`](../totalme/index.html) above every
+focal variable, most often used to summarize effects with multi-category 
+outcome models like an ordinal or nominal model.
+
+```{.stata-run}
+. mecompare i.race, models(m1 m2) meinequality(all)
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_m1=1875) (N_m2=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+race                             |                                       
+               ME Inequality     |                                       
+                              m1 |     1      0.079      0.050      0.116
+                              m2 |     2      0.079      0.028      0.005
+                      Difference |     3     -0.000      0.027      0.999
+              Unwgt ME Ineq.     |                                       
+                              m1 |     4      0.067      0.065      0.300
+                              m2 |     5      0.062      0.016      0.000
+                      Difference |     6      0.005      0.066      0.938
+               Black - White     |                                       
+                              m1 |     7      0.079      0.024      0.001
+                              m2 |     8      0.093      0.024      0.000
+                      Difference |     9     -0.014      0.004      0.002
+               Other - White     |                                       
+                              m1 |    10      0.101      0.097      0.300
+                              m2 |    11      0.089      0.101      0.377
+                      Difference |    12      0.012      0.015      0.444
+
+```
+
+```{.stata-run}
+. egen hours_ord = cut(hours), at(0 30 40 50 81)
+
+. quietly ologit hours_ord c.age i.married i.race, vce(robust)
+
+. mecompare age married race, totalme
+
+
+Predicting: Pr(hours_ord)
+
+Marginal effects (N_m1=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                        Total ME |     1      0.006      0.003      0.053
+                  Outcome 0 - m1 |     2      0.003      0.002      0.055
+                 Outcome 30 - m1 |     3      0.003      0.001      0.053
+                 Outcome 40 - m1 |     4     -0.004      0.002      0.055
+                 Outcome 50 - m1 |     5     -0.002      0.001      0.054
+---------------------------------+---------------------------------------
+married                          |                                       
+            Married - Single     |                                       
+                        Total ME |     6      0.121      0.019      0.000
+                  Outcome 0 - m1 |     7      0.066      0.011      0.000
+                 Outcome 30 - m1 |     8      0.055      0.009      0.000
+                 Outcome 40 - m1 |     9     -0.073      0.012      0.000
+                 Outcome 50 - m1 |    10     -0.048      0.009      0.000
+---------------------------------+---------------------------------------
+race                             |                                       
+                  Total ME Ineq. |    11      0.049      0.045      0.276
+               Black - White     |                                       
+                  Outcome 0 - m1 |    12     -0.012      0.011      0.263
+                 Outcome 30 - m1 |    13     -0.010      0.009      0.267
+                 Outcome 40 - m1 |    14      0.014      0.012      0.264
+                 Outcome 50 - m1 |    15      0.008      0.007      0.268
+               Other - White     |                                       
+                  Outcome 0 - m1 |    16     -0.044      0.043      0.315
+                 Outcome 30 - m1 |    17     -0.038      0.043      0.381
+                 Outcome 40 - m1 |    18      0.045      0.038      0.238
+                 Outcome 50 - m1 |    19      0.036      0.048      0.454
+
+```
+
+## `groups`, `groupnames()`, `groupme`, `groupsd` -- models fit to separate samples
+
+The `groups` option tells `mecompare` that the models were fit to 
+non-overlapping samples, so each
+model's marginal effects are averaged over its own sample and the
+**Difference** row compares the effects across the groups (with three or more
+groups each group's effects are listed and `metest` can be used to test the
+differences).
+`groupnames()` labels the rows; `groupme` (two groups only) adds the average difference in the outcome between the groups;
+`groupsd` uses each group's own SD for `amount(sd)`; we generally do not
+recommend `groupsd`. `group(varname)`, the syntax of earlier versions, is also
+accepted; *varname* must take one value in each model's sample and a different
+value in each model.
+
+```{.stata-run}
+. quietly logit union age hours i.collgrad if south == 1, vce(robust)
+
+. estimates store msouth
+
+. quietly logit union age hours i.collgrad if south == 0, vce(robust)
+
+. estimates store mnonsouth
+
+. 
+. mecompare age hours collgrad, models(msouth mnonsouth) groups groupnames(South NonSouth) groupme
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_South=797) (N_NonSouth=1078)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                           South |     1     -0.005      0.004      0.273
+                        NonSouth |     2      0.007      0.005      0.137
+                      Difference |     3     -0.011      0.006      0.066
+---------------------------------+---------------------------------------
+hours + 1 (centered)             |                                       
+                           South |     4      0.002      0.001      0.092
+                        NonSouth |     5      0.003      0.001      0.019
+                      Difference |     6     -0.001      0.002      0.744
+---------------------------------+---------------------------------------
+collgrad                         |                                       
+    College gra - Not colleg     |                                       
+                           South |     7      0.026      0.032      0.407
+                        NonSouth |     8      0.135      0.033      0.000
+                      Difference |     9     -0.109      0.046      0.018
+
+
+Average conditional difference in the outcome (NonSouth - South),
+each model averaged over its own sample:
+                         Estimate =     0.130   SE =     0.019   p =  0.000
+
+```
+
+## `predict()` -- which prediction
+
+With one model any prediction that `margins` accepts after that command can be
+requested; with two or more models, any prediction returning one quantity per model.
+Multi-category models report every outcome by default, or one with
+`predict(pr outcome(#))`.
+
+```{.stata-run}
+. quietly nbreg hours c.age i.collgrad i.race, vce(robust)
+
+. estimates store cnt
+
+. 
+. mecompare age collgrad, models(cnt)
+
+
+Predicting: Predicted number of events
+
+Marginal effects (N_cnt=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                             cnt |     1     -0.046      0.077      0.545
+---------------------------------+---------------------------------------
+collgrad                         |                                       
+    College gra - Not colleg     |                                       
+                             cnt |     2      2.495      0.569      0.000
+
+```
+
+```{.stata-run}
+. mecompare age collgrad, models(cnt) predict(pr(0))
+
+
+Predicting: Pr(hours=0)
+
+Marginal effects (N_cnt=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                             cnt |     1      0.000      0.000      0.569
+---------------------------------+---------------------------------------
+collgrad                         |                                       
+    College gra - Not colleg     |                                       
+                             cnt |     2     -0.000      0.000      0.232
+
+```
+
+## `marginsopt()` -- anything else margins should be told
+
+`marginsopt(string)` is passed to `margins` verbatim. We recommend using it 
+only in combination with the `commands` and `details` options to double check 
+that `margins` produced what you want. Its main use is
+`expression()` with one model, for example effects in percentage points:
+
+```{.stata-run}
+. mecompare i.married age, models(m2) marginsopt(expression(100*predict(pr)))
+
+
+Predicting: 100*predict(pr)
+
+Marginal effects (N_m2=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+married                          |                                       
+            Married - Single     |                                       
+                              m2 |     1     -1.906      2.126      0.370
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                              m2 |     2      0.266      0.322      0.410
+
+```
+
+## Display options
+
+`decimals(#)` sets the decimal places (default 3), `mod1name()` and
+`mod2name()` label the model rows, `labwidth(#)` and `statwidth(#)` set the
+column widths, and `norownum` drops the `#` column.
+
+```{.stata-run}
+. mecompare i.married age, models(m1 m2) decimals(4) mod1name(Base) mod2name(Full) norownum
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_Base=1875) (N_Full=1875)
+
+                                 |  Estimate  Robust SE      P>|z|
+---------------------------------+--------------------------------
+married                          |                                
+            Married - Single     |                                
+                            Base |   -0.0263     0.0215     0.2215
+                            Full |   -0.0191     0.0213     0.3700
+                      Difference |   -0.0073     0.0031     0.0175
+---------------------------------+--------------------------------
+age + 1 (centered)               |                                
+                            Base |    0.0026     0.0032     0.4274
+                            Full |    0.0027     0.0032     0.4097
+                      Difference |   -0.0001     0.0005     0.8467
+
+```
+
+## `commands` and `details` -- seeing what was run
+
+`commands` prints the command of each model and the `suest2` and `margins`
+commands `mecompare` used;
+`details` prints their output too.
+
+```{.stata-run}
+. mecompare i.married, models(m1 m2) commands
+
+
+
+Model 1 (m1) is:
+     logit union i.married age i.race hours i.collgrad
+Model 2 (m2) is:
+     logit union i.married age i.race hours i.collgrad wage grade
+
+
+suest2 model is: 
+    suest2 m1 m2, nowarn
+
+
+margins command is: 
+    margins  ,    at(   married=(0 1))        post
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_m1=1875) (N_m2=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+married                          |                                       
+            Married - Single     |                                       
+                              m1 |     1     -0.026      0.022      0.222
+                              m2 |     2     -0.019      0.021      0.370
+                      Difference |     3     -0.007      0.003      0.017
+
+```
+
+## `store()` -- results for coefplot and esttab
+
+`store(stub)` saves the marginal effects as stored estimates (`stub_model1`,
+`stub_model2`, `stub_diff`), ready for `coefplot` and `esttab`. The
+coefficients are named with the table's labels, e.g. `age + SD (centered)` or
+`Black - White`. The [plotting page](plotting.html) shows how.
+
+## After mecompare: `metest`, `e(b)`, `e(V)`
+
+Every row of the table is posted to `e(b)` and `e(V)` in `#` order, so
+[`metest`](../metest/index.html), `lincom`, `nlcom`, and `test` all work on
+them. `mecompare, coeflegend` lists the coefficient names.
+
+```{.stata-run}
+. mecompare i.married age, models(m1 m2)
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_m1=1875) (N_m2=1875)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+married                          |                                       
+            Married - Single     |                                       
+                              m1 |     1     -0.026      0.022      0.222
+                              m2 |     2     -0.019      0.021      0.370
+                      Difference |     3     -0.007      0.003      0.017
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                              m1 |     4      0.003      0.003      0.427
+                              m2 |     5      0.003      0.003      0.410
+                      Difference |     6     -0.000      0.000      0.847
+
+. metest 1 - 4
+
+                                 |  estimate         se     pvalue 
+---------------------------------+--------------------------------
+m1                               |                                
+                   married - age |    -0.029      0.022      0.182 
+
+. mecompare, coeflegend
+------------------------------------------------------------------------------
+             | Coefficient  Legend
+-------------+----------------------------------------------------------------
+married      |
+          m1 |     -0.026  _b[married:m1]
+          m2 |     -0.019  _b[married:m2]
+  Difference |     -0.007  _b[married:Difference]
+-------------+----------------------------------------------------------------
+age          |
+          m1 |      0.003  _b[age:m1]
+          m2 |      0.003  _b[age:m2]
+  Difference |     -0.000  _b[age:Difference]
+------------------------------------------------------------------------------
+
+```

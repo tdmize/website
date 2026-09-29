@@ -1,0 +1,178 @@
+---
+title: "Usage and examples"
+subtitle: "Every form of metest, from the help file, with output"
+---
+<<dd_version: 2>>
+
+```stata
+metest [exp] [, options]
+```
+
+*exp* refers to marginal effects by the `#` shown in the `mecompare` table,
+or by their coefficient names, combined with `+`, `-`, `*`, `/`, parentheses,
+or `=`. A bare number is always an ME number; a literal number is written
+with a leading `#` (`#2` is the number two, `2` is the second marginal
+effect). Non-whole numbers are always literals.
+
+The examples below are the ones in the [help file](help.html), run in order.
+
+## Setup: fit and store two models, then calculate the marginal effects
+
+```{.stata-run}
+<<dd_do>>
+sysuse nlsw88, clear
+drop if missing(union, married, age, race, wage)
+
+logit union i.married age i.race, vce(robust)
+est store m1
+logit union i.married age i.race wage, vce(robust)
+est store m2
+
+mecompare age i.married, models(m1 m2)
+<</dd_do>>
+```
+
+## A single marginal effect, by number and by name
+
+```{.stata-run}
+<<dd_do>>
+metest 1
+metest age:m1
+<</dd_do>>
+```
+
+## The cross-model difference, three equivalent ways
+
+Note that `mecompare` already reports it as ME 3.
+
+```{.stata-run}
+<<dd_do>>
+metest 1 - 2
+metest 3
+metest _b[age:m1] - _b[age:m2]
+<</dd_do>>
+```
+
+## A ratio and an average
+
+Note the `#` on the divisor of the average, which makes it the number two rather
+than ME 2.
+
+```{.stata-run}
+<<dd_do>>
+metest 1 / 2
+metest (1 + 2) / #2
+<</dd_do>>
+```
+
+## Scaling by a literal value
+
+10 times the effect for a change in age:
+
+```{.stata-run}
+<<dd_do>>
+metest 1 * #10
+<</dd_do>>
+```
+
+## Equality tests, including a joint test and two constraints at once
+
+```{.stata-run}
+<<dd_do>>
+metest 1 = 2
+metest 1 = 2 = 3
+metest (1 = 2) (4 = 5)
+<</dd_do>>
+```
+
+## Building up a table
+
+Estimates and equality tests are shown in separate tables.
+
+```{.stata-run}
+<<dd_do>>
+metest, clear
+metest 1 - 2
+metest 4 - 5, add
+metest 1 = 2, add
+<</dd_do>>
+```
+
+Redisplayed at any point, with a title, by typing `metest` on its own:
+
+```{.stata-run}
+<<dd_do>>
+metest, title("Age and marriage")
+<</dd_do>>
+```
+
+## All six statistics, and a label of your own
+
+```{.stata-run}
+<<dd_do>>
+metest 1 - 2, stat(all)
+metest 1 - 2, rowname("Age effect, m1 vs m2")
+<</dd_do>>
+```
+
+## Options
+
+| Option | Purpose |
+|:--|:--|
+| `statistics(list)` | Statistics to display: `estimate`, `se`, `zvalue`, `pvalue`, `ll`, `ul`, or `all`. The default is `estimate se pvalue`. Ignored for equality tests, which report the test statistic, its degrees of freedom, and the p-value. `stats()` is a synonym. |
+| `allstats` | Same as `statistics(all)`. |
+| `add` | Adds the result as another row of the saved table rather than starting a new one. `save` is a synonym. |
+| `clear` | Clears the saved table before running; `metest, clear` on its own clears it without running anything. |
+| `rowname(string)` | Labels the row. A `:` in the label puts what comes before it on a row of its own, with the rest indented underneath, which is how several rows are grouped under one heading. `label()` is a synonym. |
+| `decimals(#)` | Decimal places; the default is 3. |
+| `width(#)` | Width of each statistic column; the default is 9. |
+| `labwidth(#)` | Width of the label column; the maximum is 32. `twidth()` is a synonym. |
+| `title(string)` | Title above the table. |
+| `notable` | Suppresses the table. |
+| `details` | Shows the underlying `nlcom` or `test` output. |
+| `level(#)` | Confidence level for `ll` and `ul`. |
+
+Results accumulate in the matrix `_metest` (estimates) and `_metest_test`
+(equality tests). `metest` is r-class: after an expression it returns
+`r(estimate)`, `r(se)`, `r(zvalue)`, `r(pvalue)`, `r(ll)`, and `r(ul)`; after
+an equality test, `r(chi2)` (or `r(F)`), `r(df)`, and `r(pvalue)`.
+
+## Use after other commands
+
+`metest` also works after other estimation commands: a number refers to the
+*n*th coefficient in `e(b)`, in the order of `matrix list e(b)`, and
+coefficient names work as usual.
+
+```{.stata-run}
+<<dd_do>>
+sysuse nlsw88, clear
+regress wage age ttl_exp grade
+metest 1 - 2
+metest 1 / 2
+metest 1 = 2 = 3
+metest abs(1) - abs(2)
+metest min(1,2)
+metest _b[age] * #10
+<</dd_do>>
+```
+
+After `margins, post`, a number refers to a row of the `margins` table. E.g.,
+a risk ratio -- the ratio of two predicted probabilities, averaging over
+observed values -- in the Health and Retirement Study 2020:
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_hrs", clear
+drop if missing(cogB, marstatB, collegeB, woman, age)
+
+logit cogB i.collegeB i.marstatB i.woman c.age, or
+
+margins collegeB, post
+metest 1 / 2
+<</dd_do>>
+```
+
+Omitted (`o.`) coefficients are skipped when numbering, so check the numbers
+with `matrix list e(b)`. After some commands `test` reports *F* rather than
+chi-squared; run `metest, clear` before accumulating results from a model of
+the other kind.

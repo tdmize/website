@@ -1,0 +1,116 @@
+---
+title: "irt_me"
+subtitle: "Stata command for marginal effects from item response theory models"
+---
+<<dd_version: 2>>
+
+`irt_me` is a Stata command that automates the calculation of marginal
+effects after item response theory (IRT) models. In an IRT model the latent
+variable is the independent variable and the observed items are the
+dependent variables, so a marginal effect quantifies the relationship
+between the latent variable and an item in the predicted probability metric
+-- an alternative to interpreting the discrimination and difficulty
+parameters directly. `irt_me` works with every model the `irt` commands
+fit, with binary, ordinal, and nominal items as well as continuous and
+count items in `gsem`, and with a mix of item types in one model.
+
+The approach is described in the slides from my presentation at the 2024
+Italian Stata Conference:
+[Marginal effects for IRT models](https://drive.google.com/file/d/1lDXbnwYa2-8GSHTDyc3eGM7Jmvz97GDy/view?usp=sharing).
+It is also covered in my graduate course slides on
+[Item Response Theory](https://drive.google.com/file/d/1G9sWGLMAN6SGWzw3XqOXyBw7MC-R_hGI/view?usp=drive_link);
+all of the materials for the course, including example code, are on the
+[Latent Variable Modeling](https://www.trentonmize.com/teaching/lvm) page.
+
+## Installation
+
+```stata
+net install irt_me, from("https://tdmize.github.io/data") replace
+```
+
+To read the help file in Stata, type `help irt_me`; it is also
+[on this site](help.html).
+
+## Citation
+
+Please cite the use of `irt_me` as:
+
+> Mize, Trenton D. 2024. "Stata command for marginal effects from item
+> response theory models." <https://www.trentonmize.com/software/irt_me>
+
+## Examples
+
+### Load the data and fit the IRT model
+
+The example uses ten binary depression items from Add Health Wave IV and a
+two-parameter logistic model.
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/lvm_ah4", clear
+
+irt 2pl botherB bluesB keepmindB depressB tiredB dislikedB sadB ///
+        feltgoodBR happyBR enjoylifeBR
+<</dd_do>>
+```
+
+### Calculate the marginal effects
+
+By default `irt_me` reports, for each item, the change in the predicted
+probability for a one standard deviation increase in the latent variable,
+centered on its mean (from -0.5 to 0.5 on the standardized scale). The
+`help` option adds a legend beneath the table.
+
+```{.stata-run}
+<<dd_do>>
+irt_me, help
+<</dd_do>>
+```
+
+For an average person, a one standard deviation increase in latent
+depression is associated with a 0.334 increase in the probability of
+reporting being bothered by things last week (the `botherB` item).
+
+### The same model with gsem
+
+An identical model can be fit with `gsem`. Because `gsem` lets the latent
+variable take any name, the `latent()` option tells `irt_me` which one to
+use (after `irt` it is always `Theta`, and the option is not needed).
+
+```{.stata-run}
+<<dd_do>>
+gsem (Depress -> botherB bluesB keepmindB depressB tiredB dislikedB sadB ///
+                 feltgoodBR happyBR enjoylifeBR), logit var(Depress@1)
+<</dd_do>>
+```
+
+```{.stata-run}
+<<dd_do>>
+irt_me, latent(Depress)
+<</dd_do>>
+```
+
+### Marginal effects across the trimmed range of the latent variable
+
+The `range` option calculates the change in each item's probability across
+the trimmed range of the latent variable: from its 1st percentile to its
+99th percentile, as predicted for the sample.
+
+```{.stata-run}
+<<dd_do>>
+irt_me, range help
+<</dd_do>>
+```
+
+### Customized marginal effects
+
+`start()` and `end()` set any starting and ending values on the
+standardized scale of the latent variable. Here the change is from two to
+three standard deviations above the mean: the effect of becoming more
+depressed among those who are already highly depressed.
+
+```{.stata-run}
+<<dd_do>>
+irt_me, start(2) end(3) help
+<</dd_do>>
+```

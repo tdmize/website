@@ -1,0 +1,131 @@
+---
+title: "Group comparisons"
+subtitle: "Section 4.2 of Mize and Han (forthcoming): separate models for each group, and which observations to use"
+---
+<<dd_version: 2>>
+
+Group comparisons span interaction effects and cross-model comparisons. A
+single interaction term lets one variable's effect differ across groups; at
+the other end of the spectrum, separate models for each group let *every*
+effect differ. Mize and Han (forthcoming) discuss the trade-off and show both.
+This page reproduces Table 6 of the chapter (separate models for men and
+women) and its Section 4.2.c example of the choice of observations when a
+single model is used.
+
+## Separate models for each group (Table 6)
+
+The same happiness model as the chapter's Section 4.1 (the
+[nested models](nested-models.html) example) is fit separately for men and
+for women, on the 2000--2021 GSS respondents who are employed. The `groups`
+option tells `mecompare` that the two models were fit to non-overlapping
+samples, so each model's marginal effects are averaged over its own group;
+`groupnames()` labels the rows. With no varlist, every predictor is
+reported; `amount(sd)` sets a standard-deviation change for age, and
+`pwcompare` gives all of the race-ethnicity contrasts.
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/gss_cme", clear
+drop if year < 2000
+drop if employed != 1
+drop if missing(vhappy, college, wages, occprest, age, married, parent, woman, conserv, race)
+
+quietly logit vhappy i.college i.married i.parent i.conserv i.race c.age##c.age ///
+              if woman == 0, vce(robust)
+estimates store menmod
+
+quietly logit vhappy i.college i.married i.parent i.conserv i.race c.age##c.age ///
+              if woman == 1, vce(robust)
+estimates store wommod
+<</dd_do>>
+```
+
+```{.stata-run}
+<<dd_do>>
+mecompare, models(menmod wommod) groups groupnames(Men Women) amount(sd) pwcompare
+<</dd_do>>
+```
+
+Each block is one marginal effect: the effect for men, the effect for women,
+and the **Difference** (men minus women, the order of `models()`). Both married
+men and married women report being happier than their unmarried
+counterparts, and college degrees and conservatism have similar positive
+effects for both genders. The one significant gender difference is the
+effect of being a parent: it does not affect the probability of being very
+happy for men, but women who are parents are less likely to be very happy
+than women who are not.
+
+## Which observations: a single model with `by()`, `over()`, or separate models
+
+When the groups are in one model, there is a choice of which observations
+to use when calculating each group's marginal effect. The chapter's example
+compares Germany and Nigeria in the World Values Survey, two countries with
+very different age distributions, in a linear regression of acceptance of
+same-sex relationships on age (with a squared term) and country.
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/lvm_wvs6", clear
+drop if age < 18
+keep if country == 276 | country == 566
+
+quietly regress Jgaylesbian c.age##c.age i.country, vce(robust)
+estimates store glmod
+<</dd_do>>
+```
+
+The default -- and what `by()` does -- is to use *all* observations for
+every group's marginal effect: everyone is set to Germany, then everyone to
+Nigeria, and the effect of a ten-year increase in age is averaged over the
+whole sample each time. This controls for the two countries' different age
+distributions. Because this model has no age-by-country interaction, the
+counterfactual effects are identical:
+
+```{.stata-run}
+<<dd_do>>
+mecompare age, models(glmod) amount(10) by(country)
+<</dd_do>>
+```
+
+`over()` instead uses only each country's own respondents. The effect of age
+is nonlinear, so where a country's respondents sit on the age curve changes
+the average effect, and the two countries now differ even though they share
+every coefficient:
+
+```{.stata-run}
+<<dd_do>>
+mecompare age, models(glmod) amount(10) over(country)
+<</dd_do>>
+```
+
+Separate models with `groups`, as in Table 6 above, go one step further:
+each country has its own coefficients *and* its own observations, so the
+cross-model difference reflects both.
+
+```{.stata-run}
+<<dd_do>>
+quietly regress Jgaylesbian c.age##c.age if country == 276, vce(robust)
+estimates store germany
+quietly regress Jgaylesbian c.age##c.age if country == 566, vce(robust)
+estimates store nigeria
+
+mecompare age, models(germany nigeria) groups groupnames(Germany Nigeria) amount(10)
+<</dd_do>>
+```
+
+Which to report depends on the question. If the goal is to control for all
+differences across the groups, including the distributions of the focal and
+control variables, use a single model and all observations (`by()`). If the
+groups' different compositions are part of the question -- for example, which
+group an intervention would matter more for -- use group-specific
+observations (`over()`) or separate models (`groups`). The chapter's Section
+4.2.b--c discusses the two causal questions behind this choice; the
+[Options](../options.html#by-and-over-effects-within-levels-of-another-variable)
+page has more on `by()` versus `over()`.
+
+## Reference
+
+> Mize, Trenton D. and Bing Han. Forthcoming. "Marginal effects: flexible
+> methods for interpretation across linear and nonlinear models." In
+> *Understanding Data Modeling and Data Analysis*, edited by David Weakliem.
+> Edward Elgar Publishing.

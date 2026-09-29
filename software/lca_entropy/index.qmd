@@ -1,0 +1,307 @@
+---
+title: "lca_entropy"
+subtitle: "Stata command for entropy fit statistics for latent class analysis"
+---
+
+`lca_entropy` is a Stata command that calculates an entropy fit statistic
+for a latent class analysis (LCA) model. The LCA model should be fit using
+`gsem` in Stata with the `lclass()` option. Entropy summarizes how cleanly
+the model separates the observations into classes: it runs from 0 to 1, and
+values closer to 1 indicate that each observation is assigned to one class
+with high posterior probability.
+
+Entropy is discussed in my graduate course slides on latent class analysis
+(pages 742--744): [Latent Class Analysis slides](https://drive.google.com/file/d/1eyomPFrld6ByupZUpOxjXcAFkfgiRWyO/view?usp=drive_link).
+All of the materials for the course are on the
+[Latent Variable Modeling](https://www.trentonmize.com/teaching/lvm) page.
+
+## Installation
+
+```stata
+net install lca_entropy, from("https://tdmize.github.io/data") replace
+```
+
+To read the help file in Stata, type `help lca_entropy`; it is also
+[on this site](help.html).
+
+## Citation
+
+Please cite the use of `lca_entropy` as:
+
+> Mize, Trenton D. 2024. "lca_entropy: Stata command for entropy fit
+> statistics for latent class analysis."
+> <https://www.trentonmize.com/software/lca_entropy>
+
+## Example
+
+The example recreates the three-class model of cultural participation in
+Alderson, Junisbai, and Heacock (2007) from seven GSS items on attending
+the opera, dance, drama, and art museums, popular music concerts, reading
+fiction, and going to the movies. Load the 1998 and 2002 GSS respondents
+who answered every item:
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/cda_gss", clear
+(cda_gss.dta |  GSS 1972-2021 CDA - Categorical Data Analysis | date created 2023)
+
+. keep if year == 1998 | year == 2002
+(63,249 observations deleted)
+
+. drop if missing(opera, dance, drama, visitart, popmusic, readfict, seemovie)
+(2,813 observations deleted)
+
+```
+
+Fit the LCA with `gsem`. The constraint on the intercept of `opera` in
+class 1 handles a boundary estimate -- a class in which essentially no one
+attends the opera -- so that the model converges:
+
+```{.stata-run}
+. gsem (-> opera dance drama visitart popmusic readfict seemovie, logit) ///
+>      (1: opera <- _cons@-15) ///
+>      , lclass(Class 3)
+
+Fitting class model:
+
+Iteration 0:  (class) log likelihood = -3058.5366  
+Iteration 1:  (class) log likelihood = -3058.5366  
+
+Fitting outcome model:
+
+Iteration 0:  (outcome) log likelihood = -8109.6013  
+Iteration 1:  (outcome) log likelihood = -7932.4997  
+Iteration 2:  (outcome) log likelihood = -7917.6417  
+Iteration 3:  (outcome) log likelihood = -7916.7526  
+Iteration 4:  (outcome) log likelihood = -7916.7418  
+Iteration 5:  (outcome) log likelihood = -7916.7418  
+
+Refining starting values:
+
+Iteration 0:  (EM) log likelihood = -11406.301
+Iteration 1:  (EM) log likelihood = -11442.997
+Iteration 2:  (EM) log likelihood = -11427.125
+Iteration 3:  (EM) log likelihood =  -11408.48
+Iteration 4:  (EM) log likelihood = -11394.017
+Iteration 5:  (EM) log likelihood = -11383.627
+Iteration 6:  (EM) log likelihood = -11376.274
+Iteration 7:  (EM) log likelihood = -11371.043
+Iteration 8:  (EM) log likelihood = -11367.264
+Iteration 9:  (EM) log likelihood = -11364.478
+Iteration 10: (EM) log likelihood = -11362.371
+Iteration 11: (EM) log likelihood = -11360.735
+Iteration 12: (EM) log likelihood = -11359.428
+Iteration 13: (EM) log likelihood = -11358.358
+Iteration 14: (EM) log likelihood = -11357.459
+Iteration 15: (EM) log likelihood = -11356.688
+Iteration 16: (EM) log likelihood = -11356.014
+Iteration 17: (EM) log likelihood = -11355.418
+Iteration 18: (EM) log likelihood = -11354.883
+Iteration 19: (EM) log likelihood = -11354.399
+Iteration 20: (EM) log likelihood = -11353.958
+note: EM algorithm reached maximum iterations.
+
+Fitting full model:
+
+Iteration 0:  Log likelihood = -10148.704  
+Iteration 1:  Log likelihood = -10148.525  
+Iteration 2:  Log likelihood = -10148.523  
+Iteration 3:  Log likelihood = -10148.523  
+
+Generalized structural equation model                    Number of obs = 2,784
+Log likelihood = -10148.523
+
+ ( 1)  [opera]1bn.Class = -15
+
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.Class      |  (base outcome)
+-------------+----------------------------------------------------------------
+2.Class      |
+       _cons |      0.344      0.139    2.472   0.013        0.071       0.617
+-------------+----------------------------------------------------------------
+3.Class      |
+       _cons |     -0.121      0.133   -0.909   0.364       -0.382       0.140
+------------------------------------------------------------------------------
+
+Class:    1        
+
+Response: opera    
+Family:   Bernoulli
+Link:     Logit    
+
+Response: dance    
+Family:   Bernoulli
+Link:     Logit    
+
+Response: drama    
+Family:   Bernoulli
+Link:     Logit    
+
+Response: visitart 
+Family:   Bernoulli
+Link:     Logit    
+
+Response: popmusic 
+Family:   Bernoulli
+Link:     Logit    
+
+Response: readfict 
+Family:   Bernoulli
+Link:     Logit    
+
+Response: seemovie 
+Family:   Bernoulli
+Link:     Logit    
+
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+opera        |
+       _cons |    -15.000  (constrained)
+-------------+----------------------------------------------------------------
+dance        |
+       _cons |     -5.023      0.833   -6.030   0.000       -6.655      -3.390
+-------------+----------------------------------------------------------------
+drama        |
+       _cons |     -3.596      0.338  -10.629   0.000       -4.258      -2.933
+-------------+----------------------------------------------------------------
+visitart     |
+       _cons |     -2.277      0.180  -12.658   0.000       -2.630      -1.925
+-------------+----------------------------------------------------------------
+popmusic     |
+       _cons |     -2.897      0.377   -7.683   0.000       -3.635      -2.158
+-------------+----------------------------------------------------------------
+readfict     |
+       _cons |     -0.295      0.110   -2.686   0.007       -0.510      -0.080
+-------------+----------------------------------------------------------------
+seemovie     |
+       _cons |     -0.808      0.177   -4.574   0.000       -1.154      -0.462
+------------------------------------------------------------------------------
+
+Class:    2        
+
+Response: opera    
+Family:   Bernoulli
+Link:     Logit    
+
+Response: dance    
+Family:   Bernoulli
+Link:     Logit    
+
+Response: drama    
+Family:   Bernoulli
+Link:     Logit    
+
+Response: visitart 
+Family:   Bernoulli
+Link:     Logit    
+
+Response: popmusic 
+Family:   Bernoulli
+Link:     Logit    
+
+Response: readfict 
+Family:   Bernoulli
+Link:     Logit    
+
+Response: seemovie 
+Family:   Bernoulli
+Link:     Logit    
+
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+opera        |
+       _cons |     -2.692      0.240  -11.201   0.000       -3.163      -2.221
+-------------+----------------------------------------------------------------
+dance        |
+       _cons |     -2.150      0.202  -10.657   0.000       -2.546      -1.755
+-------------+----------------------------------------------------------------
+drama        |
+       _cons |     -1.776      0.169  -10.495   0.000       -2.107      -1.444
+-------------+----------------------------------------------------------------
+visitart     |
+       _cons |     -0.740      0.122   -6.080   0.000       -0.979      -0.502
+-------------+----------------------------------------------------------------
+popmusic     |
+       _cons |     -0.008      0.117   -0.064   0.949       -0.237       0.222
+-------------+----------------------------------------------------------------
+readfict     |
+       _cons |      1.197      0.111   10.777   0.000        0.979       1.414
+-------------+----------------------------------------------------------------
+seemovie     |
+       _cons |      1.681      0.164   10.240   0.000        1.359       2.002
+------------------------------------------------------------------------------
+
+Class:    3        
+
+Response: opera    
+Family:   Bernoulli
+Link:     Logit    
+
+Response: dance    
+Family:   Bernoulli
+Link:     Logit    
+
+Response: drama    
+Family:   Bernoulli
+Link:     Logit    
+
+Response: visitart 
+Family:   Bernoulli
+Link:     Logit    
+
+Response: popmusic 
+Family:   Bernoulli
+Link:     Logit    
+
+Response: readfict 
+Family:   Bernoulli
+Link:     Logit    
+
+Response: seemovie 
+Family:   Bernoulli
+Link:     Logit    
+
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+opera        |
+       _cons |      0.092      0.108    0.858   0.391       -0.119       0.304
+-------------+----------------------------------------------------------------
+dance        |
+       _cons |      0.468      0.113    4.147   0.000        0.247       0.690
+-------------+----------------------------------------------------------------
+drama        |
+       _cons |      0.873      0.135    6.447   0.000        0.608       1.139
+-------------+----------------------------------------------------------------
+visitart     |
+       _cons |      1.630      0.171    9.510   0.000        1.294       1.966
+-------------+----------------------------------------------------------------
+popmusic     |
+       _cons |      0.643      0.093    6.917   0.000        0.461       0.825
+-------------+----------------------------------------------------------------
+readfict     |
+       _cons |      2.203      0.154   14.329   0.000        1.901       2.504
+-------------+----------------------------------------------------------------
+seemovie     |
+       _cons |      2.227      0.168   13.242   0.000        1.897       2.556
+------------------------------------------------------------------------------
+
+```
+
+Estimate entropy with `lca_entropy`; the statistic is also returned in
+`r(entropy)`:
+
+```{.stata-run}
+. lca_entropy
+Entropy =  0.607
+
+```
+
+## Reference
+
+> Alderson, Arthur S., Azamat Junisbai, and Isaac Heacock. 2007. "Social
+> Status and Cultural Consumption in the United States." *Poetics* 35(2--3):
+> 191--212. <https://www.sciencedirect.com/science/article/abs/pii/S0304422X07000186>

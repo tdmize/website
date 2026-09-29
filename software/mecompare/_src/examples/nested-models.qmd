@@ -1,0 +1,63 @@
+---
+title: "Nested logit models and mediation/attenuation"
+subtitle: "Example 6.2 of Mize, Doan, and Long (2019)"
+---
+<<dd_version: 2>>
+
+One of the most common cross-model questions is whether an effect changes when
+controls are added, such as in tests of mediation/attenuation. Here the effect
+of a college degree on the probability of being very happy is compared across
+four nested logits: the bivariate model, then a full set of controls, then
+wages, then occupational prestige. Unlike logit coefficients, marginal effects
+-- here, changes in the predicted probability -- can be compared across models
+without the problem of rescaling.
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/gss_cme", clear
+drop if year < 2000
+drop if employed != 1
+drop if missing(vhappy, college, wages, occprest, age, married, parent, woman, conserv, reltrad)
+
+quietly logit vhappy i.college, vce(robust)
+estimates store m1
+
+quietly logit vhappy i.college i.married i.parent i.woman i.conserv ///
+              i.reltrad i.year c.age##c.age, vce(robust)
+estimates store m2
+
+quietly logit vhappy i.college c.wages i.married i.parent i.woman i.conserv ///
+              i.reltrad i.year c.age##c.age, vce(robust)
+estimates store m3
+
+quietly logit vhappy i.college c.wages c.occprest i.married i.parent i.woman ///
+              i.conserv i.reltrad i.year c.age##c.age, vce(robust)
+estimates store m4
+<</dd_do>>
+```
+
+```{.stata-run}
+<<dd_do>>
+mecompare college, models(m1 m2 m3 m4)
+<</dd_do>>
+```
+
+Use [`metest`](../../metest/index.html) to calculate the cross-model tests.
+Here, whether the effect diminishes in each subsequent model.
+
+```{.stata-run}
+<<dd_do>>
+metest, clear
+metest 1 - 2, add
+metest 2 - 3, add
+metest 3 - 4, add
+<</dd_do>>
+```
+
+With two models, the **Difference** row is printed directly:
+
+```{.stata-run}
+<<dd_do>>
+mecompare college, models(m1 m2)
+<</dd_do>>
+```

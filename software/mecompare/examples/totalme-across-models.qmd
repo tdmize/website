@@ -1,0 +1,98 @@
+---
+title: "Comparing Total MEs across models"
+subtitle: "Example 5.2.e of Mize and Han (2025): mediation/attenuation with a multi-category outcome"
+---
+
+With a nominal or ordinal outcome, each predictor has one marginal effect per
+outcome category. The Total ME of Mize and Han (2025) summarizes them in one
+number: the sum of the absolute effects, divided by two. The `totalme` option
+of `mecompare` adds it above the per-category effects; with two models, the
+**Difference** row tests whether the Total ME changed.
+
+Here the question is whether the total effect of a college degree on
+self-rated health shrinks once family income is in the model. The outcome has
+five ordered categories and is fit with a multinomial logit on the 2000--2021
+GSS. Store the model without income and the model with it, and name both in
+`models()`.
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/cda_gss", clear
+(cda_gss.dta |  GSS 1972-2021 CDA - Categorical Data Analysis | date created 2023)
+
+. drop if missing(healthR, college, race4, age, woman, parent, married, faminc)
+(22,943 observations deleted)
+
+. drop if year < 2000 | year > 2021
+(26,611 observations deleted)
+
+. 
+. quietly mlogit healthR i.college i.race4 c.age i.woman i.parent i.married, vce(robust)
+
+. estimates store basemod
+
+. 
+. quietly mlogit healthR i.college i.race4 c.age i.woman i.parent i.married c.faminc, vce(robust)
+
+. estimates store medmod
+
+```
+
+```{.stata-run}
+. mecompare i.college, models(basemod medmod) totalme
+
+
+Predicting: Pr(healthR)
+
+Marginal effects and cross-model differences (N_basemod=19292) (N_medmod=19292)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+college                          |                                       
+    College Deg - No Col Deg     |                                       
+                    Total ME     |                                       
+                         basemod |     1      0.159      0.006      0.000
+                          medmod |     2      0.118      0.007      0.000
+                      Difference |     3      0.041      0.003      0.000
+                  Poor - basemod |     4     -0.047      0.003      0.000
+                   Poor - medmod |     5     -0.033      0.003      0.000
+               Poor - Difference |     6     -0.015      0.002      0.000
+                  Fair - basemod |     7     -0.112      0.006      0.000
+                   Fair - medmod |     8     -0.085      0.006      0.000
+               Fair - Difference |     9     -0.027      0.002      0.000
+                  Good - basemod |    10      0.024      0.008      0.003
+                   Good - medmod |    11      0.021      0.009      0.015
+               Good - Difference |    12      0.003      0.003      0.301
+             Excellent - basemod |    13      0.135      0.007      0.000
+              Excellent - medmod |    14      0.097      0.008      0.000
+          Excellent - Difference |    15      0.038      0.003      0.000
+
+```
+
+The first block is the Total ME of a college degree in each model and the
+**Difference**: the part of the college effect that family income accounts
+for. The blocks beneath it are the effects of college on each health category,
+which show where the attenuation comes from.
+[`metest`](../../metest/index.html) gives the attenuation as a proportion of
+the baseline Total ME:
+
+```{.stata-run}
+. metest (1 - 2) / 1
+
+                                 |  estimate         se     pvalue 
+---------------------------------+--------------------------------
+college_TotME                    |                                
+    (basemod - medmod) / basemod |     0.260      0.020      0.000 
+
+```
+
+`totalme college, models(basemod medmod)` gives the same difference. The
+`totalme` option also works for continuous predictors (with `amount()`) and
+for nominal predictors (a Total ME inequality); the
+[Options](../options.html#meinequality-and-totalme-summary-measures) page
+has an example of each.
+
+## Reference
+
+> Mize, Trenton D. and Bing Han. 2025. "Inequality and Total Effect Summary
+> Measures for Nominal and Ordinal Variables." *Sociological Science* 12:
+> 115--157.

@@ -1,0 +1,307 @@
+---
+title: "meinequality help file"
+subtitle: "The installed help file, rendered for the web"
+toc-depth: 3
+---
+
+::: {.callout-note appearance="simple"}
+This page is generated from `meinequality.sthlp` by `build.do`, so it matches the
+installed version. In Stata, type `help meinequality`.
+:::
+
+## Title
+
+**`meinequality` --** `ME Inequality` (**M**arginal **E**ffects **Inequality**) calculates marginal effects (ME) inequality statistics for independent variables specified as nominal/factors by averaging the absolute values of all marginal effects for the nominal independent variable, which represent all pairwise comparisons of predictions for the variable. The command supports estimation for one or two models. In the two model case, the inequality of the meinequality statistics across models is automatically calculated. `meinequality` can compute both weighted and unweighted ME Inequality statistics. `meinequality` can be used after most regression models.
+
+## General syntax
+
+`meinequality` *varlist* *ifin* `,` [options]
+
+<span id="overview"></span>
+
+## Overview
+
+`meinequality` implements the *ME inequality* method of Mize and Han (2025) to compute a marginal effects inequality statistics for an independent variable specified as nominal/factor by summarizing the absolute differences in predictions across all pairwise combinations of levels of the independent variable. The command can calculate ME Inequality within a single model or compare ME Inequality across two models using seemingly unrelated estimation (SUEST) to combine model estimates via the [suest2](../suest2/help.html) command.
+
+`meinequality` supports the calculation of ME Inequality for one or more nominal and/or binary independent variables simultaneously.
+
+`meinequality` supports both weighted and unweighted estimations. Weighted ME Inequality accounts for the relative frequency of each level of the nominal variable in the sample. Unweighted ME Inequality computes the average pairwise absolute difference without considering the relative frequencies.
+
+`meinequality` accepts one or two models from every estimation command the suite supports; see [Supported estimators](help.html#estimators) below for the list and for the rules that apply when two models are compared.
+
+## Table of contents
+
+- [Which models and estimators are supported](help.html#estimators)
+
+- [Setting weighted/unweighted calculations](help.html#Weighted)
+
+- [Setting values of the covariates](help.html#covariates)
+
+- [Required option for two model comparison](help.html#Models)
+
+- [Required option if fitting models over two distinct samples](help.html#groups)
+
+- [Estimations for subpopulations](help.html#by/over)
+
+- [Setting sample weights and multiple imputation estimates](help.html#sampleweights)
+
+- [Optional options for formatting, reporting, missing data, etc.](help.html#options)
+
+- [Saved estimates and matrices](help.html#matrices)
+
+- [Bootstrap standard errors](help.html#bootstrap)
+
+- [Examples](help.html#examples)
+
+<span id="estimators"></span>
+
+## Supported estimators
+
+`meinequality` accepts one or two models from the following families. When two are given they must be the same estimation command; see [Pairing two models](help.html#pairs) below.
+
+### Ordinary single-level models
+
+`regress`; `logit` and `logistic`; `probit`; `poisson`; `nbreg`; `ologit`; `oprobit`; and `mlogit`.
+
+`glm`; `cloglog`; `tobit`; `intreg`; maximum-likelihood `heckman`; and parametric `streg`, all parametric distributions.
+
+`gologit2`, all forms.
+
+`ivregress 2sls`.
+
+`fracreg` with estimators: logit, probit.
+
+`betareg`, all four links; `truncreg`; `hetprobit`; `zip` and `zinb`, both inflation links; and `biprobit`.
+
+`ivprobit` and `ivtobit`.
+
+### Panel models
+
+`xtreg` with estimators: mle, fe, be, re, pa. `xtreg, cre` is not supported.
+
+`xtlogit` with estimators: re, fe, pa. `xtprobit` with estimators: re, pa. `xtcloglog` with estimators: re, pa; the re estimator combines when fit with `intpoints(24)` (or >24).
+
+`xtologit` and `xtoprobit`.
+
+`xtmlogit` with estimators: re, fe.
+
+`xtpoisson` with estimators: re (normal or gamma random effects), fe, pa. `xtnbreg` with estimators: re, pa. `xtnbreg, fe` is not supported: Stata exposes no `predict, scores` for it in any form.
+
+### Multilevel models
+
+`mixed, mle`; `melogit`; `meprobit`; `mecloglog`; `mepoisson`; `menbreg`; `meologit`; `meoprobit`; and `mestreg`, all parametric distributions.
+
+Supported `meglm` family-link pairs are Gaussian-identity and Gamma-log.
+
+<span id="pairs"></span>
+
+### Pairing two models
+
+Both models must be the **same** estimation command. A pair of two different commands is refused, naming both. ([mecompare](../mecompare/help.html) allows a pair of different commands and is recommended for non-standard applications of ME inequality statistics.)
+
+The outcome may have **any** number of categories, for a single model and for a two-model comparison alike. When it has more than two, one set of statistics is returned *per outcome category*.
+
+<span id="scale"></span>
+
+### Families whose statistic is not a probability
+
+For a few families the statistic [suest2](../suest2/help.html) supplies is not on a probability scale, and the ME Inequality inherits whatever scale it is on. `ivprobit` and `ivtobit` return the structural linear index, and `truncreg` its own linear prediction, so for these the statistic is in the units of the index rather than of a probability. It is still the ME Inequality of that quantity and is compared across models in the usual way, but it should not be read beside a statistic from, say, `probit` as though the two were on one scale.
+
+## Options
+
+<span id="Weighted"></span>
+
+### Weighted options
+
+**`weighted`** is the default if no option is specified. A weighted *ME inequality* accounts for the relative frequency of each level of the nominal variable in the sample. The weight assigned to each pairwise comparison is the sum of the proportions of the two levels used in the comparison, with a correction for each group being used in multiple comparisons: w_ab = (prop_a + prob_b)/(L - 1). Here, prop_a and prop_b refer to the proportions of the sample in Levels A and B, respectively. The term L-1 serves as a correction for the fact that each group is represented in multiple contrasts, ensuring the total sums to 1.
+
+The proportions are taken over the model's estimation sample. When two models are fit on separate samples (`groups`), each model's contrasts are weighted by the proportions in **its own** sample. The two ME inequality statistics can then differ both because the marginal effects differ and because the composition of the nominal variable differs across the samples; specify `unweighted` if the comparison should reflect differences in the marginal effects alone.
+
+**`unweighted`** gives all groups equal weight in the calculation by ignoring the relative frequency of each level of the nominal variable in the sample.
+
+**`all`** reports both the `weighted` and `unweighted` inequality measures. For a binary variable the two are equal, and only the weighted one is shown.
+
+<span id="covariates"></span>
+
+### Setting values of covariates
+
+**`atmeans`** By default, the observed values of the other variables in the model are used for calculating the marginal effects (i.e., the margins default of *asobserved* is used; see `margins`). Alternatively, the covariates can be set to their sample means with the `atmeans` option.
+
+<span id="Models"></span>
+
+### Models Option
+
+**`models(list)`** is required to compare *ME inequalities* across two models. The models must have been estimated and saved using `estimates store` before running `meinequality`. `models(list)` is optional for one model estimation; if no `models(list)` option is included the default is to use the model estimates in memory. `meinequality` is limited to one or two models. The `vce(robust)` option is strongly recommended when conducting two-model comparisons because SUEST is used to combine the model estimates which uses robust variance estimation.
+
+<span id="groups"></span>
+
+### Groups options
+
+**`groups`** specifies that the two models used for comparison are fit on distinct samples. When the `groups` option is specified, the models listed in the `models(list)` option must have been fit separately across distinct samples (e.g., distinct groups in data). `group(varname)`, the syntax of earlier versions, is also accepted; *varname* must take one value in each model's sample and a different value in each model.
+
+With `groups`, a weighted ME inequality weights each model by the level proportions of **its own** sample. The comparison therefore reflects differences in the marginal effects *and* differences in composition between the samples. Use `unweighted` to compare the marginal effects alone.
+
+<span id="by/over"></span>
+
+### Subpopulation estimation options
+
+**`by(varname)`** estimates ME inequality separately for each level of the specified binary or nominal variable, using the full sample. For each level, the estimation is based on the entire sample with the subpopulation variable counterfactually set to that level. The subpopulation variable must be binary or nominal and must also be included as a covariate in the model. This option uses the `at()` option of `margins`.
+
+**`over(varname)`** estimates ME inequality separately for each level of the specified binary or nominal variable, using only the subsample of observations that have that specific value. This option uses the `over()` option from the `margins` command to compute marginal effects within each group-specific subsample; see [margins] over option.
+
+Neither option may name one of the focal variables: `meinequality` does not estimate the ME inequality of a variable within levels of that same variable and exits with an error; [mecompare](../mecompare/help.html) handles that case.
+
+With either option the table also holds a **Diff.** row for each pair of levels of the `by()` or `over()` variable -- the ME inequality at the first level minus that at the second, with its standard error and test, which is the test of whether the inequality differs across the groups (a test of interaction). With a multi-category outcome there is one Diff. row per outcome; with two models the Diff. rows are given for model 1, model 2, and the cross-model difference. Rows are labelled **Diff.** when the variable has two levels and **Diff.1**, **Diff.2**, ... when it has more, one per pair; the level each row subtracts is printed under the table. All quantities come from one `margins` call, so the tests use the joint covariance of the levels.
+
+<span id="sampleweights"></span>
+
+### Sample weights and multiple imputation estimation options
+
+**`mi and svy`** Models fit with `mi`, `svy`, and `mi estimate: svy:` prefixes are supported. Specify the prefixes on the models themselves, not with `meinequality`; with two models both must use the same prefixes. Under `mi`, fit with `mi estimate:` or `mi estimate, post:` -- with one model both are accepted and return the same pooled statistic; with two models, fit both with `mi estimate, post:` -- and store with `estimates store`; declare a survey design with `mi svyset` rather than `svyset`. The user-written *mimrgns* is used for the marginal effects and must be installed separately.
+
+*Multilevel models need a stage weight.* For the multilevel (`me`...) families, a weight alone is not enough: the model must carry a higher-level weight too, as in `melogit y x [pw=w2] || group:, pweight(w1)`. A model fit with a weight but no `pweight()` has no design to build from and is refused. The better alternative is the `svy:` prefix, which carries the whole design from `svyset` and is the recommended way to specify one.
+
+**`[weight]`** When possible, use `svyset` and the `svy:` prefix to apply weights to a model. However, you may instead specify a weight directly on the **stored models** -- e.g. `logit y x [pw=w]`. `meinequality` takes the weighting from the models, so the results reported are the ones the stored models themselves imply. With two models, both must carry the same weight.
+
+<span id="options"></span>
+
+### Additional Optional Options
+
+**`level(#)`** sets the confidence level for reported confidence intervals. The default is `level(95)`. Values from 10 to 99 are allowed.
+
+**`decimals(#)`** changes the number of decimal places reported in the table. The default is 3. Any integer between 0 - 7 is allowed.
+
+**`ci`** adds the lower and upper bounds of the confidence intervals (CIs) for all estimates, at the level set by `level(#)` (95% by default).
+
+**`labwidth(#)`** changes the width of the leftmost column of the table that provides the labels for the variables and associated marginal effects. The default is 24. Any integer between 20 - 32 is allowed.
+
+**`title(string)`** changes title of the output table. The default is "ME Inequality Estimates".
+
+**`groupnames(string)`** specifies the row names in the table corresponding to the ME Inequality for Model 1 and Model 2. Two group names must be provided; there can be no spaces in each group name. The `groups` option is required when using `groupnames(string)`. By default, the rows are named based on the stored estimate names specified in the `models(list)` option. Long names are shortened only as needed to fit the table.
+
+**`commands`** displays the command of each model, the `margins` command used to calculate the predictions that make up the ME inequality estimate, and when two models are used, the `suest2` command used to combine the two models.
+
+**`details`** displays the output of the `margins` command and, when two models are used, the `suest2` output.
+
+<span id="matrices"></span>
+
+### Saved estimates and matrices
+
+`meinequality` uses `margins` to estimate the predictions for the *ME inequality* estimate. In the two-model case it combines the two **stored** models with [suest2](../suest2/help.html). These results are stored and can be restored after `meinequality` (via `estimates restore`). The `margins` results which contain the predictions that are the constituent pieces of the marginal effects `meinequality` calculates are stored as *meineq_margins*. The combined model estimates are stored as *meineq_suest2*.
+
+The command saves estimation results that can be retrieved using `return list`, including scalars for each estimated inequality score and a matrix containing all results.
+
+When the outcome has more than two categories the scalars carry an outcome suffix: `r(wem1`*#*`_o`*#*`)` is the weighted statistic for model 1, variable *#*, outcome *#*. The unsuffixed names are used when the outcome is binary or continuous.
+
+In the scalar names below, *#* is the variable's number within the *varlist* (the first nominal variable is 1). With a multi-category outcome the outcome is appended as `_o`*#* -- one scalar per outcome, matching the rows displayed -- and with a binary outcome nothing is appended, since there is only one. `by()` and `over()` then append `_`*level*, and their Diff. rows append `_d`*level1*`_`*level2* instead (e.g. `r(wem11_d0_1)` is the weighted ME inequality of the first variable at level 0 minus that at level 1). With one model only the `m1` names are returned.
+
+| scalar | Description |
+|:--|:--|
+| *Weighted ME inequality* | |
+| `r(wem1`*#*`)` | model 1 |
+| `r(wem2`*#*`)` | model 2 |
+| `r(wed`*#*`)` | cross-model difference |
+| *Unweighted ME inequality* | |
+| `r(uwem1`*#*`)` | model 1 |
+| `r(uwem2`*#*`)` | model 2 |
+| `r(uwed`*#*`)` | cross-model difference |
+| *Other* | |
+| `r(n_mods)` | number of models |
+| `r(n_vars)` | number of variables |
+
+`meinequality` saves the current table to the matrix `r(table)`, one row per displayed quantity by six columns: estimate, standard error, *z*, *p*, and the two confidence limits. All six columns are returned whether or not `ci` is displayed.
+
+`r(se_missing)` counts the quantities in that table whose standard error could not be computed. It is normally 0. When it is not, the point estimates are still reported but their standard error, *z*, *p* and confidence limits come back missing, and a note to that effect is printed beneath the table. This usually happens when a predicted quantity is near zero.
+
+<span id="bootstrap"></span>
+
+### Bootstrap standard errors
+
+`meinequality` uses `nlcom` to calculate standard errors via the delta method. Users can instead use the `bootstrap` command to estimate standard errors for `meinequality`. This can be particularly useful when the model encounters convergence issues or when standard errors are otherwise unavailable or unreliable. When using `bootstrap`, you should wrap the `meinequality` command inside the `bootstrap` prefix to obtain bootstrap-based standard errors for the inequality measures. See `bootstrap` for more information on syntax and options.
+
+<span id="examples"></span>
+
+## Examples
+
+```stata
+sysuse 			nlsw88, clear
+```
+
+**Single model**
+
+```stata
+reg 				wage i.race c.age i.married
+meinequality 	race
+meinequality 	race, unweighted
+```
+
+**Compare across two models on same sample**
+
+```stata
+logit 			union i.race, vce(robust)
+est store 		basemod
+logit 			union i.race c.age i.married, vce(robust)
+est store 		medmod
+meinequality 	race, models(basemod medmod)
+```
+
+**ME inequality by group in the second model, with the Diff. row testing whether it differs**
+
+```stata
+meinequality 	race, models(medmod) by(married)
+```
+
+**Compare across distinct samples/groups for two models**
+
+```stata
+logit 			union i.race c.age if married == 0, vce(robust)
+est store 		notmar
+logit 			union i.race c.age if married == 1, vce(robust)
+est store 		marry
+meinequality 	race, models(notmar marry) group
+```
+
+**Nominal or ordinal outcome models**
+
+```stata
+mlogit 			industry i.race c.age
+meinequality 	race
+```
+
+**Bootstrap example**
+
+```stata
+capture program drop boot_mei
+program define boot_mei, rclass
+reg wage i.race c.age i.married
+meinequality race
+return scalar w_mei = r(wem11)
+end
+bootstrap w_mei=r(w_mei), reps(1000): boot_mei
+```
+
+<span id="prereq"></span>
+
+## Required packages
+
+`meinequality` requires the [suest2](../suest2/help.html) package, which supplies `suest2` itself and the shared helpers the command calls.
+
+## Comments
+
+`meinequality` implements the methods described in Mize and Han's 2025 article "Inequality and Total Effect Summary Measures for Nominal and Ordinal Variables".
+
+`meinequality` uses seemingly unrelated estimation to combine the model estimates in the two model case. See `suest` and Weesie (1999) for details on the method.
+
+## Stata version
+
+`meinequality` requires Stata 16 or later. A do-file that sets `version` must set version 16 or later; under an older version the command stops with a message.
+
+## Authorship
+
+`meinequality` and its sister command, `totalme`, are written by Bing Han (Population Research Institute, Penn State University) and Trenton D Mize (Departments of Sociology & Statistics and The Methodology Center at Purdue University). Questions can be sent to han644@purdue.edu or tmize@purdue.edu.
+
+## References
+
+Mize, Trenton D. and Bing Han. 2025. Inequality and total effect summary measures for nominal and ordinal variables. *Sociological Science*.
+
+Weesie, Jeroen. 1999. sg121: Seemingly Unrelated Estimation and the Cluster-Adjusted Sandwich Estimator. *Stata Technical Bulletin*. 52:34-47.

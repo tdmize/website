@@ -1,0 +1,150 @@
+---
+title: "Nonlinear effects in a linear model"
+subtitle: "Age, age², and gender: Table 2 and Figures 1--2 of Mize (2019)"
+---
+<<dd_version: 2>>
+
+Even linear regression models often produce nonlinear effects, e.g. when the 
+model has a polynomial specification such as a squared term. In the case of 
+nonlinearities, questions like "does the effect of age differ for men and
+women?" have no single answer: it depends on where in the range of age you ask.
+The article's first example regresses hourly wages on age, age², gender, and
+their products, using employed respondents from the pooled GSS.
+
+## The model
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/nli_gss", clear
+drop if missing(wages, age, woman, parent, year, race, college, parttime, employed)
+keep if employed == 1
+
+quietly regress wages c.age##c.age##i.woman i.parent c.year i.race i.college i.parttime, vce(robust)
+estimates store regwages
+<</dd_do>>
+```
+
+## Start with the predictions (Figure 1)
+
+The article recommends plotting the predictions first, with `margins` and
+`marginsplot`, and letting the plot guide the tests.
+
+```{.stata-run}
+<<dd_do>>
+quietly margins woman, at(age=(18(2)72))
+marginsplot, recastci(rline) ciopts(lpattern(dash) color(*.4)) ///
+    plotopts(lwidth(medthick) msymbol(none)) ///
+    xlabel(20(10)70) ylabel(0(5)25) xtitle("Age in years") ytitle("Hourly wages") ///
+    title("Figure 1. Predicted wages by age and gender")
+graph export "fig/nli-wages-predictions.png", replace width(1400)
+<</dd_do>>
+```
+
+![](../fig/nli-wages-predictions.png){width=80% fig-alt="Predicted hourly wages by age, for men and women, with confidence intervals."}
+
+Wages rise with age and then fall, and the curves for men and women are not
+parallel. Whether the effect of age differs by gender therefore has to be asked
+at particular ages, or on average across the sample. Table 2 of the article
+does both.
+
+## The effect of age for men and women (Table 2)
+
+The first row of Table 2 is the effect of aging from 25 to 30. `start(age=25)`
+puts everyone at 25, `amount(5) uncentered` moves them to 30, and `by(woman)`
+calculates these effects for both men and for women. The second difference --
+whether the effect of aging is the same for men and women -- is `metest 1 -
+2`.
+
+```{.stata-run}
+<<dd_do>>
+mecompare age, models(regwages) start(age=25) amount(5) uncentered by(woman)
+metest 1 - 2
+<</dd_do>>
+```
+
+The same test from 65 to 70:
+
+```{.stata-run}
+<<dd_do>>
+mecompare age, models(regwages) start(age=65) amount(5) uncentered by(woman)
+metest 1 - 2
+<</dd_do>>
+```
+
+Getting older raises wages more for men than for women in the twenties, while
+in the sixties the effect is negative and not statistically different across 
+genders. An interaction that exists at one part of the range of age need 
+not exist at another.
+
+Absent a specific age of interest, the last row of Table 2 asks the question on
+average: a five-year increase from each person's own age, averaged over the
+sample. Dropping `start()` does that.
+
+```{.stata-run}
+<<dd_do>>
+mecompare age, models(regwages) amount(5) uncentered by(woman)
+metest 1 - 2
+<</dd_do>>
+```
+
+On average, there is a difference in the effect of age for men and women.
+
+## The other side: the effect of gender across age (Figure 2)
+
+An interaction involves two variables and has two sides. The tests above focus 
+on the effect of age; the other side is the effect of gender. 
+The gender gap in wages at a given age is the
+marginal effect of `woman` with age held at that value. E.g. 
+`covariates(age=(25 55))` reports it at 25 and at 55 in one table so that the
+two can be compared.
+
+```{.stata-run}
+<<dd_do>>
+mecompare i.woman, models(regwages) covariates(age=(25 55))
+metest 2 - 1
+<</dd_do>>
+```
+
+Women earn less than men at both ages, and the gap is significantly larger at
+55. Absent particular ages of interest, a good default for a continuous
+moderator is its 10th, 50th, and 90th percentiles -- a low, a typical, and a
+high value that are all in the range of the data. `summarize, detail` returns
+them and they go straight into `covariates()`. The joint test that the three
+gaps are equal is the test of interaction on this side, and the difference
+between the 90th and the 10th percentile is the single summary of how much
+the gap changes across age:
+
+```{.stata-run}
+<<dd_do>>
+quietly summarize age, detail
+mecompare i.woman, models(regwages) covariates(age=(`r(p10)' `r(p50)' `r(p90)'))
+metest 1 = 2 = 3
+metest 3 - 1
+<</dd_do>>
+```
+
+The full picture is the effect of gender across the whole range of age:
+give `covariates()` the range, save the results with `store()`, and plot them
+with `coefplot`. `recast(line)` connects the effects and
+`ciopts(recast(rline))` draws the confidence interval as a band, the same look
+as the `marginsplot` figures.
+
+```{.stata-run}
+<<dd_do>>
+mecompare i.woman, models(regwages) covariates(age=(20(5)70)) store(gap)
+
+coefplot gap_regwages, vertical recast(line) ///
+    ciopts(recast(rline) lpattern(dash) color(*.4)) yline(0) ///
+    rename("^.*=(.*)$" = \1, regex) ///
+    ylabel(-10(2)2) xtitle("Age") ytitle("Effect of gender: women - men") ///
+    title("Figure 2. AME of gender across age") ///
+    note("Effects below zero indicate women earn less than men at that age")
+graph export "fig/nli-wages-gender-gap.png", replace width(1400)
+<</dd_do>>
+```
+
+![](../fig/nli-wages-gender-gap.png){width=80% fig-alt="The marginal effect of gender across the range of age, with 95% confidence intervals."}
+
+The gap is significant at every age (no interval crosses zero) and grows with
+age. Because these are direct tests of the group difference, the confidence
+intervals here say what overlapping intervals on the predictions plot cannot.

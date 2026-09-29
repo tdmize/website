@@ -1,0 +1,64 @@
+---
+title: "metest"
+subtitle: "Tests and contrasts of marginal effects"
+---
+<<dd_version: 2>>
+
+`metest` tests linear and nonlinear combinations of the marginal effects
+reported by [`mecompare`](../mecompare/index.html) -- or of any results posted by
+`margins, post`. Rows are referred to by the number in the `#` column of the
+`mecompare` table, so a difference between two effects is `metest 2 - 1`, a ratio is
+`metest 2 / 1`, and a test that several effects are equal is
+`metest 1 = 2 = 3`. To refer to an actual number for a mathematical expression,
+use a leading # -- e.g. to divide the 5th marginal effect by 2 use `metest 5 / #2`.
+
+Sums, differences, ratios, products, and functions such as `abs()`, `exp()`,
+`ln()`, and `min()` are all allowed, as are equality tests with `=`, including
+several at once. Results can be accumulated into one table with `add`.
+
+## Installation
+
+`metest` is part of the `mecompare` package and is installed with it:
+
+```stata
+net install mecompare, from("https://tdmize.github.io/data") replace
+```
+
+`metest` requires Stata 16 or later.
+
+## Where to start
+
+- [Usage and examples](usage.html) runs every form of the command from the
+  help file: single effects, differences, ratios and averages, scaling by a
+  literal value, equality tests, accumulated tables, and use after commands other
+  than `mecompare`.
+- [Tests across three or more models](many-models.html) compares one effect
+  across four nested models.
+- The [help file](help.html) is on the site.
+- The `mecompare` pages use `metest` throughout, e.g. the [effect sizes across
+  predictors](../mecompare/examples/within-model.html) example and the
+  [interactions pages](../mecompare/interactions/index.html).
+
+## Basic use
+
+```{.stata-run}
+<<dd_do>>
+sysuse nlsw88, clear
+drop if missing(union)
+
+quietly logit union i.collgrad i.south i.smsa c.age c.wage, vce(robust)
+estimates store m
+
+mecompare i.collgrad i.south i.smsa, models(m)
+<</dd_do>>
+```
+
+Is the college gap in union membership the same size as the regional gap? And
+is the college gap larger than the city/non-city gap?
+
+```{.stata-run}
+<<dd_do>>
+metest 1 - 2
+metest 1 - 3
+<</dd_do>>
+```

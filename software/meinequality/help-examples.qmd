@@ -1,0 +1,377 @@
+---
+title: "Examples from the help file"
+subtitle: "The examples at the end of help meinequality, run in full"
+---
+
+The examples from the end of the [help file](help.html), in order, on
+Stata's `nlsw88` data.
+
+## Single model
+
+```{.stata-run}
+. sysuse nlsw88, clear
+(NLSW, 1988 extract)
+
+. 
+. reg wage i.race c.age i.married
+
+      Source |       SS           df       MS      Number of obs   =     2,246
+-------------+----------------------------------   F(4, 2241)      =      8.50
+       Model |  1111.30875         4  277.827187   Prob > F        =    0.0000
+    Residual |  73256.6587     2,241   32.689272   R-squared       =    0.0149
+-------------+----------------------------------   Adj R-squared   =    0.0132
+       Total |  74367.9674     2,245  33.1260434   Root MSE        =    5.7175
+
+------------------------------------------------------------------------------
+        wage | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        race |
+      Black  |     -1.459      0.283   -5.157   0.000       -2.014      -0.904
+      Other  |      0.463      1.130    0.409   0.682       -1.754       2.679
+             |
+         age |     -0.084      0.040   -2.122   0.034       -0.161      -0.006
+             |
+     married |
+    Married  |     -0.782      0.258   -3.035   0.002       -1.287      -0.277
+       _cons |     11.928      1.575    7.572   0.000        8.839      15.017
+------------------------------------------------------------------------------
+
+. 
+. meinequality race
+
+ME Inequality Estimates (N = 2246)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+ME Inequality            |                                               
+                    race |      1.153       0.588       1.961       0.050 
+
+. meinequality race, unweighted
+
+ME Inequality Estimates (N = 2246)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+Unwgt. ME Inequality     |                                               
+                    race |      1.281       0.765       1.675       0.094 
+
+```
+
+## Compare across two models on the same sample
+
+```{.stata-run}
+. logit union i.race, vce(robust)
+
+Iteration 0:  Log pseudolikelihood = -1046.6242  
+Iteration 1:  Log pseudolikelihood = -1040.2968  
+Iteration 2:  Log pseudolikelihood = -1040.2692  
+Iteration 3:  Log pseudolikelihood = -1040.2692  
+
+Logistic regression                                     Number of obs =  1,878
+                                                        Wald chi2(2)  =  12.97
+                                                        Prob > chi2   = 0.0015
+Log pseudolikelihood = -1040.2692                       Pseudo R2     = 0.0061
+
+------------------------------------------------------------------------------
+             |               Robust
+       union | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        race |
+      Black  |      0.406      0.117    3.466   0.001        0.177       0.636
+      Other  |      0.554      0.438    1.265   0.206       -0.305       1.412
+             |
+       _cons |     -1.247      0.065  -19.096   0.000       -1.375      -1.119
+------------------------------------------------------------------------------
+
+. est store basemod
+
+. logit union i.race c.age i.married, vce(robust)
+
+Iteration 0:  Log pseudolikelihood = -1046.6242  
+Iteration 1:  Log pseudolikelihood = -1038.8701  
+Iteration 2:  Log pseudolikelihood = -1038.8354  
+Iteration 3:  Log pseudolikelihood = -1038.8354  
+
+Logistic regression                                     Number of obs =  1,878
+                                                        Wald chi2(4)  =  15.82
+                                                        Prob > chi2   = 0.0033
+Log pseudolikelihood = -1038.8354                       Pseudo R2     = 0.0074
+
+------------------------------------------------------------------------------
+             |               Robust
+       union | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        race |
+      Black  |      0.372      0.120    3.093   0.002        0.136       0.608
+      Other  |      0.553      0.439    1.260   0.208       -0.307       1.412
+             |
+         age |      0.011      0.018    0.637   0.524       -0.024       0.046
+             |
+     married |
+    Married  |     -0.176      0.114   -1.549   0.121       -0.399       0.047
+       _cons |     -1.570      0.711   -2.207   0.027       -2.964      -0.176
+------------------------------------------------------------------------------
+
+. est store medmod
+
+. 
+. meinequality race, models(basemod medmod)
+
+ME Inequality Estimates (N_basemod = 1878 , N_medmod = 1878)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+race ME Ineq.            |                                               
+       Model 1 (basemod) |      0.083       0.050       1.661       0.097 
+        Model 2 (medmod) |      0.081       0.050       1.608       0.108 
+       Cross-Model Diff. |      0.002       0.003       0.959       0.337 
+
+```
+
+## ME inequality by group
+
+In the second model, with the **Diff.** row testing whether it differs
+between the groups:
+
+```{.stata-run}
+. meinequality race, models(medmod) by(married)
+
+ME Inequality Estimates (N = 1878)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+ME Inequality            |                                               
+            race(Single) |      0.085       0.052       1.629       0.103 
+           race(Married) |      0.079       0.049       1.593       0.111 
+              race Diff. |      0.006       0.005       1.304       0.192 
+
+Diff. = Single - Married
+
+```
+
+## Compare across distinct samples/groups for two models
+
+```{.stata-run}
+. logit union i.race c.age if married == 0, vce(robust)
+
+Iteration 0:  Log pseudolikelihood = -386.41898  
+Iteration 1:  Log pseudolikelihood = -384.38689  
+Iteration 2:  Log pseudolikelihood = -384.38343  
+Iteration 3:  Log pseudolikelihood = -384.38343  
+
+Logistic regression                                     Number of obs =    656
+                                                        Wald chi2(3)  =   4.12
+                                                        Prob > chi2   = 0.2493
+Log pseudolikelihood = -384.38343                       Pseudo R2     = 0.0053
+
+------------------------------------------------------------------------------
+             |               Robust
+       union | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        race |
+      Black  |      0.359      0.178    2.016   0.044        0.010       0.709
+      Other  |      0.206      0.845    0.243   0.808       -1.451       1.863
+             |
+         age |      0.010      0.029    0.346   0.729       -0.047       0.067
+       _cons |     -1.513      1.161   -1.303   0.193       -3.788       0.763
+------------------------------------------------------------------------------
+
+. est store notmar
+
+. logit union i.race c.age if married == 1, vce(robust)
+
+Iteration 0:  Log pseudolikelihood = -657.71228  
+Iteration 1:  Log pseudolikelihood = -654.35596  
+Iteration 2:  Log pseudolikelihood =  -654.3266  
+Iteration 3:  Log pseudolikelihood = -654.32659  
+
+Logistic regression                                     Number of obs =  1,222
+                                                        Wald chi2(3)  =   6.95
+                                                        Prob > chi2   = 0.0734
+Log pseudolikelihood = -654.32659                       Pseudo R2     = 0.0051
+
+------------------------------------------------------------------------------
+             |               Robust
+       union | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        race |
+      Black  |      0.380      0.163    2.330   0.020        0.060       0.699
+      Other  |      0.692      0.512    1.351   0.177       -0.312       1.695
+             |
+         age |      0.012      0.022    0.518   0.605       -0.032       0.056
+       _cons |     -1.762      0.887   -1.986   0.047       -3.500      -0.023
+------------------------------------------------------------------------------
+
+. est store marry
+
+. 
+. meinequality race, models(notmar marry) groups
+
+ME Inequality Estimates (N_notmar = 656 , N_marry = 1222)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+race ME Ineq.            |                                               
+        Model 1 (notmar) |      0.055       0.032       1.706       0.088 
+         Model 2 (marry) |      0.097       0.061       1.603       0.109 
+       Cross-Model Diff. |     -0.042       0.069      -0.619       0.536 
+
+```
+
+## Nominal or ordinal outcome models
+
+One ME inequality is reported per outcome category.
+
+```{.stata-run}
+. mlogit industry i.race c.age
+
+Iteration 0:  Log likelihood = -4225.5484  
+Iteration 1:  Log likelihood = -4179.1623  
+Iteration 2:  Log likelihood = -4175.8438  
+Iteration 3:  Log likelihood = -4175.3653  
+Iteration 4:  Log likelihood = -4175.2895  
+Iteration 5:  Log likelihood =  -4175.271  
+Iteration 6:  Log likelihood = -4175.2671  
+Iteration 7:  Log likelihood = -4175.2663  
+Iteration 8:  Log likelihood = -4175.2661  
+Iteration 9:  Log likelihood = -4175.2661  
+Iteration 10: Log likelihood = -4175.2661  
+
+Multinomial logistic regression                         Number of obs =  2,232
+                                                        LR chi2(33)   = 100.56
+                                                        Prob > chi2   = 0.0000
+Log likelihood = -4175.2661                             Pseudo R2     = 0.0119
+
+-----------------------------------------------------------------------------------------
+               industry | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+------------------------+----------------------------------------------------------------
+Ag_Forestry_Fisheries   |
+                   race |
+                 Black  |     -0.001      0.579   -0.002   0.999       -1.136       1.134
+                 Other  |    -15.006   3747.262   -0.004   0.997    -7359.505    7329.494
+                        |
+                    age |      0.074      0.080    0.931   0.352       -0.082       0.231
+                  _cons |     -6.809      3.207   -2.123   0.034      -13.096      -0.523
+------------------------+----------------------------------------------------------------
+Mining                  |
+                   race |
+                 Black  |    -14.797   1374.780   -0.011   0.991    -2709.318    2679.723
+                 Other  |    -15.095   7082.897   -0.002   0.998    -1.39e+04   13867.127
+                        |
+                    age |     -0.257      0.198   -1.297   0.195       -0.645       0.131
+                  _cons |      4.785      7.398    0.647   0.518       -9.714      19.284
+------------------------+----------------------------------------------------------------
+Construction            |
+                   race |
+                 Black  |     -0.686      0.547   -1.254   0.210       -1.758       0.386
+                 Other  |      0.853      1.066    0.800   0.424       -1.236       2.942
+                        |
+                    age |     -0.073      0.063   -1.150   0.250       -0.197       0.051
+                  _cons |     -0.402      2.461   -0.163   0.870       -5.226       4.423
+------------------------+----------------------------------------------------------------
+Manufacturing           |
+                   race |
+                 Black  |      0.594      0.137    4.353   0.000        0.327       0.862
+                 Other  |     -0.020      0.589   -0.034   0.973       -1.175       1.134
+                        |
+                    age |     -0.020      0.021   -0.980   0.327       -0.061       0.020
+                  _cons |     -0.191      0.818   -0.234   0.815       -1.794       1.412
+------------------------+----------------------------------------------------------------
+Transport_Comm_Utility  |
+                   race |
+                 Black  |      0.312      0.245    1.273   0.203       -0.168       0.793
+                 Other  |     -0.102      1.053   -0.097   0.922       -2.166       1.961
+                        |
+                    age |      0.007      0.036    0.203   0.839       -0.064       0.079
+                  _cons |     -2.587      1.437   -1.800   0.072       -5.403       0.230
+------------------------+----------------------------------------------------------------
+Wholesale_Retail_trade  |
+                   race |
+                 Black  |     -0.256      0.160   -1.597   0.110       -0.570       0.058
+                 Other  |    -15.084    863.578   -0.017   0.986    -1707.666    1677.497
+                        |
+                    age |      0.003      0.021    0.152   0.879       -0.038       0.045
+                  _cons |     -0.963      0.839   -1.148   0.251       -2.609       0.682
+------------------------+----------------------------------------------------------------
+Finance_Ins_Real_estate |
+                   race |
+                 Black  |     -0.771      0.230   -3.349   0.001       -1.222      -0.320
+                 Other  |     -0.384      0.774   -0.495   0.620       -1.901       1.134
+                        |
+                    age |     -0.050      0.027   -1.883   0.060       -0.102       0.002
+                  _cons |      0.642      1.040    0.617   0.537       -1.397       2.680
+------------------------+----------------------------------------------------------------
+Business_Repair_svc     |
+                   race |
+                 Black  |     -0.049      0.270   -0.184   0.854       -0.578       0.479
+                 Other  |      0.564      0.781    0.722   0.470       -0.967       2.094
+                        |
+                    age |     -0.056      0.038   -1.470   0.141       -0.130       0.018
+                  _cons |     -0.093      1.475   -0.063   0.950       -2.983       2.798
+------------------------+----------------------------------------------------------------
+Personal_services       |
+                   race |
+                 Black  |      1.021      0.221    4.618   0.000        0.587       1.454
+                 Other  |      0.092      1.055    0.088   0.930       -1.975       2.159
+                        |
+                    age |      0.012      0.035    0.332   0.740       -0.058       0.081
+                  _cons |     -2.954      1.403   -2.105   0.035       -5.705      -0.204
+------------------------+----------------------------------------------------------------
+Entertainment_Rec_svc   |
+                   race |
+                 Black  |     -0.355      0.643   -0.552   0.581       -1.615       0.905
+                 Other  |    -15.066   3718.055   -0.004   0.997    -7302.320    7272.188
+                        |
+                    age |      0.090      0.080    1.123   0.262       -0.067       0.247
+                  _cons |     -7.358      3.227   -2.280   0.023      -13.683      -1.034
+------------------------+----------------------------------------------------------------
+Professional_services   |  (base outcome)
+------------------------+----------------------------------------------------------------
+Public_administration   |
+                   race |
+                 Black  |      0.356      0.184    1.933   0.053       -0.005       0.717
+                 Other  |      0.641      0.593    1.082   0.279       -0.520       1.803
+                        |
+                    age |     -0.005      0.027   -0.187   0.851       -0.058       0.048
+                  _cons |     -1.452      1.076   -1.350   0.177       -3.560       0.657
+-----------------------------------------------------------------------------------------
+
+. 
+. meinequality race
+
+ME Inequality Estimates (N = 2232)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+race ME Ineq.            |                                               
+Pr(Ag/Forestry/Fisherie) |      0.004       0.002       1.880       0.060 
+              Pr(Mining) |      0.002       0.001       2.003       0.045 
+        Pr(Construction) |      0.017       0.019       0.890       0.374 
+       Pr(Manufacturing) |      0.059       0.021       2.788       0.005 
+Pr(Transport/Comm/Utili) |      0.006       0.011       0.503       0.615 
+Pr(Wholesale/Retail tra) |      0.101       0.009      10.871       0.000 
+Pr(Finance/Ins/Real est) |      0.043       0.015       2.897       0.004 
+ Pr(Business/Repair svc) |      0.023       0.027       0.839       0.402 
+   Pr(Personal services) |      0.031       0.012       2.623       0.009 
+Pr(Entertainment/Rec sv) |      0.005       0.002       2.410       0.016 
+Pr(Professional service) |      0.046       0.051       0.903       0.367 
+Pr(Public administratio) |      0.049       0.036       1.331       0.183 
+
+```
+
+## Bootstrap example
+
+Wrap the model and the command in an r-class program and hand it to
+`bootstrap`. (Shown, not run.)
+
+```stata
+capture program drop boot_mei
+
+program define boot_mei, rclass
+    reg wage i.race c.age i.married
+    meinequality race
+    return scalar w_mei = r(wem11)
+end
+
+bootstrap w_mei=r(w_mei), reps(1000): boot_mei
+```

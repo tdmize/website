@@ -1,0 +1,137 @@
+---
+search: false
+title: "irt_me"
+subtitle: "Stata Command for Marginal Effects from Item Response Theory Models"
+---
+
+## (1) Introduction
+
+`irt_me` is a Stata command that automates the calculation of marginal effects after Item Response Theory (IRT) models. IRT is a latent variable modeling technique for continuous latent variables and categorical items (e.g., binary, ordinal, and nominal). In IRT, the models are traditionally interpreted using the estimated coefficients (discrimination) and intercept (difficulty) parameters. Marginal effects are an alternative that quantify the relationship between the latent variable and the items in the predicted probability metric.
+
+To read more about the background of the command and examples of its functionality see:
+
+- [Slides for my presentation at the 2024 Italian Stata Conference](https://drive.google.com/file/d/1lDXbnwYa2-8GSHTDyc3eGM7Jmvz97GDy/view?usp=sharing)
+
+To read more about Item Response Theory and using marginal effects for interpretation see:
+
+- [My graduate course slides on Item Response Theory](https://drive.google.com/file/d/1G9sWGLMAN6SGWzw3XqOXyBw7MC-R_hGI/view?usp=drive_link)
+- [All of the materials, including example code, for my Latent Variable Modeling graduate course](/teaching/lvm.qmd)
+
+## (2) Installation Instructions 
+
+To install in Stata:
+
+`    net install irt_me, from("`[`https://tdmize.github.io/data`](https://tdmize.github.io/data/irt_me)`") replace`
+
+Once installed, to read the help file (also [available here](/software/irt_me/help.qmd)):
+
+`    help irt_me`
+
+## (3) Citation
+
+Please cite the use of `irt_me` as:
+
+Mize, Trenton D. 2024. "Stata command for marginal effects from item response theory models." https://www.trentonmize.com/software/irt_me
+
+## (4) Examples
+
+`irt_me` can be used with any latent variable model fit using Stata's `irt` commands and also with models for continuous and count items fit using `gsem`. A mix of different item types is also allowed (e.g., a mix of binary and ordinal items). If the IRT model was fit using `gsem` you have to specify the name of the latent variable in the `latent( )` option.
+
+### Load the data
+
+`use "https://tdmize.github.io/data/data/lvm_ah4", clear`
+
+### Fit the IRT model
+
+    irt 2pl   botherB bluesB keepmindB depressB tiredB dislikedB ///
+       sadB feltgoodBR happyBR enjoylifeBR
+
+### Use irt_me to calculate marginal effects
+
+    irt_me,    help                    
+    Marginal Effects of + 1.000 Increase in Latent Variable (theta) N=5113
+                 |    PrStart       PrEnd     ME Est.   Std. Err.       P>|z| 
+    -------------+-----------------------------------------------------------
+         botherB |      0.240       0.574       0.334       0.013       0.000 
+          bluesB |      0.016       0.285       0.269       0.013       0.000 
+       keepmindB |      0.523       0.754       0.230       0.010       0.000 
+        depressB |      0.021       0.411       0.390       0.017       0.000 
+          tiredB |      0.586       0.748       0.161       0.009       0.000 
+       dislikedB |      0.136       0.298       0.162       0.007       0.000 
+            sadB |      0.192       0.768       0.576       0.020       0.000 
+      feltgoodBR |      0.025       0.054       0.029       0.002       0.000 
+         happyBR |      0.002       0.012       0.010       0.002       0.000 
+     enjoylifeBR |      0.001       0.005       0.005       0.001       0.000 
+    PrStart : Pr(y=1) at theta = -0.5
+    PrEnd   : Pr(y=1) at theta = 0.5
+    ME      : PrEnd - PrStart 
+
+For all items, predictions are made at the default values of -0.5 (starting values) and 0.5 (ending value) for a centered +1 SD  marginal effect estimate. An example interpretation:
+
+*For an average person, a one standard deviation increase in latent depression is associated with a 0.334 increase in the probability of reporting being bothered by things last week (botherB item).*
+
+### An identical model as above can be fit using gsem
+
+To fit an identical model as the `irt` command using `gsem`, you need to set the latent variable standard deviation to 1 using the `var(latentvar@1)` option on `gsem` (where *latentvar* is your name for your latent variable) and then specify the *latentvar* name when you call `irt_me`.
+
+    gsem   (Depress -> botherB bluesB keepmindB depressB tiredB dislikedB ///
+         sadB feltgoodBR happyBR enjoylifeBR) ///
+       , logit var(Depress@1)
+    irt_me,   latent(Depress) 
+    Marginal Effects of + 1.000 Increase in Latent Variable (theta) N=5113
+                 |    PrStart       PrEnd     ME Est.   Std. Err.       P>|z| 
+    -------------+-----------------------------------------------------------
+         botherB |      0.240       0.574       0.334       0.013       0.000 
+          bluesB |      0.016       0.285       0.269       0.013       0.000 
+       keepmindB |      0.523       0.754       0.230       0.010       0.000 
+        depressB |      0.021       0.411       0.390       0.017       0.000 
+          tiredB |      0.586       0.748       0.161       0.009       0.000 
+       dislikedB |      0.136       0.298       0.162       0.007       0.000 
+            sadB |      0.192       0.768       0.576       0.020       0.000 
+      feltgoodBR |      0.025       0.054       0.029       0.002       0.000 
+         happyBR |      0.002       0.012       0.010       0.002       0.000 
+     enjoylifeBR |      0.001       0.005       0.005       0.001       0.000 
+
+### Calculating marginal effects across the trimmed range of the latent variable
+
+By default, `irt_me` calculates a centered +1 SD marginal effect (see examples above). One alternative is to estimate a marginal effect across the trimmed range of the latent variable (1st to 99th percentile) using the `range` option.
+
+    irt_me, range help
+    Marginal Effects of + 3.228 Increase in Latent Variable (theta) N=5113
+                 |    PrStart       PrEnd     ME Est.   Std. Err.       P>|z| 
+    -------------+-----------------------------------------------------------
+         botherB |      0.095       0.919       0.824       0.015       0.000 
+          bluesB |      0.001       0.978       0.976       0.006       0.000 
+       keepmindB |      0.335       0.932       0.597       0.019       0.000 
+        depressB |      0.001       0.992       0.990       0.003       0.000 
+          tiredB |      0.447       0.897       0.450       0.020       0.000 
+       dislikedB |      0.069       0.646       0.576       0.024       0.000 
+            sadB |      0.031       0.994       0.963       0.006       0.000 
+      feltgoodBR |      0.014       0.157       0.143       0.018       0.000 
+         happyBR |      0.000       0.163       0.162       0.020       0.000 
+     enjoylifeBR |      0.000       0.131       0.131       0.018       0.000 
+    PrStart : Pr(y=1) at theta = -1.260
+    PrEnd   : Pr(y=1) at theta = 1.968
+    ME      : PrEnd - PrStart
+
+### Customized marginal effects
+
+Customized marginal effects beyond the standard ones shown above can be calculated using custom starting and ending values in the `start( )` and `end( )` option. For example, for an ideal type of a very depressed person we could specify marginal effects from 2 to 3 SDs above the mean on the latent variable.
+
+    irt_me, start(2) end(3) help
+    Marginal Effects of + 1.000 Increase in Latent Variable (theta) N=5113
+                 |    PrStart       PrEnd     ME Est.   Std. Err.       P>|z| 
+    -------------+-----------------------------------------------------------
+         botherB |      0.923       0.981       0.058       0.005       0.000 
+          bluesB |      0.980       0.999       0.019       0.004       0.000 
+       keepmindB |      0.934       0.975       0.041       0.003       0.000 
+        depressB |      0.992       1.000       0.007       0.002       0.001 
+          tiredB |      0.900       0.949       0.050       0.002       0.000 
+       dislikedB |      0.653       0.835       0.182       0.003       0.000 
+            sadB |      0.994       1.000       0.005       0.001       0.000 
+      feltgoodBR |      0.161       0.300       0.139       0.025       0.000 
+         happyBR |      0.171       0.579       0.407       0.050       0.000 
+     enjoylifeBR |      0.140       0.612       0.473       0.063       0.000 
+    PrStart : Pr(y=1) at theta = 2.000
+    PrEnd   : Pr(y=1) at theta = 3.000
+    ME      : PrEnd - PrStart

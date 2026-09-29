@@ -1,0 +1,106 @@
+---
+title: "Tests across three or more models"
+subtitle: "Example 6.2 of Mize, Doan, and Long (2019), with all four models"
+---
+
+With three or more models, `mecompare` lists each model's marginal effects
+and reports no differences; `metest` can be used to test the comparisons you choose. The
+four nested logits of Example 6.2:
+
+```{.stata-run}
+. use https://tdmize.github.io/data/data/gss_cme, clear
+(gss_cme.dta | GSS 1972 - 2016 Weighted | 2018-07-10)
+
+. drop if year < 2000
+(38,116 observations deleted)
+
+. drop if employed != 1
+(9,556 observations deleted)
+
+. drop if missing(vhappy, college, wages, occprest, age, married, parent, woman, conserv, reltrad)
+(5,578 observations deleted)
+
+. 
+. quietly logit vhappy i.college, vce(robust)
+
+. estimates store m1
+
+. quietly logit vhappy i.college i.married i.parent i.woman i.conserv i.reltrad i.year c.age##c.age,
+>  vce(robust)
+
+. estimates store m2
+
+. quietly logit vhappy i.college c.wages i.married i.parent i.woman i.conserv i.reltrad i.year c.age
+> ##c.age, vce(robust)
+
+. estimates store m3
+
+. quietly logit vhappy i.college c.wages c.occprest i.married i.parent i.woman i.conserv i.reltrad i
+> .year c.age##c.age, vce(robust)
+
+. estimates store m4
+
+. 
+. mecompare college, models(m1 m2 m3 m4)
+
+
+Predicting: Pr(vhappy)
+
+Marginal effects across models (N_m1=9216) (N_m2=9216) (N_m3=9216) (N_m4=9216)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+college                          |                                       
+    College Deg - No Col Deg     |                                       
+                              m1 |     1      0.072      0.010      0.000
+                              m2 |     2      0.060      0.011      0.000
+                              m3 |     3      0.036      0.011      0.001
+                              m4 |     4      0.019      0.012      0.103
+
+```
+
+Rows 1-4 are the effect of college in models 1-4. Whether the effect
+diminishes in each subsequent model:
+
+```{.stata-run}
+. metest, clear
+
+. metest 1 - 2, add
+
+                                 |  estimate         se     pvalue 
+---------------------------------+--------------------------------
+college                          |                                
+                         m1 - m2 |     0.012      0.004      0.003 
+
+. metest 2 - 3, add
+
+                                 |  estimate         se     pvalue 
+---------------------------------+--------------------------------
+college                          |                                
+                         m1 - m2 |     0.012      0.004      0.003 
+                         m2 - m3 |     0.024      0.004      0.000 
+
+. metest 3 - 4, add
+
+                                 |  estimate         se     pvalue 
+---------------------------------+--------------------------------
+college                          |                                
+                         m1 - m2 |     0.012      0.004      0.003 
+                         m2 - m3 |     0.024      0.004      0.000 
+                         m3 - m4 |     0.017      0.004      0.000 
+
+```
+
+And whether it is the same in all four models:
+
+```{.stata-run}
+. metest 1 = 2 = 3 = 4
+
+Tests of equality
+
+                                 |      chi2         df     pvalue 
+---------------------------------+--------------------------------
+college                          |                                
+               m1 = m2 = m3 = m4 |    60.094      3.000      0.000 
+
+```

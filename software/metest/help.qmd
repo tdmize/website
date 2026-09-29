@@ -1,0 +1,194 @@
+---
+title: "metest help file"
+subtitle: "The installed help file, rendered for the web"
+toc-depth: 3
+---
+
+::: {.callout-note appearance="simple"}
+This page is generated from `metest.sthlp` by `build.do`, so it matches the
+installed version. In Stata, type `help metest`.
+:::
+
+## Title
+
+**`metest` --** tests and combines the marginal effects calculated by [mecompare](../mecompare/help.html)
+
+## Syntax
+
+`metest` [*exp*] [`,` *options*]
+
+where *exp* refers to the marginal effects either by the *ME #* shown in the `mecompare` table or by their coefficient names, combined with `+`, `-`, `*`, `/`, parentheses, or `=`.
+
+## Description
+
+`metest` operates on the marginal effects that [mecompare](../mecompare/help.html) posts to `e(b)` and `e(V)`. An expression **without** `=` is passed to `nlcom`, so any combination is allowed -- sums, differences, ratios, products, and nonlinear functions such as `abs()`, `exp()`, `ln()` and `min()`. A name followed by `(` is read as a function and handed to `nlcom` as typed, which is what reports an unknown one. An expression with `=` goes to `test` instead, which tests linear combinations and cannot evaluate a function. An expression **containing** `=` is passed to `test`, which supports chained equalities (`metest 1 = 2 = 3`) and multiple constraints (`metest (1 = 2) (3 = 4)`).
+
+A **bare number** is always read as the *ME #* from the last `mecompare` table. To use a number as a **literal value**, prefix it with **#**: `#2` is the number two, whereas `2` is the second marginal effect. So `metest (1 + 4) / #2` averages MEs 1 and 4, while `metest 4 / 5` is the ratio of ME 4 to ME 5. A number that is not a whole number cannot be an *ME #* and is always read as a literal.
+
+Anything that is not a number is read as a coefficient name, with or without the `_b[ ]` wrapper. Type `mecompare, coeflegend` to list the names.
+
+Results accumulate with `add`, and `metest` with **no** expression redisplays what has accumulated. A loop can therefore build a table quietly and show it once at the end:
+
+```stata
+metest, clear
+qui metest 1, add rowname(raceWhite)
+qui metest 2, add rowname(raceBlack)
+metest, title("Marginal effects by race")
+```
+
+`metest` is written for [mecompare](../mecompare/help.html) but is not restricted to it. A number is the *n*th non-omitted column of `e(b)`, which is well defined after any e-class command, so `metest` can also be used after margins, post or after a model fit directly -- see [Use after other commands](help.html#other).
+
+## Options
+
+**`statistics(list)`** statistics to display: `estimate`, `se`, `zvalue`, `pvalue`, `ll`, `ul`, or `all`. The default is `estimate se pvalue`. Each may be abbreviated or given by a synonym -- `est`, `coef` or `b` for `estimate`; `stderr` for `se`; `z`; `p`; `lb`; `ub` -- and the list is not case sensitive. Ignored for equality tests, which always report the test statistic, its degrees of freedom, and the p-value. `stats()` is a synonym for the option itself.
+
+**`allstats`** equivalent to `statistics(all)`.
+
+**`add`** adds the result as another row of the saved table rather than starting a new one. `save` is a synonym.
+
+**`clear`** clears the saved table before running. `metest, clear` on its own clears it without running anything. It is an option and must follow a comma; `metest clear` is not accepted.
+
+**`rowname(string)`** labels the row. A `:` in the label puts what comes before it on a row of its own, with the rest indented underneath, which is how several rows are grouped under one heading: `rowname(raceBlack - White)`. By default the row is labeled with the test that was run -- the expression with coefficient names substituted for the ME numbers -- and whatever every term has in common becomes that heading: the variable when they come from one variable (`marriedm1 - m2`), otherwise the model (`m1:married - age`). When they share neither, the expression itself is used, e.g. `(1-2)-(4-5)`. `label()` is a synonym.
+
+**`decimals(#)`** decimal places; the default is 3.
+
+**`width(#)`** width of each statistic column; the default is 9.
+
+**`labwidth(#)`** width of the leftmost (label) column; the maximum is 32. By default it is sized so the table fits an 80-column line -- 32 for the default three statistics, narrowing as more are shown. `twidth()` is a synonym.
+
+**`title(string)`** title above the table.
+
+**`notable`** suppresses the table.
+
+**`details`** shows the underlying `nlcom` or `test` output.
+
+**`level(#)`** confidence level for `ll` and `ul`.
+
+## Saved results
+
+Estimates accumulate in the matrix `_metest` and equality tests in `_metest_test`. The two are displayed as separate tables because they report different statistics. Each row is named for the quantity it reports -- by default the expression with coefficient names substituted for the ME numbers, or whatever `rowname()` was given. When no usable name can be formed from the expression, the row falls back to a counter that runs continuously across both matrices, so no two rows share a name within a session. Note that `metest` does not print a row-number column: the counter is a naming fallback, not a column you will see.
+
+A call without `add` starts a fresh table. If the result is an estimate, `_metest` is replaced and `_metest_test` is dropped; if it is an equality test, the reverse. With `add` both matrices persist side by side. `metest, clear` drops both. `metest` with no expression redisplays them without changing either.
+
+`metest` is r-class. After an expression it returns `r(estimate)`, `r(se)`, `r(zvalue)`, `r(pvalue)`, `r(ll)`, and `r(ul)`; after an equality test it returns `r(chi2)` (or `r(F)`), `r(df)`, and `r(pvalue)`. `r(label)` holds the row label used and `r(expression)` the expression.
+
+## Examples
+
+Setup -- fit and store two models, then calculate the marginal effects:
+
+```stata
+sysuse nlsw88, clear
+drop if missing(union, married, age, race, wage)
+logit union i.married age i.race, vce(robust)
+est store m1
+logit union i.married age i.race wage, vce(robust)
+est store m2
+mecompare age i.married, models(m1 m2)
+```
+
+A single marginal effect, by number and by name:
+
+```stata
+metest 1
+metest age:m1
+```
+
+The cross-model difference, three equivalent ways -- and note that `mecompare` already reports it as ME 3:
+
+```stata
+metest 1 - 2
+metest 3
+metest _b[age:m1] - _b[age:m2]
+```
+
+A ratio and an average -- these need `nlcom`, so they are not available in `lincom` or `mlincom`. Note the **#** on the divisor of the average, which makes it the number two rather than ME 2:
+
+```stata
+metest 1 / 2
+metest (1 + 2) / #2
+```
+
+Scaling by a literal value -- the effect of a 10-year change in age:
+
+```stata
+metest 1 * #10
+```
+
+Equality tests, including a joint test and two constraints at once:
+
+```stata
+metest 1 = 2
+metest 1 = 2 = 3
+metest (1 = 2) (4 = 5)
+```
+
+Building up a table. Estimates and equality tests are shown as two tables, since they report different statistics, but the rows are numbered continuously across both:
+
+```stata
+metest, clear
+metest 1 - 2
+metest 4 - 5, add
+metest 1 = 2, add
+```
+
+And redisplayed at any point, with a title, by typing `metest` on its own:
+
+```stata
+metest, title("Age and marriage")
+```
+
+All six statistics, and a label of your own:
+
+```stata
+metest 1 - 2, stat(all)
+metest 1 - 2, rowname("Age effect, m1 vs m2")
+```
+
+<span id="other"></span>
+
+## Use after other commands
+
+Nothing in `metest` is specific to `mecompare`. After any e-class command, a bare number refers to the *n*th non-omitted coefficient of `e(b)`, in the order `matrix list e(b)` reports them, and coefficient names work as usual. Row labels fall back to the coefficient names themselves, abbreviated to fit.
+
+This makes `metest` usable wherever `mlincom` is, with the addition of multiplication, division, nonlinear functions, and equality tests:
+
+```stata
+sysuse nlsw88, clear
+regress wage age ttl_exp grade
+```
+
+`metest 1 - 2` the 1st minus the 2nd coefficient
+
+`metest 1 / 2` their ratio
+
+`metest 1 = 2 = 3` a joint test that the three are equal
+
+`metest abs(1) - abs(2)` which effect is larger in magnitude
+
+`metest min(1,2)` the smaller of the two
+
+`metest _b[age] * #10` by name, scaled by ten
+
+After margins, post, a number refers to a row of the `margins` table. E.g., a risk ratio -- the ratio of two predicted probabilities, averaging over observed values -- in the Health and Retirement Study 2020:
+
+```stata
+use https://tdmize.github.io/data/data/cda_hrs, clear
+drop if missing(cogB, marstatB, collegeB, woman, age)
+logit cogB i.collegeB i.marstatB i.woman c.age, or
+margins collegeB, post
+metest 1 / 2
+```
+
+Two things to keep in mind away from `mecompare`. Omitted (`o.`) coefficients are skipped when numbering, so a number may not match the position in the displayed regression table -- check with `matrix list e(b)`. And after some commands `test` reports *F* rather than *chi2*; the two cannot be stacked in one accumulated table, so run `metest, clear` when switching between models of the two kinds.
+
+## Also see
+
+[mecompare](../mecompare/help.html), `nlcom`, `test`, `mlincom`
+
+## Stata version
+
+`metest` requires Stata 16 or later. A do-file that sets `version` must set version 16 or later; under an older version the command stops with a message.
+
+## Authorship
+
+`metest` is written by Trenton D Mize (Departments of Sociology & Statistics [by courtesy] and the Methodology Center, Purdue University). Questions can be sent to tmize@purdue.edu. The ME-number mapping and the accumulating result table are adapted from Long and Freese's SPost13 `mlincom`.

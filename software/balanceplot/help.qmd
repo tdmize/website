@@ -1,0 +1,171 @@
+---
+title: "balanceplot help file"
+subtitle: "The installed help file, rendered for the web"
+toc-depth: 3
+---
+
+::: {.callout-note appearance="simple"}
+This page is generated from `balanceplot.sthlp` by `build.do`, so it matches the
+installed version. In Stata, type `help balanceplot`.
+:::
+
+## Title
+
+**`balanceplot` --** Plot covariate imbalance for categorical or continuous treatments
+
+## Syntax
+
+`balanceplot` *varlist* *ifin*`,` `group(varname)` [`outcome(varname)` `base(#)` `level(#)` `noci` `matchweight(varname)` `cohensh` `fadens` `sort` `absolute` `threshold(#)` `graphop(options)` `leg1(string)` `leg2(string)` `plotcommand` `table` `tablefull` `store(stubname[, replace])` `leftmargin(#)` `decimals(#)` `width(#)` `labwidth(#)`]
+
+`balanceplot` *varlist* *ifin*`,` `contreat(varname)` [`outcome(varname)` `level(#)` `noci` `fadens` `sort` `absolute` `threshold(#)` `graphop(options)` `plotcommand` `table` `tablefull` `store(stubname[, replace])` `leftmargin(#)` `decimals(#)` `width(#)` `labwidth(#)`]
+
+`balanceplot` [*varlist*]`,` `tebalance` [`sort` `absolute` `threshold(#)` `graphop(options)` `plotcommand` `leftmargin(#)`]
+
+## Description
+
+Balanceplot calculates and plots covariate imbalance. Specify `group()`, `contreat()`, or `tebalance`. With `group()`, standardized imbalance is calculated across all observed categories of a categorical grouping variable. With `contreat()`, correlations are calculated between a continuous treatment and each covariate row. After a supported `teffects` or `stteffects` model, `tebalance` compares the raw and matched or weighted standardized differences returned by `tebalance summarize`.
+
+All variables in *varlist* are included in the balance analysis.
+
+Factor syntax is required in *varlist*. Bare variables and variables specified with `c.` are treated as continuous. Variables specified with `i.` or `ib#.` are treated as binary/nominal.
+
+A binary categorical covariate contributes only its nonreference category. A nominal categorical covariate contributes every category. With `group()`, the nominal reference category is a zero-valued placeholder row labeled `(ref)`. With `contreat()`, every nominal category, including the reference category, receives an estimated correlation. Nominal covariates are displayed under a heading; continuous and binary covariates are not. Use factor-variable base syntax, such as `ib2.race`, to change the displayed covariate reference category.
+
+With `group()`, every nonreference row is reported as a standardized mean difference: `(mean_group - mean_base) / sqrt((sd_group^2 + sd_base^2)/2)`. With `cohensh`, binary and nominal variables specified with `i.` or `ib#.` are instead reported as Cohen's h: `2*asin(sqrt(p_group)) - 2*asin(sqrt(p_base))`. Continuous variables are always reported on the standardized-mean-difference scale.
+
+With `contreat()`, `polychoric` is called separately for each covariate row so its standard error can be used for confidence intervals and p-values. Continuous covariates receive Pearson correlations; binary indicators receive polyserial correlations. Nominal covariates are converted to category indicators and receive one polyserial correlation per category. The user-written `polychoric` command must be installed.
+
+Confidence intervals are plotted by default. Non-significant imbalance can be visually emphasized on the graph with `fadens`.
+
+Balance plots are often used to examine balance before and after matching. `matchweight()` plots the unweighted and weighted results together. See details below.
+
+## Options
+
+`group(varname)` specifies the categorical grouping variable. Imbalance statistics are calculated across all categories of this variable. `group()` and `contreat()` may not be combined.
+
+`contreat(varname)` specifies a continuous treatment variable. The graph reports its correlation with each covariate row. `contreat()` may not be combined with `group()`, `base()`, `cohensh`, or `matchweight()`.
+
+`tebalance` is a postestimation mode for supported `teffects` and `stteffects` estimators. It quietly calls `tebalance summarize` and plots the first two columns of its `r(table)` matrix as unweighted and matched or weighted standardized differences. An optional *varlist* restricts the plot to selected treatment-model covariates. With a multivalued treatment, each nonbase treatment comparison is displayed as a separate covariate block under its treatment-category heading. Confidence intervals and `fadens` are unavailable because `tebalance summarize` does not return standard errors for these statistics. `sort`, `absolute`, `threshold()`, `graphop()`, and `plotcommand` are supported.
+
+`base(#)` selects the base/reference category of `group()` and may not be used with `contreat()`. Each nonbase group is compared with the group base. For a binary grouping variable, the lowest category is the default. For three or more categories, the largest complete-case category is the default.
+
+`cohensh` reports Cohen's h statistics for binary and nominal variables when `group()` is specified. Imbalance statistics for continuous variables are unchanged. `cohensH` is a synonym.
+
+`outcome(varname)` allows a hypothetical outcome variable which will be used in listwise deletion to determine the sample for `balanceplot`, but is not shown in the plot. Useful when you want `balanceplot`'s sample to match a subsequent model with all of *varlist* and an `outcome()`.
+
+`matchweight(varname)` compares unweighted and weighted balance in the same graph. Matching weights are applied to the base category of `group()` only; all nonbase categories receive weight 1. Each group comparison retains one color, while marker symbols distinguish unweighted and weighted estimates. Missing or zero base-group weights are retained in the unweighted results and excluded from the weighted results. It may not be combined with `contreat()`. This matches ATT-style output from `psmatch2`, where controls are ordinarily coded 0 and treated observations are coded 1. If the control category is not the command's default base, specify it with `base()`.
+
+`level(#)` sets the confidence interval level. The default is 95.
+
+`noci` suppresses confidence intervals in the graph. Confidence intervals remain in the returned matrices and `table` (if requested).
+
+`fadens` fades nonsignificant point estimates and confidence intervals on the graph. With `matchweight()`, unweighted and weighted estimates are faded according to their own p-values.
+
+`sort` By default, `balanceplot` retains covariates in the order specified in *varlist* and keeps all categories of a nominal variable together under a heading. `sort` sorts variables from negative to positive imbalance. With `absolute`, it sorts from the smallest to largest absolute imbalance. With `matchweight()`, sorting is based on the weighted estimates. Variable headings are omitted when `sort` is specified because categories from the same nominal variable may no longer remain together.
+
+`absolute` plots the absolute magnitude of each imbalance statistic. Returned matrices and printed tables retain the signed statistics. Confidence intervals are reflected onto the absolute scale for the graph; an interval that crosses zero begins at zero. `abs` is the shortest allowed abbreviation.
+
+`threshold(#)` adds dashed light-gray reference lines at `-#` and `#`. With `absolute`, only the positive threshold line is shown. The threshold must be greater than zero. With `contreat()`, it must also be no greater than one. The zero reference line remains unchanged.
+
+`store(stubname[, replace])` posts results as separate estimation results for use with `esttab`, `estout`, or official `estimates` commands. For an unweighted two-category `group()` analysis, the generated names are *stubname*`_mean_g#` for each group and *stubname*`_imbalance`. With three or more categories, each nonbase comparison is stored as *stubname*`_imb_g#`. Mean results contain `e(b)` only. Imbalance results contain `e(b)` and a diagonal `e(V)`, so significance information is calculated from the stored estimate and standard error.
+
+With `matchweight()`, `store()` posts complete unweighted and weighted sets. The prefixes are *stubname*`_unw_` and *stubname*`_w_`. For example, a binary analysis with `store(bp)` creates `bp_unw_mean_g0`, `bp_unw_mean_g1`, `bp_unw_imbalance`, `bp_w_mean_g0`, `bp_w_mean_g1`, and `bp_w_imbalance`. With `contreat()`, the correlation result is stored as *stubname*`_correlation`, with correlations in `e(b)` and squared `polychoric` standard errors on the diagonal of `e(V)`.
+
+The `replace` suboption replaces estimation results whose generated names already exist. Without `replace`, `balanceplot` reports an error before posting any results. For example, specify `store(bp, replace)` to replace results previously created from `store(bp)`.
+
+`graphop(options)` passes graph options to `coefplot`.
+
+`table` displays one compact table for each group comparison. Its columns are the two group-specific means, Standardized Imbalance, and p-value. With `matchweight()`, an unweighted table is followed by a weighted table for each comparison. With `contreat()`, it displays the correlation and p-value. `width()` and `labwidth()` customize the table size.
+
+`tablefull` displays the same table but with more details: the two group-specific means, Standardized Imbalance, standard error, lower confidence limit, upper confidence limit, and p-value. With `matchweight()`, an unweighted table is followed by a weighted table for each comparison. With `contreat()`, it displays the correlation, standard error, confidence limits, and p-value. `table` and `tablefull` may not be combined.
+
+`decimals(#)` sets the number of digits after the decimal in printed tables. The default is 3.
+
+`width(#)` sets the display width of every statistic column in printed tables. The default is 10.
+
+`labwidth(#)` sets the display width of the leftmost column containing variable and category labels. The default is 24. Labels longer than this width are abbreviated.
+
+## Stored results
+
+`balanceplot` stores the first nonbase comparison in `r(bias1)`, the second in `r(bias2)`, and subsequent comparisons in `r(bias3)`, and so on. Each matrix contains `mean_base`, `mean_ref`, `ttest_pval`, `std_diff`, `std_err`, `ci_low`, and `ci_high`. Under `cohensh`, the last four columns are on the Cohen's h scale for factor-indicator rows. With `matchweight()`, these established returns contain the weighted results; unweighted results are additionally stored in `r(bias_unweighted1)`, `r(bias_unweighted2)`, and so on.
+
+Export-ready compact matrices are stored in `r(table1)`, `r(table2)`, and so on. Their columns are the two group-specific means, `std_imbalance`, and `p_value`. Detailed matrices are stored in `r(tablefull1)`, `r(tablefull2)`, and so on; they additionally contain `std_err`, `ci_low`, and `ci_high`. Mean-column names encode the actual group values, such as `mean_g0` and `mean_g1`. All confidence limits occupy separate matrix columns. These matrices are returned whether or not a printed table is requested. With `matchweight()`, weighted results retain these names and unweighted counterparts are stored in `r(table_unweighted#)` and `r(tablefull_unweighted#)`.
+
+With `store(stubname)`, group means and imbalance statistics are also posted as estimation results. For example, `store(bp)` with an unweighted binary grouping variable creates `bp_mean_g0`, `bp_mean_g1`, and `bp_imbalance`. The same coefficient rows appear in every result, so `esttab bp_mean_g0 bp_mean_g1 bp_imbalance, se label mtitles` produces three aligned columns. Group-mean results contain `e(b)` without a substantive `e(V)`. Imbalance results contain the imbalance estimates in `e(b)` and squared standard errors on the diagonal of `e(V)`. With `cohensh`, `esttab` derives significance from Cohen's h and its stored standard error.
+
+With `matchweight()`, the unweighted and weighted stored sets use `_unw_` and `_w_` in their names. Each set can therefore be passed to `esttab` independently. With `contreat()`, *stubname*`_correlation` contains the signed correlations in `e(b)` and their squared standard errors in `e(V)`. Stored results remain signed when `absolute` is specified.
+
+The names created by `store()` are returned in `r(stored_estimates)`; `r(storestub)` contains the requested stub and `r(stored)` indicates whether estimation results were posted.
+
+With `contreat()`, results are returned in `r(correlation)`. Its columns are `correlation`, `std_err`, `ci_low`, `ci_high`, and `p_value`. The command also returns `r(N)` and `r(contreat)`. When `store()` is requested, the generated correlation estimate name is listed in `r(stored_estimates)`.
+
+With `tebalance`, `r(table)` and `r(size)` reproduce the matrices returned by `tebalance summarize`, while `r(balance)` contains its two standardized-difference columns. `r(adjustment)` identifies the second series as `Matched` or `Weighted`. Tebalance mode also returns `r(nrows)`, `r(absolute)`, `r(threshold)`, `r(width)`, `r(labwidth)`, `r(rownames)`, `r(measure)`, `r(xtitle)`, `r(sortmode)`, `r(tablemode)`, `r(headings)`, `r(coeflabels)`, `r(plotcommand)`, and `r(mode)`. Storage is not supported in `tebalance` mode.
+
+Group and continuous-treatment modes return `r(nrows)`, `r(level)`, `r(fadens)`, `r(fadealpha)`, `r(absolute)`, `r(threshold)`, `r(stored)`, `r(storestub)`, `r(stored_estimates)`, `r(width)`, `r(labwidth)`, `r(rownames)`, `r(outcome)`, `r(measure)`, `r(xtitle)`, `r(graphnote)`, `r(sortmode)`, `r(tablemode)`, `r(headings)`, `r(plotcommand)`, `r(mode)`, and `r(contreat)`. Group mode additionally returns `r(base)`, `r(ngroups)`, `r(cohensh)`, `r(weighted)`, `r(base_n)`, `r(base_n_unweighted)`, `r(base_sumw)`, `r(groups)`, `r(matrices)`, `r(tablematrices)`, `r(tablefullmatrices)`, `r(unweighted_matrices)`, `r(table_unweighted_matrices)`, `r(tablefull_unweighted_matrices)`, and `r(weightvar)`.
+
+## Examples
+
+```stata
+sysuse nlsw88, clear
+balanceplot wage age i.married i.race tenure, group(union)
+balanceplot wage age i.married i.race tenure, group(union) cohensh
+balanceplot wage age i.married i.race tenure, group(union) fadens
+balanceplot wage age i.married i.race tenure, group(union) cohensH noci
+balanceplot wage age i.married i.race tenure, group(union) sort
+balanceplot wage age i.married i.race tenure, group(union) absolute sort threshold(.1)
+balanceplot wage age i.married i.race tenure, group(union) threshold(.1)
+balanceplot wage age i.married i.race tenure, group(union) table
+balanceplot wage age i.married i.race tenure, group(union) tablefull
+balanceplot wage age i.married i.race tenure, group(union) table labwidth(30) width(11)
+matrix list r(table1)
+matrix list r(tablefull1)
+```
+
+Store results for `esttab`:
+
+```stata
+balanceplot wage age i.married i.race tenure, group(union) store(bp)
+esttab bp_mean_g0 bp_mean_g1 bp_imbalance, se label mtitles
+balanceplot wage age i.married tenure, group(race) store(br)
+esttab br_mean_g1 br_mean_g2 br_mean_g3 br_imb_g2 br_imb_g3, se label mtitles
+```
+
+Continuous treatment:
+
+```stata
+balanceplot age i.union i.race tenure, contreat(wage)
+balanceplot age i.union i.race tenure, contreat(wage) threshold(.1)
+balanceplot age i.union i.race tenure, contreat(wage) abs sort threshold(.1)
+balanceplot age i.union i.race tenure, contreat(wage) fadens sort tablefull
+balanceplot age i.union i.race tenure, contreat(wage) store(ct)
+esttab ct_correlation, se label mtitles
+matrix list r(correlation)
+```
+
+More than two groups:
+
+```stata
+balanceplot wage age i.married tenure, group(race)
+```
+
+## Matching-weight examples
+
+After ATT matching with `psmatch2`, `_weight` equals 1 for treated observations and records how often or how strongly each matched control contributes. Unmatched controls have missing weights. `matchweight()` displays both the original complete-case balance and the weighted matched balance. With a conventional 0/1 treatment variable:
+
+```stata
+sysuse nlsw88, clear
+psmatch2 union age tenure grade, neighbor(1) logit
+balanceplot age tenure grade, group(union) matchweight(_weight)
+balanceplot age tenure grade, group(union) matchweight(_weight) store(bm)
+esttab bm_unw_mean_g0 bm_unw_mean_g1 bm_unw_imbalance, se label mtitles
+esttab bm_w_mean_g0 bm_w_mean_g1 bm_w_imbalance, se label mtitles
+```
+
+Official `teffects` and `stteffects` estimators provide raw and matched or weighted standardized differences through `tebalance summarize`. `balanceplot, tebalance` calls that command internally and plots the results:
+
+```stata
+sysuse nlsw88, clear
+teffects psmatch (wage) (union age tenure grade), atet
+balanceplot, tebalance
+balanceplot age tenure, tebalance absolute sort threshold(.1)
+```

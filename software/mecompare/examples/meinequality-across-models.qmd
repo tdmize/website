@@ -1,0 +1,171 @@
+---
+title: "Comparing ME inequalities across models"
+subtitle: "Examples 4.3.b and 4.3.a of Mize and Han (2025): nested models, and separate samples"
+---
+
+The ME inequality of Mize and Han (2025) summarizes the effect of a nominal
+predictor in one number: the average absolute difference in the outcome across
+its categories. The `meinequality` option of `mecompare` adds it to the table;
+with two models, the **Difference** row tests whether the inequality changed.
+This page shows nested models and models fit to separate samples. The same
+examples, run with the `meinequality` command, are on the
+[`meinequality`](../../meinequality/index.html) pages.
+
+## Nested models: how much of a racial-ethnic inequality is accounted for by SES?
+
+How much of the racial-ethnic inequality in functional limitations is
+accounted for by education, wealth, and income? The outcome is a count of
+limitations in instrumental activities of daily living from the Health and
+Retirement Study. Fit the model with and without those variables, store both,
+and name them in `models()`.
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/cda_hrs", clear
+(cda_hrs.dta | Health & Retirement Study 2020)
+
+. drop if missing(iadl, race4cat, collegeB, wealth_w, income_w)
+(114 observations deleted)
+
+. 
+. quietly nbreg iadl i.race4cat, vce(robust)
+
+. estimates store basemod
+
+. 
+. quietly nbreg iadl i.race4cat i.collegeB c.wealth_w c.income_w, vce(robust)
+
+. estimates store medmod
+
+```
+
+```{.stata-run}
+. mecompare i.race4cat, models(basemod medmod) meinequality
+
+
+Predicting: Predicted mean of iadl
+
+Marginal effects and cross-model differences (N_basemod=15609) (N_medmod=15609)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+race4cat                         |                                       
+               ME Inequality     |                                       
+                         basemod |     1      0.046      0.012      0.000
+                          medmod |     2      0.038      0.011      0.001
+                      Difference |     3      0.009      0.022      0.698
+    Non-Hispani - Non-Hispan     |                                       
+                         basemod |     4      0.053      0.018      0.004
+                          medmod |     5     -0.049      0.018      0.006
+                      Difference |     6      0.102      0.008      0.000
+     Hispanic - Non-Hispanic     |                                       
+                         basemod |     7      0.074      0.022      0.001
+                          medmod |     8     -0.060      0.019      0.002
+                      Difference |     9      0.134      0.010      0.000
+    Other - Non-Hispanic Whi     |                                       
+                         basemod |    10      0.033      0.036      0.349
+                          medmod |    11     -0.010      0.034      0.776
+                      Difference |    12      0.043      0.011      0.000
+
+```
+
+The first block is the ME inequality in each model and the **Difference**: the
+reduction in racial-ethnic inequality once education, wealth, and income are
+in the model. The blocks beneath it are the contrasts with the base category.
+[`metest`](../../metest/index.html) gives the reduction as a proportion of the
+baseline inequality:
+
+```{.stata-run}
+. metest (1 - 2) / 1
+
+                                 |  estimate         se     pvalue 
+---------------------------------+--------------------------------
+race4cat_MEineq                  |                                
+    (basemod - medmod) / basemod |     0.187      0.436      0.667 
+
+```
+
+`meinequality race4cat, models(basemod medmod)` gives the same difference.
+
+## Separate samples: has the effect of religion changed over time?
+
+When the two models are fit to different samples -- different groups, or
+different time periods -- add the `groups` option. Here the question is
+whether religious-tradition differences in willingness to let a gay man speak
+in public were larger before 1980 than after 2010. Two logits are fit, one
+per period, and `groupnames()` labels the rows.
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/cda_gss", clear
+(cda_gss.dta |  GSS 1972-2021 CDA - Categorical Data Analysis | date created 2023)
+
+. drop if missing(spkhomo, reltrad, age, woman)
+(30,806 observations deleted)
+
+. 
+. quietly logit spkhomo i.reltrad c.age i.woman if year < 1980, vce(robust)
+
+. estimates store premod
+
+. 
+. quietly logit spkhomo i.reltrad c.age i.woman if year >= 2010, vce(robust)
+
+. estimates store postmod
+
+```
+
+```{.stata-run}
+. mecompare i.reltrad, models(premod postmod) groups groupnames(Pre1980 Post2010) ///
+>           meinequality(unweighted)
+
+
+Predicting: Pr(spkhomo)
+
+Marginal effects and cross-model differences (N_Pre1980=5593) (N_Post2010=8226)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+reltrad                          |                                       
+              Unwgt ME Ineq.     |                                       
+                         Pre1980 |     1      0.156      0.011      0.000
+                        Post2010 |     2      0.072      0.007      0.000
+                      Difference |     3      0.083      0.013      0.000
+    Mainline Pr - Evangelica     |                                       
+                         Pre1980 |     4      0.212      0.017      0.000
+                        Post2010 |     5      0.118      0.011      0.000
+                      Difference |     6      0.094      0.021      0.000
+    Black Prote - Evangelica     |                                       
+                         Pre1980 |     7      0.075      0.026      0.004
+                        Post2010 |     8     -0.003      0.018      0.883
+                      Difference |     9      0.078      0.032      0.014
+      Catholic - Evangelical     |                                       
+                         Pre1980 |    10      0.205      0.018      0.000
+                        Post2010 |    11      0.094      0.011      0.000
+                      Difference |    12      0.111      0.021      0.000
+        Jewish - Evangelical     |                                       
+                         Pre1980 |    13      0.366      0.030      0.000
+                        Post2010 |    14      0.150      0.017      0.000
+                      Difference |    15      0.216      0.034      0.000
+    Other Faith - Evangelica     |                                       
+                         Pre1980 |    16      0.176      0.038      0.000
+                        Post2010 |    17      0.070      0.017      0.000
+                      Difference |    18      0.107      0.042      0.011
+    Nonaffiliat - Evangelica     |                                       
+                         Pre1980 |    19      0.325      0.025      0.000
+                        Post2010 |    20      0.125      0.010      0.000
+                      Difference |    21      0.200      0.027      0.000
+
+```
+
+The **Difference** row tests whether the inequality changed. It is
+significantly smaller after 2010 than before 1980: religious traditions have
+converged on this question.
+
+`unweighted` compares the marginal effects alone; the default weighted version
+would also reflect the change in the religious makeup of the GSS between the
+two periods. `meinequality(all)` reports both.
+
+## Reference
+
+> Mize, Trenton D. and Bing Han. 2025. "Inequality and Total Effect Summary
+> Measures for Nominal and Ordinal Variables." *Sociological Science* 12:
+> 115--157.

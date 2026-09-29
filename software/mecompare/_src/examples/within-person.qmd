@@ -1,0 +1,88 @@
+---
+title: "Within-person effects"
+subtitle: "Correlated random effects (Mundlak) logit models"
+---
+<<dd_version: 2>>
+
+With panel data, the effect of a variable that changes over time can come from
+differences between people (people who are married compared with people who
+are not) or from changes within a person (the same person when married
+compared with when not married). A random-effects model mixes the two.
+
+Fixed-effects models estimate the within-person effect, but marginal effects
+after them have known problems, especially for categorical outcomes. The
+correlated random effects (Mundlak) specification gives the same
+within-person estimate: add each time-varying predictor's person mean to a
+random-effects model. The coefficient on the predictor is then the
+within-person effect.
+
+The data are those of the [panel models](panel.html) example: depressive
+symptoms among adults aged 51 and older in the Health and Retirement Study,
+2010 to 2020. Marital status and age change over time, so each gets its
+person mean.
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/hrs_si_2025", clear
+keep if year >= 2010 & age >= 51
+generate depressed = cesd >= 4 if !missing(cesd)
+drop if missing(depressed, marstatB, age, woman, race4cat, collegeB)
+xtset hhidpn year
+
+bysort hhidpn: egen mean_marstatB = mean(marstatB)
+bysort hhidpn: egen mean_age = mean(age)
+
+quietly xtlogit depressed i.marstatB c.age i.woman i.race4cat i.collegeB, re intpoints(30)
+estimates store re
+
+quietly xtlogit depressed i.marstatB c.mean_marstatB c.age c.mean_age ///
+    i.woman i.race4cat i.collegeB, re intpoints(30)
+estimates store cre
+<</dd_do>>
+```
+
+## The within-person effect
+
+In the correlated random effects model (`cre`), the marginal effect of being
+married holds the person's mean fixed: it is the within-person effect, the
+change in the probability of depressive symptoms for the same person when
+married compared with when not married. The random-effects model (`re`)
+gives the usual estimate, and the **Difference** row tests whether the two
+differ.
+
+```{.stata-run}
+<<dd_do>>
+mecompare marstatB, models(re cre)
+<</dd_do>>
+```
+
+In the random-effects model, being married is associated with a 9.0
+percentage point reduction in the probability of depressive symptoms.
+Examining only within-person variation, the effect of being married is a 5.9
+percentage point reduction. The random-effects estimate is 3.2 points larger
+(p < .001) because it pools both between- and within-person variation, shown
+next.
+
+## The between-person effect
+
+`cochange()` lets the person mean change along with marital status. With
+`start()` and `end()` it changes from 0 (not married at any interview) to 1
+(married at every interview), so the second row is the between-person effect:
+the difference between people who are married at every interview and people
+who are married at none.
+
+```{.stata-run}
+<<dd_do>>
+mecompare marstatB, models(cre) cochange(mean_marstatB) ///
+    start(mean_marstatB=0) end(mean_marstatB=1)
+
+metest 2 - 1
+<</dd_do>>
+```
+
+Within a person, being married is associated with a 5.9 percentage point
+reduction in the probability of depressive symptoms; between people, it is
+associated with a 10.6 percentage point reduction. `metest` shows the
+between-person effect is 4.7 points larger (p < .001): people who are married
+at every interview differ from people who are married at none by more than the
+same person differs when married and when not.

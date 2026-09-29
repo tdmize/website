@@ -1,0 +1,393 @@
+---
+title: "Options"
+subtitle: "Every totalme option, with an example of each"
+---
+
+```stata
+totalme varlist [if] [in] [, options]
+```
+
+The examples use Stata's `nlsw88` data with occupation collapsed to three
+groups and modeled with `mlogit`.
+
+```{.stata-run}
+. sysuse nlsw88, clear
+(NLSW, 1988 extract)
+
+. drop if missing(occupation, wage, ttl_exp)
+(9 observations deleted)
+
+. recode occupation (1/2 = 1 "Professional/managerial") (3/5 = 2 "Sales/clerical/craft") ///
+>                   (6/13 = 3 "Other"), gen(occ3)
+(1,920 differences between occupation and occ3)
+
+. 
+. quietly mlogit occ3 i.collgrad i.race c.age i.south, vce(robust)
+
+. estimates store basemod
+
+. quietly mlogit occ3 i.collgrad i.race c.age i.south c.ttl_exp c.wage, vce(robust)
+
+. estimates store medmod
+
+```
+
+## `models()` -- one model or two
+
+`models()` is optional for one model (the estimates in memory are used) and
+required for two. With two models the Total ME is reported for each and the
+difference is tested; the two models can be the same or different estimation
+commands. `vce(robust)` is strongly recommended on both.
+
+```{.stata-run}
+. totalme collgrad age, models(medmod)
+
+Total ME Estimates (N = 2237)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+collgrad                 |                                               
+College gr vs Not colleg |      0.264       0.023      11.527       0.000 
+-------------------------+-----------------------------------------------
+age                      |                                               
+          + 1 (centered) |      0.007       0.003       2.267       0.023 
+
+. totalme collgrad age, models(basemod medmod)
+
+Total ME Estimates (N_basemod = 2237 , N_medmod = 2237)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+collgrad                 |                                               
+       Model 1 (basemod) |      0.248       0.021      11.572       0.000 
+        Model 2 (medmod) |      0.264       0.023      11.527       0.000 
+       Cross-Model Diff. |     -0.016       0.008      -2.049       0.040 
+-------------------------+-----------------------------------------------
+age + 1 (centered)       |                                               
+       Model 1 (basemod) |      0.005       0.003       1.831       0.067 
+        Model 2 (medmod) |      0.007       0.003       2.267       0.023 
+       Cross-Model Diff. |     -0.001       0.001      -1.152       0.249 
+
+```
+
+## `amount()`, `centered`, `uncentered` -- the size of a continuous change
+
+For a continuous variable the default is a one-unit change, centered on the
+observed value. `amount()` takes a number, `sd`, `2sd`, `trimrange` (5th to
+95th percentile), `range` (minimum to maximum), `p#-p#` (from one percentile
+to another, e.g. `p10-p90`), or `rate` (the instantaneous
+rate of change); one value applies to all continuous variables, several apply
+in order. `uncentered` makes the change
+run upward from the observed value.
+
+```{.stata-run}
+. totalme age, models(medmod) amount(sd)
+
+Total ME Estimates (N = 2237)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+age                      |                                               
+         + SD (centered) |      0.020       0.009       2.268       0.023 
+
+. totalme age, models(medmod) amount(trimrange)
+
+Total ME Estimates (N = 2237)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+age                      |                                               
+               p5 to p95 |      0.058       0.026       2.280       0.023 
+
+. totalme age, models(medmod) amount(p10-p90)
+
+Total ME Estimates (N = 2237)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+age                      |                                               
+              p10 to p90 |      0.058       0.026       2.280       0.023 
+
+. totalme age, models(medmod) amount(10) uncentered
+
+Total ME Estimates (N = 2237)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+age                      |                                               
+                    + 10 |      0.060       0.024       2.494       0.013 
+
+```
+
+## `start()` -- where the change begins
+
+```{.stata-run}
+. totalme age, models(medmod) start(age=40) amount(5)
+
+Total ME Estimates (N = 2237)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+age                      |                                               
+start (40) + 5 (centere) |      0.032       0.014       2.297       0.022 
+
+```
+
+## `atmeans` -- covariates at their means
+
+```{.stata-run}
+. totalme collgrad, models(medmod) atmeans
+
+Total ME Estimates (N = 2237)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+collgrad                 |                                               
+College gr vs Not colleg |      0.281       0.025      11.105       0.000 
+
+```
+
+## `weighted`, `unweighted`, `all` -- nominal variables
+
+For a nominal variable the per-outcome quantity is the ME inequality of
+[`meinequality`](../meinequality/index.html), so the Total ME is a Total ME
+inequality, weighted by category shares by default. `unweighted` gives every
+pairwise comparison the same weight; `all` reports both. For a continuous or
+binary variable these options are ignored and the variable keeps its one row.
+
+```{.stata-run}
+. totalme race, models(medmod)
+
+Total ME Estimates (N = 2237)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+race                     |                                               
+          total ME Ineq. |      0.147       0.043       3.427       0.001 
+
+. totalme race, models(medmod) unweighted
+
+Total ME Estimates (N = 2237)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+race                     |                                               
+    Unwgt total ME Ineq. |      0.149       0.051       2.922       0.003 
+
+. totalme race, models(medmod) all
+
+Total ME Estimates (N = 2237)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+race                     |                                               
+          total ME Ineq. |      0.147       0.043       3.427       0.001 
+    Unwgt total ME Ineq. |      0.149       0.051       2.922       0.003 
+
+```
+
+## `groups` and `groupnames()` -- models fit on distinct samples
+
+`groups` specifies that the two models used for comparison are fit on
+distinct samples; each model's marginal effects are then averaged over its own
+sample. `group(varname)`, the syntax of earlier versions, is also accepted;
+*varname* must take one value in each model's sample and a different value in
+each model.
+
+```{.stata-run}
+. quietly mlogit occ3 i.collgrad c.age if south == 0, vce(robust)
+
+. estimates store nonsouth
+
+. quietly mlogit occ3 i.collgrad c.age if south == 1, vce(robust)
+
+. estimates store south
+
+. 
+. totalme collgrad, models(nonsouth south) groups groupnames(NonSouth South)
+
+Total ME Estimates (N_nonsouth = 1300 , N_south = 937)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+collgrad                 |                                               
+      Model 1 (NonSouth) |      0.277       0.028       9.886       0.000 
+         Model 2 (South) |      0.228       0.036       6.292       0.000 
+       Cross-Model Diff. |      0.049       0.046       1.079       0.281 
+
+```
+
+## `by()` and `over()` -- within levels of another variable
+
+`by(varname)` computes the Total ME at each level of a binary or nominal
+covariate as a counterfactual (the whole sample set to that level);
+`over(varname)` computes it within each observed subgroup. The variable must
+be in the model with the `i.` prefix.
+
+With either option the table also holds a **Diff.** row for each pair of
+levels -- the Total ME at the first level minus that at the second, with its
+standard error and test, which is the test of whether the effect differs
+across the groups (a test of interaction). Neither option may name one of
+the focal variables; [`mecompare`](../mecompare/index.html) handles that case.
+
+```{.stata-run}
+. totalme collgrad, models(medmod) by(south)
+
+Total ME Estimates (N = 2237)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+collgrad(Not south)      |                                               
+College gr vs Not colleg |      0.272       0.024      11.451       0.000 
+-------------------------+-----------------------------------------------
+collgrad(South)          |                                               
+College gr vs Not colleg |      0.254       0.023      11.130       0.000 
+-------------------------+-----------------------------------------------
+collgrad Diff.           |                                               
+College gr vs Not colleg |      0.018       0.009       2.002       0.045 
+
+Diff. = Not south - South
+
+. totalme collgrad, models(medmod) over(south)
+
+Total ME Estimates (N = 2237)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+collgrad(Not south)      |                                               
+College gr vs Not colleg |      0.275       0.024      11.261       0.000 
+-------------------------+-----------------------------------------------
+collgrad(South)          |                                               
+College gr vs Not colleg |      0.248       0.022      11.398       0.000 
+-------------------------+-----------------------------------------------
+collgrad Diff.           |                                               
+College gr vs Not colleg |      0.027       0.009       2.892       0.004 
+
+Diff. = Not south - South
+
+```
+
+## Display options: `ci`, `level()`, `decimals()`, `labwidth()`, `title()`
+
+```{.stata-run}
+. totalme collgrad age, models(basemod medmod) ci decimals(4) title("Total MEs on occupation group")
+
+Total MEs on occupation group (N_basemod = 2237 , N_medmod = 2237)
+
+                         |   Estimate   Std. err.           z       P>|z|      95% LL      95% UL 
+-------------------------+-----------------------------------------------------------------------
+collgrad                 |                                                                       
+       Model 1 (basemod) |     0.2478      0.0214     11.5722      0.0000      0.2058      0.2897 
+        Model 2 (medmod) |     0.2638      0.0229     11.5272      0.0000      0.2189      0.3087 
+       Cross-Model Diff. |    -0.0160      0.0078     -2.0490      0.0405     -0.0314     -0.0007 
+-------------------------+-----------------------------------------------------------------------
+age + 1 (centered)       |                                                                       
+       Model 1 (basemod) |     0.0054      0.0029      1.8307      0.0671     -0.0004      0.0111 
+        Model 2 (medmod) |     0.0065      0.0029      2.2673      0.0234      0.0009      0.0121 
+       Cross-Model Diff. |    -0.0011      0.0010     -1.1524      0.2492     -0.0031      0.0008 
+
+```
+
+## `commands` and `details`
+
+`commands` prints the command of each model and the `margins` command (and
+with two models the `suest2` command) that produced the estimates; `details`
+prints their output.
+
+```{.stata-run}
+. totalme collgrad, models(basemod medmod) commands
+
+
+Model 1 (basemod) is:
+     mlogit occ3 i.collgrad i.race c.age i.south
+Model 2 (medmod) is:
+     mlogit occ3 i.collgrad i.race c.age i.south c.ttl_exp c.wage
+suest2 model is: 
+     suest2 basemod medmod
+margins specification is: 
+     margins , at(collgrad=(0 1))    post
+
+Total ME Estimates (N_basemod = 2237 , N_medmod = 2237)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+collgrad                 |                                               
+       Model 1 (basemod) |      0.248       0.021      11.572       0.000 
+        Model 2 (medmod) |      0.264       0.023      11.527       0.000 
+       Cross-Model Diff. |     -0.016       0.008      -2.049       0.040 
+
+```
+
+## Weights, svy, and mi
+
+Weights, the `svy:` prefix, and `mi estimate` go on the stored models, not
+on `totalme`; with two models both must carry the same. Multilevel models
+need a higher-level weight as well or, better, the `svy:` prefix. See the
+[help file](help.html#sampleweights).
+
+Under `mi`, one model may be fit with plain `mi estimate:` or with
+`mi estimate, post:`, which return the same pooled statistic; to compare two
+models, fit both with `mi estimate, post:`. `mi estimate` requires the
+user-written `mimrgns` package.
+
+## Saved results
+
+`totalme` is r-class. For a continuous or binary variable, `r(tmcm1#)`,
+`r(tmcm2#)`, and `r(tmcd#)` hold the Total ME for model 1, model 2, and their
+difference for the *#*th such variable in *varlist*; for a nominal variable
+`r(tmwm1#)`, `r(tmwm2#)`, `r(tmwd#)` hold the weighted Total ME inequality and
+`r(tmuwm1#)`, `r(tmuwm2#)`, `r(tmuwd#)` the unweighted. With `by()` or
+`over()`, `_level` is appended, and the **Diff.** rows append `_d`*level1*`_`*level2*
+(e.g. `r(tmcm11_d0_1)`). `r(n_mods)` and `r(n_vars)` hold the number of models
+and the number of variables. `r(table)` holds the displayed table and
+`r(se_missing)` counts quantities whose standard error could not be computed.
+The `margins` results are stored as `totalme_margins` and, with two models,
+the combined system as `totalme_suest2`.
+
+```{.stata-run}
+. totalme collgrad race, models(basemod medmod)
+
+Total ME Estimates (N_basemod = 2237 , N_medmod = 2237)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+collgrad                 |                                               
+       Model 1 (basemod) |      0.248       0.021      11.572       0.000 
+        Model 2 (medmod) |      0.264       0.023      11.527       0.000 
+       Cross-Model Diff. |     -0.016       0.008      -2.049       0.040 
+-------------------------+-----------------------------------------------
+race total ME Ineq.      |                                               
+       Model 1 (basemod) |      0.152       0.044       3.492       0.000 
+        Model 2 (medmod) |      0.147       0.043       3.427       0.001 
+       Cross-Model Diff. |      0.005       0.006       0.902       0.367 
+
+. return list
+
+scalars:
+         r(se_missing) =  0
+              r(tmwd1) =  .0053498747963924
+             r(tmwm21) =  .1469832421949591
+             r(tmwm11) =  .1523331169913515
+              r(tmcd1) =  -.0160303373827734
+             r(tmcm21) =  .2637991970588639
+             r(tmcm11) =  .2477688596760905
+             r(n_vars) =  2
+             r(n_mods) =  2
+
+matrices:
+              r(table) :  6 x 6
+
+```
+
+## Bootstrap standard errors
+
+```stata
+capture program drop boot_tot
+program define boot_tot, rclass
+    mlogit healthR i.race4 c.age i.woman, base(1)
+    totalme race4
+    return scalar w_tot = r(tmwm11)
+end
+
+bootstrap w_tot=r(w_tot), reps(1000): boot_tot
+```

@@ -1,0 +1,173 @@
+---
+title: "Examples"
+subtitle: "Six common graphs in cleanplots and in Stata's classic s2color scheme"
+---
+<<dd_version: 2>>
+
+Each example below draws the same graph twice: once with `scheme(cleanplots)`
+and once with `scheme(s2color)`, Stata's long-standing default scheme (Stata
+18's default is `stcolor`). Nothing else about the commands changes. The
+graphs are drawn with the data from [`usetdm`](../usetdm/index.html), so every
+example can be run as shown. With `set scheme cleanplots, perm` in place, the
+`scheme()` option is not needed.
+
+## Histogram
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/addhealth4", clear
+
+hist vidtv, percent scheme(cleanplots)
+graph export "fig/ex-hist-cleanplots.png", replace width(1400)
+hist vidtv, percent scheme(s2color)
+graph export "fig/ex-hist-s2color.png", replace width(1400)
+<</dd_do>>
+```
+
+::: {layout-ncol=2}
+![cleanplots](fig/ex-hist-cleanplots.png){fig-alt="Histogram of hours of video and television per week with the cleanplots scheme: white background, light gridlines, horizontal axis labels."}
+
+![s2color](fig/ex-hist-s2color.png){fig-alt="The same histogram in the s2color scheme."}
+:::
+
+## Predictions from an ordinal logit with dashed confidence intervals
+
+```{.stata-run}
+<<dd_do>>
+quietly ologit health orole vrole i.woman age income i.race i.educ
+quietly margins, at(orole=(0(1)10))
+
+marginsplot, recastci(rline) ciopts(lpattern(dash) color(*.5)) scheme(cleanplots) ///
+    legend(order(6 "Poor" 7 "Fair" 8 "Good" 9 "Very Good" 10 "Excellent"))
+graph export "fig/ex-ologit-cleanplots.png", replace width(1400)
+marginsplot, recastci(rline) ciopts(lpattern(dash) color(*.5)) scheme(s2color) ///
+    legend(order(6 "Poor" 7 "Fair" 8 "Good" 9 "Very Good" 10 "Excellent"))
+graph export "fig/ex-ologit-s2color.png", replace width(1400)
+<</dd_do>>
+```
+
+::: {layout-ncol=2}
+![cleanplots](fig/ex-ologit-cleanplots.png){fig-alt="Predicted probabilities of five self-rated health categories across a count of obligatory roles, with dashed confidence-interval lines, in the cleanplots scheme: each category has its own color, marker, and line pattern."}
+
+![s2color](fig/ex-ologit-s2color.png){fig-alt="The same plot in the s2color scheme."}
+:::
+
+## Predictions at combinations of two nominal variables
+
+```{.stata-run}
+<<dd_do>>
+quietly logit alcB i.woman##i.parrole c.age i.race i.educ c.wages
+quietly margins, at(woman=(0 1) educ=(0(1)4))
+
+marginsplot, recast(scatter) x(educ) scheme(cleanplots)
+graph export "fig/ex-pred-cleanplots.png", replace width(1400)
+marginsplot, recast(scatter) x(educ) scheme(s2color)
+graph export "fig/ex-pred-s2color.png", replace width(1400)
+<</dd_do>>
+```
+
+::: {layout-ncol=2}
+![cleanplots](fig/ex-pred-cleanplots.png){fig-alt="Predicted probability of drinking alcohol by education level for men and women, as points with confidence intervals, in the cleanplots scheme."}
+
+![s2color](fig/ex-pred-s2color.png){fig-alt="The same plot in the s2color scheme."}
+:::
+
+## Bar chart
+
+`cleanplots` uses its softer palette for the bars.
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_gss", clear
+
+graph bar income, over(degree) over(woman) asyvars scheme(cleanplots)
+graph export "fig/ex-bar-cleanplots.png", replace width(1400)
+graph bar income, over(degree) over(woman) asyvars scheme(s2color)
+graph export "fig/ex-bar-s2color.png", replace width(1400)
+<</dd_do>>
+```
+
+::: {layout-ncol=2}
+![cleanplots](fig/ex-bar-cleanplots.png){fig-alt="Bar chart of mean income by degree, grouped by gender, in the cleanplots scheme: softer bar colors and a light grid."}
+
+![s2color](fig/ex-bar-s2color.png){fig-alt="The same bar chart in the s2color scheme."}
+:::
+
+## Residual and influence plot
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/pew16", clear
+
+quietly logit trump i.woman c.age ib4.educ i.race i.polparty3 ///
+              i.religB c.income ib3.region
+gen index = _n
+predict residstd, rs
+predict influence, dbeta
+
+twoway scatter residstd index [w=influence], scheme(cleanplots)
+graph export "fig/ex-resid-cleanplots.png", replace width(1400)
+twoway scatter residstd index [w=influence], scheme(s2color)
+graph export "fig/ex-resid-s2color.png", replace width(1400)
+<</dd_do>>
+```
+
+::: {layout-ncol=2}
+![cleanplots](fig/ex-resid-cleanplots.png){fig-alt="Scatter plot of standardized residuals against observation number with markers sized by influence, in the cleanplots scheme."}
+
+![s2color](fig/ex-resid-s2color.png){fig-alt="The same plot in the s2color scheme."}
+:::
+
+## Lowess plot
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/scireview3", clear
+sort phd
+
+lowess jobimp phd, scheme(cleanplots)
+graph export "fig/ex-lowess-cleanplots.png", replace width(1400)
+lowess jobimp phd, scheme(s2color)
+graph export "fig/ex-lowess-s2color.png", replace width(1400)
+<</dd_do>>
+```
+
+::: {layout-ncol=2}
+![cleanplots](fig/ex-lowess-cleanplots.png){fig-alt="Lowess smoother of job importance against PhD prestige with the scatter of points, in the cleanplots scheme."}
+
+![s2color](fig/ex-lowess-s2color.png){fig-alt="The same lowess plot in the s2color scheme."}
+:::
+
+## All ten colors
+
+A scatter plot with ten groups and the matching bar chart show the full
+palette, with the darker and lighter colors alternating.
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_gss", clear
+
+twoway scatter income occprest if isco88cat == 1, msize(large) || ///
+       scatter income occprest if isco88cat == 2, msize(large) || ///
+       scatter income occprest if isco88cat == 3, msize(large) || ///
+       scatter income occprest if isco88cat == 4, msize(large) || ///
+       scatter income occprest if isco88cat == 5, msize(large) || ///
+       scatter income occprest if isco88cat == 6, msize(large) || ///
+       scatter income occprest if isco88cat == 7, msize(large) || ///
+       scatter income occprest if isco88cat == 8, msize(large) || ///
+       scatter income occprest if isco88cat == 9, msize(large) || ///
+       scatter income occprest if isco88cat == 10, msize(large) || ///
+       , scheme(cleanplots)
+graph export "fig/ex-ten-scatter-cleanplots.png", replace width(1400)
+
+graph bar income, over(isco88cat) asyvars scheme(cleanplots) ///
+    title("Average income by occupation")
+graph export "fig/ex-ten-bar-cleanplots.png", replace width(1400)
+<</dd_do>>
+```
+
+::: {layout-ncol=2}
+![Scatter plot](fig/ex-ten-scatter-cleanplots.png){fig-alt="Scatter plot of income against occupational prestige with ten occupation groups in the ten cleanplots colors and marker symbols."}
+
+![Bar chart](fig/ex-ten-bar-cleanplots.png){fig-alt="Bar chart of average income for ten occupation groups in the softer cleanplots bar colors."}
+:::

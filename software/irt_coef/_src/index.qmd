@@ -1,0 +1,85 @@
+---
+title: "irt_coef"
+subtitle: "Stata command for y*-standardized coefficients in item response theory models"
+---
+<<dd_version: 2>>
+
+`irt_coef` is a Stata command that calculates y\*-standardized coefficients
+for binary and ordinal item response theory (IRT) models. The discrimination
+parameters of an IRT model are on the log-odds (or probit) scale of each
+item, which makes their size hard to judge; standardizing on the latent
+propensity y\* behind each item puts the coefficients on a common scale for
+interpreting them and for comparing across items and models. The raw
+coefficient, its standard error, and *p*-value are reported alongside the
+standardized coefficient.
+
+Both types of coefficients are covered in my graduate course slides on
+item response theory:
+[Item Response Theory slides](https://drive.google.com/file/d/1G9sWGLMAN6SGWzw3XqOXyBw7MC-R_hGI/view?usp=drive_link).
+All of the materials for the course, including example code, are on the
+[Latent Variable Modeling](https://www.trentonmize.com/teaching/lvm) page.
+
+## Installation
+
+```stata
+net install irt_coef, from("https://tdmize.github.io/data") replace
+```
+
+To read the help file in Stata, type `help irt_coef`; it is also
+[on this site](help.html).
+
+## Citation
+
+Please cite the use of `irt_coef` as:
+
+> Mize, Trenton D. 2024. "irt_coef: Stata command for y*-standardized
+> coefficients in item response theory models."
+> <https://www.trentonmize.com/software/irt_coef>
+
+## Examples
+
+### After the irt command
+
+The example fits a graded response model to ten ordinal items measuring
+mastery (a sense of control over one's life) in Add Health Wave IV.
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/lvm_ah4", clear
+
+irt grm nocontrol handle yourway overwhelm nofutureR cantchangeR ///
+        othersdetR interfereR lowcontrolR cantsolveR
+<</dd_do>>
+```
+
+`irt_coef` then calculates the y*-standardized coefficients. The `help`
+option adds a legend beneath the table explaining each column.
+
+```{.stata-run}
+<<dd_do>>
+irt_coef, help
+<</dd_do>>
+```
+
+### After gsem
+
+An identical model can be fit with `gsem`. Because `gsem` lets the latent
+variable take any name, the `latent()` option tells `irt_coef` which one to
+use (after `irt` it is always `Theta`, and the option is not needed).
+
+```{.stata-run}
+<<dd_do>>
+gsem (Mastery -> nocontrol handle yourway overwhelm nofutureR cantchangeR ///
+                 othersdetR interfereR lowcontrolR cantsolveR, ologit), var(Mastery@1)
+<</dd_do>>
+```
+
+```{.stata-run}
+<<dd_do>>
+irt_coef, latent(Mastery)
+<</dd_do>>
+```
+
+The `sort` option orders the items by the size of the standardized
+coefficient, and `decimals()` sets the number of decimal places; see the
+[help file](help.html) for the full list of options.

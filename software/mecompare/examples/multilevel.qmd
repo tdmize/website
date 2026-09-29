@@ -1,0 +1,156 @@
+---
+title: "Multilevel models"
+subtitle: "Students nested in schools: mixed-effects logit"
+---
+
+`mecompare` works after multilevel models such as `melogit`. The marginal
+effects average over the random effects (the default prediction), so they are
+changes in predicted probabilities, as after an ordinary `logit`.
+
+The example uses wave 1 of Add Health: about 5,800 students in 132 schools.
+The outcome is being a current smoker. The predictors are sex, age, race, and
+whether the student's mother has a college degree, plus a school-level
+variable: the share of students in the school whose mother has a college
+degree.
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/ah_si_2026", clear
+(ah-si.dta | Add Health Waves 1-6: Cleaned for MCAP SI)
+
+. keep if wave == 1
+(22,963 observations deleted)
+
+. rename cluster school
+
+. drop if missing(smoker, male, age, race, momeduc)
+(679 observations deleted)
+
+. generate momcollege = momeduc >= 4
+
+. bysort school: egen school_momcollege = mean(momcollege)
+
+. 
+. quietly melogit smoker i.male c.age i.race i.momcollege c.school_momcollege || school:
+
+. estimates store multilevel
+
+```
+
+With no variable listed before the comma, `mecompare` computes marginal effects
+for every predictor. Age and the school's share of college-educated mothers are
+changed by one standard deviation:
+
+```{.stata-run}
+. mecompare, models(multilevel) amount(sd)
+
+
+Predicting: Marginal predicted mean
+
+Marginal effects (N_multilevel=5825)
+
+                                 |  ME #   Estimate         SE      P>|z|
+---------------------------------+---------------------------------------
+male                             |                                       
+               Male - Female     |                                       
+                      multilevel |     1      0.010      0.011      0.338
+---------------------------------+---------------------------------------
+age + SD (centered)              |                                       
+                      multilevel |     2      0.061      0.006      0.000
+---------------------------------+---------------------------------------
+race                             |                                       
+               Black - White     |                                       
+                      multilevel |     3     -0.167      0.013      0.000
+              Latinx - White     |                                       
+                      multilevel |     4     -0.085      0.020      0.000
+               Asian - White     |                                       
+                      multilevel |     5     -0.129      0.028      0.000
+               Other - White     |                                       
+                      multilevel |     6      0.000      0.047      1.000
+---------------------------------+---------------------------------------
+momcollege                       |                                       
+                       1 - 0     |                                       
+                      multilevel |     7     -0.060      0.012      0.000
+---------------------------------+---------------------------------------
+school momcollege + SD (centered |                                       
+                      multilevel |     8     -0.008      0.008      0.335
+
+```
+
+Black students are 16.7 percentage points less likely to smoke than White
+students. A student whose mother has a college degree is 6.0 points less
+likely to smoke, but the share of college-educated mothers in the school adds
+little beyond that: a one standard deviation increase is associated with a
+0.8 point reduction (p = .34).
+
+## Ordinary and multilevel logit
+
+The coefficients of a multilevel logit are on a different scale than those of
+an ordinary logit, so they cannot be compared directly; the marginal effects
+can. Here the same model is fit as an ordinary logit, which ignores the
+schools, and compared with the multilevel logit. Fit both models without
+`vce(robust)`: `mecompare` clusters the standard errors on school.
+
+```{.stata-run}
+. quietly logit smoker i.male c.age i.race i.momcollege c.school_momcollege
+
+. estimates store ordinary
+
+. 
+. mecompare, models(ordinary multilevel) amount(sd)
+NOTE: mecompare clusters the standard errors on the highest-level group of the multilevel or panel m
+> odel(s), so they will differ from the models' own. Fit every model without vce(robust); mecompare 
+> supplies the clustering.
+
+
+Predicting: Default prediction for each model
+
+Marginal effects and cross-model differences (N_ordinary=5825) (N_multilevel=5825)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+male                             |                                       
+               Male - Female     |                                       
+                        ordinary |     1      0.010      0.012      0.381
+                      multilevel |     2      0.010      0.011      0.370
+                      Difference |     3     -0.000      0.001      0.977
+---------------------------------+---------------------------------------
+age + SD (centered)              |                                       
+                        ordinary |     4      0.067      0.007      0.000
+                      multilevel |     5      0.061      0.007      0.000
+                      Difference |     6      0.006      0.003      0.013
+---------------------------------+---------------------------------------
+race                             |                                       
+               Black - White     |                                       
+                        ordinary |     7     -0.176      0.014      0.000
+                      multilevel |     8     -0.167      0.014      0.000
+                      Difference |     9     -0.010      0.005      0.042
+              Latinx - White     |                                       
+                        ordinary |    10     -0.112      0.022      0.000
+                      multilevel |    11     -0.085      0.023      0.000
+                      Difference |    12     -0.027      0.009      0.004
+               Asian - White     |                                       
+                        ordinary |    13     -0.134      0.034      0.000
+                      multilevel |    14     -0.129      0.034      0.000
+                      Difference |    15     -0.005      0.007      0.509
+               Other - White     |                                       
+                        ordinary |    16     -0.005      0.041      0.907
+                      multilevel |    17      0.000      0.045      1.000
+                      Difference |    18     -0.005      0.008      0.564
+---------------------------------+---------------------------------------
+momcollege                       |                                       
+                       1 - 0     |                                       
+                        ordinary |    19     -0.061      0.010      0.000
+                      multilevel |    20     -0.060      0.010      0.000
+                      Difference |    21     -0.001      0.001      0.329
+---------------------------------+---------------------------------------
+school momcollege + SD (centered |                                       
+                        ordinary |    22     -0.011      0.010      0.262
+                      multilevel |    23     -0.008      0.010      0.405
+                      Difference |    24     -0.003      0.002      0.153
+
+```
+
+Most effects are nearly the same in the two models. The ordinary logit gives
+somewhat larger effects of age and race: for example, its Latinx–White
+difference is 11.2 percentage points, compared with 8.5 in the multilevel
+logit (the difference of 2.7 points has p = .004).

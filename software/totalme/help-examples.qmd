@@ -1,0 +1,445 @@
+---
+title: "Examples from the help file"
+subtitle: "The examples at the end of help totalme, run in full"
+---
+
+The examples from the end of the [help file](help.html), in order, on the
+GSS extract used in Mize and Han (2025).
+
+## Single model
+
+```{.stata-run}
+. use https://tdmize.github.io/data/data/cda_gss, clear
+(cda_gss.dta |  GSS 1972-2021 CDA - Categorical Data Analysis | date created 2023)
+
+. 
+. mlogit healthR i.race4 c.age i.woman
+
+Iteration 0:  Log likelihood = -60994.004  
+Iteration 1:  Log likelihood = -59240.119  
+Iteration 2:  Log likelihood = -59162.226  
+Iteration 3:  Log likelihood = -59161.873  
+Iteration 4:  Log likelihood = -59161.873  
+
+Multinomial logistic regression                        Number of obs =  51,084
+                                                       LR chi2(15)   = 3664.26
+                                                       Prob > chi2   =  0.0000
+Log likelihood = -59161.873                            Pseudo R2     =  0.0300
+
+------------------------------------------------------------------------------
+     healthR | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Poor         |
+       race4 |
+      Black  |      0.540      0.054   10.039   0.000        0.434       0.645
+      Other  |      0.295      0.114    2.579   0.010        0.071       0.518
+   Hispanic  |      0.275      0.099    2.782   0.005        0.081       0.470
+             |
+         age |      0.041      0.001   35.274   0.000        0.039       0.044
+             |
+       woman |
+      Women  |      0.123      0.041    2.978   0.003        0.042       0.203
+       _cons |     -4.441      0.076  -58.817   0.000       -4.589      -4.293
+-------------+----------------------------------------------------------------
+Fair         |
+       race4 |
+      Black  |      0.435      0.033   13.095   0.000        0.370       0.501
+      Other  |      0.230      0.066    3.506   0.000        0.102       0.359
+   Hispanic  |      0.490      0.052    9.452   0.000        0.389       0.592
+             |
+         age |      0.020      0.001   28.069   0.000        0.018       0.021
+             |
+       woman |
+      Women  |      0.064      0.025    2.616   0.009        0.016       0.112
+       _cons |     -1.969      0.041  -48.537   0.000       -2.048      -1.889
+-------------+----------------------------------------------------------------
+Good         |  (base outcome)
+-------------+----------------------------------------------------------------
+Excellent    |
+       race4 |
+      Black  |     -0.344      0.033  -10.461   0.000       -0.408      -0.280
+      Other  |     -0.223      0.058   -3.836   0.000       -0.337      -0.109
+   Hispanic  |     -0.432      0.053   -8.177   0.000       -0.535      -0.328
+             |
+         age |     -0.013      0.001  -20.863   0.000       -0.015      -0.012
+             |
+       woman |
+      Women  |     -0.057      0.021   -2.672   0.008       -0.098      -0.015
+       _cons |      0.229      0.033    7.031   0.000        0.165       0.293
+------------------------------------------------------------------------------
+
+```
+
+Continuous and binary independent variables:
+
+```{.stata-run}
+. totalme age woman
+
+Total ME Estimates (N = 51084)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+age                      |                                               
+          + 1 (centered) |      0.005       0.000      51.475       0.000 
+-------------------------+-----------------------------------------------
+woman                    |                                               
+            Women vs Men |      0.017       0.004       4.576       0.000 
+
+. totalme age woman, amount(sd)
+
+Total ME Estimates (N = 51084)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+age                      |                                               
+         + SD (centered) |      0.090       0.002      51.707       0.000 
+-------------------------+-----------------------------------------------
+woman                    |                                               
+            Women vs Men |      0.017       0.004       4.576       0.000 
+
+. totalme age woman, amount(2sd)
+
+Total ME Estimates (N = 51084)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+age                      |                                               
+        + 2SD (centered) |      0.180       0.003      52.408       0.000 
+-------------------------+-----------------------------------------------
+woman                    |                                               
+            Women vs Men |      0.017       0.004       4.576       0.000 
+
+. totalme age woman, amount(trimrange)
+
+Total ME Estimates (N = 51084)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+age                      |                                               
+               p5 to p95 |      0.303       0.006      49.217       0.000 
+-------------------------+-----------------------------------------------
+woman                    |                                               
+            Women vs Men |      0.017       0.004       4.576       0.000 
+
+. totalme age woman, amount(range)
+
+Total ME Estimates (N = 51084)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+age                      |                                               
+              min to max |      0.399       0.008      49.827       0.000 
+-------------------------+-----------------------------------------------
+woman                    |                                               
+            Women vs Men |      0.017       0.004       4.576       0.000 
+
+. totalme age woman, amount(rate)
+
+Total ME Estimates (N = 51084)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+age                      |                                               
+                    d/dx |      0.005       0.000      51.474       0.000 
+-------------------------+-----------------------------------------------
+woman                    |                                               
+            Women vs Men |      0.017       0.004       4.576       0.000 
+
+. totalme age woman, start(age=20) amount(10)
+
+Total ME Estimates (N = 51084)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+age                      |                                               
+start (20) + 10 (center) |      0.043       0.002      27.106       0.000 
+-------------------------+-----------------------------------------------
+woman                    |                                               
+            Women vs Men |      0.017       0.004       4.576       0.000 
+
+```
+
+A nominal independent variable (ME inequalities are calculated on each
+outcome):
+
+```{.stata-run}
+. totalme race4
+
+Total ME Estimates (N = 51084)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+race4                    |                                               
+          total ME Ineq. |      0.087       0.005      18.901       0.000 
+
+. totalme race4, unweighted
+
+Total ME Estimates (N = 51084)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+race4                    |                                               
+    Unwgt total ME Ineq. |      0.070       0.005      13.385       0.000 
+
+```
+
+Total MEs by group, with the **Diff.** row testing whether they differ:
+
+```{.stata-run}
+. totalme age woman, by(race4)
+
+Total ME Estimates (N = 51084)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+age(White)               |                                               
+          + 1 (centered) |      0.005       0.000      51.672       0.000 
+-------------------------+-----------------------------------------------
+age(Black)               |                                               
+          + 1 (centered) |      0.006       0.000      46.289       0.000 
+-------------------------+-----------------------------------------------
+age(Other)               |                                               
+          + 1 (centered) |      0.006       0.000      29.994       0.000 
+-------------------------+-----------------------------------------------
+age(Hispanic)            |                                               
+          + 1 (centered) |      0.006       0.000      36.752       0.000 
+-------------------------+-----------------------------------------------
+age Diff.1               |                                               
+          + 1 (centered) |     -0.001       0.000     -15.379       0.000 
+-------------------------+-----------------------------------------------
+age Diff.2               |                                               
+          + 1 (centered) |     -0.001       0.000      -4.417       0.000 
+-------------------------+-----------------------------------------------
+age Diff.3               |                                               
+          + 1 (centered) |     -0.001       0.000      -8.282       0.000 
+-------------------------+-----------------------------------------------
+age Diff.4               |                                               
+          + 1 (centered) |      0.000       0.000       2.904       0.004 
+-------------------------+-----------------------------------------------
+age Diff.5               |                                               
+          + 1 (centered) |      0.000       0.000       1.863       0.062 
+-------------------------+-----------------------------------------------
+age Diff.6               |                                               
+          + 1 (centered) |     -0.000       0.000      -1.363       0.173 
+-------------------------+-----------------------------------------------
+woman(White)             |                                               
+            Women vs Men |      0.017       0.004       4.000       0.000 
+-------------------------+-----------------------------------------------
+woman(Black)             |                                               
+            Women vs Men |      0.020       0.004       4.457       0.000 
+-------------------------+-----------------------------------------------
+woman(Other)             |                                               
+            Women vs Men |      0.018       0.004       4.483       0.000 
+-------------------------+-----------------------------------------------
+woman(Hispanic)          |                                               
+            Women vs Men |      0.019       0.005       4.242       0.000 
+-------------------------+-----------------------------------------------
+woman Diff.1             |                                               
+            Women vs Men |     -0.003       0.005      -0.627       0.531 
+-------------------------+-----------------------------------------------
+woman Diff.2             |                                               
+            Women vs Men |     -0.002       0.005      -0.363       0.717 
+-------------------------+-----------------------------------------------
+woman Diff.3             |                                               
+            Women vs Men |     -0.003       0.005      -0.496       0.620 
+-------------------------+-----------------------------------------------
+woman Diff.4             |                                               
+            Women vs Men |      0.001       0.001       2.292       0.022 
+-------------------------+-----------------------------------------------
+woman Diff.5             |                                               
+            Women vs Men |      0.001       0.001       1.035       0.300 
+-------------------------+-----------------------------------------------
+woman Diff.6             |                                               
+            Women vs Men |     -0.001       0.001      -1.000       0.317 
+
+Diff.1 = White - Black
+Diff.2 = White - Other
+Diff.3 = White - Hispanic
+Diff.4 = Black - Other
+Diff.5 = Black - Hispanic
+Diff.6 = Other - Hispanic
+
+```
+
+## Compare across two models on the same sample
+
+```{.stata-run}
+. mlogit healthR i.college if faminc < ., vce(robust)
+
+Iteration 0:  Log pseudolikelihood = -54961.742  
+Iteration 1:  Log pseudolikelihood = -54106.184  
+Iteration 2:  Log pseudolikelihood = -54076.543  
+Iteration 3:  Log pseudolikelihood = -54076.322  
+Iteration 4:  Log pseudolikelihood = -54076.322  
+
+Multinomial logistic regression                        Number of obs =  46,288
+                                                       Wald chi2(3)  = 1540.58
+                                                       Prob > chi2   =  0.0000
+Log pseudolikelihood = -54076.322                      Pseudo R2     =  0.0161
+
+---------------------------------------------------------------------------------
+                |               Robust
+        healthR | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+----------------+----------------------------------------------------------------
+Poor            |
+        college |
+College Degree  |     -1.267      0.075  -16.785   0.000       -1.415      -1.119
+          _cons |     -1.976      0.022  -88.014   0.000       -2.020      -1.932
+----------------+----------------------------------------------------------------
+Fair            |
+        college |
+College Degree  |     -0.765      0.036  -21.337   0.000       -0.836      -0.695
+          _cons |     -0.761      0.014  -54.820   0.000       -0.788      -0.734
+----------------+----------------------------------------------------------------
+Good            |  (base outcome)
+----------------+----------------------------------------------------------------
+Excellent       |
+        college |
+College Degree  |      0.481      0.024   19.903   0.000        0.434       0.528
+          _cons |     -0.586      0.013  -44.719   0.000       -0.611      -0.560
+---------------------------------------------------------------------------------
+
+. est store basemod
+
+. mlogit healthR i.college c.faminc, vce(robust)
+
+Iteration 0:  Log pseudolikelihood = -54961.742  
+Iteration 1:  Log pseudolikelihood = -53281.885  
+Iteration 2:  Log pseudolikelihood = -53067.773  
+Iteration 3:  Log pseudolikelihood = -53056.882  
+Iteration 4:  Log pseudolikelihood = -53056.875  
+Iteration 5:  Log pseudolikelihood = -53056.875  
+
+Multinomial logistic regression                        Number of obs =  46,288
+                                                       Wald chi2(6)  = 1988.54
+                                                       Prob > chi2   =  0.0000
+Log pseudolikelihood = -53056.875                      Pseudo R2     =  0.0347
+
+---------------------------------------------------------------------------------
+                |               Robust
+        healthR | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+----------------+----------------------------------------------------------------
+Poor            |
+        college |
+College Degree  |     -0.697      0.076   -9.141   0.000       -0.846      -0.547
+         faminc |     -0.044      0.002  -18.005   0.000       -0.049      -0.039
+          _cons |     -1.098      0.045  -24.408   0.000       -1.186      -1.010
+----------------+----------------------------------------------------------------
+Fair            |
+        college |
+College Degree  |     -0.516      0.037  -14.057   0.000       -0.587      -0.444
+         faminc |     -0.014      0.001  -18.567   0.000       -0.016      -0.013
+          _cons |     -0.420      0.022  -18.877   0.000       -0.464      -0.376
+----------------+----------------------------------------------------------------
+Good            |  (base outcome)
+----------------+----------------------------------------------------------------
+Excellent       |
+        college |
+College Degree  |      0.364      0.026   14.077   0.000        0.313       0.415
+         faminc |      0.005      0.000   13.802   0.000        0.004       0.006
+          _cons |     -0.727      0.016  -44.064   0.000       -0.759      -0.695
+---------------------------------------------------------------------------------
+
+. est store medmod
+
+. 
+. totalme college, models(basemod medmod)
+
+Total ME Estimates (N_basemod = 46288 , N_medmod = 46288)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+college                  |                                               
+       Model 1 (basemod) |      0.161       0.004      41.362       0.000 
+        Model 2 (medmod) |      0.112       0.006      20.305       0.000 
+       Cross-Model Diff. |      0.049       0.006       8.667       0.000 
+
+```
+
+## Compare across distinct samples/groups for two models
+
+```{.stata-run}
+. ologit class i.college if woman == 0, vce(robust)
+
+Iteration 0:  Log pseudolikelihood = -28758.485  
+Iteration 1:  Log pseudolikelihood = -26679.591  
+Iteration 2:  Log pseudolikelihood = -26646.384  
+Iteration 3:  Log pseudolikelihood =  -26646.33  
+Iteration 4:  Log pseudolikelihood =  -26646.33  
+
+Ordered logistic regression                            Number of obs =  28,840
+                                                       Wald chi2(1)  = 3638.70
+                                                       Prob > chi2   =  0.0000
+Log pseudolikelihood = -26646.33                       Pseudo R2     =  0.0734
+
+---------------------------------------------------------------------------------
+                |               Robust
+          class | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+----------------+----------------------------------------------------------------
+        college |
+College Degree  |      1.820      0.030   60.322   0.000        1.761       1.879
+----------------+----------------------------------------------------------------
+          /cut1 |     -2.565      0.026                        -2.616      -2.514
+          /cut2 |      0.484      0.014                         0.457       0.512
+          /cut3 |      4.119      0.037                         4.046       4.191
+---------------------------------------------------------------------------------
+
+. est store menmod
+
+. ologit class i.college if woman == 1, vce(robust)
+
+Iteration 0:  Log pseudolikelihood = -36744.748  
+Iteration 1:  Log pseudolikelihood = -35463.303  
+Iteration 2:  Log pseudolikelihood = -35455.104  
+Iteration 3:  Log pseudolikelihood = -35455.093  
+Iteration 4:  Log pseudolikelihood = -35455.093  
+
+Ordered logistic regression                            Number of obs =  36,258
+                                                       Wald chi2(1)  = 2491.95
+                                                       Prob > chi2   =  0.0000
+Log pseudolikelihood = -35455.093                      Pseudo R2     =  0.0351
+
+---------------------------------------------------------------------------------
+                |               Robust
+          class | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+----------------+----------------------------------------------------------------
+        college |
+College Degree  |      1.293      0.026   49.919   0.000        1.243       1.344
+----------------+----------------------------------------------------------------
+          /cut1 |     -2.390      0.021                        -2.431      -2.350
+          /cut2 |      0.342      0.012                         0.318       0.365
+          /cut3 |      3.898      0.033                         3.833       3.963
+          /cut4 |     10.950      1.000                         8.990      12.910
+---------------------------------------------------------------------------------
+
+. est store wommod
+
+. 
+. totalme college, models(menmod wommod) groups
+
+Total ME Estimates (N_menmod = 28840 , N_wommod = 36258)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+college                  |                                               
+        Model 1 (menmod) |      0.410       0.005      74.771       0.000 
+        Model 2 (wommod) |      0.306       0.005      56.239       0.000 
+       Cross-Model Diff. |      0.104       0.008      13.507       0.000 
+
+```
+
+## Bootstrap example
+
+Shown, not run.
+
+```stata
+capture program drop boot_tot
+
+program define boot_tot, rclass
+    mlogit healthR i.race4 c.age i.woman, base(1)
+    totalme race4
+    return scalar w_tot = r(tmwm11)
+end
+
+bootstrap w_tot=r(w_tot), reps(1000): boot_tot
+```

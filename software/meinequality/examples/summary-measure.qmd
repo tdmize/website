@@ -1,0 +1,74 @@
+---
+title: "Inequality as a summary measure"
+subtitle: "Example 4.1 of Mize and Han (2025)"
+---
+
+A nominal variable such as race-ethnicity has no single marginal effect: with
+four categories there are six pairwise differences in predictions. The ME
+inequality statistic summarizes them as one number -- the average absolute
+difference in the outcome across the categories. This first example uses a
+linear regression of hourly wages on a four-category race-ethnicity variable
+in the 2021 GSS.
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/cda_gss", clear
+(cda_gss.dta |  GSS 1972-2021 CDA - Categorical Data Analysis | date created 2023)
+
+. keep if year == 2021
+(64,814 observations deleted)
+
+. drop if missing(wages, race4)
+(2,234 observations deleted)
+
+. 
+. regress wages i.race4 c.age i.woman
+
+      Source |       SS           df       MS      Number of obs   =     1,714
+-------------+----------------------------------   F(5, 1708)      =     37.11
+       Model |  49208.2413         5  9841.64825   Prob > F        =    0.0000
+    Residual |  452993.938     1,708  265.218933   R-squared       =    0.0980
+-------------+----------------------------------   Adj R-squared   =    0.0953
+       Total |  502202.179     1,713   293.17115   Root MSE        =    16.286
+
+------------------------------------------------------------------------------
+       wages | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+       race4 |
+      Black  |     -3.440      1.351   -2.546   0.011       -6.090      -0.790
+      Other  |      6.664      1.705    3.910   0.000        3.321      10.007
+   Hispanic  |     -3.766      1.294   -2.911   0.004       -6.304      -1.228
+             |
+         age |      0.255      0.029    8.697   0.000        0.197       0.312
+             |
+       woman |
+      Women  |     -6.095      0.793   -7.690   0.000       -7.649      -4.540
+       _cons |     14.729      1.528    9.640   0.000       11.732      17.725
+------------------------------------------------------------------------------
+
+. meinequality race4
+
+ME Inequality Estimates (N = 1714)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+ME Inequality            |                                               
+                   race4 |      4.904       0.860       5.702       0.000 
+
+```
+
+Racial-ethnic groups' wages differ by close to $5 per hour, on average. The
+default statistic is weighted: each pairwise comparison counts in proportion
+to the share of the sample in the two groups compared. The unweighted version
+gives every comparison the same weight:
+
+```{.stata-run}
+. meinequality race4, unweighted
+
+ME Inequality Estimates (N = 1714)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+Unwgt. ME Inequality     |                                               
+                   race4 |      5.788       1.042       5.558       0.000 
+
+```

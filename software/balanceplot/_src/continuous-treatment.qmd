@@ -1,0 +1,79 @@
+---
+title: "Continuous treatments"
+subtitle: "contreat(): correlations between a continuous treatment and the covariates"
+---
+<<dd_version: 2>>
+
+With a continuous treatment there are no groups to compare, so
+`contreat(varname)` assesses balance as the correlation between the treatment
+and each covariate: Pearson correlations for continuous covariates and
+polyserial correlations for binary indicators, with one indicator per
+category of a nominal covariate (including the reference category). The
+correlations come from the user-written `polychoric` command, which must be
+installed. Values closer to zero indicate less association between the
+treatment and the covariate.
+
+Here hourly wage is the treatment:
+
+```{.stata-run}
+<<dd_do>>
+sysuse nlsw88, clear
+balanceplot age i.union i.race tenure, contreat(wage)
+graph export "fig/contreat-default.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/contreat-default.png){width=85% fig-alt="Correlations between hourly wage and age, union membership, race, and tenure, with confidence intervals."}
+
+## The same plotting options
+
+`threshold()`, `absolute`, `sort`, `fadens`, `noci`, `level()`, and
+`graphop()` work as they do with `group()`. With `contreat()` the threshold
+must be no greater than one.
+
+```{.stata-run}
+<<dd_do>>
+balanceplot age i.union i.race tenure, contreat(wage) absolute sort threshold(.1)
+graph export "fig/contreat-absolute.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/contreat-absolute.png){width=85% fig-alt="Sorted absolute correlations with hourly wage and a reference line at 0.1."}
+
+```{.stata-run}
+<<dd_do>>
+balanceplot age i.union i.race tenure, contreat(wage) fadens
+graph export "fig/contreat-fadens.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/contreat-fadens.png){width=85% fig-alt="Correlations with hourly wage, with nonsignificant correlations faded."}
+
+## Tables
+
+`table` reports each correlation and its p-value; `tablefull` adds the
+standard error and confidence limits.
+
+```{.stata-run}
+<<dd_do>>
+balanceplot age i.union i.race tenure, contreat(wage) table
+balanceplot age i.union i.race tenure, contreat(wage) tablefull
+<</dd_do>>
+```
+
+The correlations are returned in `r(correlation)`.
+
+## Stored results
+
+`store(stub)` posts one set, *stub*`_correlation`, with the correlations in
+`e(b)` and their squared standard errors on the diagonal of `e(V)`:
+
+```{.stata-run}
+<<dd_do>>
+balanceplot age i.union i.race tenure, contreat(wage) store(ct, replace)
+esttab ct_correlation, se label mtitles
+<</dd_do>>
+```
+
+`contreat()` may not be combined with `group()`, `base()`, `cohensh`, or
+`matchweight()`.

@@ -1,0 +1,94 @@
+---
+title: "Matching and teffects"
+subtitle: "Balance before and after matching: matchweight() after psmatch2, and tebalance after teffects"
+---
+<<dd_version: 2>>
+
+The original use of a balance plot is to show that matching or weighting has
+done its job: the covariates that were imbalanced before matching are
+balanced after it. `balanceplot` supports this two ways. `matchweight()`
+takes the matching weights produced by a command such as `psmatch2` and plots
+the unweighted and weighted balance together. `tebalance` works after Stata's
+own `teffects` and `stteffects` estimators, plotting the standardized
+differences that `tebalance summarize` returns.
+
+## matchweight() after psmatch2
+
+After ATT matching with `psmatch2`, `_weight` is 1 for treated observations
+and records how often each matched control was used; unmatched controls have
+a missing weight. `matchweight(_weight)` applies those weights to the base
+group (the controls) and shows the original complete-case balance and the
+weighted matched balance in one graph, one color per comparison and a
+different marker for the unweighted and weighted estimates.
+
+```{.stata-run}
+<<dd_do>>
+sysuse nlsw88, clear
+psmatch2 union age tenure grade, neighbor(1) logit
+balanceplot age tenure grade, group(union) matchweight(_weight)
+graph export "fig/matching-matchweight.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/matching-matchweight.png){width=85% fig-alt="Standardized imbalance of age, tenure, and grade between union and nonunion workers, unweighted and after propensity-score matching."}
+
+This matches `psmatch2`'s convention of controls coded 0 and treated coded
+1. If the control category is not the default base, name it with `base()`.
+`fadens` fades each estimate according to its own p-value, and `sort` orders
+the covariates by the weighted estimates.
+
+With `table`, an unweighted table is followed by a weighted one:
+
+```{.stata-run}
+<<dd_do>>
+balanceplot age tenure grade, group(union) matchweight(_weight) table
+<</dd_do>>
+```
+
+`store()` posts both sets, with the prefixes *stub*`_unw_` and *stub*`_w_`:
+
+```{.stata-run}
+<<dd_do>>
+balanceplot age tenure grade, group(union) matchweight(_weight) store(bm, replace)
+esttab bm_unw_mean_g0 bm_unw_mean_g1 bm_unw_imbalance, se label mtitles
+esttab bm_w_mean_g0 bm_w_mean_g1 bm_w_imbalance, se label mtitles
+<</dd_do>>
+```
+
+## tebalance after teffects and stteffects
+
+After a supported `teffects` estimator (`aipw`, `ipw`, `ipwra`, `nnmatch`,
+`psmatch`) or `stteffects` estimator (`ipw`, `ipwra`), `balanceplot,
+tebalance` calls `tebalance summarize` and plots its raw and matched or
+weighted standardized differences.
+
+```{.stata-run}
+<<dd_do>>
+sysuse nlsw88, clear
+teffects psmatch (wage) (union age tenure grade), atet
+balanceplot, tebalance
+graph export "fig/matching-tebalance.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/matching-tebalance.png){width=85% fig-alt="Standardized differences in age, tenure, and grade before and after propensity-score matching, from tebalance summarize."}
+
+A *varlist* restricts the plot to some of the treatment-model covariates, and
+`sort`, `absolute`, `threshold()`, `graphop()`, and `plotcommand` are
+available:
+
+```{.stata-run}
+<<dd_do>>
+balanceplot age tenure, tebalance absolute sort threshold(.1)
+graph export "fig/matching-tebalance-sorted.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/matching-tebalance-sorted.png){width=85% fig-alt="Sorted absolute standardized differences for age and tenure before and after matching, with a reference line at 0.1."}
+
+Because `tebalance summarize` does not return standard errors, confidence
+intervals and `fadens` are not available in this mode. With a multivalued
+treatment, each nonbase comparison is shown as its own block under the
+treatment category's heading. The matrices from `tebalance summarize` are
+returned in `r(table)` and `r(size)`, and its two standardized-difference
+columns in `r(balance)`.

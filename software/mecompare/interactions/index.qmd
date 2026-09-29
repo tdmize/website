@@ -1,0 +1,111 @@
+---
+title: "Interaction effects"
+subtitle: "Testing nonlinear interactions with mecompare: the approach of Mize (2019)"
+---
+
+Mize (2019) shows that in nonlinear models -- and in linear models with
+nonlinearities -- the coefficient on a product term is not a test of
+interaction on the metric of interest. Interaction should instead be assessed
+in the natural metric of the outcome by (1) plotting the predictions, (2)
+computing the marginal effect of one variable at chosen levels of the other,
+and (3) testing whether those marginal effects differ: a *second difference*.
+It is also important to look at both sides of an interaction -- the effect of X
+across levels of Z, and the effect of Z across levels of X.
+
+`mecompare` automates these steps, and each second difference is one `metest`
+call. The pages in this section reproduce the article's examples:
+
+- [Nonlinear effects in a linear model](linear-model.html): age, age², and
+  gender (Table 2, Figures 1--2).
+- [Two nominal variables](nominal-by-nominal.html): gender × parenthood and
+  gender × education (Tables 3--4, Figures 12--13).
+- [A nominal and a continuous variable](nominal-by-continuous.html): gender ×
+  social roles (Figure 14).
+- [Two continuous variables](continuous-by-continuous.html): political views ×
+  survey year (Figures 15--17).
+
+A [bonus page](joint-tests.html), not in the article, shows joint tests of
+interaction when the moderator has more than two categories.
+
+The same methods, applied to the examples of the marginal effects chapter of
+Mize and Han (forthcoming) -- including a multi-category outcome and a
+three-way interaction -- are on the [Tests of
+interaction](../examples/chapter-interactions.html) page.
+
+## The three ingredients
+
+**A nominal moderator: `by()`.** `by()` reports the marginal effect of a
+focal variable at each level of `by()`, e.g. `by(woman)` reports one marginal 
+effect for each level of `woman`, computed as a counterfactual: the 
+whole sample set to each level in turn, then averaged.
+(`over(woman)` instead uses only the observations in each group; see
+`help mecompare` for the distinction.)
+
+**A continuous moderator: `covariates(z=(numlist))`.** E.g. `covariates(age=(25 55))`
+reports the marginal effect of the focal variable with everyone set to age 25,
+then to age 55, as numbered rows in one table. Any numlist works, so
+`covariates(age=(20(5)70))` gives the effect across the range of the moderator
+-- the numbers behind the "marginal effect of X across Z" plots.
+
+**Where to evaluate a continuous moderator.** When there is no substantive
+reason to pick particular values, a good default is the 10th, 50th, and 90th
+percentiles of the moderator: a low, a typical, and a high value that are all
+in the range of the data. `summarize z, detail` returns them as `r(p10)`,
+`r(p50)`, and `r(p90)`, so the pattern is
+``mecompare x, covariates(z=(`r(p10)' `r(p50)' `r(p90)'))`` followed by
+`metest 1 = 2 = 3` for the joint test and `metest 3 - 1` for the change from
+the 10th to the 90th percentile. The pages with a continuous moderator each
+show it.
+
+**Where and how far the focal variable moves: `start()`, `amount()`,
+`uncentered`.** `start(age=25) amount(5)` is the change from 25 to 30;
+`amount(5)` alone is a five-unit change from each observation's own value;
+`amount(sd)` is a standard-deviation change and `amount(rate)` the instantaneous
+rate (the `dydx()` of `margins`). By default a change is centered on the
+starting value (half below, half above); `uncentered` makes it run upward from
+the start.
+
+## Testing the second difference
+
+Every row of the `mecompare` table is numbered, and `metest` tests any
+combination of rows: `metest 1 - 2` is the second difference between the marginal 
+effects in rows 1 and 2, `metest 1 = 2 = 3` is a joint test that the first three 
+marginal effects in the table are equal, and
+`metest 2 - 1, add rowname("...")` accumulates results into one table.
+
+## Plotting the marginal effects
+
+`store(stub)` saves the table as stored estimates so that `esttab` can be used
+to make publication-ready tables and `coefplot` can be used to plot them. With
+`by()` or `covariates()` there is one coefficient per level, so a plot of the
+effect of gender across the range of age is `mecompare i.woman,
+covariates(age=(20(5)70)) store(gap)` followed by `coefplot gap_m1, vertical
+yline(0)`. Plots of predictions are made with `margins` and `marginsplot`.
+
+## Translating the 2019 files
+
+| In the replication files | With `mecompare` |
+|:--|:--|
+| `margins woman, at(age=(25 30)) post` then `mlincom 3 - 1`, `mlincom 4 - 2`, `mlincom (3 - 1) - (4 - 2)` | `mecompare age, start(age=25) amount(5) uncentered by(woman)` then `metest 1 - 2` |
+| `margins woman, at(age=gen(age)) at(age=gen(age+5)) post` then the three `mlincom` lines | `mecompare age, amount(5) uncentered by(woman)` then `metest 1 - 2` |
+| `margins, dydx(woman) at(age=(25 55)) post` then `mlincom 2 - 1` | `mecompare i.woman, covariates(age=(25 55))` then `metest 2 - 1` |
+| `margins, dydx(woman) at(age=(18(2)72))` then `marginsplot` | `mecompare i.woman, covariates(age=(18(2)72)) store(gap)` then `coefplot gap_m1, vertical` |
+| `margins parrole#woman, post` then `mlincom 3 - 1`, `mlincom 4 - 2`, `mlincom (1 - 2) - (3 - 4)` | `mecompare i.parrole, by(woman)` then `metest 1 - 2` |
+| `margins educ, dydx(woman) pwcompare(pve)` | `mecompare i.woman, by(educ)` then `metest 1 = 2 = 3 = 4 = 5` and `metest 1 - 2`, ... |
+| `margins woman, at(role=gen(role)) at(role=gen(role + 1)) post` then `mlincom` | `mecompare role, by(woman) uncentered` then `metest 1 - 2` |
+| `margins woman, dydx(role) post` then `mlincom 2 - 1` | `mecompare role, by(woman) amount(rate)` then `metest 1 - 2` |
+| `mchange year1976 conviewSS` | `mecompare year1976 conviewSS, amount(sd) uncentered` |
+| `margins, dydx(conviewSS) at(year=(0 40)) post` then `mlincom 2 - 1` | `mecompare conviewSS, covariates(year1976=(0 40)) amount(rate)` then `metest 2 - 1` |
+| `margins, at(year1976=gen(year1976) conview=(-1 1)) at(year1976=gen(year1976 + 2) conview=(-1 1)) post` then `mlincom` | `mecompare year1976, covariates(conviewSS=(-1 1)) amount(2) uncentered` then `metest 1 - 2` |
+
+In each case the `models()` option names the stored model, or is omitted when
+the model is the one in memory.
+
+## Reference
+
+> Mize, Trenton D. 2019. "Best Practices for Estimating, Interpreting, and
+> Presenting Nonlinear Interaction Effects." *Sociological Science* 6: 81--117.
+> <https://doi.org/10.15195/v6.a4>
+
+The article's data and replication files are at
+[trentonmize.com/research](https://www.trentonmize.com/research/mize_2019_SocSci).

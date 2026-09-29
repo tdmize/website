@@ -1,0 +1,136 @@
+---
+title: "sgmediation2 help file"
+subtitle: "The installed help file, rendered for the web"
+toc-depth: 3
+---
+
+::: {.callout-note appearance="simple"}
+This page is generated from `sgmediation2.hlp` by `build.do`, so it matches the
+installed version. In Stata, type `help sgmediation2`.
+:::
+
+help for sgmediation2
+
+## Sobel-Goodman mediation tests
+
+`sgmediation2` *depvar* [`if` *exp*] [`in` *range*] `,` `iv(`*focal_iv*`)` `mv(`*mediator_var*`)` [options]
+
+## Description
+
+Sobel-Goodman tests provide a statistical test of mediation in linear regression models. See [www.trentonmize.com/software/sgmediation2](https://www.trentonmize.com/software/sgmediation2) for full details, summarized briefly below.
+
+The commonly used approach to mediation based on Baron and Kenny (1986) suggests that a variable may be considered a mediator to the extent to which it carries the influence of a focal independent variable (IV) to a given dependent variable (DV). In this framework, mediation can be said to occur when (1) the IV significantly affects the mediator, (2) the IV significantly affects the DV in the absence of the mediator, (3) the mediator has a significant unique effect on the DV, and (4) the effect of the IV on the DV shrinks upon the addition of the mediator to the model.
+
+Others (e.g. Preacher and Hayes 2004) suggest that only two requirements need be met: (1) the IV has a significant effect before the mediator is added to the model, and (2) the effect of the IV shrinks upon the addition of the mediator to the model (i.e. same requirement as #4 above). Simplifying even further, many now suggest (e.g. Zhao, Lynch, and Chen 2010) that the only needed requirement is that the effect of the IV shrinks upon the addition of the mediator to the model (AKA there is a significant indirect effect) because mediation can occur even in the absence of a direct effect of the IV. Yet another approach suggests using the steps given by Baron and Kenny (1986) but determining mediation as whether or not the effects in steps #1 and #3 are both significant (labeled the a and b paths; e.g., Yzerbyt et al. 2018).
+
+`sgmediation2` provides tests of all of the various requirements discussed above to facilitate most any test desired. I personally agree that the test that the effect of the IV shrinks upon the addition of the mediator to the model (i.e. the indirect effect) is of most central interest. But as Zhao et al. (2010) detail -- the individual tests outlined by Baron and Kenny (1986) are still quite useful to determine the specific nature of mediation found.
+
+Some limitations of this general approach to mediation are discussed below along with one alternative approach.
+
+## Required options
+
+| Option | Description |
+|:--|:--|
+| `iv(var)` | The focal independent variable (IV). Factor syntax is not allowed on the focal IV. This limits the focal IV to continuous or binary variables. |
+| `mv(var)` | The mediator variable (MV). Factor syntax is not allowed on the mediator variable. This limits the mediator to continuous or binary variables. |
+
+## Optional options
+
+| Option | Description |
+|:--|:--|
+| `cv(varlist)` | Optional list of covariate (control) variables. Factor variables are allowed in the list. |
+| `prefix( )` | Allows the user to specify survey weights and/or multiple imputation estimates by requesting the relevant prefix you would use with `regress`. Specify *svy:* for the survey weights defined by `svyset` to be used. Specify *mi est, post:* for multiple imputation estimates to be used as defined in `mi set`. Specify *mi est, post: svy:* for both survey weights and multiple imputation estimates as defined in `mi svyset`. |
+| `vce( )` | Allows the user to specify a variance estimator other than the default ols (see `regress` for options). For example, users may wish to specify *robust* for robust variance estimates or *cluster clustvar* for cluster robust variance estimates. |
+| `options( )` | Allows the user to specify any other options that are allowed with `regress`. |
+| `quietly` | Suppresses the individual regression output and only shows the summary tables. |
+| `decimals(#)` | changes the number of decimal places reported in the final tables of statistics. The default is 3. Any integer between 1 - 8 is allowed. |
+
+## Examples
+
+```stata
+use "https://tdmize.github.io/data/data/cda_ah4"
+drop if missing(health, edyrs, income, race, woman, age)
+sgmediation2 health, iv(edyrs) mv(income)
+* Add control variables
+sgmediation2 health, iv(edyrs) mv(income) cv(i.race i.woman age)
+* Add survey weights already set with svyset
+sgmediation2 health, iv(edyrs) mv(income) cv(i.race i.woman age) prefix(svy:)
+* Obtain cluster robust variance estimates for clustering on occcat
+sgmediation2 health, iv(edyrs) mv(income) cv(i.race i.woman age) vce(cluster occcat)
+* Use bootstrapping to obtain standard errors and confidence intervals
+bootstrap r(ind_eff) r(dir_eff) r(tot_eff), reps(1000): sgmediation2 health, iv(edyrs) mv(income) cv(i.race i.woman age)
+* Obtain bias-corrected and percentile confidence intervals based on the bootstrapped samples
+estat bootstrap, bc percentile
+```
+
+## Author
+
+`sgmediation2` is an adaptation (with permission) of the `sgmediation` command. `sgmediation2` is written and maintained by Trenton D. Mize (Departments of Sociology & Statistics [by courtesy] & The Methodology Center at Purdue University). Please send any requests for help or suggestions for additions to the command to tmize@purdue.edu
+
+The original `sgmediation` command was written by Phil Ender of the UCLA Statistical Consulting Group.
+
+## Citation
+
+Please cite use of the sgmediation2 command as:
+
+Mize, Trenton D. 2022. "sgmediation2: Sobel-Goodman tests of mediation in Stata." https://www.trentonmize.com/software/sgmediation2
+
+## Stored results
+
+sgmediation2 returns the table of Sobel-Goodman tests, the tests of effects, and several scalars as:
+
+| Option | Description |
+|:--|:--|
+| **r(sgtests)** | Matrix of the table of Sobel-Goodman tests of mediation. |
+| **r(effects)** | Matrix of the table of indirect, direct, and total effects. |
+| **r(ar_zstat)** | z-statistic on Aroian test. |
+| **r(g_zstat)** | z-statistic on Goodman test. |
+| **r(s_zstat)** | z-statistic on Sobel test. |
+| **r(tot2dir)** | Ratio of total to direct effect. |
+| **r(ind2dir)** | Ratio of indirect to direct effect. |
+| **r(ind2tot)** | Ratio of indirect to total effect. |
+| **r(b_coef)** | Coefficient on b path. |
+| **r(a_coef)** | Coefficient on a path. |
+| **r(tot_eff)** | Total effect. |
+| **r(dir_eff)** | Direct effect. |
+| **r(ind_eff)** | Indirect effect (a X b) |
+
+## Limitations of the Sobel-Goodman approach to mediation
+
+There are many limitations to this approach to mediation (more than I discuss here). A few of note:
+
+1. Only continuous or binary focal independent variables (IV) can be examined.
+
+2. Only continuous or binary mediating variables (MV) can be examined.
+
+3. Multiple mediating variables (MVs) cannot be easily incorporated.
+
+4. Limited to tests of a single coefficient. E.g. There is no clear way to test if the effect of age is mediated if both age and age^2 coefficients are included in the models.
+
+5. Limited to linear regression models.
+
+6. A specialized approach appropriate only for mediation and not other cross-model comparisons.
+
+These limitations (and some others) were the motivation of my article *A General Framework for Comparing Predictions and Marginal Effects* [(Mize, Doan, and Long 2019)](https://doi.org/10.1177%2F0081175019852763). See that article and the [associated Stata files](https://www.trentonmize.com/software/mecompare) if you are interested.
+
+## References
+
+Aroian, L. A. (1944). The probability function of the product of two normally distributed variables. *Annals of Mathematical Statistics*, *18*, 265-271.
+
+Baron, R. M., & Kenny, D. A. (1986). The moderator–mediator variable distinction in social psychological research: Conceptual, strategic, and statistical considerations. *Journal of Personality and Social Psychology*, 51(6), 1173.
+
+Goodman, L. A. (1960). On the exact variance of products. *Journal of the American Statistical Association*, 55, 708–713.
+
+MacKinnon, D. P., & Dwyer, J. H. (1993). Estimating mediated effects in prevention studies. *Evaluation Review*, *17*, 144-158.
+
+MacKinnon, D. P., Warsi, G., & Dwyer, J. H. (1995). A simulation study of mediated effect measures. *Multivariate Behavioral Research*, *30*(1), 41-62.
+
+MacKinnon, D. P., Lockwood, C. M., Hoffman, J. M., West, S. G., & Sheets, V. (2002). A comparison of methods to test mediation and other intervening variable effects. *Psychological Methods*, 7(1), 83.
+
+Preacher, K. J., & Hayes, A. F. (2004). SPSS and SAS procedures for estimating indirect effects in simple mediation models. *Behavior Research Methods, Instruments, & Computers*, *36*(4), 717-731.
+
+Mize, T. D., Doan, L., & Long, J. S. (2019). A general framework for comparing predictions and marginal effects across models. *Sociological Methodology*, 49(1), 152-189.
+
+Yzerbyt, V., Muller, D., Batailler, C., & Judd, C. M. (2018). New recommendations for testing indirect effects in mediational models: The need to report and test component paths. *Journal of personality and social psychology*, 115(6), 929.
+
+Zhao, X., Lynch Jr, J. G., & Chen, Q. (2010). Reconsidering Baron and Kenny: Myths and truths about mediation analysis. *Journal of Consumer Research*, 37(2), 197-206.

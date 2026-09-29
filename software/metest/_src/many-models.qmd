@@ -1,0 +1,49 @@
+---
+title: "Tests across three or more models"
+subtitle: "Example 6.2 of Mize, Doan, and Long (2019), with all four models"
+---
+<<dd_version: 2>>
+
+With three or more models, `mecompare` lists each model's marginal effects
+and reports no differences; `metest` can be used to test the comparisons you choose. The
+four nested logits of Example 6.2:
+
+```{.stata-run}
+<<dd_do>>
+use https://tdmize.github.io/data/data/gss_cme, clear
+drop if year < 2000
+drop if employed != 1
+drop if missing(vhappy, college, wages, occprest, age, married, parent, woman, conserv, reltrad)
+
+quietly logit vhappy i.college, vce(robust)
+estimates store m1
+quietly logit vhappy i.college i.married i.parent i.woman i.conserv i.reltrad i.year c.age##c.age, vce(robust)
+estimates store m2
+quietly logit vhappy i.college c.wages i.married i.parent i.woman i.conserv i.reltrad i.year c.age##c.age, vce(robust)
+estimates store m3
+quietly logit vhappy i.college c.wages c.occprest i.married i.parent i.woman i.conserv i.reltrad i.year c.age##c.age, vce(robust)
+estimates store m4
+
+mecompare college, models(m1 m2 m3 m4)
+<</dd_do>>
+```
+
+Rows 1-4 are the effect of college in models 1-4. Whether the effect
+diminishes in each subsequent model:
+
+```{.stata-run}
+<<dd_do>>
+metest, clear
+metest 1 - 2, add
+metest 2 - 3, add
+metest 3 - 4, add
+<</dd_do>>
+```
+
+And whether it is the same in all four models:
+
+```{.stata-run}
+<<dd_do>>
+metest 1 = 2 = 3 = 4
+<</dd_do>>
+```

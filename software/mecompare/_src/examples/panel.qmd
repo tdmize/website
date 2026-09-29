@@ -1,0 +1,68 @@
+---
+title: "Panel models"
+subtitle: "Repeated observations of the same people: random-effects logit"
+---
+<<dd_version: 2>>
+
+`mecompare` works after panel models such as `xtlogit`. The example uses the
+Health and Retirement Study, 2010 to 2020: about 104,000 interviews of 26,000
+people aged 51 and older, interviewed every two years. The outcome is
+depressive symptoms (four or more of the eight CES-D items).
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/hrs_si_2025", clear
+keep if year >= 2010 & age >= 51
+generate depressed = cesd >= 4 if !missing(cesd)
+generate poorhealth = srhealthB == 0 if !missing(srhealthB)
+drop if missing(depressed, poorhealth, marstatB, age, woman, race4cat, collegeB)
+xtset hhidpn year
+
+quietly xtlogit depressed i.marstatB c.age i.woman i.race4cat i.collegeB, re intpoints(60)
+estimates store dep
+<</dd_do>>
+```
+
+After `xtlogit, re`, the marginal effects are changes in the probability of
+the outcome, averaged over the random effect (the default prediction of
+`margins`). Age is changed by ten years:
+
+```{.stata-run}
+<<dd_do>>
+mecompare, models(dep) amount(10)
+<</dd_do>>
+```
+
+Being married is associated with a 9.0 percentage point reduction in the
+probability of depressive symptoms. Ten more years of age are associated with
+a 1.2 point reduction, and a college degree with a 7.0 point reduction.
+
+## Comparing two outcomes
+
+The second model predicts fair or poor self-rated health. With two panel
+models, `mecompare` combines them with [`suest2`](../../suest2/index.html),
+which clusters the standard errors on the panel identifier. Random-effects
+models need enough integration points to be combined; these two need
+`intpoints(60)`, and `mecompare` says when a model needs more.
+
+```{.stata-run}
+<<dd_do>>
+quietly xtlogit poorhealth i.marstatB c.age i.woman i.race4cat i.collegeB, re intpoints(60)
+estimates store health
+
+mecompare, models(dep health) amount(10)
+<</dd_do>>
+```
+
+Being married is associated with a larger reduction in the probability of
+depressive symptoms (9.0 percentage points) than in the probability of fair or
+poor health (5.7 points); the difference of 3.4 points has p < .001. Age and
+gender go in opposite directions for the two outcomes: ten more years of age
+are associated with a 1.2 point reduction in depressive symptoms but a 3.5
+point increase in fair or poor health, and women are 3.9 points more likely
+than men to report depressive symptoms but 1.2 points less likely to report
+fair or poor health.
+
+A random-effects model mixes differences between people with changes within a
+person. The [within-person effects](within-person.html) example separates
+them.

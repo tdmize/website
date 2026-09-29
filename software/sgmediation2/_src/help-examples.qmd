@@ -1,0 +1,62 @@
+---
+title: "Examples from the help file"
+subtitle: "The examples in help sgmediation2, run in full"
+---
+<<dd_version: 2>>
+
+The examples at the end of `help sgmediation2`, run in order: the basic
+test, then control variables, survey weights, cluster-robust standard
+errors, and bootstrapped confidence intervals. The
+[overview](index.html) page explains what each part of the output is.
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_ah4", clear
+drop if missing(health, edyrs, income, race, woman, age)
+sgmediation2 health, iv(edyrs) mv(income)
+<</dd_do>>
+```
+
+Add control variables:
+
+```{.stata-run}
+<<dd_do>>
+sgmediation2 health, iv(edyrs) mv(income) cv(i.race i.woman age)
+<</dd_do>>
+```
+
+Add survey weights already set with `svyset`:
+
+```{.stata-run}
+<<dd_do>>
+sgmediation2 health, iv(edyrs) mv(income) cv(i.race i.woman age) prefix(svy:)
+<</dd_do>>
+```
+
+Obtain cluster-robust variance estimates for clustering on `occcat`:
+
+```{.stata-run}
+<<dd_do>>
+sgmediation2 health, iv(edyrs) mv(income) cv(i.race i.woman age) vce(cluster occcat)
+<</dd_do>>
+```
+
+Use bootstrapping to obtain standard errors and confidence intervals. 1,000
+replications are recommended for serious use; 100 are used here for
+illustration.
+
+```{.stata-run}
+<<dd_do>>
+bootstrap r(ind_eff) r(dir_eff) r(tot_eff), reps(100) seed(2026): ///
+    sgmediation2 health, iv(edyrs) mv(income) cv(i.race i.woman age)
+<</dd_do>>
+```
+
+Obtain bias-corrected and percentile confidence intervals based on the
+bootstrapped samples:
+
+```{.stata-run}
+<<dd_do>>
+estat bootstrap, bc percentile
+<</dd_do>>
+```

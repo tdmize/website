@@ -1,0 +1,101 @@
+---
+title: "meinequality"
+subtitle: "Inequality summary effects of nominal and ordinal independent variables"
+---
+<<dd_version: 2>>
+
+`meinequality` (Marginal Effects Inequality) is a companion package to Mize
+and Han's 2025 *Sociological Science* article, "Inequality and Total Effect
+Summary Measures for Nominal and Ordinal Variables." A nominal independent
+variable with *L* categories has *L(L-1)/2* pairwise marginal effects -- one
+for every pair of categories. `meinequality` summarizes them in a single
+**ME inequality** statistic: the average absolute pairwise difference in
+predictions across the categories, with a standard error. It answers "how
+much does the outcome differ across the levels of this variable, overall?"
+and it can be compared across predictors, across models, and across groups.
+
+The command calculates **weighted** ME inequality (the default), which
+accounts for the relative size of each category in the sample, and/or
+**unweighted** ME inequality, which gives every pairwise comparison the same
+weight. It works after most regression models, for one model or for two; with
+two models the difference in ME inequality across the models is tested.
+
+## Installation
+
+```stata
+net install meinequality, from("https://tdmize.github.io/data") replace
+```
+
+`meinequality` requires the [`suest2`](../suest2/index.html) package and
+Stata 16 or later.
+
+## Where to start
+
+- [Options](options.html) goes through every option with an example of each.
+- The **Examples** in the sidebar reproduce the examples from Mize and Han
+  (2025): inequality as a summary measure, inequality in categorical
+  models, and comparisons of ME inequality across models and across groups.
+- [Examples from the help file](help-examples.html) runs the help file's
+  examples, and the [help file](help.html) is on the site.
+- The same summary is available as the `meinequality` option of
+  [`mecompare`](../mecompare/index.html), which places it above the pairwise
+  contrasts it summarizes.
+
+## Basic syntax
+
+For a single model, fit it with the nominal variable entered as a factor
+variable (`i.`), then call `meinequality` with that variable:
+
+```stata
+regress dv i.nominalvar iv2, vce(robust)
+meinequality i.nominalvar
+```
+
+For two models, store them and name both in `models()`:
+
+```stata
+logit dv i.nominalvar iv2, vce(robust)
+est store basemod
+
+logit dv i.nominalvar iv2 med1 med2, vce(robust)
+est store medmod
+
+meinequality i.nominalvar, models(basemod medmod)
+```
+
+For two models fit on separate samples, add `groups`:
+
+```stata
+meinequality i.nominalvar, models(grp1mod grp2mod) groups
+```
+
+## A first example
+
+```{.stata-run}
+<<dd_do>>
+sysuse nlsw88, clear
+drop if missing(union)
+
+quietly logit union i.race i.collgrad c.age i.south, vce(robust)
+
+meinequality race
+<</dd_do>>
+```
+
+With no `models()` option the summary is computed for the model in memory;
+with two stored models in `models()` it is computed for each and the
+difference is tested.
+
+## Citation
+
+Please cite the use of `meinequality` by citing the corresponding article:
+
+> Mize, Trenton D. and Bing Han. 2025. "Inequality and Total Effect Summary
+> Measures for Nominal and Ordinal Variables." *Sociological Science* 12:
+> 115--157.
+
+## Authors
+
+`meinequality` and its sister command [`totalme`](../totalme/index.html) are
+written by Bing Han (Population Research Institute, Penn State University)
+and Trenton D. Mize (Purdue University).

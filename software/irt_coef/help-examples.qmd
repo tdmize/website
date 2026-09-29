@@ -1,0 +1,202 @@
+---
+title: "Examples from the help file"
+subtitle: "The examples in help irt_coef, run in full"
+---
+
+The examples at the end of `help irt_coef`, on Stata's `charity` data (five
+ordinal items on attitudes toward charitable giving). The graded response
+model is fit first with `irt grm` and then, identically, with `gsem`; after
+`gsem` the `latent()` option names the latent variable.
+
+```{.stata-run}
+. webuse charity, clear
+(Data from Zheng & Rabe-Hesketh (2007))
+
+. irt grm ta1 ta2 ta3 ta4 ta5
+
+Fitting fixed-effects model:
+
+Iteration 0:  Log likelihood = -5559.6414  
+Iteration 1:  Log likelihood = -5473.9434  
+Iteration 2:  Log likelihood = -5467.4082  
+Iteration 3:  Log likelihood = -5467.3926  
+Iteration 4:  Log likelihood = -5467.3926  
+
+Fitting full model:
+
+Iteration 0:  Log likelihood = -5271.0634  
+Iteration 1:  Log likelihood = -5162.5917  
+Iteration 2:  Log likelihood = -5159.2947  
+Iteration 3:  Log likelihood = -5159.2791  
+Iteration 4:  Log likelihood = -5159.2791  
+
+Graded response model                                      Number of obs = 945
+Log likelihood = -5159.2791
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+ta1          |
+     Discrim |      0.908      0.096    9.495   0.000        0.720       1.095
+        Diff |
+        >=1  |     -1.540      0.164                        -1.861      -1.219
+        >=2  |      1.296      0.143                         1.016       1.576
+         =3  |      3.305      0.325                         2.668       3.942
+-------------+----------------------------------------------------------------
+ta2          |
+     Discrim |      0.943      0.097    9.752   0.000        0.754       1.133
+        Diff |
+        >=1  |     -1.661      0.168                        -1.990      -1.332
+        >=2  |      0.007      0.082                        -0.154       0.168
+         =3  |      2.531      0.241                         2.058       3.004
+-------------+----------------------------------------------------------------
+ta3          |
+     Discrim |      1.734      0.155   11.157   0.000        1.430       2.039
+        Diff |
+        >=1  |     -1.080      0.084                        -1.244      -0.916
+        >=2  |      1.017      0.080                         0.860       1.173
+         =3  |      2.233      0.150                         1.939       2.526
+-------------+----------------------------------------------------------------
+ta4          |
+     Discrim |      1.933      0.186   10.408   0.000        1.569       2.298
+        Diff |
+        >=1  |     -0.345      0.058                        -0.458      -0.231
+        >=2  |      1.466      0.098                         1.273       1.659
+         =3  |      2.419      0.162                         2.101       2.737
+-------------+----------------------------------------------------------------
+ta5          |
+     Discrim |      1.428      0.126   11.294   0.000        1.180       1.675
+        Diff |
+        >=1  |     -0.855      0.083                        -1.019      -0.692
+        >=2  |      0.681      0.075                         0.534       0.827
+         =3  |      2.074      0.154                         1.773       2.376
+------------------------------------------------------------------------------
+
+```
+
+```{.stata-run}
+. irt_coef, help
+
+y* standardized coefficients (and raw coefficient) from IRT model N=945
+
+             |   Std Coef        Coef   Std. Err.       P>|z| 
+-------------+-----------------------------------------------
+         ta1 |      0.447       0.908       0.096       0.000 
+         ta2 |      0.461       0.943       0.097       0.000 
+         ta3 |      0.691       1.734       0.155       0.000 
+         ta4 |      0.729       1.933       0.186       0.000 
+         ta5 |      0.618       1.428       0.126       0.000 
+
+
+Std Coef : y* standardized IRT regression coefficient
+Coef     : IRT raw regression coefficient
+NOTE     : SE and p-value based on raw regression coefficient
+
+```
+
+```{.stata-run}
+. gsem (Theta -> ta1 ta2 ta3 ta4 ta5, ologit), var(Theta@1)
+
+Fitting fixed-effects model:
+
+Iteration 0:  Log likelihood = -5467.3926  
+Iteration 1:  Log likelihood = -5467.3926  
+
+Refining starting values:
+
+Grid node 0:  Log likelihood = -5285.1964
+
+Fitting full model:
+
+Iteration 0:  Log likelihood = -5285.1964  
+Iteration 1:  Log likelihood = -5168.1087  
+Iteration 2:  Log likelihood = -5159.3229  
+Iteration 3:  Log likelihood = -5159.2791  
+Iteration 4:  Log likelihood = -5159.2791  
+
+Generalized structural equation model                      Number of obs = 945
+
+Response: ta1                                              Number of obs = 885
+Family:   Ordinal
+Link:     Logit  
+
+Response: ta2                                              Number of obs = 912
+Family:   Ordinal
+Link:     Logit  
+
+Response: ta3                                              Number of obs = 929
+Family:   Ordinal
+Link:     Logit  
+
+Response: ta4                                              Number of obs = 934
+Family:   Ordinal
+Link:     Logit  
+
+Response: ta5                                              Number of obs = 923
+Family:   Ordinal
+Link:     Logit  
+
+Log likelihood = -5159.2791
+
+ ( 1)  [/]var(Theta) = 1
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+ta1          |
+       Theta |      0.908      0.096    9.495   0.000        0.720       1.095
+-------------+----------------------------------------------------------------
+ta2          |
+       Theta |      0.943      0.097    9.752   0.000        0.754       1.133
+-------------+----------------------------------------------------------------
+ta3          |
+       Theta |      1.734      0.155   11.157   0.000        1.430       2.039
+-------------+----------------------------------------------------------------
+ta4          |
+       Theta |      1.933      0.186   10.408   0.000        1.569       2.298
+-------------+----------------------------------------------------------------
+ta5          |
+       Theta |      1.428      0.126   11.294   0.000        1.180       1.675
+-------------+----------------------------------------------------------------
+/ta1         |
+        cut1 |     -1.398      0.095                        -1.583      -1.212
+        cut2 |      1.176      0.090                         0.999       1.354
+        cut3 |      2.999      0.155                         2.695       3.304
+-------------+----------------------------------------------------------------
+/ta2         |
+        cut1 |     -1.567      0.099                        -1.761      -1.374
+        cut2 |      0.006      0.078                        -0.146       0.159
+        cut3 |      2.388      0.124                         2.145       2.631
+-------------+----------------------------------------------------------------
+/ta3         |
+        cut1 |     -1.873      0.136                        -2.140      -1.606
+        cut2 |      1.763      0.133                         1.501       2.024
+        cut3 |      3.872      0.230                         3.422       4.322
+-------------+----------------------------------------------------------------
+/ta4         |
+        cut1 |     -0.666      0.110                        -0.882      -0.450
+        cut2 |      2.835      0.194                         2.454       3.215
+        cut3 |      4.677      0.303                         4.083       5.271
+-------------+----------------------------------------------------------------
+/ta5         |
+        cut1 |     -1.221      0.105                        -1.426      -1.016
+        cut2 |      0.971      0.099                         0.777       1.166
+        cut3 |      2.961      0.161                         2.645       3.277
+-------------+----------------------------------------------------------------
+   var(Theta)|      1.000  (constrained)
+------------------------------------------------------------------------------
+
+```
+
+```{.stata-run}
+. irt_coef, latent(Theta)
+
+y* standardized coefficients (and raw coefficient) from IRT model N=945
+
+             |   Std Coef        Coef   Std. Err.       P>|z| 
+-------------+-----------------------------------------------
+         ta1 |      0.447       0.908       0.096       0.000 
+         ta2 |      0.461       0.943       0.097       0.000 
+         ta3 |      0.691       1.734       0.155       0.000 
+         ta4 |      0.729       1.933       0.186       0.000 
+         ta5 |      0.618       1.428       0.126       0.000 
+
+```

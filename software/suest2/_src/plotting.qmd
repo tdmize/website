@@ -1,0 +1,280 @@
+---
+title: "Predictions and graphs"
+subtitle: "margins, marginsplot, and coefplot after suest2 -- Figures 3 to 6 of Mize, Doan, and Long (2019)"
+---
+<<dd_version: 2>>
+
+After `suest2`, `margins` can be pointed at any one model with
+`predict(model(name))`. So everything `margins` produces for a single model --
+predictions over a range of a variable, predicted probabilities for each
+outcome category, differences between predictions -- can be produced for each
+model, and graphed with `marginsplot` or `coefplot`.
+
+This page remakes four figures from Mize, Doan, and Long (2019). The article's
+replication files are at
+[trentonmize.com/software/mecompare](https://www.trentonmize.com/software/mecompare);
+the marginal-effect tables from the same examples are on the [`mecompare`
+example pages](../mecompare/examples/mediation.html). `coefplot` (Jann) is
+used for one figure; install it with `ssc install coefplot`.
+
+## Predictions from each model (Figure 3)
+
+Example 6.1 of the article regresses a depressive-symptoms scale on income
+and income squared, then adds job satisfaction as a possible mediator. Fit
+and store the two models, then combine them:
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/ah4_cme", clear
+drop if missing(depsympB, income, inc10, age, woman, race, college, jobsat)
+
+quietly regress depsympB c.income##c.income c.age i.woman i.race, vce(robust)
+estimates store basemod
+
+quietly regress depsympB c.income##c.income c.age i.woman i.race i.jobsat, vce(robust)
+estimates store medmod
+
+suest2 basemod medmod
+<</dd_do>>
+```
+
+`predict(model(basemod))` gives predictions from the base model only: here the
+predicted depressive symptoms across income, with the other variables at their
+means (the left panel of Figure 3):
+
+```{.stata-run}
+<<dd_do>>
+margins, predict(model(basemod)) at(income=(0(5)150)) atmeans noatlegend
+
+marginsplot, plotopts(msym(i)) recastci(rline) ciopts(lpat(dash) color(gs12)) ///
+    xlab(0(25)150) xtitle("Income in thousands of dollars") ///
+    ylab(2(1)8) ytitle("Depressive symptoms") ///
+    title("Model 1: Base", pos(11)) name(g_base, replace)
+<</dd_do>>
+```
+
+The same call with `predict(model(medmod))` gives the right panel, and
+`graph combine` puts the two side by side:
+
+```{.stata-run}
+<<dd_do>>
+quietly margins, predict(model(medmod)) at(income=(0(5)150)) atmeans noatlegend
+
+marginsplot, plotopts(msym(i)) recastci(rline) ciopts(lpat(dash) color(gs12)) ///
+    xlab(0(25)150) xtitle("Income in thousands of dollars") ///
+    ylab(2(1)8) ytitle("Depressive symptoms") ///
+    title("Model 2: Adding job satisfaction", pos(11)) name(g_med, replace)
+
+graph combine g_base g_med, ycommon xsize(10) ysize(5.5) iscale(*1.2)
+graph export "fig/plotting-predictions.png", replace width(1400)
+<</dd_do>>
+```
+
+![Predicted depressive symptoms by income from the base model and the model adding job satisfaction, other variables at their means.](fig/plotting-predictions.png){width=90%}
+
+## The difference in predictions across models (Figure 4)
+
+The article's Figure 4 plots the difference between the two curves -- model 2
+minus model 1 -- with a confidence interval at each value of income. With
+`suest2` this is one `margins` call: `expression()` can contain more than one
+`predict()`, and each can name its model.
+
+```{.stata-run}
+<<dd_do>>
+margins, at(income=(0(5)150)) atmeans noatlegend ///
+    expression(predict(model(medmod)) - predict(model(basemod)))
+
+marginsplot, plotopts(msym(i)) recastci(rline) ciopts(lpat(dash) color(gs12)) ///
+    yline(0) xlab(0(25)150) xtitle("Income in thousands of dollars") ///
+    ylab(-0.5(.25)1, format(%3.2f)) ytitle("Difference: Model 2 - Model 1") ///
+    title("")
+graph export "fig/plotting-difference.png", replace width(1400)
+<</dd_do>>
+```
+
+![The difference in predicted depressive symptoms between the two models across income, with its 95% confidence interval.](fig/plotting-difference.png){width=70%}
+
+Above roughly $50,000 model 2 predicts more depressive symptoms than model 1,
+and the interval excludes zero -- accounting for job satisfaction changes what
+the model says about people with higher incomes.
+
+A bare `margins` after `suest2` gives predictions from every model, in the
+order given to `suest2`: here rows 1 to 4 are the base model and rows 5 to 8
+the mediation model. After `post`, [`metest`](../metest/index.html) can test
+any difference between rows:
+
+```{.stata-run}
+<<dd_do>>
+margins, at(income=(0 50 100 150)) atmeans post
+
+metest 5 - 1, rowname("Income 0: Model 2 - Model 1")
+metest 7 - 3, rowname("Income 100: Model 2 - Model 1") add
+<</dd_do>>
+```
+
+## Predicted probabilities from alternative predictors (Figure 5)
+
+Example 6.3 predicts whether a person views same-sex relationships as wrong
+from sexual orientation measured two ways: by self-identification in one
+logit and by reported sexual behavior in the other. The article's Figure 5 is
+a bar chart of the predicted probabilities for each orientation category from
+each model. Fit, store, and combine, and this time store the combined system
+too, because `margins, post` will replace it:
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/gss_cme", clear
+drop if missing(samesexB, sexident, sexbehav, college, woman, race, age, year)
+
+quietly logit samesexB i.sexident i.woman i.college c.age i.race i.year, vce(robust)
+estimates store identity
+
+quietly logit samesexB i.sexbehav i.woman i.college c.age i.race i.year, vce(robust)
+estimates store behavior
+
+quietly suest2 identity behavior
+estimates store system
+<</dd_do>>
+```
+
+Each model gets its own `margins` call, posted and stored for `coefplot`: the
+identity model at the three values of `sexident`, the behavior model at the
+three values of `sexbehav`:
+
+```{.stata-run}
+<<dd_do>>
+margins, predict(model(identity)) at(sexident=(1 2 3)) post
+estimates store pr_identity
+
+estimates restore system
+margins, predict(model(behavior)) at(sexbehav=(1 2 3)) post
+estimates store pr_behavior
+<</dd_do>>
+```
+
+The two stored results have the same coefficient names (`1._at`, `2._at`,
+`3._at`), so `coefplot` lines them up category by category:
+
+```{.stata-run}
+<<dd_do>>
+coefplot (pr_identity, color(red*1.3)) (pr_behavior, color(eltblue*.9)), ///
+    vertical recast(bar) barw(0.3) ciopts(recast(rcap) color(gs8)) citop ///
+    legend(order(1 "Identity" 3 "Behavior")) ///
+    xlab(1 "Heterosexual" 2 "Bisexual" 3 "Gay/Lesbian", noticks) ///
+    ylab(0(0.1).6) ytitle("Pr(same-sex relationships wrong)") ///
+    xscale(noline) plotregion(style(none))
+graph export "fig/plotting-bars.png", replace width(1400)
+<</dd_do>>
+```
+
+![Predicted probability of viewing same-sex relationships as wrong, by sexual orientation measured by identity and by behavior.](fig/plotting-bars.png){width=70%}
+
+The article's Table 4 (panel A) tests the cross-model difference in each
+category. One `margins` call on the restored system evaluates both models:
+rows 1 to 3 are the identity model and rows 10 to 12 the behavior model (the
+other rows are not needed). `metest` builds the table:
+
+```{.stata-run}
+<<dd_do>>
+estimates restore system
+margins, at(sexident=(1 2 3)) at(sexbehav=(1 2 3)) post
+
+metest, clear
+quietly metest 1,      rowname("Heterosexual: Identity") add
+quietly metest 10,     rowname("Heterosexual: Behavior") add
+quietly metest 10 - 1, rowname("Heterosexual: Difference") add
+quietly metest 2,      rowname("Bisexual: Identity") add
+quietly metest 11,     rowname("Bisexual: Behavior") add
+quietly metest 11 - 2, rowname("Bisexual: Difference") add
+quietly metest 3,      rowname("Gay/lesbian: Identity") add
+quietly metest 12,     rowname("Gay/lesbian: Behavior") add
+quietly metest 12 - 3, rowname("Gay/lesbian: Difference") add
+metest, title("Pr(wrong) by orientation: identity versus behavior")
+<</dd_do>>
+```
+
+Only for people classified as bisexual do the two measures give a different
+answer. The marginal effects for this example -- panel B of the article's
+table -- are on the [alternative predictors](../mecompare/examples/alternative-predictors.html)
+page of `mecompare`.
+
+## Two model types for one outcome (Figure 6)
+
+Example 6.5 fits an ordinal logit and a multinomial logit to the same
+five-category party identification, and the article's Figure 6 compares the
+predicted probability of each category across age from the two models. For a
+multi-category model, `predict()` names the model and the outcome, so the five
+categories take five `predict()` options. `partyid5` is coded 0 to 4, from
+strong Democrat to strong Republican:
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/gss_cme", clear
+drop if year < 2010
+drop if missing(partyid5, woman, edyrs, age, parent, married, faminc, employed, region4, year)
+
+quietly ologit partyid5 c.age##c.age i.woman c.edyrs i.parent i.married i.race ///
+               c.faminc i.employed i.region4 i.year, vce(robust)
+estimates store ordinal
+
+quietly mlogit partyid5 c.age##c.age i.woman c.edyrs i.parent i.married i.race ///
+               c.faminc i.employed i.region4 i.year, vce(robust)
+estimates store nominal
+
+quietly suest2 ordinal nominal
+
+margins, at(age=(20 50 80)) atmeans ///
+    predict(model(ordinal) pr outcome(0)) predict(model(ordinal) pr outcome(1)) ///
+    predict(model(ordinal) pr outcome(2)) predict(model(ordinal) pr outcome(3)) ///
+    predict(model(ordinal) pr outcome(4))
+<</dd_do>>
+```
+
+For the figure, the same call over `age=(20(5)80)` for each model, without
+confidence intervals as in the article:
+
+```{.stata-run}
+<<dd_do>>
+quietly margins, at(age=(20(5)80)) atmeans ///
+    predict(model(ordinal) pr outcome(0)) predict(model(ordinal) pr outcome(1)) ///
+    predict(model(ordinal) pr outcome(2)) predict(model(ordinal) pr outcome(3)) ///
+    predict(model(ordinal) pr outcome(4))
+
+marginsplot, noci plotopts(msym(i) lwidth(medthick)) ///
+    legend(order(1 "Strong Dem" 2 "Democrat" 3 "Independent" ///
+                 4 "Republican" 5 "Strong Repub") position(6) rows(2)) ///
+    xlab(20(10)80) xtitle("Age in years") ylab(0(.1).4) ///
+    ytitle("Pr(party affiliation)") title("Ordinal logit", pos(11)) ///
+    name(g_ordinal, replace)
+
+quietly margins, at(age=(20(5)80)) atmeans ///
+    predict(model(nominal) pr outcome(0)) predict(model(nominal) pr outcome(1)) ///
+    predict(model(nominal) pr outcome(2)) predict(model(nominal) pr outcome(3)) ///
+    predict(model(nominal) pr outcome(4))
+
+marginsplot, noci plotopts(msym(i) lwidth(medthick)) ///
+    legend(order(1 "Strong Dem" 2 "Democrat" 3 "Independent" ///
+                 4 "Republican" 5 "Strong Repub") position(6) rows(2)) ///
+    xlab(20(10)80) xtitle("Age in years") ylab(0(.1).4) ///
+    ytitle("Pr(party affiliation)") title("Multinomial logit", pos(11)) ///
+    name(g_nominal, replace)
+
+graph combine g_ordinal g_nominal, ycommon xsize(10) ysize(6) iscale(*1.2)
+graph export "fig/plotting-party.png", replace width(1400)
+<</dd_do>>
+```
+
+![Predicted probabilities of party affiliation by age from an ordinal logit and a multinomial logit, other variables at their means.](fig/plotting-party.png){width=90%}
+
+The ordinal model forces one pattern on every category -- the probability of
+being an independent barely moves with age -- while the multinomial model
+lets it fall steeply. The tests of whether these age effects differ across
+the two models are on the [model types](../mecompare/examples/model-types.html)
+page of `mecompare`.
+
+## Reference
+
+> Mize, Trenton D., Long Doan, and J. Scott Long. 2019. "A General Framework
+> for Comparing Predictions and Marginal Effects Across Models."
+> *Sociological Methodology* 49(1): 152--189.
+> <https://doi.org/10.1177/0081175019852763>

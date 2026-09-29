@@ -1,0 +1,67 @@
+---
+title: "Multilevel models"
+subtitle: "Students nested in schools: mixed-effects logit"
+---
+<<dd_version: 2>>
+
+`mecompare` works after multilevel models such as `melogit`. The marginal
+effects average over the random effects (the default prediction), so they are
+changes in predicted probabilities, as after an ordinary `logit`.
+
+The example uses wave 1 of Add Health: about 5,800 students in 132 schools.
+The outcome is being a current smoker. The predictors are sex, age, race, and
+whether the student's mother has a college degree, plus a school-level
+variable: the share of students in the school whose mother has a college
+degree.
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/ah_si_2026", clear
+keep if wave == 1
+rename cluster school
+drop if missing(smoker, male, age, race, momeduc)
+generate momcollege = momeduc >= 4
+bysort school: egen school_momcollege = mean(momcollege)
+
+quietly melogit smoker i.male c.age i.race i.momcollege c.school_momcollege || school:
+estimates store multilevel
+<</dd_do>>
+```
+
+With no variable listed before the comma, `mecompare` computes marginal effects
+for every predictor. Age and the school's share of college-educated mothers are
+changed by one standard deviation:
+
+```{.stata-run}
+<<dd_do>>
+mecompare, models(multilevel) amount(sd)
+<</dd_do>>
+```
+
+Black students are 16.7 percentage points less likely to smoke than White
+students. A student whose mother has a college degree is 6.0 points less
+likely to smoke, but the share of college-educated mothers in the school adds
+little beyond that: a one standard deviation increase is associated with a
+0.8 point reduction (p = .34).
+
+## Ordinary and multilevel logit
+
+The coefficients of a multilevel logit are on a different scale than those of
+an ordinary logit, so they cannot be compared directly; the marginal effects
+can. Here the same model is fit as an ordinary logit, which ignores the
+schools, and compared with the multilevel logit. Fit both models without
+`vce(robust)`: `mecompare` clusters the standard errors on school.
+
+```{.stata-run}
+<<dd_do>>
+quietly logit smoker i.male c.age i.race i.momcollege c.school_momcollege
+estimates store ordinary
+
+mecompare, models(ordinary multilevel) amount(sd)
+<</dd_do>>
+```
+
+Most effects are nearly the same in the two models. The ordinary logit gives
+somewhat larger effects of age and race: for example, its Latinx–White
+difference is 11.2 percentage points, compared with 8.5 in the multilevel
+logit (the difference of 2.7 points has p = .004).

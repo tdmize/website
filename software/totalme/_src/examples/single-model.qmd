@@ -1,0 +1,28 @@
+---
+title: "Total MEs for a single model"
+subtitle: "Example 5.2.c of Mize and Han (2025)"
+---
+<<dd_version: 2>>
+
+Self-rated health has five ordered categories, so in a multinomial logit each
+predictor has five marginal effects -- one per category -- and it is not
+obvious which predictor matters most. The Total ME sums the absolute effects
+across the categories (and halves the sum) to give one summary of how much
+probability each predictor moves. This example uses the 2000--2021 GSS.
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_gss", clear
+drop if missing(healthR, race4, age, woman, parent, married, faminc, degree)
+drop if year < 2000 | year > 2021
+
+mlogit healthR i.race4 c.age i.woman i.parent i.married c.faminc i.degree
+totalme age married parent, amount(sd)
+<</dd_do>>
+```
+
+For continuous independent variables, custom amounts of change can be
+specified in the `amount()` option; here age changes by one standard
+deviation. The Total ME for a binary variable such as `married` or `parent`
+is built from its discrete change on each outcome category, so continuous and
+binary predictors are summarized on the same scale.

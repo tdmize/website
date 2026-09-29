@@ -1,0 +1,106 @@
+---
+title: "Comparing ME inequalities across groups"
+subtitle: "Example 4.3.a of Mize and Han (2025): models fit on different samples"
+---
+
+When different samples are used for each model -- different groups, or
+different time periods -- the `groups` option must be specified. Here the
+question is whether religious-tradition differences in willingness to let a
+gay man speak in public were larger before 1980 than after 2010.
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/cda_gss", clear
+(cda_gss.dta |  GSS 1972-2021 CDA - Categorical Data Analysis | date created 2023)
+
+. drop if missing(spkhomo, reltrad, age, woman)
+(30,806 observations deleted)
+
+. 
+. logit spkhomo i.reltrad c.age i.woman if year < 1980, vce(robust)
+
+Iteration 0:  Log pseudolikelihood = -3659.4419  
+Iteration 1:  Log pseudolikelihood =  -3286.856  
+Iteration 2:  Log pseudolikelihood = -3281.6546  
+Iteration 3:  Log pseudolikelihood =  -3281.646  
+Iteration 4:  Log pseudolikelihood =  -3281.646  
+
+Logistic regression                                     Number of obs =  5,593
+                                                        Wald chi2(8)  = 660.44
+                                                        Prob > chi2   = 0.0000
+Log pseudolikelihood = -3281.646                        Pseudo R2     = 0.1032
+
+-----------------------------------------------------------------------------------
+                  |               Robust
+          spkhomo | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+------------------+----------------------------------------------------------------
+          reltrad |
+   Mainline Prot  |      0.978      0.081   12.013   0.000        0.818       1.137
+Black Protestant  |      0.332      0.116    2.870   0.004        0.105       0.558
+        Catholic  |      0.943      0.084   11.214   0.000        0.778       1.107
+          Jewish  |      1.935      0.222    8.703   0.000        1.499       2.371
+     Other Faith  |      0.800      0.184    4.350   0.000        0.439       1.160
+   Nonaffiliated  |      1.630      0.151   10.778   0.000        1.333       1.926
+                  |
+              age |     -0.037      0.002  -20.643   0.000       -0.041      -0.034
+                  |
+            woman |
+           Women  |      0.020      0.060    0.328   0.743       -0.098       0.138
+            _cons |      1.538      0.106   14.543   0.000        1.331       1.745
+-----------------------------------------------------------------------------------
+
+. est store premod
+
+. 
+. logit spkhomo i.reltrad c.age i.woman if year >= 2010, vce(robust)
+
+Iteration 0:  Log pseudolikelihood = -2886.0891  
+Iteration 1:  Log pseudolikelihood = -2742.9178  
+Iteration 2:  Log pseudolikelihood = -2731.8164  
+Iteration 3:  Log pseudolikelihood = -2731.7771  
+Iteration 4:  Log pseudolikelihood = -2731.7771  
+
+Logistic regression                                     Number of obs =  8,226
+                                                        Wald chi2(8)  = 267.70
+                                                        Prob > chi2   = 0.0000
+Log pseudolikelihood = -2731.7771                       Pseudo R2     = 0.0535
+
+-----------------------------------------------------------------------------------
+                  |               Robust
+          spkhomo | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+------------------+----------------------------------------------------------------
+          reltrad |
+   Mainline Prot  |      1.162      0.130    8.920   0.000        0.906       1.417
+Black Protestant  |     -0.018      0.120   -0.148   0.883       -0.253       0.217
+        Catholic  |      0.829      0.097    8.533   0.000        0.638       1.019
+          Jewish  |      1.835      0.422    4.345   0.000        1.007       2.663
+     Other Faith  |      0.559      0.151    3.699   0.000        0.263       0.856
+   Nonaffiliated  |      1.274      0.117   10.927   0.000        1.046       1.503
+                  |
+              age |     -0.017      0.002   -7.555   0.000       -0.021      -0.012
+                  |
+            woman |
+           Women  |      0.111      0.072    1.544   0.123       -0.030       0.253
+            _cons |      2.270      0.137   16.536   0.000        2.001       2.539
+-----------------------------------------------------------------------------------
+
+. est store postmod
+
+. 
+. meinequality reltrad, models(premod postmod) groups unweighted
+
+ME Inequality Estimates (N_premod = 5593 , N_postmod = 8226)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+reltrad Unwgt ME Ineq.   |                                               
+        Model 1 (premod) |      0.156       0.011      14.329       0.000 
+       Model 2 (postmod) |      0.072       0.007      10.913       0.000 
+       Cross-Model Diff. |      0.083       0.013       6.561       0.000 
+
+```
+
+The ME inequality estimate is significantly larger in the first model
+(pre-1980) than in the second (post-2010): religious traditions have converged
+on this question. `unweighted` compares the marginal effects alone; the
+default weighted version would also reflect the change in the religious makeup
+of the GSS between the two periods.

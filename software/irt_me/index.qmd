@@ -1,0 +1,327 @@
+---
+title: "irt_me"
+subtitle: "Stata command for marginal effects from item response theory models"
+---
+
+`irt_me` is a Stata command that automates the calculation of marginal
+effects after item response theory (IRT) models. In an IRT model the latent
+variable is the independent variable and the observed items are the
+dependent variables, so a marginal effect quantifies the relationship
+between the latent variable and an item in the predicted probability metric
+-- an alternative to interpreting the discrimination and difficulty
+parameters directly. `irt_me` works with every model the `irt` commands
+fit, with binary, ordinal, and nominal items as well as continuous and
+count items in `gsem`, and with a mix of item types in one model.
+
+The approach is described in the slides from my presentation at the 2024
+Italian Stata Conference:
+[Marginal effects for IRT models](https://drive.google.com/file/d/1lDXbnwYa2-8GSHTDyc3eGM7Jmvz97GDy/view?usp=sharing).
+It is also covered in my graduate course slides on
+[Item Response Theory](https://drive.google.com/file/d/1G9sWGLMAN6SGWzw3XqOXyBw7MC-R_hGI/view?usp=drive_link);
+all of the materials for the course, including example code, are on the
+[Latent Variable Modeling](https://www.trentonmize.com/teaching/lvm) page.
+
+## Installation
+
+```stata
+net install irt_me, from("https://tdmize.github.io/data") replace
+```
+
+To read the help file in Stata, type `help irt_me`; it is also
+[on this site](help.html).
+
+## Citation
+
+Please cite the use of `irt_me` as:
+
+> Mize, Trenton D. 2024. "Stata command for marginal effects from item
+> response theory models." <https://www.trentonmize.com/software/irt_me>
+
+## Examples
+
+### Load the data and fit the IRT model
+
+The example uses ten binary depression items from Add Health Wave IV and a
+two-parameter logistic model.
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/lvm_ah4", clear
+(Add Health Wave IV | Latent Variable Modeling Class | )
+
+. 
+. irt 2pl botherB bluesB keepmindB depressB tiredB dislikedB sadB ///
+>         feltgoodBR happyBR enjoylifeBR
+
+Fitting fixed-effects model:
+
+Iteration 0:  Log likelihood = -24968.123  
+Iteration 1:  Log likelihood = -24426.745  
+Iteration 2:  Log likelihood = -24398.991  
+Iteration 3:  Log likelihood = -24398.692  
+Iteration 4:  Log likelihood = -24398.692  
+
+Fitting full model:
+
+Iteration 0:  Log likelihood = -23626.374  (not concave)
+Iteration 1:  Log likelihood = -21936.782  
+Iteration 2:  Log likelihood = -21692.881  
+Iteration 3:  Log likelihood = -21320.524  
+Iteration 4:  Log likelihood = -21283.244  
+Iteration 5:  Log likelihood = -21281.501  
+Iteration 6:  Log likelihood = -21281.483  
+Iteration 7:  Log likelihood = -21281.482  
+
+Two-parameter logistic model                             Number of obs = 5,113
+Log likelihood = -21281.482
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+botherB      |
+     Discrim |      1.453      0.060   24.219   0.000        1.335       1.570
+        Diff |      0.295      0.028   10.613   0.000        0.240       0.349
+-------------+----------------------------------------------------------------
+bluesB       |
+     Discrim |      3.198      0.163   19.655   0.000        2.879       3.517
+        Diff |      0.787      0.024   32.561   0.000        0.740       0.835
+-------------+----------------------------------------------------------------
+keepmindB    |
+     Discrim |      1.024      0.049   20.967   0.000        0.929       1.120
+        Diff |     -0.591      0.039  -14.994   0.000       -0.669      -0.514
+-------------+----------------------------------------------------------------
+depressB     |
+     Discrim |      3.497      0.187   18.682   0.000        3.130       3.864
+        Diff |      0.603      0.022   27.706   0.000        0.561       0.646
+-------------+----------------------------------------------------------------
+tiredB       |
+     Discrim |      0.738      0.043   17.274   0.000        0.654       0.821
+        Diff |     -0.972      0.064  -15.261   0.000       -1.097      -0.848
+-------------+----------------------------------------------------------------
+dislikedB    |
+     Discrim |      0.992      0.050   19.971   0.000        0.894       1.089
+        Diff |      1.363      0.063   21.748   0.000        1.240       1.486
+-------------+----------------------------------------------------------------
+sadB         |
+     Discrim |      2.631      0.122   21.578   0.000        2.392       2.870
+        Diff |      0.046      0.021    2.208   0.027        0.005       0.086
+-------------+----------------------------------------------------------------
+feltgoodBR   |
+     Discrim |      0.805      0.079   10.188   0.000        0.650       0.960
+        Diff |      4.055      0.342   11.845   0.000        3.384       4.726
+-------------+----------------------------------------------------------------
+happyBR      |
+     Discrim |      1.894      0.159   11.946   0.000        1.583       2.204
+        Diff |      2.833      0.134   21.087   0.000        2.569       3.096
+-------------+----------------------------------------------------------------
+enjoylifeBR  |
+     Discrim |      2.275      0.215   10.606   0.000        1.855       2.696
+        Diff |      2.799      0.128   21.934   0.000        2.549       3.049
+------------------------------------------------------------------------------
+
+```
+
+### Calculate the marginal effects
+
+By default `irt_me` reports, for each item, the change in the predicted
+probability for a one standard deviation increase in the latent variable,
+centered on its mean (from -0.5 to 0.5 on the standardized scale). The
+`help` option adds a legend beneath the table.
+
+```{.stata-run}
+. irt_me, help
+
+Marginal Effects of + 1.000 Increase in Latent Variable (theta) N=5113
+
+             |    PrStart       PrEnd     ME Est.   Std. Err.       P>|z| 
+-------------+-----------------------------------------------------------
+     botherB |      0.240       0.574       0.334       0.013       0.000 
+      bluesB |      0.016       0.285       0.269       0.013       0.000 
+   keepmindB |      0.523       0.754       0.230       0.010       0.000 
+    depressB |      0.021       0.411       0.390       0.017       0.000 
+      tiredB |      0.586       0.748       0.161       0.009       0.000 
+   dislikedB |      0.136       0.298       0.162       0.007       0.000 
+        sadB |      0.192       0.768       0.576       0.020       0.000 
+  feltgoodBR |      0.025       0.054       0.029       0.002       0.000 
+     happyBR |      0.002       0.012       0.010       0.002       0.000 
+ enjoylifeBR |      0.001       0.005       0.005       0.001       0.000 
+
+
+PrStart : Pr(y=1) at theta = -0.500
+PrEnd   : Pr(y=1) at theta = 0.500
+ME      : PrEnd - PrStart
+
+```
+
+For an average person, a one standard deviation increase in latent
+depression is associated with a 0.334 increase in the probability of
+reporting being bothered by things last week (the `botherB` item).
+
+### The same model with gsem
+
+An identical model can be fit with `gsem`. Because `gsem` lets the latent
+variable take any name, the `latent()` option tells `irt_me` which one to
+use (after `irt` it is always `Theta`, and the option is not needed).
+
+```{.stata-run}
+. gsem (Depress -> botherB bluesB keepmindB depressB tiredB dislikedB sadB ///
+>                  feltgoodBR happyBR enjoylifeBR), logit var(Depress@1)
+
+Fitting fixed-effects model:
+
+Iteration 0:  Log likelihood = -24968.123  
+Iteration 1:  Log likelihood = -24426.745  
+Iteration 2:  Log likelihood = -24398.991  
+Iteration 3:  Log likelihood = -24398.692  
+Iteration 4:  Log likelihood = -24398.692  
+
+Refining starting values:
+
+Grid node 0:  Log likelihood = -23626.374
+
+Fitting full model:
+
+Iteration 0:  Log likelihood = -23626.374  (not concave)
+Iteration 1:  Log likelihood = -21936.782  
+Iteration 2:  Log likelihood = -21692.881  
+Iteration 3:  Log likelihood = -21320.524  
+Iteration 4:  Log likelihood = -21283.244  
+Iteration 5:  Log likelihood = -21281.501  
+Iteration 6:  Log likelihood = -21281.483  
+Iteration 7:  Log likelihood = -21281.482  
+
+Generalized structural equation model                    Number of obs = 5,113
+
+Response: botherB                                        Number of obs = 5,112
+Family:   Bernoulli  
+Link:     Logit      
+
+Response: bluesB                                         Number of obs = 5,113
+Family:   Bernoulli  
+Link:     Logit      
+
+Response: keepmindB                                      Number of obs = 5,112
+Family:   Bernoulli  
+Link:     Logit      
+
+Response: depressB                                       Number of obs = 5,113
+Family:   Bernoulli  
+Link:     Logit      
+
+Response: tiredB                                         Number of obs = 5,113
+Family:   Bernoulli  
+Link:     Logit      
+
+Response: dislikedB                                      Number of obs = 5,111
+Family:   Bernoulli  
+Link:     Logit      
+
+Response: sadB                                           Number of obs = 5,113
+Family:   Bernoulli  
+Link:     Logit      
+
+Response: feltgoodBR                                     Number of obs = 5,109
+Family:   Bernoulli  
+Link:     Logit      
+
+Response: happyBR                                        Number of obs = 5,113
+Family:   Bernoulli  
+Link:     Logit      
+
+Response: enjoylifeBR                                    Number of obs = 5,113
+Family:   Bernoulli  
+Link:     Logit      
+
+Log likelihood = -21281.482
+
+ ( 1)  [/]var(Depress) = 1
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+botherB      |
+     Depress |      1.453      0.060   24.219   0.000        1.335       1.570
+       _cons |     -0.428      0.040  -10.747   0.000       -0.506      -0.350
+-------------+----------------------------------------------------------------
+bluesB       |
+     Depress |      3.198      0.163   19.655   0.000        2.879       3.517
+       _cons |     -2.518      0.116  -21.654   0.000       -2.746      -2.290
+-------------+----------------------------------------------------------------
+keepmindB    |
+     Depress |      1.024      0.049   20.967   0.000        0.929       1.120
+       _cons |      0.606      0.036   16.926   0.000        0.536       0.676
+-------------+----------------------------------------------------------------
+depressB     |
+     Depress |      3.497      0.187   18.682   0.000        3.130       3.864
+       _cons |     -2.110      0.112  -18.875   0.000       -2.329      -1.891
+-------------+----------------------------------------------------------------
+tiredB       |
+     Depress |      0.738      0.043   17.274   0.000        0.654       0.821
+       _cons |      0.717      0.034   21.348   0.000        0.651       0.783
+-------------+----------------------------------------------------------------
+dislikedB    |
+     Depress |      0.992      0.050   19.971   0.000        0.894       1.089
+       _cons |     -1.352      0.042  -32.001   0.000       -1.435      -1.269
+-------------+----------------------------------------------------------------
+sadB         |
+     Depress |      2.631      0.122   21.578   0.000        2.392       2.870
+       _cons |     -0.120      0.055   -2.199   0.028       -0.228      -0.013
+-------------+----------------------------------------------------------------
+feltgoodBR   |
+     Depress |      0.805      0.079   10.188   0.000        0.650       0.960
+       _cons |     -3.264      0.086  -37.936   0.000       -3.432      -3.095
+-------------+----------------------------------------------------------------
+happyBR      |
+     Depress |      1.894      0.159   11.946   0.000        1.583       2.204
+       _cons |     -5.364      0.248  -21.605   0.000       -5.851      -4.878
+-------------+----------------------------------------------------------------
+enjoylifeBR  |
+     Depress |      2.275      0.215   10.606   0.000        1.855       2.696
+       _cons |     -6.368      0.373  -17.077   0.000       -7.099      -5.637
+-------------+----------------------------------------------------------------
+ var(Depress)|      1.000  (constrained)
+------------------------------------------------------------------------------
+
+```
+
+```{.stata-run}
+. irt_me, latent(Depress)
+
+Marginal Effects of + 1.000 Increase in Latent Variable (theta) N=5113
+
+             |    PrStart       PrEnd     ME Est.   Std. Err.       P>|z| 
+-------------+-----------------------------------------------------------
+     botherB |      0.240       0.574       0.334       0.013       0.000 
+      bluesB |      0.016       0.285       0.269       0.013       0.000 
+   keepmindB |      0.523       0.754       0.230       0.010       0.000 
+    depressB |      0.021       0.411       0.390       0.017       0.000 
+      tiredB |      0.586       0.748       0.161       0.009       0.000 
+   dislikedB |      0.136       0.298       0.162       0.007       0.000 
+        sadB |      0.192       0.768       0.576       0.020       0.000 
+  feltgoodBR |      0.025       0.054       0.029       0.002       0.000 
+     happyBR |      0.002       0.012       0.010       0.002       0.000 
+ enjoylifeBR |      0.001       0.005       0.005       0.001       0.000 
+
+```
+
+### Marginal effects across the trimmed range of the latent variable
+
+The `range` option calculates the change in each item's probability across
+the trimmed range of the latent variable: from its 1st percentile to its
+99th percentile, as predicted for the sample.
+
+```{.stata-run}
+. irt_me, range help
+If gsem was used to fit the model , the latent variable must be specified in the latent( ) option.
+
+```
+
+### Customized marginal effects
+
+`start()` and `end()` set any starting and ending values on the
+standardized scale of the latent variable. Here the change is from two to
+three standard deviations above the mean: the effect of becoming more
+depressed among those who are already highly depressed.
+
+```{.stata-run}
+. irt_me, start(2) end(3) help
+If gsem was used to fit the model , the latent variable must be specified in the latent( ) option.
+
+```

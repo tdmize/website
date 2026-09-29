@@ -1,0 +1,90 @@
+---
+title: "desctable"
+subtitle: "Stata command for descriptive statistics tables"
+---
+<<dd_version: 2>>
+
+`desctable` creates formatted descriptive statistics tables using Stata.
+The table is automatically exported to Excel, where it can be easily copied
+and pasted to Word without losing the formatting. `desctable` treats
+continuous, binary, and nominal variables differently -- providing
+formatting, labeling, and statistics that are most appropriate for the
+measurement level of each variable. Binary and nominal variables are
+entered with the `i.` prefix; variables without a prefix are treated as
+continuous. Rows are labeled with the variable labels, and the categories
+of nominal variables with their value labels, so a well-labeled dataset
+produces a table that needs no further editing.
+
+## Installation
+
+```stata
+net install desctable, from("https://tdmize.github.io/data") replace
+```
+
+To read the help file in Stata, type `help desctable`; it is also
+[on this site](help.html). `desctable` uses `putexcel`, so Stata 14.1 or
+newer is required.
+
+## Citation
+
+In general, I do not think the use of `desctable` requires citation. So for
+most cases, feel free to use `desctable` without citation. But, if you
+need or want a citation you can cite `desctable` as:
+
+> Mize, Trenton D. and Bianca Manago. 2018. "desctable: Stata command for
+> descriptive statistics tables."
+> <https://www.trentonmize.com/software/desctable>
+
+## Examples
+
+The examples use Stata's `nlsw88` data. `filename()` is the only required
+option: it names the Excel file that the table is written to. The default
+table reports the mean (the proportion for binary and nominal variables)
+and the standard deviation of the continuous variables.
+
+```{.stata-run}
+<<dd_do>>
+sysuse nlsw88, clear
+desctable wage age i.race i.union i.collgrad tenure i.occupation hours, ///
+    filename("descriptivesEX1")
+<</dd_do>>
+```
+
+![](fig/desctable-ex1.png){width=45% fig-alt="Default desctable output opened in Excel: a table titled Descriptive Statistics (N = 2246) with Mean and SD columns; race and occupation categories are indented under their variable labels, and SD is blank for the binary and nominal rows."}
+
+`stats()` chooses the statistics and their order. Frequencies are reported
+for the categories of nominal variables, and the minimum, maximum,
+interquartile range, and median for continuous variables:
+
+```{.stata-run}
+<<dd_do>>
+desctable wage age i.race i.union i.collgrad tenure i.occupation hours, ///
+    filename("descriptivesEX2") stats(mean freq sd min max iqr median)
+<</dd_do>>
+```
+
+![](fig/desctable-ex2.png){width=85% fig-alt="desctable output with Mean, Freq., SD, Min., Max., IQR, and Median columns; the frequencies fill only the category rows, and the continuous statistics only the continuous rows."}
+
+`group()` reports the statistics separately for each category of a nominal
+grouping variable, side by side:
+
+```{.stata-run}
+<<dd_do>>
+desctable wage age i.union i.collgrad tenure i.occupation hours, ///
+    filename("descriptivesEX5") group(race)
+<</dd_do>>
+```
+
+![](fig/desctable-ex5.png){width=80% fig-alt="desctable output with Mean and SD columns for each of three race groups, white, black, and other, under a shared title."}
+
+The [help file](help.html) lists the other options: the full set of
+available statistics (including survey-weighted and multiple-imputation
+means), `decimals()`, `listwise`, `notes()`, `title()`, and the font and
+layout settings. The [help-file examples](help-examples.html) run several
+of them.
+
+## Authors
+
+`desctable` is written by Trenton D. Mize (Department of Sociology, Purdue
+University) and Bianca Manago (Department of Sociology, Vanderbilt
+University). Questions can be sent to tmize@purdue.edu.

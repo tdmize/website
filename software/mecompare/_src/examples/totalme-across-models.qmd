@@ -1,0 +1,62 @@
+---
+title: "Comparing Total MEs across models"
+subtitle: "Example 5.2.e of Mize and Han (2025): mediation/attenuation with a multi-category outcome"
+---
+<<dd_version: 2>>
+
+With a nominal or ordinal outcome, each predictor has one marginal effect per
+outcome category. The Total ME of Mize and Han (2025) summarizes them in one
+number: the sum of the absolute effects, divided by two. The `totalme` option
+of `mecompare` adds it above the per-category effects; with two models, the
+**Difference** row tests whether the Total ME changed.
+
+Here the question is whether the total effect of a college degree on
+self-rated health shrinks once family income is in the model. The outcome has
+five ordered categories and is fit with a multinomial logit on the 2000--2021
+GSS. Store the model without income and the model with it, and name both in
+`models()`.
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_gss", clear
+drop if missing(healthR, college, race4, age, woman, parent, married, faminc)
+drop if year < 2000 | year > 2021
+
+quietly mlogit healthR i.college i.race4 c.age i.woman i.parent i.married, vce(robust)
+estimates store basemod
+
+quietly mlogit healthR i.college i.race4 c.age i.woman i.parent i.married c.faminc, vce(robust)
+estimates store medmod
+<</dd_do>>
+```
+
+```{.stata-run}
+<<dd_do>>
+mecompare i.college, models(basemod medmod) totalme
+<</dd_do>>
+```
+
+The first block is the Total ME of a college degree in each model and the
+**Difference**: the part of the college effect that family income accounts
+for. The blocks beneath it are the effects of college on each health category,
+which show where the attenuation comes from.
+[`metest`](../../metest/index.html) gives the attenuation as a proportion of
+the baseline Total ME:
+
+```{.stata-run}
+<<dd_do>>
+metest (1 - 2) / 1
+<</dd_do>>
+```
+
+`totalme college, models(basemod medmod)` gives the same difference. The
+`totalme` option also works for continuous predictors (with `amount()`) and
+for nominal predictors (a Total ME inequality); the
+[Options](../options.html#meinequality-and-totalme-summary-measures) page
+has an example of each.
+
+## Reference
+
+> Mize, Trenton D. and Bing Han. 2025. "Inequality and Total Effect Summary
+> Measures for Nominal and Ordinal Variables." *Sociological Science* 12:
+> 115--157.

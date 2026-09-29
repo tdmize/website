@@ -1,0 +1,70 @@
+---
+title: "Inequality in categorical models"
+subtitle: "Example 4.2.b of Mize and Han (2025)"
+---
+
+Because the statistic is built from predictions, it works the same way after
+a binary logit, where the predictions are probabilities. This example
+summarizes several nominal and binary predictors of conservative
+identification at once: gender, race-ethnicity, and subjective class.
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/cda_gss", clear
+(cda_gss.dta |  GSS 1972-2021 CDA - Categorical Data Analysis | date created 2023)
+
+. keep if year == 2021
+(64,814 observations deleted)
+
+. drop if missing(conserv, race4, woman, class, age)
+(424 observations deleted)
+
+. 
+. logit conserv i.woman i.race4 i.class
+
+Iteration 0:  Log likelihood = -2250.6348  
+Iteration 1:  Log likelihood = -2208.9154  
+Iteration 2:  Log likelihood = -2208.4707  
+Iteration 3:  Log likelihood = -2208.4707  
+
+Logistic regression                                     Number of obs =  3,608
+                                                        LR chi2(7)    =  84.33
+                                                        Prob > chi2   = 0.0000
+Log likelihood = -2208.4707                             Pseudo R2     = 0.0187
+
+--------------------------------------------------------------------------------
+       conserv | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+---------------+----------------------------------------------------------------
+         woman |
+        Women  |     -0.326      0.073   -4.477   0.000       -0.469      -0.183
+               |
+         race4 |
+        Black  |     -0.841      0.140   -6.006   0.000       -1.115      -0.567
+        Other  |     -0.420      0.166   -2.527   0.011       -0.745      -0.094
+     Hispanic  |     -0.549      0.125   -4.374   0.000       -0.794      -0.303
+               |
+         class |
+working class  |     -0.053      0.141   -0.379   0.705       -0.329       0.222
+ middle class  |     -0.019      0.138   -0.139   0.890       -0.290       0.251
+  upper class  |     -0.131      0.218   -0.601   0.548       -0.557       0.296
+               |
+         _cons |     -0.406      0.138   -2.953   0.003       -0.676      -0.137
+--------------------------------------------------------------------------------
+
+. meinequality woman race4 class
+
+ME Inequality Estimates (N = 3608)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+ME Inequality            |                                               
+                   woman |      0.070       0.016       4.466       0.000 
+                   race4 |      0.108       0.013       7.991       0.000 
+                   class |      0.012       0.017       0.701       0.484 
+
+```
+
+Class has no overall effect on conservative identification. Racial-ethnic
+groups differ by about 11 percentage points on average. For a binary
+variable such as `woman` the ME inequality is simply the absolute value of its
+marginal effect, which puts binary and multi-category predictors on the same
+footing for comparison.

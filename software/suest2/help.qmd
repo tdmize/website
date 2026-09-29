@@ -1,0 +1,299 @@
+---
+title: "suest2 help file"
+subtitle: "The installed help file, rendered for the web"
+toc-depth: 3
+---
+
+::: {.callout-note appearance="simple"}
+This page is generated from `suest2.sthlp` by `build.do`, so it matches the
+installed version. In Stata, type `help suest2`.
+:::
+
+## Title
+
+**suest2** Seemingly unrelated estimation for most models in Stata with margins support
+
+## Table of contents
+
+- [Syntax](help.html#syntax)
+
+- [Description](help.html#description)
+
+- [Supported estimators](help.html#estimators)
+
+- [Weights, survey data, and multiple imputation](help.html#weights)
+
+- [margins and mecompare](help.html#margins)
+
+- [Options for suest2](help.html#options)
+
+- [Stored results](help.html#stored)
+
+- [Correlated random effects specifications](help.html#cre)
+
+- [Examples](help.html#examples)
+
+- [Companion commands](help.html#companions)
+
+- [Authorship](help.html#authorship)
+
+<span id="syntax"></span>
+
+## Syntax
+
+`suest2` *model1name* *model2name* [`,` *options*]
+
+*model#name* contains named stored estimates. Store each model with `estimates store` before running `suest2`.
+
+<span id="description"></span>
+
+## Description
+
+`suest2` combines stored estimation results and estimates their joint sandwich covariance matrix, including cross-model covariances, using seemingly-unrelated estimation. It extends `suest` to additional panel, multilevel, weighted, survey, MI, generalized ordered, and instrumental-variable models. It also allows `predict` and `margins` to select a constituent model from the combined system, which allows for most any post-estimation work. For example, graphs of predictions or marginal effect estimates within and across models. The [mecompare](../mecompare/help.html) command is written to work seemlessly after `suest2` to automate marginal effect calculations and comparisons.
+
+The usual workflow is
+
+```stata
+logit y1 c.x##i.group
+estimates store m1
+logit y1 c.x##i.group z
+estimates store m2
+suest2 m1 m2
+mecompare x, amount(sd)
+```
+
+<span id="estimators"></span>
+
+## Supported estimators
+
+The following model families are supported.
+
+### Ordinary single-level models
+
+`regress`; `logit` and `logistic`; `probit`; `ologit`; `oprobit`; `mlogit`; `poisson`; `nbreg`; `zip`; and `zinb` with either inflation link.
+
+`glm`; `cloglog`; `tobit`; `intreg`; maximum-likelihood `heckman`; and parametric `streg`. Active-system `glm` prediction supports identity, log, logit, probit, cloglog, and loglog links.
+
+`gologit2`, including proportional-odds, partial proportional-odds, unrestricted, alternative-link, and `autofit()` results.
+
+`ivregress 2sls`. `fracreg` with estimators: logit, probit. Every constituent model in the system must use the same estimation mode: either unweighted conventional estimates, or linearized `svy: ivregress 2sls` estimates under one active survey design.
+
+`betareg` with links: logit, probit, cloglog, loglog. `truncreg`. `hetprobit`. `biprobit`. `ivprobit`. `ivtobit`.
+
+### Panel models
+
+`xtreg` with estimators: re, fe, be, mle, pa.
+
+`xtlogit` with estimators: re, fe, pa. `xtprobit` with estimators: re, pa.
+
+`xtologit` and `xtoprobit`
+
+`xtmlogit` with estimators: re, fe.
+
+`xtpoisson` with estimators: re, fe, pa. `xtnbreg` with estimators: re, pa.
+
+`xtcloglog` with estimators: re, pa.
+
+Panel systems are unweighted and ordinarily require a common panel identifier. Store conventional constituent results; request robust or higher-level clustered covariance with `suest2`.
+
+Correlated random effects models should be specified as detailed in the [CRE specification section below](help.html#cre).
+
+### Multilevel models
+
+`mixed, mle`; `melogit`; `meprobit`; `mecloglog`; `mepoisson`; `menbreg`; `meologit`; `meoprobit`; and `mestreg`.
+
+Supported `meglm` families and links are Gaussian-identity, Bernoulli-logit, Bernoulli-probit, Bernoulli-cloglog, Poisson-log, negative-binomial-log, Gamma-log, ordinal-logit, and ordinal-probit.
+
+Multilevel and panel models may also be combined with ordinary single-level models: `regress`, `logit`, `probit`, `cloglog`, `poisson`, `nbreg`, `ologit`, and `oprobit`, e.g., a `logit` with a `melogit` or `xtlogit`. Fit the ordinary model unweighted, without a prefix, and with conventional standard errors; its standard errors are clustered on the highest-level group of the multilevel or panel model.
+
+Supported `mestreg` distributions are exponential, Weibull, lognormal, loglogistic, and gamma, including the applicable proportional-hazards and accelerated-failure-time forms.
+
+Supported multilevel families may be combined in one system. Every model must use the same highest-level grouping variable.
+
+<span id="weights"></span>
+
+## Weights, survey data, and multiple imputation
+
+### Survey data
+
+For weighted analyses and for complex samples, using `svyset` and `svy:` on the individual models is recommended. Estimate and store each model with the `svy:` prefix, then pass the stored names to `suest2` without a prefix:
+
+```stata
+svy: regress y1 x z
+estimates store s1
+svy: logit y2 x z
+estimates store s2
+suest2 s1 s2
+```
+
+The survey route supports linearized VCEs. Survey design information is taken from `svyset`; do not specify `cluster()`, `vce()`, or `robust` on `suest2`. All models must use the same survey subpopulation specification. Replicate-weight VCEs are not supported.
+
+### Pweights
+
+Pweighted systems support `regress`, `logit`/`logistic`, `probit`, `poisson`, `nbreg`, `ologit`, `oprobit`, and `mlogit`. These families may be combined. Evaluated pweights must agree on observations shared by constituent estimation samples; they may differ outside the overlap. Request system clustering with `cluster()` on `suest2`.
+
+### Multiple imputation
+
+MI support is provided for `regress`, `logit`/`logistic`, `probit`, `poisson`, `nbreg`, `ologit`, `oprobit`, and `mlogit`, `xtreg` (mle), `mixed`, `melogit`, `meprobit`, `mecloglog`, `mepoisson`, `menbreg`, `meologit`, `meoprobit`, `meglm` and `mestreg`. Estimate and store each model with `mi estimate, post:`, then pass their stored names to `suest2`:
+
+```stata
+mi estimate, post: regress y1 x z
+estimates store mi1
+mi estimate, post: logit y2 x z
+estimates store mi2
+suest2 mi1 mi2
+```
+
+`suest2` re-estimates the constituent commands jointly within each imputation and pools the system with Rubin's rules. The current MI data and all variables used by the stored commands must remain available and unchanged. Use `mimrgns` or `mecompare` for postestimation; ordinary `predict` and `margins` are not available after MI pooling.
+
+<span id="margins"></span>
+
+## margins and mecompare
+
+A bare `margins` or `mecompare` call evaluates the default response for every constituent model. Select one model and prediction statistic with `predict()`:
+
+```stata
+margins
+margins, dydx(x)
+margins, dydx(x) predict(pr)
+margins, dydx(x) predict(model(m2) pr)
+margins, predict(model(o1) pr outcome(3))
+margins, dydx(x) predict(model(me1) mu fixedonly)
+```
+
+Options `at()`, `dydx()`, `over()`, `post`, and other standard `margins` options are supported when the constituent command supports the requested prediction. Inference uses the complete joint `suest2` covariance matrix, including the cross-model covariance.
+
+<span id="options"></span>
+
+## Options for suest2
+
+For most applications, `vce(robust)` or `vce(cluster *varname*)` should be used on the individual models so that the `suest2` standard errors match exactly. However, these options and some others can be requested directly on `suest2`:
+
+| Option | Description |
+|:--|:--|
+| `cluster(varname)` | cluster the joint covariance on *varname* |
+| `vce(robust)` | request the route's robust covariance |
+| `vce(cluster`*varname*`)` | same as `cluster(`*varname*`)` |
+| `robust` | same as `vce(robust)` |
+| `level(#)` | set the confidence level; the default is 95 |
+| `dir` | pass through the official `suest` display option |
+| `eform(string)` | request exponentiated coefficients where applicable, labelling the column with *string*, e.g. `eform("Odds ratio")`. As with official `suest`, the argument is required |
+| `minus(string)` | use the official `suest` minus convention when supported. Like `eform()` it is passed to `suest` verbatim, so the argument is required and the accepted values are `suest`'s |
+| `regressml` | use the official `suest` ML-regression convention when supported |
+| `svy` | pass through the official `suest` survey option when supported |
+| `nowarn` | suppress the note printed when a model was not fit with `vce(robust)` |
+
+Specify only one of `cluster()`, `vce()`, and `robust`. Options `minus`, `regressml`, and `svy` apply only to routes that use official `suest`; specialized panel, multilevel, and IV routes reject them when they are not meaningful. Option `svy` does not replace estimating each survey constituent with the `svy:` prefix.
+
+Panel models cluster at the panel identifier by default. Multilevel models cluster at the common highest-level grouping variable by default. A larger cluster may be requested only when the lower-level panels or groups are nested within it.
+
+<span id="stored"></span>
+
+## Stored results
+
+`suest2` stores the standard results returned by `suest`, including `e(b)`, `e(V)`, `e(N)`, `e(sample)`, `e(names)`, and, when applicable, `e(clustvar)` and `e(N_clust)`. It also stores:
+
+| Option | Description |
+|:--|:--|
+| `e(suest2_version)` | installed `suest2` version |
+| `e(suest2_nmodels)` | number of constituent models |
+| `e(suest2_model#)` | user-facing name of constituent model # |
+| `e(suest2_hold#)` | private stored-estimate name for model # |
+| `e(suest2_start#)` | first column of model # in `e(b)` |
+| `e(suest2_korig#)` | number of original parameters in model # |
+| `e(suest2_cmd#)` | constituent estimation command |
+| `e(suest2_family#)` | constituent response family, when defined |
+| `e(suest2_link#)` | constituent link, when defined |
+| `e(suest2_systempred#)` | whether active-system prediction is available |
+| `e(suest2_pweight)` | whether the pweight route was used |
+| `e(suest2_svy)` | whether the linearized survey route was used |
+| `e(suest2_mi_reconstruction_checked)` | whether MI source results were successfully reconstructed |
+| `e(predict)` | `suest2_p` |
+| `e(margins_cmd)` | `suest2_margins` |
+
+Estimator-specific routes store additional `e(suest2_*)` metadata for diagnostics and postestimation.
+
+<span id="cre"></span>
+
+## Fixed effects models and correlated random effects (Mundlak) specifications
+
+Fixed effects models (*fe* estimator for *xt* commands) have known issues in calculating marginal effects, especially for categorical outcome models. One common recommendation is to use the correlated random effects (Mundlak) specification, which estimates both within-person ("fixed effects") estimates and between-person estimates, and has no issue in calculating marginal effects (Mize and Han 2026).
+
+`xtreg, cre` is not supported, but an identical correlated-random-effects (Mundlak) specification can be estimated and used with `mecompare` by including each time-varying predictor's panel mean alongside the predictor when fit with the `re` estimator.
+
+```stata
+bysort id: egen mean_x = mean(x)
+xtreg y x mean_x i.d, re
+```
+
+Where the *x* coefficient represents the within-person ("fixed effect") estimate and the *mean_x* coefficient represents the difference between the between-person and within-person estimates. The same recipe extends to any supported panel or multilevel family, e.g. `xtlogit` or `xtpoisson`, etc.
+
+<span id="examples"></span>
+
+## Examples
+
+### Ordinary single-level models
+
+```stata
+sysuse nlsw88, clear
+logit union c.age i.married, vce(robust)
+estimates store mod1
+logit union c.age i.married i.collgrad, vce(robust)
+estimates store mod2
+suest2 mod1 mod2
+margins, dydx(age married)
+```
+
+### Panel models
+
+```stata
+webuse nlswork, clear
+xtset idcode year
+xtreg ln_wage c.ttl_exp##i.union i.year, fe
+estimates store fe1
+xtreg hours c.ttl_exp##i.union i.year, fe
+estimates store fe2
+suest2 fe1 fe2, cluster(idcode)
+margins, dydx(ttl_exp)
+```
+
+### Mixed models
+
+```stata
+webuse bangladesh, clear
+melogit c_use urban age || district:, intpoints(5)
+estimates store me1
+meprobit c_use urban age || district:, intpoints(5)
+estimates store me2
+suest2 me1 me2
+margins, dydx(age) predict(model(me1) mu fixedonly)
+margins, dydx(age) predict(model(me2) mu conditional(fixedonly))
+```
+
+### Instrumental variables
+
+```stata
+webuse hsng2, clear
+ivregress 2sls rent pcturban (hsngval = faminc)
+estimates store iv1
+ivregress 2sls rent pcturban (hsngval = faminc i.region)
+estimates store iv2
+suest2 iv1 iv2
+margins, dydx(pcturban)
+```
+
+<span id="companions"></span>
+
+## Companion Comamnds
+
+The [mecompare](../mecompare/help.html) command is a companion command to `suest2` that automates calculation of marginal effects within and across models. `mecompare` with the `models()` option uses `suest2` to combine the model estimates before estimating marginal effects.
+
+<span id="authorship"></span>
+
+## Stata version
+
+`suest2` requires Stata 16 or later. A do-file that sets `version` must set version 16 or later; under an older version the command stops with a message.
+
+## Authorship
+
+`suest2` is written by Trenton D Mize, Departments of Sociology & Statistics (by courtesy) and The Methodology Center, Purdue University. uestions can be sent to tmize@purdue.edu

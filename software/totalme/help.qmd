@@ -1,0 +1,316 @@
+---
+title: "totalme help file"
+subtitle: "The installed help file, rendered for the web"
+toc-depth: 3
+---
+
+::: {.callout-note appearance="simple"}
+This page is generated from `totalme.sthlp` by `build.do`, so it matches the
+installed version. In Stata, type `help totalme`.
+:::
+
+## Title
+
+**`totalme` --** `Total ME` (**Total** **M**arginal **E**ffects) calculates a summary of the total effects of an independent variable on a, usually multi-category outcome, such as from an ordinal or nominal model. `totalme` supports any independent variable but makes different calculations for continuous, binary, and nominal independent variables. The total marginal effect statistic is the sum of the absolute values of all marginal effects for an independent variable across all levels of the dependent variable, divided by two. For nominal independent variables, Total ME inequality (**Total** **M**arginal **E**ffects **Inequality**) is calculated, with both weighted and unweighted estimates supported (see `meinequality` for more details). The command supports estimation for one or two models. For two models, the command performs cross-model comparisons of the *totalMEs*.
+
+## General Syntax
+
+`totalme` *varlist* *ifin* `,` [options]
+
+<span id="overview"></span>
+
+## Overview
+
+`totalme` computes the Total Marginal Effect (ME) for independent variables, which is most often used with multi-outcome models like a nominal or ordinal model. The total ME is a summary measure for the overall effect of an independent variable across all outcome categories. It is calculated by summing the absolute values of all marginal effects for that independent variable across all outcome levels, and divided by two. The `totalme` command implements the methods described in Mize and Han (2025).
+
+`totalme` supports continuous, binary, and nominal independent variables. For continuous and binary independent variables, a single marginal effect summarizes the total effect on each level of the dependent variable. The Total ME statistic is then calculated as the sum of all marginal effects for that independent variable (using absolute values) divided by two. For nominal independent variables, Marginal Effects Inequality (see `meinequality`) is first calculated to summarize the total effect on each level of the dependent variable. ME Inequality represents the (weighted/unweighted) sum of all marginal effects, which are pairwise comparisons of predictions for categories of the nominal independent variable. The Total ME Inequality is then computed by summing the ME Inequality across all levels of the dependent variable, divided by two.
+
+`totalme` supports the calculation of Total ME for one or more independent variables simultaneously.
+
+The command calculates the Total ME for a single model or performs cross-model comparisons of the *total MEs* using Seemingly Unrelated Estimation (SUEST) to combine the estimates from two models via the [suest2](../suest2/help.html) command, which is a required package.
+
+## Table of contents
+
+- [Supported estimation commands](help.html#models)
+
+- [Required option for two model comparison](help.html#Models)
+
+- [Required option if fitting models over two distinct samples](help.html#groups)
+
+- [Amount of change to compute for continuous variables](help.html#amount)
+
+- [Setting starting values of variables in varlist](help.html#start)
+
+- [Setting values of the covariates](help.html#covariates)
+
+- [Weighting options for ME inequality for nominal IVs](help.html#Weighted)
+
+- [Estimations for subpopulations](help.html#byover)
+
+- [Setting sample weights and multiple imputation estimates](help.html#sampleweights)
+
+- [Optional options for formatting, reporting, missing data, etc.](help.html#options)
+
+- [Saved estimates and matrices](help.html#matrices)
+
+- [Bootstrap standard errors](help.html#bootstrap)
+
+- [Examples](help.html#examples)
+
+<span id="models"></span>
+
+## Supported estimators
+
+`totalme` accepts one or two models from the following families. When two models are specified, cross-model comparisons of the equality of the *total MEs* are automatically calculated. In the two-model case, the models can be the same or different types of models. That is, any two combinations of the supported model estimations are possible.
+
+### Ordinary single-level models
+
+`logit` and `logistic`; `probit`; `cloglog`; `hetprobit`; `ologit`; `oprobit`; `mlogit`; and `gologit2`, all forms, including with two models.
+
+### Panel models
+
+`xtlogit` with estimators: re, fe, pa. `xtprobit` with estimators: re, pa. `xtcloglog` with estimators: re, pa.
+
+`xtologit`; `xtoprobit`; and `xtmlogit` with estimators: re, fe.
+
+### Multilevel models
+
+`melogit`; `meprobit`; `mecloglog`; `meologit`; and `meoprobit`.
+
+<span id="quadrature"></span>
+
+### Quadrature for xtcloglog
+
+Comparing two `xtcloglog` models requires each to be fitted with `intpoints(24)` or more; a single model needs no such option.
+
+## Options
+
+<span id="Models"></span>
+
+### Models Option
+
+**`models(list)`** is required for cross-model comparisons. The models must be estimated and saved using `estimates store` before running `totalme`. The `models(list)` option is optional for single-model estimation; by default, `totalme` will use the model estimates in memory. `totalme` is limited to one or two models. The `vce(robust)` option is strongly recommended for the two-model case because the estimates are combined by seemingly unrelated estimation, which uses robust variance estimation. The two models specified can be the same or different estimation commands.
+
+<span id="groups"></span>
+
+### Groups options
+
+**`groups`** specifies that the two models used for comparison are fit on distinct samples. Under `groups` each model's marginal effects are averaged over its own sample. When the `groups` option is specified, the models listed in the `models(list)` option must have been fit separately across distinct samples (e.g., distinct groups in the data). `group(varname)`, the syntax of earlier versions, is also accepted; *varname* must take one value in each model's sample and a different value in each model.
+
+<span id="amount"></span>
+
+### Amount of change and related options for continuous independent variables
+
+**`amount(list)`** specifies the amount of change to be computed for the continuous independent variables. If only one value is specified in `amount( )`, this amount of change is applied to all of the continuous independent variables. To specify different amounts for each continuous independent variable, amounts in *list* are applied in the order of the continuous independent variables. E.g., In a *varlist* of *age i.woman income i.race polviews* there are three continuous variables, of which changes of (a) age + sd, (b) income + 5, and (c) polviews + one can be specified with `amount(sd 5 one)`
+
+| Name | Description |
+|:--|:--|
+| **one** | A one unit change; the default |
+| **sd** | A standard deviation change |
+| **#** | A change of *#*, which can be any amount. E.g., A 10 unit increase can be specified with `amount(10)` |
+| **2sd** | A two standard deviation change (Gelman 2008), useful for comparing continuous effects to categorical effects; centered by default, from [x - SD] to [x + SD]. **twosd** is a synonym |
+| **trimrange** | A change across the trimmed range of the variable, from its 5th to its 95th percentile in the estimation sample (Mize and Han 2025); `start()` and centering do not apply |
+| **range** | A change across the full observed range of the variable, from its minimum to its maximum in the estimation sample; `start()` and centering do not apply |
+| **p***#***-p***#* | A change from one percentile of the variable to another in the estimation sample, e.g. **p10-p90** for its 10th to its 90th percentile; **trimrange** is **p5-p95**. `start()` and centering do not apply |
+| **rate** | An instantaneous rate of change, i.e. the derivative, approximated with a small centered change; **slope** and **dydx** are synonyms. Centering does not apply |
+
+**`centered`** Changes for continuous independent variables are **centered** by default: computed from half the amount below to half the amount above, e.g. [mean - SD/2] to [mean + SD/2]. The default.
+
+**`uncentered`** Requests **uncentered** changes: an increase of the amount from the value of the independent variable, e.g., [mean] to [mean + SD], rather than the default centered change.
+
+<span id="start"></span>
+
+### Setting starting values of variables in varlist
+
+**`start(list)`** By default, the observed values of the focal independent variables specified in the *varlist* are used as the starting points for calculating the marginal effects (i.e., the margins default of *asobserved* is used; see `margins`). Other starting values can be specified within the `start( )` option, e.g. start(age=20). Multiple focal independent variables can be listed in `start( )`, e.g. start(age=20 income=100). Only one value per variable is allowed.
+
+<span id="covariates"></span>
+
+### Setting values of covariates
+
+**`atmeans`** By default, the observed values of the other variables in the model are used for calculating the marginal effects (i.e., the margins default of *asobserved* is used; see `margins`). Alternatively, the covariates can be set to their sample means with the `atmeans` option.
+
+<span id="Weighted"></span>
+
+### Weighting options for total ME inequality
+
+For nominal independent variables, total *ME inequalities* are calculated; see [meinequality](../meinequality/help.html). `weighted`, `unweighted`, and `all` options can be specified.
+
+**`weighted`** is the default. Weighting accounts for the relative frequency of each level of the nominal variable in the sample. The weight assigned to each pairwise comparison is the corrected sum of the proportions of the two levels used in the comparison within the sample: w_ab = (prop_a + prob_b)/(L - 1). Here, prop_a and prop_b refer to the proportions of the sample in Levels A and B, respectively. The term L-1 serves as a correction for the fact that each group is represented in multiple contrasts, ensuring the total sums to 1.
+
+**`unweighted`** ignores the relative frequency of each level of the nominal variable in the sample. Instead, `unweighted` assigns equal weights to each comparison: 1/ (L(L-1)/2), where L(L-1)/2 presents the total number of pairwise comparisons.
+
+**`all`** reports both `weighted` and `unweighted` total *ME inequalities*.
+
+<span id="byover"></span>
+
+### Subpopulation estimation options
+
+**`by(varname)`** estimates total ME for each level of the specified binary or nominal variable, using the full sample. This is equivalent to the `margins` option at( ). For each level, the estimation is based on the entire sample with the subpopulation variable counterfactually set to that level. The subpopulation variable must be binary or nominal and must also be included as a covariate in the model.
+
+**`over(varname)`** estimates total ME separately for each level of the specified binary or nominal variable, using only the subsample of observations that have that specific value. This option uses the `over()` option from the `margins` command to compute marginal effects within each group-specific subsample; see [margins] over option.
+
+Neither option may name one of the focal variables: `totalme` does not estimate the total ME of a variable within levels of that same variable and exits with an error; [mecompare](../mecompare/help.html) handles that case.
+
+With either option the table also holds a **Diff.** row for each pair of levels of the `by()` or `over()` variable -- the total ME at the first level minus the total ME at the second, with its standard error and test, which is the test of whether the effect differs across the groups (a test of interaction). With two models the Diff. rows are given for model 1, model 2, and the cross-model difference. Rows are labelled **Diff.** when the variable has two levels and **Diff.1**, **Diff.2**, ... when it has more, one per pair; the level each row subtracts is printed under the table. All quantities come from one `margins` call, so the tests use the joint covariance of the levels.
+
+<span id="sampleweights"></span>
+
+### Sample weights and multiple imputation estimation options
+
+**`mi and svy`** Models fit with the `mi`, `svy`, and `mi estimate: svy:` prefixes are supported. Specify the prefixes on the models themselves, not with `totalme`; with two models both must use the same prefixes. Under `mi`, fit with `mi estimate:` or `mi estimate, post:` -- with one model both are accepted and return the same pooled statistic; with two models, fit both with `mi estimate, post:` -- and store with `estimates store`; declare a survey design with `mi svyset` rather than `svyset`. The user-written *mimrgns* is used for the marginal effects and must be installed separately.
+
+*Multilevel models need a stage weight.* For the multilevel (`me`...) families, a weight alone is not enough: the model must carry a higher-level weight too, as in `melogit y x [pw=w2] || group:, pweight(w1)`. A model fit with a weight but no `pweight()` has no design to build from and is refused. The better alternative is the `svy:` prefix, which carries the whole design from `svyset` and is the recommended way to specify one.
+
+**`[weight]`** When possible, using `svyset` and the `svy:` prefix is the preferred way to specify weights. However, you can instead specify the weight on the **stored models** -- e.g. `logit y x [pw=w]` -- or fit them with `svy:`. With two models, both must carry the same weight.
+
+<span id="options"></span>
+
+### Additional Optional Options
+
+**`level(#)`** sets the confidence level for reported confidence intervals. The default is `level(95)`. Values can range from 10 to 99.
+
+**`decimals(#)`** changes the number of decimal places reported in the table. The default is 3. Any integer between 0 - 7 is allowed.
+
+**`ci`** adds the lower and upper bounds of the confidence intervals (CIs) for all estimates, at the level set by `level(#)` (95% by default).
+
+**`labwidth(#)`** changes the width of the leftmost column of the table that provides the labels for the variables and associated marginal effects. The default is 24. Any integer between 20 - 32 is allowed.
+
+**`title(string)`** changes title of the output table. The default is "Total ME Estimates".
+
+**`groupnames(string)`** specifies the row names in the table corresponding to the total ME for Model 1 and Model 2. Two group names must be provided. The `groups` option is required when using `groupnames(string)`. By default, the rows are named based on the stored estimate names specified in the `models(list)` option. Long names are shortened only as needed to fit the table.
+
+**`commands`** displays the command of each model, the `margins` command used to estimate the marginal effects, and when two models are specified, the `suest2` command used to combine the model estimates.
+
+**`details`** displays the output of the `margins` estimates which are the constituent parts of the *total ME* calculation, and when two models are specified, the `suest2` output with the combined model estimates.
+
+<span id="matrices"></span>
+
+### Saved estimates and matrices
+
+`totalme` uses `margins` to estimate the marginal effects which make up the Total ME. In the two-model case the stored estimates are *combined* by `suest2`. These results are stored and can be restored after `totalme` (see `estimates restore`). The combined-system results are stored as *totalme_suest2*. The `margins` results which contain the predictions that are the constituent pieces of the marginal effects `totalme` calculates are stored as *totalme_margins*.
+
+The command saves estimation results that can be retrieved using `return list`, including scalars for each estimated inequality score and a matrix containing all results.
+
+The scalars follow one naming scheme whether one or two models are given. In each name *#* is the variable's number within its type (the first continuous/binary variable is 1, the first nominal variable is 1). With `by()` or `over()`, `_`*level* is appended to every name, including the cross-model differences, and the Diff. rows append `_d`*level1*`_`*level2* instead (e.g. `r(tmcm11_d0_1)` is the total ME of the first continuous/binary variable at level 0 minus that at level 1).
+
+| scalar | Description |
+|:--|:--|
+| *Continuous or binary focal variable* | |
+| `r(tmcm1`*#*`)` | Total ME, model 1 |
+| `r(tmcm2`*#*`)` | Total ME, model 2 |
+| `r(tmcd`*#*`)` | cross-model difference |
+| *Nominal focal variable, weighted* | |
+| `r(tmwm1`*#*`)` | Total ME inequality, model 1 |
+| `r(tmwm2`*#*`)` | Total ME inequality, model 2 |
+| `r(tmwd`*#*`)` | cross-model difference |
+| *Nominal focal variable, unweighted* | |
+| `r(tmuwm1`*#*`)` | unweighted Total ME inequality, model 1 |
+| `r(tmuwm2`*#*`)` | unweighted Total ME inequality, model 2 |
+| `r(tmuwd`*#*`)` | cross-model difference |
+| *Other* | |
+| `r(n_mods)` | number of models |
+| `r(n_vars)` | number of variables |
+
+With one model only the `m1` names are returned. `totalme` saves the displayed table to the matrix `r(table)`, one row per displayed quantity by six columns: estimate, standard error, *z*, *p*, and the two confidence limits. This replaces the `r(table)` any preceding estimation command left behind.
+
+`r(se_missing)` counts the quantities in that table whose standard error could not be computed. It is normally 0. When it is not, the point estimates are still reported but their standard error, *z*, *p* and confidence limits come back missing, and a note to that effect is printed beneath the table.
+
+<span id="bootstrap"></span>
+
+### Bootstrap standard errors
+
+Users can use the `bootstrap` command to estimate standard errors for `totalme`. This can be particularly useful when the model encounters convergence issues or when standard errors are otherwise unavailable or unreliable. When using `bootstrap`, you should wrap the `totalme` command inside the `bootstrap` prefix to obtain bootstrap-based standard errors. See `bootstrap` for more information on syntax and options.
+
+<span id="examples"></span>
+
+## Examples
+
+```stata
+use https://tdmize.github.io/data/data/cda_gss, clear
+```
+
+**Single model**
+
+```stata
+mlogit 		healthR i.race4 c.age i.woman
+```
+
+**Continuous and Binary IVs**
+
+```stata
+totalme 		age woman
+totalme 		age woman, amount(sd)
+totalme 		age woman, amount(2sd)
+totalme 		age woman, amount(trimrange)
+totalme 		age woman, amount(range)
+totalme 		age woman, amount(rate)
+totalme 		age woman, start(age=20) amount(10)
+```
+
+**Nominal IV (ME inequalities calculated)**
+
+```stata
+totalme 		race4
+totalme 		race4, unweighted
+```
+
+**Total MEs by group, with the Diff. row testing whether they differ**
+
+```stata
+totalme 		age woman, by(race4)
+```
+
+**Compare across two models on same sample**
+
+```stata
+mlogit 		healthR i.college if faminc < ., vce(robust)
+est store 	basemod
+mlogit 		healthR i.college c.faminc, vce(robust)
+est store 	medmod
+totalme 		college, models(basemod medmod)
+```
+
+**Compare across distinct samples/groups for two models**
+
+```stata
+ologit 		class i.college if woman == 0, vce(robust)
+est store 	menmod
+ologit 		class i.college if woman == 1, vce(robust)
+est store 	wommod
+totalme 		college, models(menmod wommod) group
+```
+
+**Bootstrap example**
+
+```stata
+capture program drop boot_tot
+program define boot_tot, rclass
+mlogit healthR i.race4 c.age i.woman, base(1)
+totalme race4
+return scalar w_tot = r(tmwm11)
+end
+bootstrap w_tot=r(w_tot), reps(1000): boot_tot
+```
+
+## Comments
+
+`totalme` implements the methods described in Mize and Han's 2025 article "Inequality and Total Effect Summary Measures for Nominal and Ordinal Variables".
+
+In the two-model case `totalme`, uses seemingly unrelated estimation to combine the model estimates. See `suest` and Weesie (1999) for details on the method.
+
+## Stata version
+
+`totalme` requires Stata 16 or later. A do-file that sets `version` must set version 16 or later; under an older version the command stops with a message.
+
+## Authorship
+
+`totalme` and `meinequality` are written by Bing Han (Population Research Institute, Penn State University) and Trenton D Mize (Departments of Sociology & Statistics and The Methodology Center at Purdue University). Questions can be sent to han644@purdue.edu or tmize@purdue.edu.
+
+## References
+
+Gelman, Andrew. 2008. Scaling regression inputs by dividing by two standard deviations. *Statistics in Medicine*. 27(15):2865-2873.
+
+Mize, Trenton D. and Bing Han. 2025. Inequality and total effect summary measures for nominal and ordinal variables. *Sociological Science*.
+
+Weesie, Jeroen. 1999. sg121: Seemingly Unrelated Estimation and the Cluster-Adjusted Sandwich Estimator. *Stata Technical Bulletin*. 52:34-47.

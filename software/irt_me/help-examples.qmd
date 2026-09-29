@@ -1,0 +1,166 @@
+---
+title: "Examples from the help file"
+subtitle: "The examples in help irt_me, run in full"
+---
+
+The examples at the end of `help irt_me`, on Stata's `masc1` data (five
+binary items from a mathematics test). The two-parameter logistic model is
+fit first with `irt 2pl` and then, identically, with `gsem`; after `gsem`
+the `latent()` option names the latent variable.
+
+```{.stata-run}
+. webuse masc1, clear
+(Data from De Boeck & Wilson (2004))
+
+. irt 2pl q1 q2 q3 q4 q5
+
+Fitting fixed-effects model:
+
+Iteration 0:  Log likelihood = -2466.7785  
+Iteration 1:  Log likelihood = -2464.4785  
+Iteration 2:  Log likelihood = -2464.4775  
+Iteration 3:  Log likelihood = -2464.4775  
+
+Fitting full model:
+
+Iteration 0:  Log likelihood = -2410.0168  
+Iteration 1:  Log likelihood = -2400.2608  
+Iteration 2:  Log likelihood = -2400.1775  
+Iteration 3:  Log likelihood = -2400.1775  
+
+Two-parameter logistic model                               Number of obs = 800
+Log likelihood = -2400.1775
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+q1           |
+     Discrim |      1.260      0.241    5.237   0.000        0.789       1.732
+        Diff |     -0.542      0.098   -5.528   0.000       -0.735      -0.350
+-------------+----------------------------------------------------------------
+q2           |
+     Discrim |      0.739      0.145    5.082   0.000        0.454       1.024
+        Diff |     -0.137      0.110   -1.254   0.210       -0.352       0.077
+-------------+----------------------------------------------------------------
+q3           |
+     Discrim |      0.933      0.193    4.844   0.000        0.555       1.310
+        Diff |     -1.698      0.282   -6.031   0.000       -2.250      -1.146
+-------------+----------------------------------------------------------------
+q4           |
+     Discrim |      0.839      0.157    5.331   0.000        0.531       1.148
+        Diff |      0.324      0.108    2.987   0.003        0.111       0.536
+-------------+----------------------------------------------------------------
+q5           |
+     Discrim |      1.062      0.208    5.104   0.000        0.654       1.469
+        Diff |      1.408      0.213    6.606   0.000        0.990       1.825
+------------------------------------------------------------------------------
+
+```
+
+```{.stata-run}
+. irt_me, help
+
+Marginal Effects of + 1.000 Increase in Latent Variable (theta) N=800
+
+             |    PrStart       PrEnd     ME Est.   Std. Err.       P>|z| 
+-------------+-----------------------------------------------------------
+          q1 |      0.513       0.788       0.275       0.047       0.000 
+          q2 |      0.433       0.616       0.182       0.035       0.000 
+          q3 |      0.754       0.886       0.132       0.022       0.000 
+          q4 |      0.334       0.537       0.203       0.037       0.000 
+          q5 |      0.117       0.276       0.160       0.025       0.000 
+
+
+PrStart : Pr(y=1) at theta = -0.500
+PrEnd   : Pr(y=1) at theta = 0.500
+ME      : PrEnd - PrStart
+
+```
+
+```{.stata-run}
+. gsem (Theta -> q1 q2 q3 q4 q5, logit), var(Theta@1)
+
+Fitting fixed-effects model:
+
+Iteration 0:  Log likelihood = -2466.7785  
+Iteration 1:  Log likelihood = -2464.4785  
+Iteration 2:  Log likelihood = -2464.4775  
+Iteration 3:  Log likelihood = -2464.4775  
+
+Refining starting values:
+
+Grid node 0:  Log likelihood = -2410.0168
+
+Fitting full model:
+
+Iteration 0:  Log likelihood = -2410.0168  
+Iteration 1:  Log likelihood = -2400.2608  
+Iteration 2:  Log likelihood = -2400.1775  
+Iteration 3:  Log likelihood = -2400.1775  
+
+Generalized structural equation model                      Number of obs = 800
+
+Response: q1       
+Family:   Bernoulli
+Link:     Logit    
+
+Response: q2       
+Family:   Bernoulli
+Link:     Logit    
+
+Response: q3       
+Family:   Bernoulli
+Link:     Logit    
+
+Response: q4       
+Family:   Bernoulli
+Link:     Logit    
+
+Response: q5       
+Family:   Bernoulli
+Link:     Logit    
+
+Log likelihood = -2400.1775
+
+ ( 1)  [/]var(Theta) = 1
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+q1           |
+       Theta |      1.260      0.241    5.237   0.000        0.789       1.732
+       _cons |      0.684      0.108    6.330   0.000        0.472       0.895
+-------------+----------------------------------------------------------------
+q2           |
+       Theta |      0.739      0.145    5.082   0.000        0.454       1.024
+       _cons |      0.102      0.080    1.277   0.202       -0.054       0.257
+-------------+----------------------------------------------------------------
+q3           |
+       Theta |      0.933      0.193    4.844   0.000        0.555       1.310
+       _cons |      1.584      0.130   12.163   0.000        1.329       1.839
+-------------+----------------------------------------------------------------
+q4           |
+       Theta |      0.839      0.157    5.331   0.000        0.531       1.148
+       _cons |     -0.272      0.083   -3.278   0.001       -0.434      -0.109
+-------------+----------------------------------------------------------------
+q5           |
+       Theta |      1.062      0.208    5.104   0.000        0.654       1.469
+       _cons |     -1.495      0.135  -11.108   0.000       -1.758      -1.231
+-------------+----------------------------------------------------------------
+   var(Theta)|      1.000  (constrained)
+------------------------------------------------------------------------------
+
+```
+
+```{.stata-run}
+. irt_me, latent(Theta)
+
+Marginal Effects of + 1.000 Increase in Latent Variable (theta) N=800
+
+             |    PrStart       PrEnd     ME Est.   Std. Err.       P>|z| 
+-------------+-----------------------------------------------------------
+          q1 |      0.513       0.788       0.275       0.047       0.000 
+          q2 |      0.433       0.616       0.182       0.035       0.000 
+          q3 |      0.754       0.886       0.132       0.022       0.000 
+          q4 |      0.334       0.537       0.203       0.037       0.000 
+          q5 |      0.117       0.276       0.160       0.025       0.000 
+
+```

@@ -1,0 +1,92 @@
+---
+title: "Examples from the help file"
+subtitle: "The examples at the end of help totalme, run in full"
+---
+<<dd_version: 2>>
+
+The examples from the end of the [help file](help.html), in order, on the
+GSS extract used in Mize and Han (2025).
+
+## Single model
+
+```{.stata-run}
+<<dd_do>>
+use https://tdmize.github.io/data/data/cda_gss, clear
+
+mlogit healthR i.race4 c.age i.woman
+<</dd_do>>
+```
+
+Continuous and binary independent variables:
+
+```{.stata-run}
+<<dd_do>>
+totalme age woman
+totalme age woman, amount(sd)
+totalme age woman, amount(2sd)
+totalme age woman, amount(trimrange)
+totalme age woman, amount(range)
+totalme age woman, amount(rate)
+totalme age woman, start(age=20) amount(10)
+<</dd_do>>
+```
+
+A nominal independent variable (ME inequalities are calculated on each
+outcome):
+
+```{.stata-run}
+<<dd_do>>
+totalme race4
+totalme race4, unweighted
+<</dd_do>>
+```
+
+Total MEs by group, with the **Diff.** row testing whether they differ:
+
+```{.stata-run}
+<<dd_do>>
+totalme age woman, by(race4)
+<</dd_do>>
+```
+
+## Compare across two models on the same sample
+
+```{.stata-run}
+<<dd_do>>
+mlogit healthR i.college if faminc < ., vce(robust)
+est store basemod
+mlogit healthR i.college c.faminc, vce(robust)
+est store medmod
+
+totalme college, models(basemod medmod)
+<</dd_do>>
+```
+
+## Compare across distinct samples/groups for two models
+
+```{.stata-run}
+<<dd_do>>
+ologit class i.college if woman == 0, vce(robust)
+est store menmod
+ologit class i.college if woman == 1, vce(robust)
+est store wommod
+
+totalme college, models(menmod wommod) groups
+<</dd_do>>
+```
+
+## Bootstrap example
+
+Shown, not run.
+
+```stata
+capture program drop boot_tot
+
+program define boot_tot, rclass
+    mlogit healthR i.race4 c.age i.woman, base(1)
+    totalme race4
+    return scalar w_tot = r(tmwm11)
+end
+
+bootstrap w_tot=r(w_tot), reps(1000): boot_tot
+```

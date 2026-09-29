@@ -1,0 +1,68 @@
+---
+title: "irt_me help file"
+subtitle: "The installed help file, rendered for the web"
+toc-depth: 3
+---
+
+::: {.callout-note appearance="simple"}
+This page is generated from `irt_me.sthlp` by `build.do`, so it matches the
+installed version. In Stata, type `help irt_me`.
+:::
+
+## Title
+
+**`irt_me` --** Calculates marginal effects for the latent variable (Theta) after IRT models
+
+## General syntax
+
+`irt_me` [*varlist*] `,` [options]
+
+<span id="overview"></span>
+
+## Overview
+
+`irt_me` calculates marginal effects for the latent variable (theta) after an IRT model. The latent variable is the independent variable; the variables specifed in the *varlist* are the observed items which are the dependent variables in an IRT model. If no *varlist* is specified, `irt_me` calculates marginal effects for theta across all of the observed items.
+
+`irt_me` supports all models that can be estimated using the Stata `irt` commands and also models for continuous and count items (`regress`, `poisson`, and `nbreg`). A mix of different item types is also allowed (e.g., a mix of binary and ordinal items).
+
+<span id="required"></span>
+
+### Required Option for gsem models
+
+<span id="required"></span>
+
+| Option | Description |
+|:--|:--|
+| `latent(string)` | is required if `gsem` was used to fit the model of interest. This is the name of the latent variable you wish to obtain marginal effects for. The `latent( )` option should not be used if the model was fit with the `irt` command as `irt` automatically names the latent variable *Theta*. |
+
+### Options
+
+| Option | Description |
+|:--|:--|
+| `model(string)` | specifies the name of saved model estimates to use. See `estimates store` for saving model estimates. By default, `irt_me` will use the IRT/GSEM estimates in memory. If the relevant model estimates are not in memory, you must specify their name. |
+| `decimals(#)` | changes the number of decimal places reported for the statistics. The default is 3. Any integer between 1 - 8 is allowed. |
+| `start(#)` | specifies the starting value for the prediction used in the calculation of the marginal effect. The default is -0.5 for a default marginal effect estimate of a centered +1 unit change. |
+| `end(#)` | specifies the ending value for the prediction used in the calculation of the marginal effect. The default is 0.5 for a default marginal effect estimate of a centered +1 unit change. |
+| `range` | calculates marginal effects across the trimmed range of the predicted values of the latent variable theta. Predictions are made at the 1st percentile of theta (start) and at the 99th percentile of theta (end) |
+| `title(string)` | changes the title of the table of results. A default title is automatically included. |
+| `help` | prints footnotes below the table describing what the columns in the table represent. |
+
+## Examples
+
+```stata
+webuse masc1
+irt 2pl q1 q2 q3 q4 q5
+irt_me, help
+gsem (Theta -> q1 q2 q3 q4 q5, logit), var(Theta@1)
+irt_me, latent(Theta)
+```
+
+## Authorship
+
+`irt_me` is written by Trenton D Mize (Departments of Sociology & Statistics [by courtesy] & The Methodology Center at Purdue University). Questions can be sent to tmize@purdue.edu
+
+## Citation
+
+Please cite the use of irt_me as:
+
+- Mize, Trenton D. 2024. "Stata command for marginal effects from item response theory models." https://www.trentonmize.com/software/irt_me

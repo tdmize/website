@@ -1,0 +1,140 @@
+---
+title: "Generalized marginal effects"
+subtitle: "Effects when other variables change along with the focal variable"
+---
+
+A marginal effect usually holds the other variables in the model constant.
+But some variables change along with the focal variable: college graduates,
+for example, tend to have higher wages and more prestigious jobs than those
+without a degree. The `cochange()` option lets those variables change too.
+The table then reports two marginal effects of the focal variable: the usual
+one, and one labeled *with co-change* in which the co-change variables change
+too. [`metest`](../metest/index.html) can be used to test the difference
+between the two.
+
+The example uses the data and the full model of the
+[nested models](examples/nested-models.html) example (Example 6.2 of Mize,
+Doan, and Long 2019): a logit of being very happy on a college degree,
+wages, occupational prestige, and controls.
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/gss_cme", clear
+(gss_cme.dta | GSS 1972 - 2016 Weighted | 2018-07-10)
+
+. drop if year < 2000
+(38,116 observations deleted)
+
+. drop if employed != 1
+(9,556 observations deleted)
+
+. drop if missing(vhappy, college, wages, occprest, age, married, parent, woman, conserv, reltrad)
+(5,578 observations deleted)
+
+. 
+. quietly logit vhappy i.college c.wages c.occprest i.married i.parent i.woman ///
+>               i.conserv i.reltrad i.year c.age##c.age, vce(robust)
+
+. estimates store m4
+
+```
+
+## Co-change variables at chosen values
+
+`start()` and `end()` set the values the co-change variables change from and
+to. Here wages and occupational prestige change from their average among
+those without a college degree to their average among college graduates.
+
+```{.stata-run}
+. quietly summarize wages if college == 0 & e(sample)
+
+. local w0 : display %5.2f r(mean)
+
+. quietly summarize wages if college == 1 & e(sample)
+
+. local w1 : display %5.2f r(mean)
+
+. quietly summarize occprest if college == 0 & e(sample)
+
+. local p0 : display %5.2f r(mean)
+
+. quietly summarize occprest if college == 1 & e(sample)
+
+. local p1 : display %5.2f r(mean)
+
+. 
+. mecompare i.college, models(m4) cochange(wages occprest) ///
+>     start(wages=`w0' occprest=`p0') end(wages=`w1' occprest=`p1')
+
+
+Predicting: Pr(vhappy)
+
+Marginal effects (N_m4=9216)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+college                          |                                       
+    College Deg - No Col Deg     |                                       
+                              m4 |     1      0.019      0.012      0.103
+---------------------------------+---------------------------------------
+college with co-change           |                                       
+                              m4 |     2      0.063      0.011      0.000
+
+
+NOTE: college with co-change: college 0 to 1; wages 13.60 to 24.88; occprest 40.51 to 54.68.
+
+```
+
+Row 1 is the usual marginal effect of a college degree, with wages and
+occupational prestige held at their observed values. Row 2 is
+the effect of a college degree when wages and occupational prestige also
+change; the note under the table lists each change. Use `metest` to test the
+difference between the two:
+
+```{.stata-run}
+. metest 2 - 1
+
+                                 |  estimate         se     pvalue 
+---------------------------------+--------------------------------
+              cochange - college |     0.044      0.006      0.000 
+
+```
+
+Example 6.2 asks how the effect of a college degree changes when wages and
+occupational prestige are added to the model. `cochange()` asks a different
+question within one model: what the effect of a college degree is when wages
+and occupational prestige change along with it.
+
+## Co-change variables changed by an amount
+
+Without `start()` and `end()`, co-change variables change as focal variables
+do (see [`amount()`](options.html#amount-centered-uncentered-the-size-of-a-continuous-change)).
+Here wages and occupational prestige each increase by a standard deviation
+along with the degree:
+
+```{.stata-run}
+. mecompare i.college, models(m4) cochange(wages occprest) amount(sd)
+
+
+Predicting: Pr(vhappy)
+
+Marginal effects (N_m4=9216)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+college                          |                                       
+    College Deg - No Col Deg     |                                       
+                              m4 |     1      0.019      0.012      0.103
+---------------------------------+---------------------------------------
+college with co-change           |                                       
+                              m4 |     2      0.067      0.010      0.000
+
+
+NOTE: college with co-change: college 0 to 1; wages + SD (centered); occprest + SD (centered).
+
+```
+
+A nominal focal or co-change variable with three or more categories needs the
+two levels it changes between in `start()` and `end()`, e.g. `start(race=1)
+end(race=2)`. The [options page](options.html#cochange-variables-that-change-along-with-the-focal-variable)
+and the [help file](help.html#cochange) list what `cochange()` cannot be
+combined with.

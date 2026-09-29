@@ -1,0 +1,31 @@
+---
+title: "Comparing ME inequalities across groups"
+subtitle: "Example 4.3.a of Mize and Han (2025): models fit on different samples"
+---
+<<dd_version: 2>>
+
+When different samples are used for each model -- different groups, or
+different time periods -- the `groups` option must be specified. Here the
+question is whether religious-tradition differences in willingness to let a
+gay man speak in public were larger before 1980 than after 2010.
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_gss", clear
+drop if missing(spkhomo, reltrad, age, woman)
+
+logit spkhomo i.reltrad c.age i.woman if year < 1980, vce(robust)
+est store premod
+
+logit spkhomo i.reltrad c.age i.woman if year >= 2010, vce(robust)
+est store postmod
+
+meinequality reltrad, models(premod postmod) groups unweighted
+<</dd_do>>
+```
+
+The ME inequality estimate is significantly larger in the first model
+(pre-1980) than in the second (post-2010): religious traditions have converged
+on this question. `unweighted` compares the marginal effects alone; the
+default weighted version would also reflect the change in the religious makeup
+of the GSS between the two periods.

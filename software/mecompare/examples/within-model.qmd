@@ -1,0 +1,249 @@
+---
+title: "Comparing effects across predictors"
+subtitle: "Example 4.2 of Mize and Han (2025): effect sizes within a single model"
+---
+
+What social factors most strongly pattern political views? Comparing effect
+sizes across predictors is complicated when they are on different metrics
+(e.g., age versus income), are of different types (binary, nominal,
+continuous), or have nonlinear effects. Mize and Han (2025) suggest putting
+every predictor on the same footing: the effect of the *entire range* of the
+variable.
+
+- For a **binary** predictor, the 0 versus 1 contrast already summarizes the
+  whole of its effect.
+- For a **nominal** predictor, the *ME inequality* -- the average absolute
+  difference in the outcome across its categories -- summarizes its effect in
+  one number (see [`meinequality`](../../meinequality/index.html)).
+- For a **continuous** predictor, use the change across its *trimmed range*,
+  from the 5th to the 95th percentile. Like the binary contrast and the ME
+  inequality, this expresses the effect of the entire range of the variable,
+  while protecting against outliers. A two-standard-deviation change
+  (Gelman 2008) is an alternative that is sometimes recommended for comparing
+  continuous with binary predictors; see the end of this page.
+
+`mecompare` calculates all three kinds of effect in a single call, and
+[`metest`](../../metest/index.html) then tests any pair of effects against
+each other. The example uses the 2021 GSS: a linear regression of political
+views (1 = extremely liberal to 7 = extremely conservative) on age (with a
+squared term), gender, race-ethnicity, and social class.
+
+## 1. Fit and store the model
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/cda_gss", clear
+(cda_gss.dta |  GSS 1972-2021 CDA - Categorical Data Analysis | date created 2023)
+
+. keep if year == 2021
+(64,814 observations deleted)
+
+. drop if missing(polviews, race4, woman, class, age)
+(424 observations deleted)
+
+. clonevar conpolviews = polviews
+
+. 
+. quietly regress conpolviews c.age##c.age i.woman i.race4 i.class, vce(robust)
+
+. estimates store polmod
+
+```
+
+## 2. One call for every predictor
+
+`amount(trimrange)` applies to the continuous variables in the varlist (here,
+age); `meinequality` adds the ME inequality above the contrasts of each
+nominal variable (race-ethnicity and class). Binary variables need nothing
+extra.
+
+```{.stata-run}
+. mecompare age woman race4 class, models(polmod) amount(trimrange) meinequality
+
+
+Predicting: Linear prediction
+
+Marginal effects (N_polmod=3608)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age(5-95%)                       |                                       
+                          polmod |     1      0.784      0.083      0.000
+---------------------------------+---------------------------------------
+woman                            |                                       
+                 Women - Men     |                                       
+                          polmod |     2     -0.175      0.051      0.001
+---------------------------------+---------------------------------------
+race4                            |                                       
+                   ME Inequality |     3      0.172      0.049      0.000
+               Black - White     |                                       
+                          polmod |     4     -0.331      0.078      0.000
+               Other - White     |                                       
+                          polmod |     5     -0.129      0.105      0.216
+            Hispanic - White     |                                       
+                          polmod |     6      0.011      0.078      0.886
+---------------------------------+---------------------------------------
+class                            |                                       
+                   ME Inequality |     7      0.273      0.063      0.000
+    working cla - lower clas     |                                       
+                          polmod |     8     -0.021      0.091      0.814
+    middle clas - lower clas     |                                       
+                          polmod |     9     -0.279      0.091      0.002
+    upper class - lower clas     |                                       
+                          polmod |    10     -0.536      0.162      0.001
+
+```
+
+Reading the table:
+
+- **Row 1** is the trimmed-range effect of age: everyone is set to the 5th
+  percentile of age, then to the 95th, and the average difference in predicted
+  political views is the marginal effect. The effect of age is nonlinear, but
+  this summarizes it in a single number.
+- **Row 2** is the gender gap: the contrast for a binary variable.
+- **Rows 3 and 7** are the ME inequalities for race-ethnicity and class: on
+  average, how far apart the racial-ethnic groups (or the social classes) are
+  in their political views. The rows beneath each are the contrasts with the
+  base category that the ME inequality summarizes. Add `pwcompare` to see all
+  pairwise contrasts, or `meinequality(all)` to also report the unweighted ME
+  inequality; the [Options](../options.html#meinequality-and-totalme-summary-measures)
+  page shows both.
+
+The 5th and 95th percentiles that define the trimmed range of age are:
+
+```{.stata-run}
+. centile age, centile(5 95)
+
+                                                          Binom. interp.   
+    Variable |       Obs  Percentile    Centile        [95% conf. interval]
+-------------+-------------------------------------------------------------
+         age |     3,608          5          25              25          26
+             |                   95          79              79          80
+
+```
+
+## 3. Test the differences in effect size
+
+To compare effect sizes and ignore direction, use the absolute value of a
+signed effect; here the gender gap is negative. `add` collects the tests in
+one table, and `rowname()` labels each row.
+
+```{.stata-run}
+. metest, clear
+
+. metest 1 - abs(2), add rowname("age - woman")
+
+                                 |  estimate         se     pvalue 
+---------------------------------+--------------------------------
+                     age - woman |     0.609      0.098      0.000 
+
+. metest 1 - 3,      add rowname("age - race4")
+
+                                 |  estimate         se     pvalue 
+---------------------------------+--------------------------------
+                     age - woman |     0.609      0.098      0.000 
+                     age - race4 |     0.612      0.094      0.000 
+
+. metest 1 - 7,      add rowname("age - class")
+
+                                 |  estimate         se     pvalue 
+---------------------------------+--------------------------------
+                     age - woman |     0.609      0.098      0.000 
+                     age - race4 |     0.612      0.094      0.000 
+                     age - class |     0.511      0.101      0.000 
+
+. metest 3 - abs(2), add rowname("race4 - woman")
+
+                                 |  estimate         se     pvalue 
+---------------------------------+--------------------------------
+                     age - woman |     0.609      0.098      0.000 
+                     age - race4 |     0.612      0.094      0.000 
+                     age - class |     0.511      0.101      0.000 
+                   race4 - woman |    -0.003      0.069      0.971 
+
+. metest 3 - 7,      add rowname("race4 - class")
+
+                                 |  estimate         se     pvalue 
+---------------------------------+--------------------------------
+                     age - woman |     0.609      0.098      0.000 
+                     age - race4 |     0.612      0.094      0.000 
+                     age - class |     0.511      0.101      0.000 
+                   race4 - woman |    -0.003      0.069      0.971 
+                   race4 - class |    -0.101      0.081      0.212 
+
+. metest 7 - abs(2), add rowname("class - woman")
+
+                                 |  estimate         se     pvalue 
+---------------------------------+--------------------------------
+                     age - woman |     0.609      0.098      0.000 
+                     age - race4 |     0.612      0.094      0.000 
+                     age - class |     0.511      0.101      0.000 
+                   race4 - woman |    -0.003      0.069      0.971 
+                   race4 - class |    -0.101      0.081      0.212 
+                   class - woman |     0.098      0.077      0.202 
+
+. metest, title("Effect size comparison of predictors of political views")
+
+Effect size comparison of predictors of political views
+
+                                 |  estimate         se     pvalue 
+---------------------------------+--------------------------------
+                     age - woman |     0.609      0.098      0.000 
+                     age - race4 |     0.612      0.094      0.000 
+                     age - class |     0.511      0.101      0.000 
+                   race4 - woman |    -0.003      0.069      0.971 
+                   race4 - class |    -0.101      0.081      0.212 
+                   class - woman |     0.098      0.077      0.202 
+
+```
+
+Age has a larger effect on political views than does gender, race-ethnicity,
+or social class. The effects of gender, race-ethnicity, and class are similar
+in size, with no significant differences among them.
+
+## Alternative: a two-standard-deviation change
+
+`amount(2sd)` is the other common way to make a continuous variable comparable
+with a binary one. A two-standard-deviation change is centered on each
+observation's own age (one SD below to one SD above); the trimmed-range change
+is the same change, from the 5th to the 95th percentile, for everyone. With a
+nonlinear effect the two can differ:
+
+```{.stata-run}
+. mecompare age, models(polmod) amount(2sd)
+
+
+Predicting: Linear prediction
+
+Marginal effects (N_polmod=3608)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 2SD (centered)             |                                       
+                          polmod |     1      0.496      0.053      0.000
+
+. mecompare age, models(polmod) amount(trimrange)
+
+
+Predicting: Linear prediction
+
+Marginal effects (N_polmod=3608)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age(5-95%)                       |                                       
+                          polmod |     1      0.784      0.083      0.000
+
+```
+
+Mize and Han (2025) suggest the trimmed range as the more robust choice: it
+always reflects most of the range of the continuous variable's effect, as a
+binary variable's 0 to 1 effect always reflects its full range.
+
+## References
+
+> Mize, Trenton D. and Bing Han. 2025. "Inequality and Total Effect Summary
+> Measures for Nominal and Ordinal Variables." *Sociological Science* 12:
+> 115--157.
+
+> Gelman, Andrew. 2008. "Scaling Regression Inputs by Dividing by Two Standard
+> Deviations." *Statistics in Medicine* 27(15): 2865--2873.

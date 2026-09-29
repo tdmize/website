@@ -1,0 +1,77 @@
+---
+title: "Examples from the help file"
+subtitle: "Single-level, panel, multilevel, and instrumental-variable systems"
+---
+<<dd_version: 2>>
+
+The four examples at the end of the [help file](help.html), run in full.
+Each combines two models of one family and then calls `margins` on the
+combined system.
+
+## Ordinary single-level models
+
+```{.stata-run}
+<<dd_do>>
+sysuse nlsw88, clear
+logit union c.age i.married, vce(robust)
+estimates store mod1
+logit union c.age i.married i.collgrad, vce(robust)
+estimates store mod2
+suest2 mod1 mod2
+margins, dydx(age married)
+<</dd_do>>
+```
+
+## Panel models
+
+Two fixed-effects regressions on the NLS panel, clustered on the panel
+identifier:
+
+```{.stata-run}
+<<dd_do>>
+webuse nlswork, clear
+xtset idcode year
+xtreg ln_wage c.ttl_exp##i.union i.year, fe
+estimates store fe1
+xtreg hours c.ttl_exp##i.union i.year, fe
+estimates store fe2
+quietly suest2 fe1 fe2, cluster(idcode)
+suest2
+margins, dydx(ttl_exp)
+<</dd_do>>
+```
+
+Typing `suest2` on its own redisplays the table, as with any estimation
+command.
+
+## Mixed models
+
+A random-intercept logit and probit for the same outcome, with the
+model-specific predictions selected in `margins`:
+
+```{.stata-run}
+<<dd_do>>
+webuse bangladesh, clear
+melogit c_use urban age || district:, intpoints(5)
+estimates store me1
+meprobit c_use urban age || district:, intpoints(5)
+estimates store me2
+suest2 me1 me2
+margins, dydx(age) predict(model(me1) mu fixedonly)
+margins, dydx(age) predict(model(me2) mu conditional(fixedonly))
+<</dd_do>>
+```
+
+## Instrumental variables
+
+```{.stata-run}
+<<dd_do>>
+webuse hsng2, clear
+ivregress 2sls rent pcturban (hsngval = faminc)
+estimates store iv1
+ivregress 2sls rent pcturban (hsngval = faminc i.region)
+estimates store iv2
+suest2 iv1 iv2
+margins, dydx(pcturban)
+<</dd_do>>
+```

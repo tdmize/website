@@ -1,0 +1,531 @@
+---
+title: "Examples from the help file"
+subtitle: "Single-level, panel, multilevel, and instrumental-variable systems"
+---
+
+The four examples at the end of the [help file](help.html), run in full.
+Each combines two models of one family and then calls `margins` on the
+combined system.
+
+## Ordinary single-level models
+
+```{.stata-run}
+. sysuse nlsw88, clear
+(NLSW, 1988 extract)
+
+. logit union c.age i.married, vce(robust)
+
+Iteration 0:  Log pseudolikelihood = -1046.6242  
+Iteration 1:  Log pseudolikelihood = -1044.0408  
+Iteration 2:  Log pseudolikelihood = -1044.0376  
+Iteration 3:  Log pseudolikelihood = -1044.0376  
+
+Logistic regression                                     Number of obs =  1,878
+                                                        Wald chi2(2)  =   5.22
+                                                        Prob > chi2   = 0.0735
+Log pseudolikelihood = -1044.0376                       Pseudo R2     = 0.0025
+
+------------------------------------------------------------------------------
+             |               Robust
+       union | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         age |      0.008      0.018    0.434   0.664       -0.027       0.042
+             |
+     married |
+    Married  |     -0.247      0.111   -2.232   0.026       -0.464      -0.030
+       _cons |     -1.266      0.701   -1.807   0.071       -2.640       0.108
+------------------------------------------------------------------------------
+
+. estimates store mod1
+
+. logit union c.age i.married i.collgrad, vce(robust)
+
+Iteration 0:  Log pseudolikelihood = -1046.6242  
+Iteration 1:  Log pseudolikelihood =  -1035.471  
+Iteration 2:  Log pseudolikelihood = -1035.3994  
+Iteration 3:  Log pseudolikelihood = -1035.3994  
+
+Logistic regression                                     Number of obs =  1,878
+                                                        Wald chi2(3)  =  23.45
+                                                        Prob > chi2   = 0.0000
+Log pseudolikelihood = -1035.3994                       Pseudo R2     = 0.0107
+
+-------------------------------------------------------------------------------
+              |               Robust
+        union | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+          age |      0.008      0.018    0.462   0.644       -0.027       0.043
+              |
+      married |
+     Married  |     -0.247      0.112   -2.214   0.027       -0.466      -0.028
+              |
+     collgrad |
+College grad  |      0.500      0.119    4.202   0.000        0.267       0.733
+        _cons |     -1.422      0.705   -2.016   0.044       -2.804      -0.039
+-------------------------------------------------------------------------------
+
+. estimates store mod2
+
+. suest2 mod1 mod2
+
+Simultaneous results for mod1, mod2                      Number of obs = 1,878
+
+-------------------------------------------------------------------------------
+              |               Robust
+              | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+mod1_union    |
+          age |      0.008      0.018    0.434   0.664       -0.027       0.042
+              |
+      married |
+     Married  |     -0.247      0.111   -2.232   0.026       -0.464      -0.030
+        _cons |     -1.266      0.701   -1.807   0.071       -2.640       0.108
+--------------+----------------------------------------------------------------
+mod2_union    |
+          age |      0.008      0.018    0.462   0.644       -0.027       0.043
+              |
+      married |
+     Married  |     -0.247      0.112   -2.214   0.027       -0.466      -0.028
+              |
+     collgrad |
+College grad  |      0.500      0.119    4.202   0.000        0.267       0.733
+        _cons |     -1.422      0.705   -2.016   0.044       -2.804      -0.039
+-------------------------------------------------------------------------------
+
+. margins, dydx(age married)
+
+Average marginal effects                                 Number of obs = 1,878
+Model VCE: Robust
+
+dy/dx wrt: age 1.married
+
+1._predict: Pr(union), predict(model(mod1))
+2._predict: Pr(union), predict(model(mod2))
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |      dy/dx   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+age          |
+    _predict |
+          1  |      0.001      0.003    0.434   0.664       -0.005       0.008
+          2  |      0.001      0.003    0.462   0.644       -0.005       0.008
+-------------+----------------------------------------------------------------
+0.married    |  (base outcome)
+-------------+----------------------------------------------------------------
+1.married    |
+    _predict |
+          1  |     -0.047      0.021   -2.196   0.028       -0.088      -0.005
+          2  |     -0.046      0.021   -2.177   0.029       -0.088      -0.005
+------------------------------------------------------------------------------
+Note: dy/dx for factor levels is the discrete change from the base level.
+
+```
+
+## Panel models
+
+Two fixed-effects regressions on the NLS panel, clustered on the panel
+identifier:
+
+```{.stata-run}
+. webuse nlswork, clear
+(National Longitudinal Survey of Young Women, 14-24 years old in 1968)
+
+. xtset idcode year
+
+Panel variable: idcode (unbalanced)
+ Time variable: year, 68 to 88, but with gaps
+         Delta: 1 unit
+
+. xtreg ln_wage c.ttl_exp##i.union i.year, fe
+
+Fixed-effects (within) regression               Number of obs     =     19,238
+Group variable: idcode                          Number of groups  =      4,150
+
+R-squared:                                      Obs per group:
+     Within  = 0.1437                                         min =          1
+     Between = 0.2539                                         avg =        4.6
+     Overall = 0.1908                                         max =         12
+
+                                                F(14, 15074)      =     180.68
+corr(u_i, Xb) = 0.1109                          Prob > F          =     0.0000
+
+---------------------------------------------------------------------------------
+        ln_wage | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+----------------+----------------------------------------------------------------
+        ttl_exp |      0.045      0.002   27.440   0.000        0.042       0.048
+        1.union |      0.121      0.012   10.523   0.000        0.099       0.144
+                |
+union#c.ttl_exp |
+             1  |     -0.003      0.001   -2.193   0.028       -0.005      -0.000
+                |
+           year |
+            71  |      0.003      0.013    0.214   0.831       -0.023       0.029
+            72  |     -0.020      0.013   -1.563   0.118       -0.046       0.005
+            73  |     -0.042      0.014   -3.086   0.002       -0.069      -0.015
+            77  |     -0.082      0.014   -6.024   0.000       -0.108      -0.055
+            78  |     -0.064      0.015   -4.317   0.000       -0.092      -0.035
+            80  |     -0.142      0.016   -9.055   0.000       -0.173      -0.111
+            82  |     -0.180      0.017  -10.570   0.000       -0.214      -0.147
+            83  |     -0.184      0.018  -10.129   0.000       -0.220      -0.149
+            85  |     -0.210      0.020  -10.518   0.000       -0.249      -0.171
+            87  |     -0.250      0.022  -11.360   0.000       -0.293      -0.207
+            88  |     -0.262      0.024  -11.015   0.000       -0.309      -0.216
+                |
+          _cons |      1.527      0.011  141.078   0.000        1.506       1.548
+----------------+----------------------------------------------------------------
+        sigma_u |  .38034846
+        sigma_e |  .25524001
+            rho |  .68949663   (fraction of variance due to u_i)
+---------------------------------------------------------------------------------
+F test that all u_i=0: F(4149, 15074) = 8.90                 Prob > F = 0.0000
+
+. estimates store fe1
+
+. xtreg hours c.ttl_exp##i.union i.year, fe
+
+Fixed-effects (within) regression               Number of obs     =     19,202
+Group variable: idcode                          Number of groups  =      4,150
+
+R-squared:                                      Obs per group:
+     Within  = 0.0335                                         min =          1
+     Between = 0.0601                                         avg =        4.6
+     Overall = 0.0487                                         max =         12
+
+                                                F(14, 15038)      =      37.19
+corr(u_i, Xb) = -0.0847                         Prob > F          =     0.0000
+
+---------------------------------------------------------------------------------
+          hours | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+----------------+----------------------------------------------------------------
+        ttl_exp |      0.730      0.046   15.909   0.000        0.640       0.820
+        1.union |      2.054      0.322    6.378   0.000        1.423       2.685
+                |
+union#c.ttl_exp |
+             1  |     -0.080      0.033   -2.396   0.017       -0.146      -0.015
+                |
+           year |
+            71  |     -1.600      0.376   -4.253   0.000       -2.338      -0.863
+            72  |     -2.632      0.363   -7.260   0.000       -3.343      -1.921
+            73  |     -3.607      0.381   -9.460   0.000       -4.355      -2.860
+            77  |     -5.784      0.380  -15.237   0.000       -6.528      -5.040
+            78  |     -6.496      0.412  -15.756   0.000       -7.304      -5.688
+            80  |     -7.649      0.439  -17.418   0.000       -8.510      -6.788
+            82  |     -8.631      0.478  -18.055   0.000       -9.568      -7.694
+            83  |     -9.241      0.509  -18.144   0.000      -10.240      -8.243
+            85  |     -9.773      0.558  -17.510   0.000      -10.868      -8.679
+            87  |    -10.350      0.615  -16.817   0.000      -11.556      -9.144
+            88  |    -10.692      0.667  -16.034   0.000      -11.999      -9.385
+                |
+          _cons |     38.076      0.303  125.793   0.000       37.483      38.669
+----------------+----------------------------------------------------------------
+        sigma_u |  8.2810736
+        sigma_e |  7.1338816
+            rho |  .57401081   (fraction of variance due to u_i)
+---------------------------------------------------------------------------------
+F test that all u_i=0: F(4149, 15038) = 4.29                 Prob > F = 0.0000
+
+. estimates store fe2
+
+. quietly suest2 fe1 fe2, cluster(idcode)
+
+. suest2
+Simultaneous fixed-effects results for fe1 fe2
+                                (Std. err. adjusted for 4,150 clusters in idcode)
+---------------------------------------------------------------------------------
+                |               Robust
+                | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+----------------+----------------------------------------------------------------
+fe1_mean        |
+        ttl_exp |      0.045      0.002   18.496   0.000        0.040       0.050
+        1.union |      0.121      0.015    8.034   0.000        0.092       0.151
+                |
+union#c.ttl_exp |
+             1  |     -0.003      0.002   -1.706   0.088       -0.006       0.000
+                |
+           year |
+            71  |      0.003      0.011    0.268   0.789       -0.018       0.024
+            72  |     -0.020      0.012   -1.645   0.100       -0.044       0.004
+            73  |     -0.042      0.014   -3.052   0.002       -0.069      -0.015
+            77  |     -0.082      0.017   -4.906   0.000       -0.114      -0.049
+            78  |     -0.064      0.018   -3.533   0.000       -0.099      -0.028
+            80  |     -0.142      0.020   -6.979   0.000       -0.182      -0.102
+            82  |     -0.180      0.023   -7.880   0.000       -0.225      -0.135
+            83  |     -0.184      0.024   -7.551   0.000       -0.232      -0.136
+            85  |     -0.210      0.028   -7.583   0.000       -0.264      -0.155
+            87  |     -0.250      0.031   -7.941   0.000       -0.311      -0.188
+            88  |     -0.262      0.034   -7.676   0.000       -0.329      -0.195
+                |
+          _cons |      1.527      0.012  122.911   0.000        1.502       1.551
+----------------+----------------------------------------------------------------
+fe2_mean        |
+        ttl_exp |      0.730      0.074    9.866   0.000        0.585       0.875
+        1.union |      2.054      0.383    5.365   0.000        1.303       2.804
+                |
+union#c.ttl_exp |
+             1  |     -0.080      0.036   -2.238   0.025       -0.150      -0.010
+                |
+           year |
+            71  |     -1.600      0.322   -4.963   0.000       -2.232      -0.968
+            72  |     -2.632      0.350   -7.514   0.000       -3.319      -1.946
+            73  |     -3.607      0.395   -9.134   0.000       -4.382      -2.833
+            77  |     -5.784      0.502  -11.527   0.000       -6.768      -4.801
+            78  |     -6.496      0.542  -11.987   0.000       -7.558      -5.434
+            80  |     -7.649      0.632  -12.098   0.000       -8.888      -6.410
+            82  |     -8.631      0.734  -11.764   0.000      -10.069      -7.193
+            83  |     -9.241      0.786  -11.757   0.000      -10.782      -7.701
+            85  |     -9.773      0.893  -10.940   0.000      -11.524      -8.022
+            87  |    -10.350      1.018  -10.168   0.000      -12.345      -8.355
+            88  |    -10.692      1.110   -9.630   0.000      -12.868      -8.516
+                |
+          _cons |     38.076      0.334  114.034   0.000       37.421      38.730
+---------------------------------------------------------------------------------
+
+. margins, dydx(ttl_exp)
+
+Average marginal effects                                Number of obs = 19,238
+Model VCE: Robust
+
+dy/dx wrt: ttl_exp
+
+1._predict: Linear prediction, predict(model(fe1))
+2._predict: Linear prediction, predict(model(fe2))
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |      dy/dx   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+ttl_exp      |
+    _predict |
+          1  |      0.044      0.002   18.800   0.000        0.040       0.049
+          2  |      0.712      0.073    9.800   0.000        0.569       0.854
+------------------------------------------------------------------------------
+
+```
+
+Typing `suest2` on its own redisplays the table, as with any estimation
+command.
+
+## Mixed models
+
+A random-intercept logit and probit for the same outcome, with the
+model-specific predictions selected in `margins`:
+
+```{.stata-run}
+. webuse bangladesh, clear
+(Bangladesh Fertility Survey, 1989)
+
+. melogit c_use urban age || district:, intpoints(5)
+
+Fitting fixed-effects model:
+
+Iteration 0:  Log likelihood = -1271.4063  
+Iteration 1:  Log likelihood = -1269.4245  
+Iteration 2:  Log likelihood = -1269.4236  
+Iteration 3:  Log likelihood = -1269.4236  
+
+Refining starting values:
+
+Grid node 0:  Log likelihood = -1263.0911
+
+Fitting full model:
+
+Iteration 0:  Log likelihood = -1263.0911  (not concave)
+Iteration 1:  Log likelihood =  -1250.516  
+Iteration 2:  Log likelihood = -1250.0679  
+Iteration 3:  Log likelihood = -1250.0625  
+Iteration 4:  Log likelihood = -1250.0625  
+
+Mixed-effects logistic regression               Number of obs     =      1,934
+Group variable: district                        Number of groups  =         60
+
+                                                Obs per group:
+                                                              min =          2
+                                                              avg =       32.2
+                                                              max =        118
+
+Integration method: mvaghermite                 Integration pts.  =          5
+
+                                                Wald chi2(2)      =      34.23
+Log likelihood = -1250.0625                     Prob > chi2       =     0.0000
+------------------------------------------------------------------------------
+       c_use | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+       urban |      0.653      0.116    5.643   0.000        0.426       0.879
+         age |      0.009      0.005    1.669   0.095       -0.002       0.020
+       _cons |     -0.704      0.086   -8.218   0.000       -0.871      -0.536
+-------------+----------------------------------------------------------------
+district     |
+   var(_cons)|      0.195      0.068                         0.098       0.386
+------------------------------------------------------------------------------
+LR test vs. logistic model: chibar2(01) = 38.72       Prob >= chibar2 = 0.0000
+
+. estimates store me1
+
+. meprobit c_use urban age || district:, intpoints(5)
+
+Fitting fixed-effects model:
+
+Iteration 0:  Log likelihood = -1270.6112  
+Iteration 1:  Log likelihood = -1269.3945  
+Iteration 2:  Log likelihood = -1269.3945  
+
+Refining starting values:
+
+Grid node 0:  Log likelihood =  -1281.198
+
+Fitting full model:
+
+Iteration 0:  Log likelihood =  -1281.198  (not concave)
+Iteration 1:  Log likelihood = -1264.2124  (not concave)
+Iteration 2:  Log likelihood = -1250.1961  
+Iteration 3:  Log likelihood = -1249.8256  
+Iteration 4:  Log likelihood = -1249.8157  
+Iteration 5:  Log likelihood = -1249.8157  
+
+Mixed-effects probit regression                 Number of obs     =      1,934
+Group variable: district                        Number of groups  =         60
+
+                                                Obs per group:
+                                                              min =          2
+                                                              avg =       32.2
+                                                              max =        118
+
+Integration method: mvaghermite                 Integration pts.  =          5
+
+                                                Wald chi2(2)      =      34.57
+Log likelihood = -1249.8157                     Prob > chi2       =     0.0000
+------------------------------------------------------------------------------
+       c_use | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+       urban |      0.404      0.071    5.669   0.000        0.264       0.543
+         age |      0.006      0.003    1.664   0.096       -0.001       0.012
+       _cons |     -0.435      0.052   -8.319   0.000       -0.537      -0.332
+-------------+----------------------------------------------------------------
+district     |
+   var(_cons)|      0.074      0.025                         0.038       0.145
+------------------------------------------------------------------------------
+LR test vs. probit model: chibar2(01) = 39.16         Prob >= chibar2 = 0.0000
+
+. estimates store me2
+
+. suest2 me1 me2
+Simultaneous results for me1 me2
+                                      (Std. err. adjusted for 60 clusters in district)
+--------------------------------------------------------------------------------------
+                     |               Robust
+                     | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+---------------------+----------------------------------------------------------------
+me1_c_use            |
+               urban |      0.653      0.163    4.016   0.000        0.334       0.971
+                 age |      0.009      0.006    1.565   0.118       -0.002       0.020
+               _cons |     -0.704      0.102   -6.875   0.000       -0.904      -0.503
+---------------------+----------------------------------------------------------------
+me1__                |
+ var(_cons[district])|      0.195      0.061    3.199   0.001        0.075       0.314
+---------------------+----------------------------------------------------------------
+me2_c_use            |
+               urban |      0.404      0.100    4.057   0.000        0.209       0.599
+                 age |      0.006      0.004    1.550   0.121       -0.001       0.013
+               _cons |     -0.435      0.062   -7.003   0.000       -0.557      -0.313
+---------------------+----------------------------------------------------------------
+me2__                |
+ var(_cons[district])|      0.074      0.023    3.207   0.001        0.029       0.119
+--------------------------------------------------------------------------------------
+
+. margins, dydx(age) predict(model(me1) mu fixedonly)
+------------------------------------------------------------------------------
+             |            Delta-method
+             | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+me1          |
+         age |      0.002      0.001    1.559   0.119       -0.001       0.005
+------------------------------------------------------------------------------
+
+. margins, dydx(age) predict(model(me2) mu conditional(fixedonly))
+------------------------------------------------------------------------------
+             |            Delta-method
+             | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+me2          |
+         age |      0.002      0.001    1.546   0.122       -0.001       0.005
+------------------------------------------------------------------------------
+
+```
+
+## Instrumental variables
+
+```{.stata-run}
+. webuse hsng2, clear
+(1980 Census housing data)
+
+. ivregress 2sls rent pcturban (hsngval = faminc)
+
+Instrumental-variables 2SLS regression            Number of obs   =         50
+                                                  Wald chi2(2)    =      51.44
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =     0.2887
+                                                  Root MSE        =     29.517
+
+------------------------------------------------------------------------------
+        rent | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+     hsngval |      0.003      0.001    5.147   0.000        0.002       0.004
+    pcturban |     -0.506      0.482   -1.052   0.293       -1.450       0.437
+       _cons |    113.814     20.527    5.545   0.000       73.583     154.046
+------------------------------------------------------------------------------
+Endogenous: hsngval
+Exogenous:  pcturban faminc
+
+. estimates store iv1
+
+. ivregress 2sls rent pcturban (hsngval = faminc i.region)
+
+Instrumental-variables 2SLS regression            Number of obs   =         50
+                                                  Wald chi2(2)    =      90.76
+                                                  Prob > chi2     =     0.0000
+                                                  R-squared       =     0.5989
+                                                  Root MSE        =     22.166
+
+------------------------------------------------------------------------------
+        rent | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+     hsngval |      0.002      0.000    6.820   0.000        0.002       0.003
+    pcturban |      0.082      0.299    0.273   0.785       -0.504       0.667
+       _cons |    120.707     15.228    7.926   0.000       90.859     150.554
+------------------------------------------------------------------------------
+Endogenous: hsngval
+Exogenous:  pcturban faminc 2.region 3.region 4.region
+
+. estimates store iv2
+
+. suest2 iv1 iv2
+Simultaneous results for iv1 iv2
+------------------------------------------------------------------------------
+             |               Robust
+             | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+iv1_mean     |
+     hsngval |      0.003      0.001    4.328   0.000        0.002       0.005
+    pcturban |     -0.506      0.543   -0.933   0.351       -1.570       0.558
+       _cons |    113.814     21.622    5.264   0.000       71.437     156.192
+-------------+----------------------------------------------------------------
+iv2_mean     |
+     hsngval |      0.002      0.001    3.333   0.001        0.001       0.004
+    pcturban |      0.082      0.445    0.183   0.855       -0.790       0.953
+       _cons |    120.707     15.255    7.912   0.000       90.806     150.607
+------------------------------------------------------------------------------
+
+. margins, dydx(pcturban)
+------------------------------------------------------------------------------
+             |            Delta-method
+             | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+iv1          |
+    pcturban |     -0.506      0.543   -0.933   0.351       -1.570       0.558
+-------------+----------------------------------------------------------------
+iv2          |
+    pcturban |      0.082      0.445    0.183   0.855       -0.790       0.953
+------------------------------------------------------------------------------
+
+```

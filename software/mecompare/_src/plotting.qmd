@@ -1,0 +1,99 @@
+---
+title: "Plotting and tabulating results"
+subtitle: "store() with coefplot and esttab"
+---
+<<dd_version: 2>>
+
+The `store(stub)` option saves the marginal effects as stored estimates -- one
+for each model and one for the differences -- so that `coefplot` and `esttab`
+(Jann) can plot and table them. Install both once with `ssc install coefplot`
+and `ssc install estout`.
+
+## Fit, store, compare
+
+```{.stata-run}
+<<dd_do>>
+sysuse nlsw88, clear
+drop if missing(union, married, age, race, hours, collgrad, ttl_exp, grade, wage)
+
+quietly logit union i.married age i.race hours i.collgrad ttl_exp, vce(robust)
+estimates store m1
+quietly logit union i.married age i.race hours i.collgrad ttl_exp grade wage, vce(robust)
+estimates store m2
+
+mecompare i.married age i.race hours i.collgrad ttl_exp, models(m1 m2) store(mec)
+<</dd_do>>
+```
+
+This saved `mec_m1`, `mec_m2`, and `mec_diff`.
+
+## Plotting both models' marginal effects
+
+```{.stata-run}
+<<dd_do>>
+coefplot mec_m1 mec_m2, xline(0) xtitle("Average marginal effect on Pr(union)")
+graph export "fig/plotting-both-models.png", replace width(1400)
+<</dd_do>>
+```
+
+![Marginal effects from both models, arranged by variable.](fig/plotting-both-models.png){width=80%}
+
+## Plotting the cross-model differences
+
+```{.stata-run}
+<<dd_do>>
+coefplot mec_diff, xline(0) xtitle("Difference in marginal effect (model 1 - model 2)")
+graph export "fig/plotting-differences.png", replace width(1400)
+<</dd_do>>
+```
+
+![The cross-model differences with their confidence intervals.](fig/plotting-differences.png){width=80%}
+
+## A three-column table
+
+```{.stata-run}
+<<dd_do>>
+esttab mec_m1 mec_m2 mec_diff, se mtitles("Model 1" "Model 2" "Difference") nonumbers
+<</dd_do>>
+```
+
+`esttab` takes all of its usual options (`b(3)`, `star`, `label`,
+`using file.rtf`, ...), so the same line writes a publication table.
+
+## One model
+
+With one model `store()` saves a single estimate, *stub* followed by the model's
+name (`me1_m1` here):
+
+```{.stata-run}
+<<dd_do>>
+mecompare i.married age i.race hours i.collgrad ttl_exp, models(m1) store(me1)
+coefplot me1_m1, xline(0) xtitle("Average marginal effect on Pr(union)")
+graph export "fig/plotting-one-model.png", replace width(1400)
+<</dd_do>>
+```
+
+![Marginal effects from a single model.](fig/plotting-one-model.png){width=80%}
+
+## Effects across levels of a moderator
+
+With `by()`, `over()`, or a `covariates()` value list, each stored estimate
+carries one coefficient per level, so the plot shows how an effect changes
+across the moderator. The coefficients are named with the table's labels, e.g.
+`age + 1 (centered), hours=20`; `rename()` with a regular expression keeps the
+value after the `=`.
+
+```{.stata-run}
+<<dd_do>>
+mecompare age, models(m1 m2) covariates(hours=(20 30 40 50 60)) store(byhrs)
+coefplot (byhrs_m1, label("Model 1")) (byhrs_m2, label("Model 2")), vertical yline(0) ///
+    rename("^.*=(.*)$" = \1, regex) ///
+    xtitle("Hours worked per week") ytitle("Marginal effect of age on Pr(union)")
+graph export "fig/plotting-moderator.png", replace width(1400)
+<</dd_do>>
+```
+
+![The marginal effect of age at five values of hours worked, from each model.](fig/plotting-moderator.png){width=80%}
+
+The [interactions pages](interactions/index.html) use this pattern to
+reproduce the marginal-effect figures of Mize (2019).

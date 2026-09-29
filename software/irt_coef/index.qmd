@@ -1,0 +1,379 @@
+---
+title: "irt_coef"
+subtitle: "Stata command for y*-standardized coefficients in item response theory models"
+---
+
+`irt_coef` is a Stata command that calculates y\*-standardized coefficients
+for binary and ordinal item response theory (IRT) models. The discrimination
+parameters of an IRT model are on the log-odds (or probit) scale of each
+item, which makes their size hard to judge; standardizing on the latent
+propensity y\* behind each item puts the coefficients on a common scale for
+interpreting them and for comparing across items and models. The raw
+coefficient, its standard error, and *p*-value are reported alongside the
+standardized coefficient.
+
+Both types of coefficients are covered in my graduate course slides on
+item response theory:
+[Item Response Theory slides](https://drive.google.com/file/d/1G9sWGLMAN6SGWzw3XqOXyBw7MC-R_hGI/view?usp=drive_link).
+All of the materials for the course, including example code, are on the
+[Latent Variable Modeling](https://www.trentonmize.com/teaching/lvm) page.
+
+## Installation
+
+```stata
+net install irt_coef, from("https://tdmize.github.io/data") replace
+```
+
+To read the help file in Stata, type `help irt_coef`; it is also
+[on this site](help.html).
+
+## Citation
+
+Please cite the use of `irt_coef` as:
+
+> Mize, Trenton D. 2024. "irt_coef: Stata command for y*-standardized
+> coefficients in item response theory models."
+> <https://www.trentonmize.com/software/irt_coef>
+
+## Examples
+
+### After the irt command
+
+The example fits a graded response model to ten ordinal items measuring
+mastery (a sense of control over one's life) in Add Health Wave IV.
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/lvm_ah4", clear
+(Add Health Wave IV | Latent Variable Modeling Class | )
+
+. 
+. irt grm nocontrol handle yourway overwhelm nofutureR cantchangeR ///
+>         othersdetR interfereR lowcontrolR cantsolveR
+
+Fitting fixed-effects model:
+
+Iteration 0:  Log likelihood = -61673.715  
+Iteration 1:  Log likelihood = -60212.937  
+Iteration 2:  Log likelihood = -60187.957  
+Iteration 3:  Log likelihood = -60187.915  
+Iteration 4:  Log likelihood = -60187.915  
+
+Fitting full model:
+
+Iteration 0:  Log likelihood = -59216.094  (not concave)
+Iteration 1:  Log likelihood = -56183.755  
+Iteration 2:  Log likelihood = -54851.956  
+Iteration 3:  Log likelihood = -54726.048  
+Iteration 4:  Log likelihood = -54724.395  
+Iteration 5:  Log likelihood =  -54724.39  
+
+Graded response model                                    Number of obs = 5,113
+Log likelihood = -54724.39
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+nocontrol    |
+     Discrim |     -0.702      0.034  -20.896   0.000       -0.767      -0.636
+        Diff |
+        >=1  |      1.325      0.073                         1.183       1.468
+        >=2  |     -0.502      0.049                        -0.598      -0.405
+        >=3  |     -3.183      0.150                        -3.477      -2.889
+         =4  |     -5.032      0.244                        -5.511      -4.553
+-------------+----------------------------------------------------------------
+handle       |
+     Discrim |      0.943      0.037   25.197   0.000        0.870       1.017
+        Diff |
+        >=1  |     -4.272      0.173                        -4.611      -3.934
+        >=2  |     -3.356      0.128                        -3.607      -3.105
+        >=3  |     -1.510      0.061                        -1.630      -1.390
+         =4  |      0.567      0.041                         0.487       0.646
+-------------+----------------------------------------------------------------
+yourway      |
+     Discrim |      0.938      0.036   26.075   0.000        0.867       1.008
+        Diff |
+        >=1  |     -4.103      0.160                        -4.416      -3.790
+        >=2  |     -2.699      0.100                        -2.895      -2.504
+        >=3  |     -0.231      0.036                        -0.301      -0.161
+         =4  |      2.258      0.085                         2.092       2.424
+-------------+----------------------------------------------------------------
+overwhelm    |
+     Discrim |     -0.756      0.034  -22.071   0.000       -0.823      -0.689
+        Diff |
+        >=1  |      1.185      0.064                         1.059       1.310
+        >=2  |     -0.818      0.053                        -0.922      -0.714
+        >=3  |     -3.191      0.142                        -3.468      -2.913
+         =4  |     -5.020      0.233                        -5.478      -4.563
+-------------+----------------------------------------------------------------
+nofutureR    |
+     Discrim |      1.301      0.043   29.963   0.000        1.216       1.387
+        Diff |
+        >=2  |     -4.112      0.155                        -4.415      -3.808
+        >=3  |     -2.450      0.075                        -2.597      -2.302
+        >=4  |     -1.610      0.050                        -1.709      -1.511
+         =5  |      1.227      0.043                         1.142       1.313
+-------------+----------------------------------------------------------------
+cantchangeR  |
+     Discrim |      1.950      0.059   33.233   0.000        1.835       2.065
+        Diff |
+        >=2  |     -3.245      0.101                        -3.443      -3.047
+        >=3  |     -2.057      0.051                        -2.157      -1.957
+        >=4  |     -1.318      0.035                        -1.385      -1.250
+         =5  |      1.027      0.031                         0.965       1.088
+-------------+----------------------------------------------------------------
+othersdetR   |
+     Discrim |      2.049      0.063   32.477   0.000        1.925       2.172
+        Diff |
+        >=2  |     -3.261      0.102                        -3.462      -3.061
+        >=3  |     -2.228      0.055                        -2.337      -2.119
+        >=4  |     -1.532      0.038                        -1.607      -1.458
+         =5  |      0.580      0.026                         0.529       0.630
+-------------+----------------------------------------------------------------
+interfereR   |
+     Discrim |      1.329      0.042   31.677   0.000        1.246       1.411
+        Diff |
+        >=2  |     -3.304      0.106                        -3.512      -3.097
+        >=3  |     -1.099      0.039                        -1.174      -1.023
+        >=4  |     -0.218      0.028                        -0.272      -0.164
+         =5  |      2.143      0.063                         2.019       2.267
+-------------+----------------------------------------------------------------
+lowcontrolR  |
+     Discrim |      2.376      0.070   33.719   0.000        2.238       2.514
+        Diff |
+        >=2  |     -3.007      0.088                        -3.180      -2.835
+        >=3  |     -1.900      0.043                        -1.985      -1.815
+        >=4  |     -1.096      0.028                        -1.151      -1.040
+         =5  |      1.078      0.029                         1.020       1.136
+-------------+----------------------------------------------------------------
+cantsolveR   |
+     Discrim |      2.551      0.082   31.055   0.000        2.390       2.712
+        Diff |
+        >=2  |     -3.140      0.099                        -3.333      -2.946
+        >=3  |     -2.304      0.055                        -2.412      -2.197
+        >=4  |     -1.546      0.035                        -1.615      -1.478
+         =5  |      0.729      0.025                         0.679       0.778
+------------------------------------------------------------------------------
+
+```
+
+`irt_coef` then calculates the y*-standardized coefficients. The `help`
+option adds a legend beneath the table explaining each column.
+
+```{.stata-run}
+. irt_coef, help
+
+y* standardized coefficients (and raw coefficient) from IRT model N=5113
+
+             |   Std Coef        Coef   Std. Err.       P>|z| 
+-------------+-----------------------------------------------
+   nocontrol |     -0.361      -0.702       0.034       0.000 
+      handle |      0.461       0.943       0.037       0.000 
+     yourway |      0.459       0.938       0.036       0.000 
+   overwhelm |     -0.385      -0.756       0.034       0.000 
+   nofutureR |      0.583       1.301       0.043       0.000 
+ cantchangeR |      0.732       1.950       0.059       0.000 
+  othersdetR |      0.749       2.049       0.063       0.000 
+  interfereR |      0.591       1.329       0.042       0.000 
+ lowcontrolR |      0.795       2.376       0.070       0.000 
+  cantsolveR |      0.815       2.551       0.082       0.000 
+
+
+Std Coef : y* standardized IRT regression coefficient
+Coef     : IRT raw regression coefficient
+NOTE     : SE and p-value based on raw regression coefficient
+
+```
+
+### After gsem
+
+An identical model can be fit with `gsem`. Because `gsem` lets the latent
+variable take any name, the `latent()` option tells `irt_coef` which one to
+use (after `irt` it is always `Theta`, and the option is not needed).
+
+```{.stata-run}
+. gsem (Mastery -> nocontrol handle yourway overwhelm nofutureR cantchangeR ///
+>                  othersdetR interfereR lowcontrolR cantsolveR, ologit), var(Mastery@1)
+
+Fitting fixed-effects model:
+
+Iteration 0:  Log likelihood = -60187.915  
+Iteration 1:  Log likelihood = -60187.915  
+
+Refining starting values:
+
+Grid node 0:  Log likelihood = -57791.913
+
+Fitting full model:
+
+Iteration 0:  Log likelihood = -57791.913  (not concave)
+Iteration 1:  Log likelihood = -55506.534  
+Iteration 2:  Log likelihood = -54756.929  
+Iteration 3:  Log likelihood =  -54724.67  
+Iteration 4:  Log likelihood = -54724.391  
+Iteration 5:  Log likelihood =  -54724.39  
+
+Generalized structural equation model                    Number of obs = 5,113
+
+Response: nocontrol                                      Number of obs = 5,107
+Family:   Ordinal    
+Link:     Logit      
+
+Response: handle                                         Number of obs = 5,111
+Family:   Ordinal    
+Link:     Logit      
+
+Response: yourway                                        Number of obs = 5,108
+Family:   Ordinal    
+Link:     Logit      
+
+Response: overwhelm                                      Number of obs = 5,106
+Family:   Ordinal    
+Link:     Logit      
+
+Response: nofutureR                                      Number of obs = 5,101
+Family:   Ordinal    
+Link:     Logit      
+
+Response: cantchangeR                                    Number of obs = 5,097
+Family:   Ordinal    
+Link:     Logit      
+
+Response: othersdetR                                     Number of obs = 5,103
+Family:   Ordinal    
+Link:     Logit      
+
+Response: interfereR                                     Number of obs = 5,101
+Family:   Ordinal    
+Link:     Logit      
+
+Response: lowcontrolR                                    Number of obs = 5,096
+Family:   Ordinal    
+Link:     Logit      
+
+Response: cantsolveR                                     Number of obs = 5,103
+Family:   Ordinal    
+Link:     Logit      
+
+Log likelihood = -54724.39
+
+ ( 1)  [/]var(Mastery) = 1
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+nocontrol    |
+     Mastery |      0.702      0.034   20.896   0.000        0.636       0.767
+-------------+----------------------------------------------------------------
+handle       |
+     Mastery |     -0.943      0.037  -25.197   0.000       -1.017      -0.870
+-------------+----------------------------------------------------------------
+yourway      |
+     Mastery |     -0.938      0.036  -26.075   0.000       -1.008      -0.867
+-------------+----------------------------------------------------------------
+overwhelm    |
+     Mastery |      0.756      0.034   22.071   0.000        0.689       0.823
+-------------+----------------------------------------------------------------
+nofutureR    |
+     Mastery |     -1.301      0.043  -29.963   0.000       -1.387      -1.216
+-------------+----------------------------------------------------------------
+cantchangeR  |
+     Mastery |     -1.950      0.059  -33.233   0.000       -2.065      -1.835
+-------------+----------------------------------------------------------------
+othersdetR   |
+     Mastery |     -2.049      0.063  -32.477   0.000       -2.172      -1.925
+-------------+----------------------------------------------------------------
+interfereR   |
+     Mastery |     -1.329      0.042  -31.677   0.000       -1.411      -1.246
+-------------+----------------------------------------------------------------
+lowcontrolR  |
+     Mastery |     -2.376      0.070  -33.719   0.000       -2.514      -2.238
+-------------+----------------------------------------------------------------
+cantsolveR   |
+     Mastery |     -2.551      0.082  -31.054   0.000       -2.712      -2.390
+-------------+----------------------------------------------------------------
+/nocontrol   |
+        cut1 |     -0.930      0.034                        -0.996      -0.864
+        cut2 |      0.352      0.031                         0.291       0.413
+        cut3 |      2.233      0.048                         2.139       2.327
+        cut4 |      3.531      0.079                         3.376       3.686
+-------------+----------------------------------------------------------------
+/handle      |
+        cut1 |     -4.031      0.093                        -4.214      -3.848
+        cut2 |     -3.166      0.067                        -3.297      -3.035
+        cut3 |     -1.424      0.040                        -1.502      -1.346
+        cut4 |      0.535      0.034                         0.469       0.601
+-------------+----------------------------------------------------------------
+/yourway     |
+        cut1 |     -3.848      0.087                        -4.018      -3.678
+        cut2 |     -2.532      0.054                        -2.637      -2.426
+        cut3 |     -0.216      0.033                        -0.281      -0.152
+        cut4 |      2.118      0.048                         2.025       2.211
+-------------+----------------------------------------------------------------
+/overwhelm   |
+        cut1 |     -0.896      0.034                        -0.962      -0.829
+        cut2 |      0.619      0.033                         0.555       0.682
+        cut3 |      2.412      0.051                         2.312       2.513
+        cut4 |      3.796      0.088                         3.623       3.968
+-------------+----------------------------------------------------------------
+/nofutureR   |
+        cut1 |     -5.351      0.150                        -5.644      -5.058
+        cut2 |     -3.188      0.068                        -3.321      -3.055
+        cut3 |     -2.096      0.051                        -2.195      -1.996
+        cut4 |      1.598      0.045                         1.508       1.687
+-------------+----------------------------------------------------------------
+/cantchangeR |
+        cut1 |     -6.328      0.176                        -6.673      -5.983
+        cut2 |     -4.011      0.091                        -4.190      -3.832
+        cut3 |     -2.570      0.066                        -2.700      -2.439
+        cut4 |      2.002      0.059                         1.887       2.117
+-------------+----------------------------------------------------------------
+/othersdetR  |
+        cut1 |     -6.682      0.193                        -7.061      -6.303
+        cut2 |     -4.564      0.107                        -4.774      -4.355
+        cut3 |     -3.139      0.078                        -3.293      -2.986
+        cut4 |      1.187      0.051                         1.088       1.287
+-------------+----------------------------------------------------------------
+/interfereR  |
+        cut1 |     -4.390      0.101                        -4.588      -4.193
+        cut2 |     -1.460      0.043                        -1.544      -1.375
+        cut3 |     -0.290      0.037                        -0.362      -0.217
+        cut4 |      2.847      0.063                         2.723       2.971
+-------------+----------------------------------------------------------------
+/lowcontrolR |
+        cut1 |     -7.145      0.203                        -7.544      -6.747
+        cut2 |     -4.513      0.108                        -4.724      -4.303
+        cut3 |     -2.603      0.074                        -2.747      -2.459
+        cut4 |      2.561      0.074                         2.416       2.706
+-------------+----------------------------------------------------------------
+/cantsolveR  |
+        cut1 |     -8.010      0.258                        -8.516      -7.505
+        cut2 |     -5.879      0.154                        -6.180      -5.578
+        cut3 |     -3.945      0.106                        -4.154      -3.737
+        cut4 |      1.859      0.067                         1.728       1.990
+-------------+----------------------------------------------------------------
+ var(Mastery)|      1.000  (constrained)
+------------------------------------------------------------------------------
+
+```
+
+```{.stata-run}
+. irt_coef, latent(Mastery)
+
+y* standardized coefficients (and raw coefficient) from IRT model N=5113
+
+             |   Std Coef        Coef   Std. Err.       P>|z| 
+-------------+-----------------------------------------------
+   nocontrol |      0.361       0.702       0.034       0.000 
+      handle |     -0.461      -0.943       0.037       0.000 
+     yourway |     -0.459      -0.938       0.036       0.000 
+   overwhelm |      0.385       0.756       0.034       0.000 
+   nofutureR |     -0.583      -1.301       0.043       0.000 
+ cantchangeR |     -0.732      -1.950       0.059       0.000 
+  othersdetR |     -0.749      -2.049       0.063       0.000 
+  interfereR |     -0.591      -1.329       0.042       0.000 
+ lowcontrolR |     -0.795      -2.376       0.070       0.000 
+  cantsolveR |     -0.815      -2.551       0.082       0.000 
+
+```
+
+The `sort` option orders the items by the size of the standardized
+coefficient, and `decimals()` sets the number of decimal places; see the
+[help file](help.html) for the full list of options.

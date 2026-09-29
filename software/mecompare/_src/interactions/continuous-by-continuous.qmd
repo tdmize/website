@@ -1,0 +1,216 @@
+---
+title: "Two continuous variables"
+subtitle: "Political views × survey year: Figures 15--17 of Mize (2019)"
+---
+<<dd_version: 2>>
+
+Interactions between two continuous variables are the hardest to present 
+because there are an almost unlimited number of combinations of the two variables 
+at which one could examine the effects.
+The article's example is whether the growth in acceptance of same-sex
+relationships in the GSS between 1976 and 2016 has been broad-based or
+concentrated among people with particular political views. Political views are
+a standardized scale (0 = moderate, negative = liberal, positive =
+conservative); year is coded as years since 1976.
+
+## The model
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/nli_gss", clear
+drop if missing(sameokB, year1976, conviewSS, age, white, male, income, married, college)
+
+quietly logit sameokB c.year1976##c.year1976##c.conviewSS c.age i.white i.male ///
+              c.income i.married i.college, vce(robust)
+estimates store samemod
+<</dd_do>>
+```
+
+## Average effects of each variable
+
+Before looking at the interaction, the average effect of a standard-deviation
+increase in each variable:
+
+```{.stata-run}
+<<dd_do>>
+mecompare year1976 conviewSS, models(samemod) amount(sd) uncentered
+<</dd_do>>
+```
+
+More conservative individuals are less likely to view same-sex relationships 
+as acceptable, and acceptance has risen over time.
+
+## Ideal types (Figure 15)
+
+The first way to present the interaction is to pick "ideal types" on one
+variable -- here one standard deviation below and above the mean of political
+views, labeled liberal and conservative -- and plot the predictions across the
+other.
+
+`mecompare` replaces the estimates in memory, so restore the model first.
+
+```{.stata-run}
+<<dd_do>>
+estimates restore samemod
+quietly margins, at(conviewSS=(-1 1) year1976=(0(2)40))
+marginsplot, x(year1976) recastci(rline) ciopts(lpattern(dash)) ylabel(0(0.2)1) ///
+    plot1opts(lcolor(blue) mcolor(blue)) ci1opts(color(blue*.4)) ///
+    plot2opts(lcolor(red) mcolor(red)) ci2opts(color(red*.4)) ///
+    xlabel(0 "1976" 8 "1984" 16 "1992" 24 "2000" 32 "2008" 40 "2016") ///
+    xtitle("GSS survey year") ytitle("Pr(Same-sex relationships OK)") ///
+    legend(order(3 "Liberal" 4 "Conservative")) ///
+    title("Figure 15. Pr(same-sex OK) by political views and year")
+graph export "fig/nli-sameok-predictions.png", replace width(1400)
+<</dd_do>>
+```
+
+![](../fig/nli-sameok-predictions.png){width=80% fig-alt="Probability of viewing same-sex relationships as acceptable, over time, for liberals and conservatives, with confidence intervals."}
+
+The effect of time at the two ideal types, and whether it differs, is the
+marginal effect of year with `conviewSS` held at each value:
+
+```{.stata-run}
+<<dd_do>>
+mecompare year1976, models(samemod) covariates(conviewSS=(-1 1)) amount(rate)
+metest 1 - 2
+<</dd_do>>
+```
+
+One standard deviation above and below the mean are conventional ideal types,
+but a good default for any continuous moderator is its 10th, 50th, and 90th
+percentiles: a low, a typical, and a high value that are all in the range of
+the data. `summarize, detail` returns them, and they go straight into `covariates()`. The
+joint test is the test of interaction on this side, and any pair can be
+tested as before:
+
+```{.stata-run}
+<<dd_do>>
+quietly summarize conviewSS, detail
+local p10 : display %5.2f r(p10)
+local p50 : display %5.2f r(p50)
+local p90 : display %5.2f r(p90)
+mecompare year1976, models(samemod) covariates(conviewSS=(`p10' `p50' `p90')) amount(rate)
+metest 1 = 2 = 3
+metest 3 - 1
+<</dd_do>>
+```
+
+## The effect of political views across years (Figure 16)
+
+The second way to present the interaction is to plot the marginal effect of one
+variable across the range of the other. First the test the article reports:
+the effect of political views in 1976 versus 2016, the instantaneous effect
+(`amount(rate)`) with year held at 0 and at 40.
+
+```{.stata-run}
+<<dd_do>>
+mecompare conviewSS, models(samemod) covariates(year1976=(0 40)) amount(rate)
+metest 2 - 1
+<</dd_do>>
+```
+
+Political views matter more in 2016 than in 1976: the effect is negative in
+both years and significantly larger in magnitude in the later one. The same
+test at the 10th, 50th, and 90th percentiles of survey year:
+
+```{.stata-run}
+<<dd_do>>
+quietly summarize year1976, detail
+mecompare conviewSS, models(samemod) covariates(year1976=(`r(p10)' `r(p50)' `r(p90)')) amount(rate)
+metest 1 = 2 = 3
+metest 3 - 1
+<</dd_do>>
+```
+
+Across all years:
+
+```{.stata-run}
+<<dd_do>>
+mecompare conviewSS, models(samemod) covariates(year1976=(0(4)40)) amount(rate) store(pv)
+
+coefplot pv_samemod, vertical recast(connected) color(black) ///
+    ciopts(recast(rline) lpattern(dash) color(gs12)) yline(0) ///
+    rename("^.*=0$" = 1976 "^.*=4$" = 1980 "^.*=8$" = 1984 ///
+           "^.*=12$" = 1988 "^.*=16$" = 1992 "^.*=20$" = 1996 ///
+           "^.*=24$" = 2000 "^.*=28$" = 2004 "^.*=32$" = 2008 ///
+           "^.*=36$" = 2012 "^.*=40$" = 2016, regex) ///
+    ylabel(-0.25(0.05)0.05) xtitle("GSS survey year") ///
+    ytitle("AME of conservative political views") ///
+    title("Figure 16. AME of political views by survey year") ///
+    note("Negative effects indicate conservatives are less supportive of same-sex relationships")
+graph export "fig/nli-sameok-views-by-year.png", replace width(1400)
+<</dd_do>>
+```
+
+![](../fig/nli-sameok-views-by-year.png){width=80% fig-alt="The marginal effect of conservative political views on acceptance, by survey year, with confidence intervals."}
+
+## The effect of time across political views (Figure 17)
+
+The other side: how much acceptance has changed over time for people with
+different views. The article reports a two-year change (the survey interval)
+for liberals and conservatives:
+
+```{.stata-run}
+<<dd_do>>
+mecompare year1976, models(samemod) covariates(conviewSS=(-1 1)) amount(2) uncentered
+metest 1 - 2
+<</dd_do>>
+```
+
+Everyone has become more accepting, liberals significantly more so than
+conservatives per two-year interval. Across the range of political views, from
+two standard deviations below the mean to two above, in steps of one half:
+
+```{.stata-run}
+<<dd_do>>
+mecompare year1976, models(samemod) covariates(conviewSS=(-2(0.5)2)) amount(2) uncentered store(tm)
+
+coefplot tm_samemod, vertical recast(connected) color(black) ///
+    ciopts(recast(rline) lpattern(dash) color(gs12)) yline(0) ///
+    rename("^.*=-2$" = "Very liberal" "^.*=-1$" = "Liberal" "^.*=0$" = "Moderate" ///
+           "^.*=1$" = "Conservative" "^.*=2$" = "Very conservative", regex) ///
+    coeflabels(*5 = " ") ///
+    xtitle("") ytitle("Effect of two years on Pr(Same-sex relationships OK)") ///
+    title("Figure 17. AME of time by political views") ///
+    note("Positive effects: the group has become more supportive over time")
+graph export "fig/nli-sameok-time-by-views.png", replace width(1400)
+<</dd_do>>
+```
+
+![](../fig/nli-sameok-time-by-views.png){width=80% fig-alt="The marginal effect of two years of time on acceptance, across political views, with confidence intervals."}
+
+## Predictions over both variables (Figure 18)
+
+The article's final figure shows the predictions at every combination of the
+two variables as a contour plot, made with `margins` and `twoway contour`.
+`margins, saving()` saves the predictions on a grid of both variables (`nose`
+skips the standard errors); the saved dataset holds the predictions in
+`_margin` and the grid values in `_at1` and `_at2`.
+
+```{.stata-run}
+<<dd_do>>
+estimates restore samemod
+tempfile preds
+quietly margins, at(conviewSS=(-2(.1)2) year1976=(0(2)40)) nose saving(`preds', replace)
+
+use `preds', clear
+rename _at1 year1976
+rename _at2 conviewSS
+rename _margin pr_sameok
+
+twoway (contour pr_sameok conviewSS year1976, ccuts(0(0.05)1) ///
+        scolor(red) ecolor(purple) crule(hue)), ///
+    xlabel(0 "1976" 8 "1984" 16 "1992" 24 "2000" 32 "2008" 40 "2016") ///
+    ylabel(-2 "Very liberal" -1 "Liberal" 0 "Moderate" 1 "Conservative" 2 "Very conservative") ///
+    zlabel(0(0.1)1) ztitle("Pr(Same-sex relationships OK)") ///
+    xtitle("") ytitle("") xsize(7) ysize(4) ///
+    title("Figure 18. Pr(same-sex OK) across political views and year")
+graph export "fig/nli-sameok-contour.png", replace width(1400)
+<</dd_do>>
+```
+
+![](../fig/nli-sameok-contour.png){width=90% fig-alt="Contour plot of the predicted probability of viewing same-sex relationships as acceptable at every combination of political views and survey year."}
+
+The replication files at
+[trentonmize.com/research](https://www.trentonmize.com/research/mize_2019_SocSci)
+also include a grayscale version (`scolor(black) ecolor(gs16) crule(linear)`).

@@ -1,0 +1,29 @@
+---
+title: "Comparing Total MEs across models"
+subtitle: "Example 5.2.e of Mize and Han (2025): mediation/attenuation"
+---
+<<dd_version: 2>>
+
+Does the total effect of a college degree on self-rated health shrink once
+family income is in the model? Store the model without income and the model
+with it, and name both in `models()`: `totalme` reports the Total ME from each
+model and tests the difference.
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_gss", clear
+drop if missing(healthR, college, race4, age, woman, parent, married, faminc)
+drop if year < 2000 | year > 2021
+
+mlogit healthR i.college i.race4 c.age i.woman i.parent i.married, vce(robust)
+est store basemod
+
+mlogit healthR i.college i.race4 c.age i.woman i.parent i.married c.faminc, vce(robust)
+est store medmod
+
+totalme college, models(basemod medmod)
+<</dd_do>>
+```
+
+The **Difference** row is the part of the total college effect that family
+income accounts for, with its standard error.

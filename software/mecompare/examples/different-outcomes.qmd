@@ -1,0 +1,114 @@
+---
+title: "Different outcomes"
+subtitle: "Example 6.4 of Mize, Doan, and Long (2019)"
+---
+
+The same predictors can have different effects on different outcomes. Here two
+negative binomial models predict days of poor mental health and days of poor
+physical health from the same set of variables, and `mecompare` tests whether
+each predictor matters more for one outcome than the other. With no variable
+listed before the comma, `mecompare` computes marginal effects for every 
+predictor in the models.
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/gss_cme", clear
+(gss_cme.dta | GSS 1972 - 2016 Weighted | 2018-07-10)
+
+. drop if missing(mntlhlth, physhlth, woman, married, age, faminc, race, college, parent, reltrad)
+(57,404 observations deleted)
+
+. 
+. quietly nbreg mntlhlth i.woman i.married i.parent i.college c.age faminc i.race i.year, vce(robust
+> )
+
+. estimates store mental
+
+. 
+. quietly nbreg physhlth i.woman i.married i.parent i.college c.age faminc i.race i.year, vce(robust
+> )
+
+. estimates store physical
+
+```
+
+For the count models the marginal effects are changes in the predicted rate
+(expected number of days). Continuous predictors are changed by one standard
+deviation:
+
+```{.stata-run}
+. mecompare, models(mental physical) amount(sd)
+
+
+Predicting: Predicted mean of mntlhlth (mental), Predicted mean of physhlth (physical)
+
+Marginal effects and cross-model differences (N_mental=5062) (N_physical=5062)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+woman                            |                                       
+                 Women - Men     |                                       
+                          mental |     1      0.993      0.208      0.000
+                        physical |     2      0.773      0.174      0.000
+                      Difference |     3      0.220      0.229      0.337
+---------------------------------+---------------------------------------
+married                          |                                       
+       Married - Not Married     |                                       
+                          mental |     4     -1.010      0.230      0.000
+                        physical |     5     -0.159      0.192      0.408
+                      Difference |     6     -0.851      0.250      0.001
+---------------------------------+---------------------------------------
+parent                           |                                       
+        Parent - No Children     |                                       
+                          mental |     7      0.274      0.248      0.268
+                        physical |     8     -0.269      0.219      0.218
+                      Difference |     9      0.543      0.274      0.048
+---------------------------------+---------------------------------------
+college                          |                                       
+    College Deg - No Col Deg     |                                       
+                          mental |    10     -0.879      0.229      0.000
+                        physical |    11     -0.542      0.189      0.004
+                      Difference |    12     -0.337      0.254      0.184
+---------------------------------+---------------------------------------
+age + SD (centered)              |                                       
+                          mental |    13     -0.496      0.124      0.000
+                        physical |    14      0.450      0.099      0.000
+                      Difference |    15     -0.946      0.133      0.000
+---------------------------------+---------------------------------------
+faminc + SD (centered)           |                                       
+                          mental |    16     -0.476      0.135      0.000
+                        physical |    17     -0.413      0.120      0.001
+                      Difference |    18     -0.063      0.154      0.682
+---------------------------------+---------------------------------------
+race                             |                                       
+               black - white     |                                       
+                          mental |    19     -1.016      0.258      0.000
+                        physical |    20     -0.531      0.217      0.015
+                      Difference |    21     -0.485      0.279      0.083
+               other - white     |                                       
+                          mental |    22     -0.438      0.356      0.219
+                        physical |    23      0.145      0.343      0.672
+                      Difference |    24     -0.583      0.385      0.130
+---------------------------------+---------------------------------------
+year                             |                                       
+                 2006 - 2002     |                                       
+                          mental |    25     -0.944      0.270      0.000
+                        physical |    26     -0.292      0.225      0.194
+                      Difference |    27     -0.652      0.298      0.029
+                 2010 - 2002     |                                       
+                          mental |    28     -0.068      0.318      0.832
+                        physical |    29      0.323      0.261      0.215
+                      Difference |    30     -0.391      0.355      0.271
+                 2014 - 2002     |                                       
+                          mental |    31     -0.582      0.302      0.054
+                        physical |    32     -0.229      0.245      0.351
+                      Difference |    33     -0.353      0.324      0.275
+
+```
+
+Women report more poor physical health days, and more poor mental health days, 
+than do men. The effect of gender is similar in size and not statistically 
+significantly different across the two outcomes.
+
+Married individuals report fewer poor mental health days than do the unmarried. 
+Marriage has no significant effect on poor physical health days. The cross-model 
+difference is significant, indicating a larger effect of marriage on mental than 

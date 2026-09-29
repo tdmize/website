@@ -1,0 +1,201 @@
+---
+title: "Options"
+subtitle: "Every meinequality option, with an example of each"
+---
+<<dd_version: 2>>
+
+```stata
+meinequality varlist [if] [in] [, options]
+```
+
+Each variable in *varlist* must have been entered in the model(s) with the
+`i.` prefix. The examples use Stata's `nlsw88` data.
+
+```{.stata-run}
+<<dd_do>>
+sysuse nlsw88, clear
+drop if missing(union, race, age, married, collgrad, south, wage)
+
+quietly logit union i.race c.age i.married, vce(robust)
+estimates store basemod
+quietly logit union i.race c.age i.married i.collgrad c.wage, vce(robust)
+estimates store medmod
+<</dd_do>>
+```
+
+## `weighted`, `unweighted`, `all`
+
+A weighted ME inequality (the default) weights each pairwise comparison by
+the share of the sample in the two levels compared, corrected so the weights
+sum to one: *w~ab~ = (p~a~ + p~b~)/(L - 1)*. `unweighted` gives every pair the
+same weight, *1 / [L(L-1)/2]*. `all` reports both; for a binary variable the
+two are equal and only the weighted one is shown. The proportions are taken
+over the model's estimation sample.
+
+```{.stata-run}
+<<dd_do>>
+meinequality race, models(medmod)
+meinequality race, models(medmod) unweighted
+meinequality race, models(medmod) all
+<</dd_do>>
+```
+
+## `atmeans` -- covariates at their means
+
+By default the other variables stay at their observed values and the
+predictions are averaged over the sample; `atmeans` sets them to their means.
+
+```{.stata-run}
+<<dd_do>>
+meinequality race, models(medmod) atmeans
+<</dd_do>>
+```
+
+## `models()` -- one model or two
+
+`models()` is optional for one model (the estimates in memory are used) and
+required for two. With two models, the ME inequality is reported for each and
+their difference is tested; the two must be the same estimation command
+(use [`mecompare`](../mecompare/index.html) for a pair of different commands).
+`vce(robust)` is strongly recommended on both models.
+
+```{.stata-run}
+<<dd_do>>
+meinequality race, models(basemod medmod)
+<</dd_do>>
+```
+
+## `groups` and `groupnames()` -- models fit on distinct samples
+
+`groups` says the two models were fit on non-overlapping samples. A weighted
+ME inequality then weights each model by the level proportions of its own
+sample, so the comparison reflects differences in the marginal effects and in
+composition; `unweighted` isolates the marginal effects. `groupnames()` labels
+the two rows (no spaces within a name; long names are shortened only as needed
+to fit the table). `group(varname)`, the syntax of earlier versions, is also
+accepted; *varname* must take one value in each model's sample and a different
+value in each model.
+
+```{.stata-run}
+<<dd_do>>
+quietly logit union i.race c.age if married == 0, vce(robust)
+estimates store notmar
+quietly logit union i.race c.age if married == 1, vce(robust)
+estimates store marry
+
+meinequality race, models(notmar marry) groups groupnames(Unmarried Married)
+meinequality race, models(notmar marry) groups unweighted
+<</dd_do>>
+```
+
+## `by()` and `over()` -- within levels of another variable
+
+`by(varname)` computes the ME inequality at each level of a binary or nominal
+covariate as a counterfactual (the whole sample set to that level);
+`over(varname)` computes it within each observed subgroup. The variable must be
+in the model with the `i.` prefix.
+
+With either option the table also holds a **Diff.** row for each pair of
+levels -- the ME inequality at the first level minus that at the second, with
+its standard error and test, which is the test of whether the inequality
+differs across the groups (a test of interaction); with a multi-category
+outcome there is one per outcome. Neither option may name one of
+the focal variables; [`mecompare`](../mecompare/index.html) handles that case.
+
+```{.stata-run}
+<<dd_do>>
+meinequality race, models(medmod) by(collgrad)
+meinequality race, models(medmod) over(collgrad)
+<</dd_do>>
+```
+
+## Several variables at once
+
+```{.stata-run}
+<<dd_do>>
+meinequality race married collgrad, models(medmod)
+<</dd_do>>
+```
+
+## Multi-category outcomes
+
+With an ordinal or nominal outcome, one ME inequality is reported per outcome
+category. [`totalme`](../totalme/index.html) sums them into a single Total ME
+inequality.
+
+```{.stata-run}
+<<dd_do>>
+xtile wage3 = wage, nq(3)
+quietly mlogit wage3 i.race c.age i.collgrad, vce(robust)
+meinequality race
+<</dd_do>>
+```
+
+## Display options: `ci`, `level()`, `decimals()`, `labwidth()`, `title()`
+
+```{.stata-run}
+<<dd_do>>
+meinequality race, models(basemod medmod) ci level(90) decimals(4) title("ME inequality of race")
+<</dd_do>>
+```
+
+## `commands` and `details`
+
+`commands` prints the command of each model and the `margins` command (and
+with two models the `suest2` command) that produced the estimates; `details`
+prints their output.
+
+```{.stata-run}
+<<dd_do>>
+meinequality race, models(basemod medmod) commands
+<</dd_do>>
+```
+
+## Weights, svy, and mi
+
+Weights, the `svy:` prefix, and `mi estimate` go on the stored models, not
+on `meinequality`; with two models both must carry the same. Multilevel
+models need a higher-level weight as well (`melogit y x [pw=w2] || group:,
+pweight(w1)`) or, better, the `svy:` prefix. See the
+[help file](help.html#sampleweights).
+
+Under `mi`, one model may be fit with plain `mi estimate:` or with
+`mi estimate, post:`, which return the same pooled statistic; to compare two
+models, fit both with `mi estimate, post:`. `mi estimate` requires the
+user-written `mimrgns` package.
+
+## Saved results
+
+`meinequality` is r-class. `r(wem1#)`, `r(wem2#)`, and `r(wed#)` hold the
+weighted ME inequality for model 1, model 2, and their difference for the
+*#*th variable in *varlist*; `r(uwem1#)`, `r(uwem2#)`, `r(uwed#)` the
+unweighted versions; with a multi-category outcome `_o#` is appended for the
+outcome, and with `by()` or `over()` `_level`, with the **Diff.** rows
+appending `_d`*level1*`_`*level2* instead (e.g. `r(wem11_d0_1)`). `r(table)` holds the displayed
+table (estimate, SE, *z*, *p*, and the two confidence limits) and
+`r(se_missing)` counts quantities whose standard error could not be computed.
+The `margins` results are stored as `meineq_margins` and, with two models, the
+combined system as `meineq_suest2`.
+
+```{.stata-run}
+<<dd_do>>
+meinequality race, models(basemod medmod)
+return list
+<</dd_do>>
+```
+
+## Bootstrap standard errors
+
+When the standard errors are unavailable, e.g. after convergence trouble, wrap
+the command in a small program and use `bootstrap`:
+
+```stata
+capture program drop boot_mei
+program define boot_mei, rclass
+    reg wage i.race c.age i.married
+    meinequality race
+    return scalar w_mei = r(wem11)
+end
+
+bootstrap w_mei=r(w_mei), reps(1000): boot_mei
+```

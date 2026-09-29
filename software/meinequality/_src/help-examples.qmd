@@ -1,0 +1,87 @@
+---
+title: "Examples from the help file"
+subtitle: "The examples at the end of help meinequality, run in full"
+---
+<<dd_version: 2>>
+
+The examples from the end of the [help file](help.html), in order, on
+Stata's `nlsw88` data.
+
+## Single model
+
+```{.stata-run}
+<<dd_do>>
+sysuse nlsw88, clear
+
+reg wage i.race c.age i.married
+
+meinequality race
+meinequality race, unweighted
+<</dd_do>>
+```
+
+## Compare across two models on the same sample
+
+```{.stata-run}
+<<dd_do>>
+logit union i.race, vce(robust)
+est store basemod
+logit union i.race c.age i.married, vce(robust)
+est store medmod
+
+meinequality race, models(basemod medmod)
+<</dd_do>>
+```
+
+## ME inequality by group
+
+In the second model, with the **Diff.** row testing whether it differs
+between the groups:
+
+```{.stata-run}
+<<dd_do>>
+meinequality race, models(medmod) by(married)
+<</dd_do>>
+```
+
+## Compare across distinct samples/groups for two models
+
+```{.stata-run}
+<<dd_do>>
+logit union i.race c.age if married == 0, vce(robust)
+est store notmar
+logit union i.race c.age if married == 1, vce(robust)
+est store marry
+
+meinequality race, models(notmar marry) groups
+<</dd_do>>
+```
+
+## Nominal or ordinal outcome models
+
+One ME inequality is reported per outcome category.
+
+```{.stata-run}
+<<dd_do>>
+mlogit industry i.race c.age
+
+meinequality race
+<</dd_do>>
+```
+
+## Bootstrap example
+
+Wrap the model and the command in an r-class program and hand it to
+`bootstrap`. (Shown, not run.)
+
+```stata
+capture program drop boot_mei
+
+program define boot_mei, rclass
+    reg wage i.race c.age i.married
+    meinequality race
+    return scalar w_mei = r(wem11)
+end
+
+bootstrap w_mei=r(w_mei), reps(1000): boot_mei
+```

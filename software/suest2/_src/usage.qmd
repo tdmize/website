@@ -1,0 +1,237 @@
+---
+title: "Usage"
+subtitle: "Workflow, options, margins after suest2, and the rules for weights, survey data, and MI"
+---
+<<dd_version: 2>>
+
+```stata
+suest2 model1name model2name [, options]
+```
+
+*model#name* are stored estimates. Store each model with `estimates store`
+before running `suest2`.
+
+## The workflow
+
+Fit each model, store it, combine, then do the post-estimation you want on the
+combined system. We recommend fitting the models with `vce(robust)` or
+`vce(cluster varname)` so that the `suest2` results match the individual model
+results exactly.
+
+```{.stata-run}
+<<dd_do>>
+sysuse nlsw88, clear
+drop if missing(union, wage, ttl_exp, collgrad, age, south)
+
+quietly logit union c.age##i.collgrad i.south, vce(robust)
+estimates store m1
+quietly logit union c.age##i.collgrad i.south c.wage c.ttl_exp, vce(robust)
+estimates store m2
+
+suest2 m1 m2
+<</dd_do>>
+```
+
+## What the combined results contain
+
+`e(b)` holds every model's coefficients, one equation per model (named
+*model_depvar*), and `e(V)` their joint covariance matrix. Any command that
+works on `e(b)` and `e(V)` works here.
+
+```{.stata-run}
+<<dd_do>>
+test [m1_union]1.collgrad = [m2_union]1.collgrad
+nlcom ([m1_union]1.collgrad - [m2_union]1.collgrad) / [m1_union]1.collgrad
+<</dd_do>>
+```
+
+The other stored results are listed in the [help file](help.html#stored).
+
+## margins after suest2
+
+A bare `margins` gives predictions from every model. To use one model, name it
+in `predict()` with `model()`:
+
+```{.stata-run}
+<<dd_do>>
+margins, dydx(age) predict(model(m1) pr)
+margins, dydx(age) predict(model(m2) pr)
+<</dd_do>>
+```
+
+The other `margins` options, e.g. `at()`, `over()`, and `post`, work as usual.
+For multi-category models add the outcome, e.g. `predict(model(o1) pr
+outcome(3))`; for multilevel models, e.g. `predict(model(me1) mu fixedonly)`.
+The [Predictions and graphs](plotting.html) page shows `marginsplot` and
+`coefplot` after `suest2`.
+
+`margins, post` followed by `lincom` or [`metest`](../metest/index.html) tests
+a marginal effect across the two models, which is what
+[`mecompare`](../mecompare/index.html) automates:
+
+```{.stata-run}
+<<dd_do>>
+mecompare age
+<</dd_do>>
+```
+
+## Options
+
+| Option | Purpose |
+|:--|:--|
+| `cluster(varname)` | Cluster the joint covariance on *varname*. |
+| `vce(robust)`, `robust` | Request the route's robust covariance. |
+| `vce(cluster varname)` | Same as `cluster(varname)`. |
+| `level(#)` | Confidence level; the default is 95. |
+| `dir` | Pass through the official `suest` display option. |
+| `eform(string)` | Exponentiated coefficients where applicable, with *string* as the column label, e.g. `eform("Odds ratio")`. The argument is required. |
+| `minus(string)` | The official `suest` minus convention when supported; passed verbatim. |
+| `regressml` | The official `suest` ML-regression convention when supported. |
+| `svy` | Pass through the official `suest` survey option when supported. Does not replace fitting each survey model with the `svy:` prefix. |
+| `nowarn` | Suppress the note printed when a model was not fit with `vce(robust)`. |
+
+Specify only one of `cluster()`, `vce()`, and `robust`. Panel models cluster
+at the panel identifier by default and multilevel models at the common
+highest-level grouping variable; a larger cluster may be requested only when
+the panels or groups are nested within it.
+
+```{.stata-run}
+<<dd_do>>
+suest2 m1 m2, eform("Odds ratio") nowarn
+<</dd_do>>
+```
+
+## Weights, survey data, and multiple imputation
+
+**Survey data.** For weighted analyses and complex samples, `svyset` the data
+and fit each model with the `svy:` prefix, then pass the stored names to
+`suest2` without a prefix. The design comes from `svyset`; do not specify
+`cluster()`, `vce()`, or `robust` on `suest2`. All models must use the same
+subpopulation specification, and replicate-weight VCEs are not supported.
+
+**Pweights.** Pweighted systems support `regress`, `logit`/`logistic`,
+`probit`, `poisson`, `nbreg`, `ologit`, `oprobit`, and `mlogit`, which may be
+combined. The weights must agree on observations shared by the estimation
+samples. Request system clustering with `cluster()` on `suest2`.
+
+**Multiple imputation.** Fit and store each model with `mi estimate, post:`,
+then pass the stored names to `suest2`. It combines the models within each
+imputation and pools the results with Rubin's rules; the MI data must not
+change in between. Use `mimrgns` or `mecompare` for post-estimation; ordinary
+`predict` and `margins` are not available after MI pooling. The supported
+families are listed in the [help file](help.html#weights).
+
+## Supported estimators
+
+The lists follow the [help file](help.html#estimators); the notes at the end
+of each group give its rules.
+
+### Ordinary single-level models
+
+`regress`; `logit` and `logistic`; `probit`; `ologit`; `oprobit`; `mlogit`;
+`poisson`; `nbreg`; `zip`; and `zinb` with either inflation link.
+
+`glm`; `cloglog`; `tobit`; `intreg`; maximum-likelihood `heckman`; and
+parametric `streg`. `glm` predictions support the identity, log, logit,
+probit, cloglog, and loglog links.
+
+`gologit2`, including proportional-odds, partial proportional-odds,
+unrestricted, alternative-link, and `autofit()` results.
+
+`ivregress 2sls`. `fracreg` with estimators logit and probit. Every model in
+an instrumental-variables system must use the same estimation mode: either
+unweighted conventional estimates, or linearized `svy: ivregress 2sls`
+estimates under one active survey design.
+
+`betareg` with links logit, probit, cloglog, and loglog. `truncreg`.
+`hetprobit`. `biprobit`. `ivprobit`. `ivtobit`.
+
+### Panel models
+
+`xtreg` with estimators re, fe, be, mle, and pa.
+
+`xtlogit` with estimators re, fe, and pa. `xtprobit` with estimators re and
+pa.
+
+`xtologit` and `xtoprobit`.
+
+`xtmlogit` with estimators re and fe.
+
+`xtpoisson` with estimators re, fe, and pa. `xtnbreg` with estimators re and
+pa.
+
+`xtcloglog` with estimators re and pa.
+
+Panel models must be unweighted and share a panel identifier. Fit them with
+conventional standard errors and request robust or clustered ones on `suest2`.
+Correlated random effects models are described below.
+
+### Multilevel models
+
+`mixed, mle`; `melogit`; `meprobit`; `mecloglog`; `mepoisson`; `menbreg`;
+`meologit`; `meoprobit`; and `mestreg`.
+
+`meglm` with the family-link pairs Gaussian-identity, Bernoulli-logit,
+Bernoulli-probit, Bernoulli-cloglog, Poisson-log, negative-binomial-log,
+Gamma-log, ordinal-logit, and ordinal-probit.
+
+`mestreg` with the exponential, Weibull, lognormal, loglogistic, and gamma
+distributions, including the applicable proportional-hazards and
+accelerated-failure-time forms.
+
+Multilevel models may be combined, and every model must use the same
+highest-level grouping variable. Multilevel and panel models may also be
+combined with ordinary single-level models -- `regress`, `logit`, `probit`,
+`cloglog`, `poisson`, `nbreg`, `ologit`, and `oprobit` -- e.g., a `logit` with
+a `melogit` or `xtlogit`. Fit the ordinary model unweighted, without a prefix,
+and with conventional standard errors; its standard errors are clustered on
+the highest-level group of the multilevel or panel model.
+
+## Fixed effects and correlated random effects
+
+Fixed-effects (`fe`) models have known problems for marginal effects,
+especially with categorical outcomes. `xtreg, cre` is not supported, but the
+identical correlated-random-effects (Mundlak) specification is: include each
+time-varying predictor's panel mean alongside the predictor and fit with the
+`re` estimator.
+
+```stata
+bysort id: egen mean_x = mean(x)
+xtreg y x mean_x i.d, re
+```
+
+The coefficient on `x` is the within-person ("fixed effect") estimate and the
+coefficient on `mean_x` the difference between the between-person and
+within-person estimates. The same recipe applies to any supported panel or
+multilevel family; the
+[within-person effects](../mecompare/examples/within-person.html) example
+uses it with `xtlogit`.
+
+## More than two models
+
+`suest2` combines any number of stored models. Here are the four nested logits of
+Example 6.2 of Mize, Doan, and Long (2019), in one system:
+
+```{.stata-run}
+<<dd_do>>
+use https://tdmize.github.io/data/data/gss_cme, clear
+drop if year < 2000
+drop if employed != 1
+drop if missing(vhappy, college, wages, occprest, age, married, parent, woman, conserv, reltrad)
+
+quietly logit vhappy i.college, vce(robust)
+estimates store m1
+quietly logit vhappy i.college i.married i.parent i.woman i.conserv i.reltrad i.year c.age##c.age, vce(robust)
+estimates store m2
+quietly logit vhappy i.college c.wages i.married i.parent i.woman i.conserv i.reltrad i.year c.age##c.age, vce(robust)
+estimates store m3
+quietly logit vhappy i.college c.wages c.occprest i.married i.parent i.woman i.conserv i.reltrad i.year c.age##c.age, vce(robust)
+estimates store m4
+
+quietly suest2 m1 m2 m3 m4
+test [m1_vhappy]1.college = [m2_vhappy]1.college
+<</dd_do>>
+```
+
+The marginal-effects version is `mecompare college, models(m1 m2 m3 m4)`
+followed by [`metest`](../metest/many-models.html).

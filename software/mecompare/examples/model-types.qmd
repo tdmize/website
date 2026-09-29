@@ -1,0 +1,74 @@
+---
+title: "Different model types"
+subtitle: "Example 6.5 of Mize, Doan, and Long (2019): ordinal versus nominal"
+---
+
+Marginal effects are on the scale of the outcome -- here, probabilities of each
+party-identification category -- so they can be compared across different types 
+of models if both predict the same quantity. This example fits an ordered logit and a
+multinomial logit to the same five-category party identification variable with
+the same predictors, and asks whether the two models imply different effects of
+age. If they do, it is evidence the ordering imposed by the ordinal model is 
+incorrect.
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/gss_cme", clear
+(gss_cme.dta | GSS 1972 - 2016 Weighted | 2018-07-10)
+
+. drop if year < 2010
+(53,043 observations deleted)
+
+. drop if missing(partyid5, woman, edyrs, age, parent, married, faminc, employed, region4, year)
+(1,244 observations deleted)
+
+. 
+. quietly ologit partyid5 c.age##c.age i.woman c.edyrs i.parent i.married i.race ///
+>                c.faminc i.employed i.region4 i.year, vce(robust)
+
+. estimates store ordinal
+
+. 
+. quietly mlogit partyid5 c.age##c.age i.woman c.edyrs i.parent i.married i.race ///
+>                c.faminc i.employed i.region4 i.year, vce(robust)
+
+. estimates store nominal
+
+```
+
+Age enters with a squared term, so the marginal effect depends on where the
+change starts. `start(age=20)` and `amount(10)` define the effect as the change
+in each probability from age 20 to age 30, with the other variables held at
+their means:
+
+```{.stata-run}
+. mecompare age, models(ordinal nominal) start(age=20) amount(10) covariates(atmeans)
+
+
+Predicting: Pr(partyid5)
+
+Marginal effects and cross-model differences (N_ordinal=8179) (N_nominal=8179)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + 10 (centered)              |                                       
+            Strong Dem - ordinal |     1      0.021      0.004      0.000
+            Strong Dem - nominal |     2      0.029      0.003      0.000
+         Strong Dem - Difference |     3     -0.008      0.003      0.011
+              Democrat - ordinal |     4      0.028      0.007      0.000
+              Democrat - nominal |     5     -0.008      0.013      0.556
+           Democrat - Difference |     6      0.035      0.011      0.001
+           Independent - ordinal |     7     -0.002      0.001      0.033
+           Independent - nominal |     8      0.008      0.012      0.485
+        Independent - Difference |     9     -0.010      0.012      0.400
+            Republican - ordinal |    10     -0.028      0.006      0.000
+            Republican - nominal |    11     -0.039      0.013      0.004
+         Republican - Difference |    12      0.011      0.012      0.346
+          Strong Repub - ordinal |    13     -0.020      0.005      0.000
+          Strong Repub - nominal |    14      0.009      0.003      0.005
+       Strong Repub - Difference |    15     -0.029      0.005      0.000
+
+```
+
+Each outcome category gets its own block. A significant **Difference** means
+the ordinal model's proportional-odds assumption changes the conclusion for
+that category.

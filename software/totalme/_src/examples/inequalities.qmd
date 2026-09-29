@@ -1,0 +1,32 @@
+---
+title: "Total ME inequalities for nominal independent variables"
+subtitle: "Example 5.3 of Mize and Han (2025)"
+---
+<<dd_version: 2>>
+
+With a nominal outcome *and* nominal independent variables there are two
+layers of summary. On each outcome category, the effect of a nominal
+predictor is the ME inequality of [`meinequality`](../../meinequality/index.html)
+-- the average absolute difference in that category's probability across the
+predictor's groups. The Total ME inequality then sums those across the
+outcome categories. Here race-ethnicity and degree, both nominal, predict
+self-rated health.
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_gss", clear
+drop if missing(healthR, race4, age, woman, parent, married, faminc, degree)
+drop if year < 2000 | year > 2021
+
+mlogit healthR i.race4 c.age i.woman i.parent i.married c.faminc i.degree
+totalme race4 degree
+<</dd_do>>
+```
+
+`totalme` calculates a summary inequality measure for each categorical
+predictor. The default is weighted by the share of the sample in each pair of
+groups compared; `unweighted` gives every pairwise comparison the same
+weight, and `all` reports both. To test whether the two Total ME inequalities
+differ from each other, run the same comparison through
+[`mecompare`](../../mecompare/index.html) with its `totalme` option and use
+[`metest`](../../metest/index.html) on the two rows.

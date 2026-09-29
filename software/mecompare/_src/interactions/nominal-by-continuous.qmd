@@ -1,0 +1,123 @@
+---
+title: "A nominal and a continuous variable"
+subtitle: "Gender × social roles: Figure 14 of Mize (2019)"
+---
+<<dd_version: 2>>
+
+When one of the interacting variables is continuous, a plot of the predictions
+is almost always needed, and the tests have two sides: the effect of the
+continuous variable within each group, and the group difference at each value
+of the continuous variable. The article's example is whether holding more
+social roles protects against high depressive symptoms (as a binary outcome) 
+equally for men and women (Add Health Wave IV).
+
+## The model
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/nli_ah4", clear
+
+quietly logit depB c.role##i.woman i.parrole c.age i.race c.income i.college, vce(robust)
+estimates store depmod
+<</dd_do>>
+```
+
+## The predictions (Figure 14)
+
+```{.stata-run}
+<<dd_do>>
+quietly margins woman, at(role=(0(1)10))
+marginsplot, xdimension(role) recastci(rline) ciopts(lpattern(dash) color(*.4)) ///
+    xlabel(0(1)10) ylabel(0(0.1)0.7) xtitle("Number of social roles") ///
+    ytitle("Pr(High depressive symptoms)") ///
+    title("Figure 14. Pr(high depressive symptoms) by gender and roles")
+graph export "fig/nli-roles-predictions.png", replace width(1400)
+<</dd_do>>
+```
+
+![](../fig/nli-roles-predictions.png){width=80% fig-alt="Predicted probability of high depressive symptoms by number of social roles, for men and women, with confidence intervals."}
+
+Both curves fall as roles accumulate, and women sit above men. The two
+questions are whether the slope differs by gender and where along the range of
+roles the gender gap is significant.
+
+## The effect of social roles for men and women
+
+The average effect of one additional role, for men and for women, and the
+second difference. `uncentered` makes the change run from each person's
+observed count to one more. For most applications, we recommend using the
+default centered change.
+
+```{.stata-run}
+<<dd_do>>
+mecompare role, models(depmod) by(woman) uncentered
+metest 1 - 2
+<</dd_do>>
+```
+
+Each additional role lowers the probability of high depressive symptoms by
+about three percentage points for both men and women; the second difference
+is not significant. The instantaneous rate of change uses `amount(rate)`:
+
+```{.stata-run}
+<<dd_do>>
+mecompare role, models(depmod) by(woman) amount(rate)
+metest 1 - 2
+<</dd_do>>
+```
+
+## The gender gap at each number of roles
+
+The other side of the interaction is the marginal effect of gender at chosen
+numbers of roles. A good default for a continuous moderator is its 10th,
+50th, and 90th percentiles, from `summarize, detail`: a low, a typical, and a
+high number of roles, all in the range of the data. The joint test is the
+test of interaction on this side; `metest 3 - 1` is how much the gap changes
+from the 10th to the 90th percentile.
+
+```{.stata-run}
+<<dd_do>>
+quietly summarize role, detail
+mecompare i.woman, models(depmod) covariates(role=(`r(p10)' `r(p50)' `r(p90)'))
+metest 1 = 2 = 3
+metest 3 - 1
+<</dd_do>>
+```
+
+The full picture is the marginal effect of gender at each value of `role`,
+from `covariates()` with the full range. One numbered row per value, each
+with its own test.
+
+```{.stata-run}
+<<dd_do>>
+mecompare i.woman, models(depmod) covariates(role=(0(1)10)) store(gap)
+<</dd_do>>
+```
+
+This is the information Figure 14 encodes in solid versus dashed lines: the
+gender gap is significant at three or more roles and not at zero to two. Plotted
+directly:
+
+```{.stata-run}
+<<dd_do>>
+coefplot gap_depmod, vertical recast(line) ///
+    ciopts(recast(rline) lpattern(dash) color(*.4)) yline(0) ///
+    rename("^.*=(.*)$" = \1, regex) ///
+    ylabel(-.2(.1).2) xtitle("Number of social roles") ///
+    ytitle("Effect of gender: women - men") ///
+    title("AME of gender by number of social roles") ///
+    note("Effects above zero indicate women have a higher probability of high depressive symptoms")
+graph export "fig/nli-roles-gender-gap.png", replace width(1400)
+<</dd_do>>
+```
+
+![](../fig/nli-roles-gender-gap.png){width=80% fig-alt="The marginal effect of gender at each number of social roles, with 95% confidence intervals."}
+
+A joint test that the gap is the same at every number of roles is the overall
+test of interaction on this side:
+
+```{.stata-run}
+<<dd_do>>
+metest 1 = 2 = 3 = 4 = 5 = 6 = 7 = 8 = 9 = 10 = 11
+<</dd_do>>
+```

@@ -1,0 +1,44 @@
+---
+title: "Different model types"
+subtitle: "Example 6.5 of Mize, Doan, and Long (2019): ordinal versus nominal"
+---
+<<dd_version: 2>>
+
+Marginal effects are on the scale of the outcome -- here, probabilities of each
+party-identification category -- so they can be compared across different types 
+of models if both predict the same quantity. This example fits an ordered logit and a
+multinomial logit to the same five-category party identification variable with
+the same predictors, and asks whether the two models imply different effects of
+age. If they do, it is evidence the ordering imposed by the ordinal model is 
+incorrect.
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/gss_cme", clear
+drop if year < 2010
+drop if missing(partyid5, woman, edyrs, age, parent, married, faminc, employed, region4, year)
+
+quietly ologit partyid5 c.age##c.age i.woman c.edyrs i.parent i.married i.race ///
+               c.faminc i.employed i.region4 i.year, vce(robust)
+estimates store ordinal
+
+quietly mlogit partyid5 c.age##c.age i.woman c.edyrs i.parent i.married i.race ///
+               c.faminc i.employed i.region4 i.year, vce(robust)
+estimates store nominal
+<</dd_do>>
+```
+
+Age enters with a squared term, so the marginal effect depends on where the
+change starts. `start(age=20)` and `amount(10)` define the effect as the change
+in each probability from age 20 to age 30, with the other variables held at
+their means:
+
+```{.stata-run}
+<<dd_do>>
+mecompare age, models(ordinal nominal) start(age=20) amount(10) covariates(atmeans)
+<</dd_do>>
+```
+
+Each outcome category gets its own block. A significant **Difference** means
+the ordinal model's proportional-odds assumption changes the conclusion for
+that category.

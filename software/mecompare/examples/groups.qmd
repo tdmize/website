@@ -1,0 +1,84 @@
+---
+title: "Separate samples or groups"
+subtitle: "Example 6.6 of Mize, Doan, and Long (2019)"
+---
+
+When a model is fit separately to two groups -- here, GSS respondents in 1986
+and different respondents in 2016 -- the question is whether an effect differs 
+between the groups. `mecompare` with the `groups` option compares marginal 
+effects across models that were estimated on non-overlapping samples. This 
+example asks whether the association between political conservatism and 
+support for government help with medical costs changed over 30 years.
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/gss_cme", clear
+(gss_cme.dta | GSS 1972 - 2016 Weighted | 2018-07-10)
+
+. drop if missing(helpsickB, polviews, faminc, employed, woman, age, college, married, parent)
+(36,143 observations deleted)
+
+. 
+. quietly logit helpsickB i.conserv faminc i.employed i.woman age i.college i.married i.parent i.rac
+> e ///
+>               if year == 1986, vce(robust)
+
+. estimates store mod1986
+
+. 
+. quietly logit helpsickB i.conserv faminc i.employed i.woman age i.college i.married i.parent i.rac
+> e ///
+>               if year == 2016, vce(robust)
+
+. estimates store mod2016
+
+```
+
+```{.stata-run}
+. mecompare i.conserv, models(mod1986 mod2016) groups
+
+
+Predicting: Pr(helpsickB)
+
+Marginal effects and cross-model differences (N_mod1986=1254) (N_mod2016=1670)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+conserv                          |                                       
+    Conservativ - Not Conser     |                                       
+                         mod1986 |     1     -0.092      0.030      0.002
+                         mod2016 |     2     -0.258      0.025      0.000
+                      Difference |     3      0.166      0.039      0.000
+
+```
+
+`groups` tells `mecompare` that each model's estimation sample is a different
+group, so the marginal effect for each model is averaged over that model's own
+sample. The **Difference** row tests whether the conservatism gap in 2016
+differs from the gap in 1986. It does, suggesting that polarization on this
+issue has increased over this 30 year period.
+
+The 2019 article wrote this call as `group(year)`, the syntax of earlier
+versions of `mecompare`. It is also accepted and gives the same table:
+
+```{.stata-run}
+. mecompare i.conserv, models(mod1986 mod2016) group(year)
+
+
+Predicting: Pr(helpsickB)
+
+Marginal effects and cross-model differences (N_mod1986=1254) (N_mod2016=1670)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+conserv                          |                                       
+    Conservativ - Not Conser     |                                       
+                         mod1986 |     1     -0.092      0.030      0.002
+                         mod2016 |     2     -0.258      0.025      0.000
+                      Difference |     3      0.166      0.039      0.000
+
+```
+
+The [Group comparisons](chapter-groups.html) page has a second example of
+`groups` -- separate models for men and women, every predictor compared --
+and shows the alternatives when the groups are in a single model (`by()` and
+`over()`).

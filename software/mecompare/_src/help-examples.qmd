@@ -1,0 +1,213 @@
+---
+title: "Examples from the help file"
+subtitle: "The examples at the end of help mecompare, run in full"
+---
+<<dd_version: 2>>
+
+These are the examples from the end of the [help file](help.html), in the
+same order, with their output. They use Stata's `nlsw88` data; every line can
+be pasted into Stata as is.
+
+## Fit and store the models, then compare marginal effects
+
+Factor syntax is required for the regression models; it is optional for
+`mecompare`.
+
+```{.stata-run}
+<<dd_do>>
+sysuse nlsw88, clear
+
+logit union i.married age i.race hours i.collgrad, vce(robust)
+est store basemod
+
+logit union i.married age i.race hours i.collgrad wage, vce(robust)
+est store medmod
+
+mecompare age collgrad race hours, models(basemod medmod)
+<</dd_do>>
+```
+
+## Amount of change for continuous variables
+
+```{.stata-run}
+<<dd_do>>
+mecompare age collgrad race hours, models(basemod medmod) amount(sd)
+mecompare age collgrad race hours, models(basemod medmod) amount(sd 10)
+<</dd_do>>
+```
+
+`amount(rate)` gives the instantaneous rate of change; `amount(dydx)` and
+`amount(slope)` are synonyms.
+
+```{.stata-run}
+<<dd_do>>
+mecompare age hours, models(basemod medmod) amount(rate)
+mecompare age hours, models(basemod medmod) amount(range)
+<</dd_do>>
+```
+
+## Labeling the models
+
+```{.stata-run}
+<<dd_do>>
+mecompare age collgrad race hours, models(basemod medmod) mod1name(Base Model) mod2name(Mediation Model)
+<</dd_do>>
+```
+
+## Effects within levels of a variable (by, over)
+
+```{.stata-run}
+<<dd_do>>
+mecompare age race, models(basemod medmod) over(collgrad)
+mecompare age race, models(basemod medmod) by(collgrad)
+mecompare age race, models(basemod medmod) by(collgrad married)
+<</dd_do>>
+```
+
+Whether an effect differs across the levels (a test of interaction), jointly
+and for one pair:
+
+```{.stata-run}
+<<dd_do>>
+mecompare age, models(basemod) by(race)
+metest 1 = 2 = 3
+metest 1 - 2
+<</dd_do>>
+```
+
+For a nominal variable, one equality per contrast:
+
+```{.stata-run}
+<<dd_do>>
+mecompare race, models(basemod) by(collgrad)
+metest (1 = 2) (3 = 4)
+<</dd_do>>
+```
+
+## Values of the focal variables and covariates, including lists of values
+
+```{.stata-run}
+<<dd_do>>
+mecompare age race, models(basemod medmod) atmeans
+mecompare age, models(basemod) start(age=(35 40 45))
+mecompare age, models(basemod) start(age=35) end(age=40)
+mecompare age, models(basemod) start(age=(35 40)) end(age=(40 45))
+mecompare age race, models(basemod medmod) covariates(hours=(20 40 60))
+<</dd_do>>
+```
+
+## Summary measures for nominal variables
+
+```{.stata-run}
+<<dd_do>>
+mecompare race, models(basemod medmod) pwcompare
+mecompare race, models(basemod) meineq(weighted)
+mecompare race, models(basemod medmod) meineq(all)
+<</dd_do>>
+```
+
+## Total ME, which sums effects across outcome categories
+
+For example, with an ordinal outcome:
+
+```{.stata-run}
+<<dd_do>>
+egen hours_ord = cut(hours), at(0 30 40 50 81)
+ologit hours_ord c.age i.married i.race, vce(robust)
+mecompare age married race, totalme
+<</dd_do>>
+```
+
+## Comparing models fit over distinct groups
+
+```{.stata-run}
+<<dd_do>>
+logit union age hours i.collgrad if south==1, vce(robust)
+est store msouth
+logit union age hours i.collgrad if south==0, vce(robust)
+est store mnonsouth
+
+mecompare age hours collgrad, models(msouth mnonsouth) groups groupnames(South NonSouth)
+<</dd_do>>
+```
+
+## Cross-family comparison (same number of predictions)
+
+```{.stata-run}
+<<dd_do>>
+logit union i.married age i.race hours i.collgrad, vce(robust)
+est store logitmod
+regress union i.married age i.race hours i.collgrad, vce(robust)
+est store lpmmod
+
+mecompare age race, models(logitmod lpmmod)
+<</dd_do>>
+```
+
+## Choosing the prediction
+
+With one model, any prediction `margins` allows; a count model offers several.
+
+```{.stata-run}
+<<dd_do>>
+nbreg hours c.age i.collgrad i.race, vce(robust)
+est store cntbase
+
+mecompare age collgrad race, models(cntbase)
+mecompare age collgrad race, models(cntbase) predict(n)
+mecompare age collgrad race, models(cntbase) predict(ir)
+mecompare age collgrad race, models(cntbase) predict(pr(0))
+<</dd_do>>
+```
+
+With two or more models, any prediction returning one quantity per model:
+
+```{.stata-run}
+<<dd_do>>
+nbreg hours c.age i.collgrad i.race i.married, vce(robust)
+est store cntmed
+
+mecompare age collgrad race, models(cntbase cntmed) predict(n)
+<</dd_do>>
+```
+
+## Passing an option to margins, e.g. effects in percentage points
+
+```{.stata-run}
+<<dd_do>>
+mecompare age race, models(basemod) marginsopt(expression(100*predict(pr)))
+<</dd_do>>
+```
+
+## Four nested models and custom comparisons with metest
+
+```{.stata-run}
+<<dd_do>>
+use https://tdmize.github.io/data/data/gss_cme, clear
+drop if year < 2000
+drop if employed != 1
+drop if missing(vhappy, college, wages, occprest, age, married, parent, woman, conserv, reltrad)
+
+logit vhappy i.college, vce(robust)
+estimates store m1
+logit vhappy i.college i.married i.parent i.woman i.conserv i.reltrad i.year c.age##c.age, vce(robust)
+estimates store m2
+logit vhappy i.college c.wages i.married i.parent i.woman i.conserv i.reltrad i.year c.age##c.age, vce(robust)
+estimates store m3
+logit vhappy i.college c.wages c.occprest i.married i.parent i.woman i.conserv i.reltrad i.year c.age##c.age, vce(robust)
+estimates store m4
+
+mecompare college, models(m1 m2 m3 m4)
+<</dd_do>>
+```
+
+Use `metest` to calculate the cross-model tests. Here, whether the effect
+diminishes in each subsequent model.
+
+```{.stata-run}
+<<dd_do>>
+metest 1 - 2
+metest 2 - 3, add
+metest 3 - 4, add
+<</dd_do>>
+```

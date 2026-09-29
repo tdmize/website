@@ -1,0 +1,44 @@
+---
+title: "Curvilinear effects and mediation/attenuation"
+subtitle: "Example 6.1 of Mize, Doan, and Long (2019)"
+---
+<<dd_version: 2>>
+
+Marginal effects can summarize a curvilinear relationship in a single number,
+which makes it easy to test, e.g., whether a nonlinear effect is attenuated
+across models. Here, we compare the effect of income, entered with a squared
+term in a linear regression of depressive symptoms, across a model with and
+without job satisfaction as a proposed mediator.
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/ah4_cme", clear
+drop if missing(depsympB, income, inc10, age, woman, race, college, jobsat)
+
+quietly regress depsympB c.income##c.income c.age i.woman i.race, vce(robust)
+estimates store basemod
+
+quietly regress depsympB c.income##c.income c.age i.woman i.race i.jobsat, vce(robust)
+estimates store medmod
+<</dd_do>>
+```
+
+The marginal effect of a one-standard-deviation increase in income in each
+model, and the difference between them:
+
+```{.stata-run}
+<<dd_do>>
+mecompare income, models(basemod medmod) amount(sd)
+<</dd_do>>
+```
+
+The **Difference** row is the test of whether the income effect is attenuated
+after adding job satisfaction to the model.
+[`metest`](../../metest/index.html) can be used to calculate the proportion of
+the effect that is mediated, with its standard error:
+
+```{.stata-run}
+<<dd_do>>
+metest (1 - 2) / 1
+<</dd_do>>
+```

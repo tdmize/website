@@ -1,0 +1,295 @@
+---
+title: "Examples from the help file"
+subtitle: "The examples in help balanceplot, run in full"
+---
+<<dd_version: 2>>
+
+The examples at the end of `help balanceplot`, run in order with their output
+and graphs. The [Options](options.html), [Continuous
+treatments](continuous-treatment.html), and [Matching and
+teffects](matching.html) pages explain the options in more detail.
+
+## Comparing groups
+
+The default: `group(union)` compares union with nonunion workers on every
+covariate, as standardized mean differences with 95% confidence intervals.
+
+```{.stata-run}
+<<dd_do>>
+estimates clear
+sysuse nlsw88, clear
+balanceplot wage age i.married i.race tenure, group(union)
+graph export "fig/helpex-default.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/helpex-default.png){width=85% fig-alt="Default balance plot: standardized imbalance of each covariate between union and nonunion workers, with confidence intervals."}
+
+`cohensh` reports the binary and nominal covariates (married, race) as
+Cohen's *h* instead of standardized mean differences; continuous covariates
+are unchanged.
+
+```{.stata-run}
+<<dd_do>>
+balanceplot wage age i.married i.race tenure, group(union) cohensh
+graph export "fig/helpex-cohensh.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/helpex-cohensh.png){width=85% fig-alt="Balance plot using Cohen's h for the married and race covariates."}
+
+`fadens` fades the point estimates and intervals that are not statistically
+significant, so the imbalances that matter stand out.
+
+```{.stata-run}
+<<dd_do>>
+balanceplot wage age i.married i.race tenure, group(union) fadens
+graph export "fig/helpex-fadens.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/helpex-fadens.png){width=85% fig-alt="Balance plot with nonsignificant imbalances faded."}
+
+`noci` drops the confidence intervals from the graph (they stay in the
+returned matrices and tables); `cohensH` is a synonym for `cohensh`.
+
+```{.stata-run}
+<<dd_do>>
+balanceplot wage age i.married i.race tenure, group(union) cohensH noci
+graph export "fig/helpex-cohensh-noci.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/helpex-cohensh-noci.png){width=85% fig-alt="Balance plot with Cohen's h for the factor covariates and no confidence intervals."}
+
+`sort` orders the covariates from the most negative to the most positive
+imbalance instead of the order of the varlist; the variable headings are
+dropped as the nominal categories are no longer together on the graph.
+
+```{.stata-run}
+<<dd_do>>
+balanceplot wage age i.married i.race tenure, group(union) sort
+graph export "fig/helpex-sort.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/helpex-sort.png){width=85% fig-alt="Balance plot with covariates sorted from negative to positive imbalance."}
+
+`absolute` plots the magnitude of each imbalance (so `sort` now runs from
+the smallest to the largest), and `threshold(.1)` adds a dashed reference
+line at 0.1, a common cutoff for acceptable balance.
+
+```{.stata-run}
+<<dd_do>>
+balanceplot wage age i.married i.race tenure, group(union) absolute sort threshold(.1)
+graph export "fig/helpex-absolute-sort.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/helpex-absolute-sort.png){width=85% fig-alt="Balance plot of absolute imbalances sorted from smallest to largest, with a reference line at 0.1."}
+
+`threshold(.1)` on the signed plot draws the reference lines at both -0.1
+and 0.1.
+
+```{.stata-run}
+<<dd_do>>
+balanceplot wage age i.married i.race tenure, group(union) threshold(.1)
+graph export "fig/helpex-threshold.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/helpex-threshold.png){width=85% fig-alt="Default balance plot with dashed reference lines at -0.1 and 0.1."}
+
+## Tables
+
+`table` prints a compact table -- the two group means, the standardized
+imbalance, and its p-value -- alongside the graph. The same numbers are
+returned in `r(table1)` whether or not a table is printed.
+
+```{.stata-run}
+<<dd_do>>
+balanceplot wage age i.married i.race tenure, group(union) table
+matrix list r(table1)
+<</dd_do>>
+```
+
+`tablefull` prints the detailed table, adding the standard error and the
+confidence limits; the matrix version is `r(tablefull1)`.
+
+```{.stata-run}
+<<dd_do>>
+balanceplot wage age i.married i.race tenure, group(union) tablefull
+matrix list r(tablefull1)
+<</dd_do>>
+```
+
+`labwidth(30)` widens the label column so that long variable and category
+labels are not abbreviated, and `width(11)` widens every statistic column.
+
+```{.stata-run}
+<<dd_do>>
+balanceplot wage age i.married i.race tenure, group(union) table labwidth(30) width(11)
+<</dd_do>>
+```
+
+## More than two groups
+
+A grouping variable with three categories gives one comparison per nonbase
+category, each in its own color; the base is the largest complete-case
+category (White) unless `base()` says otherwise.
+
+```{.stata-run}
+<<dd_do>>
+balanceplot wage age i.married tenure, group(race)
+graph export "fig/helpex-groups.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/helpex-groups.png){width=85% fig-alt="Balance plot comparing Black and Other workers with White workers."}
+
+## Store results for esttab
+
+`store(bp)` posts the group means and the imbalances as estimation results
+(`bp_mean_g0`, `bp_mean_g1`, `bp_imbalance`) so that `esttab` can lay them out
+as three columns.
+
+```{.stata-run}
+<<dd_do>>
+balanceplot wage age i.married i.race tenure, group(union) store(bp)
+esttab bp_mean_g0 bp_mean_g1 bp_imbalance, se label mtitles
+<</dd_do>>
+```
+
+With three groups, `store(br)` posts one mean result per group and one
+imbalance result per nonbase comparison (`br_imb_g2`, `br_imb_g3`).
+
+```{.stata-run}
+<<dd_do>>
+balanceplot wage age i.married tenure, group(race) store(br)
+esttab br_mean_g1 br_mean_g2 br_mean_g3 br_imb_g2 br_imb_g3, se label mtitles
+<</dd_do>>
+```
+
+## Continuous treatment
+
+`contreat(wage)` replaces `group()` with a continuous treatment: each row is
+the correlation between wages and the covariate, with its confidence
+interval. The correlations are returned in `r(correlation)`.
+
+```{.stata-run}
+<<dd_do>>
+balanceplot age i.union i.race tenure, contreat(wage)
+graph export "fig/helpex-contreat.png", replace width(1400)
+matrix list r(correlation)
+<</dd_do>>
+```
+
+![](fig/helpex-contreat.png){width=85% fig-alt="Balance plot for a continuous treatment: the correlation of wages with each covariate, with confidence intervals."}
+
+`threshold(.1)` adds reference lines at -0.1 and 0.1 on the correlation
+scale.
+
+```{.stata-run}
+<<dd_do>>
+balanceplot age i.union i.race tenure, contreat(wage) threshold(.1)
+graph export "fig/helpex-contreat-threshold.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/helpex-contreat-threshold.png){width=85% fig-alt="Correlation balance plot with dashed reference lines at -0.1 and 0.1."}
+
+`abs` (the shortest abbreviation of `absolute`) plots the magnitude of each
+correlation, `sort` orders them from smallest to largest, and only the
+positive threshold line is drawn.
+
+```{.stata-run}
+<<dd_do>>
+balanceplot age i.union i.race tenure, contreat(wage) abs sort threshold(.1)
+graph export "fig/helpex-contreat-absolute.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/helpex-contreat-absolute.png){width=85% fig-alt="Absolute correlations sorted from smallest to largest, with a reference line at 0.1."}
+
+`fadens` fades the correlations that are not significant, `sort` orders the
+signed correlations, and `tablefull` prints the detailed table (correlation,
+standard error, confidence limits, p-value) as well.
+
+```{.stata-run}
+<<dd_do>>
+balanceplot age i.union i.race tenure, contreat(wage) fadens sort tablefull
+graph export "fig/helpex-contreat-fadens.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/helpex-contreat-fadens.png){width=85% fig-alt="Sorted correlation balance plot with nonsignificant correlations faded."}
+
+`store(ct)` posts the correlations as the estimation result
+`ct_correlation` for `esttab`.
+
+```{.stata-run}
+<<dd_do>>
+balanceplot age i.union i.race tenure, contreat(wage) store(ct)
+esttab ct_correlation, se label mtitles
+<</dd_do>>
+```
+
+## Matching-weight examples
+
+After ATT matching with `psmatch2`, `_weight` equals 1 for treated
+observations and records how often or how strongly each matched control
+contributes; unmatched controls have missing weights. `matchweight(_weight)`
+shows the original complete-case balance and the weighted matched balance in
+the same graph, with one marker symbol for each.
+
+```{.stata-run}
+<<dd_do>>
+sysuse nlsw88, clear
+psmatch2 union age tenure grade, neighbor(1) logit
+balanceplot age tenure grade, group(union) matchweight(_weight)
+graph export "fig/helpex-matchweight.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/helpex-matchweight.png){width=85% fig-alt="Balance plot showing unweighted and matching-weighted imbalance for each covariate, before and after propensity-score matching."}
+
+With `matchweight()`, `store(bm)` posts two complete sets of results, the
+unweighted set with the prefix `bm_unw_` and the weighted set with `bm_w_`,
+so each can be passed to `esttab` on its own.
+
+```{.stata-run}
+<<dd_do>>
+balanceplot age tenure grade, group(union) matchweight(_weight) store(bm)
+esttab bm_unw_mean_g0 bm_unw_mean_g1 bm_unw_imbalance, se label mtitles
+esttab bm_w_mean_g0 bm_w_mean_g1 bm_w_imbalance, se label mtitles
+<</dd_do>>
+```
+
+Official `teffects` and `stteffects` estimators provide raw and matched or
+weighted standardized differences through `tebalance summarize`;
+`balanceplot, tebalance` calls that command and plots the results for every
+covariate of the treatment model. No confidence intervals are available in
+this mode because `tebalance summarize` does not return standard errors.
+
+```{.stata-run}
+<<dd_do>>
+sysuse nlsw88, clear
+teffects psmatch (wage) (union age tenure grade), atet
+balanceplot, tebalance
+graph export "fig/helpex-tebalance.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/helpex-tebalance.png){width=85% fig-alt="Raw and matched standardized differences for age, tenure, and grade after teffects psmatch."}
+
+A varlist restricts the `tebalance` plot to selected covariates, and
+`absolute sort threshold(.1)` work as they do in the other modes.
+
+```{.stata-run}
+<<dd_do>>
+balanceplot age tenure, tebalance absolute sort threshold(.1)
+graph export "fig/helpex-tebalance-sorted.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/helpex-tebalance-sorted.png){width=85% fig-alt="Absolute raw and matched standardized differences for age and tenure, sorted, with a reference line at 0.1."}

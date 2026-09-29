@@ -1,0 +1,102 @@
+---
+title: "totalme"
+subtitle: "Holistic effect size measures for nominal and ordinal outcome models"
+---
+<<dd_version: 2>>
+
+`totalme` (Total Marginal Effect) is a companion package to Mize and Han's
+2025 *Sociological Science* article, "Inequality and Total Effect Summary
+Measures for Nominal and Ordinal Variables." In a model with several outcome
+categories -- a multinomial or ordered logit or probit, or a generalized
+ordered logit -- a predictor has one marginal effect per category, and no
+single one of them says how much the predictor matters. `totalme` summarizes
+them in a single **Total marginal effect**: the sum of the absolute values of
+the marginal effects across all outcome categories, divided by two, which is
+the total amount of probability the predictor moves between the categories.
+
+`totalme` handles any kind of independent variable. For a continuous or binary
+variable the Total ME is built from its marginal effect on each outcome. For a
+nominal variable it is built from the ME inequality of
+[`meinequality`](../meinequality/index.html) on each outcome, giving a **Total
+ME inequality** (weighted or unweighted). It works for one model or for two;
+with two models the difference in Total ME across the models is tested.
+
+## Installation
+
+```stata
+net install totalme, from("https://tdmize.github.io/data") replace
+```
+
+`totalme` requires the [`suest2`](../suest2/index.html) package and
+Stata 16 or later.
+
+## Where to start
+
+- [Options](options.html) goes through every option with an example of each.
+- The **Examples** in the sidebar reproduce the examples from Mize and Han
+  (2025): Total MEs for a single model, comparisons across models, and Total
+  ME inequalities for nominal predictors.
+- [Examples from the help file](help-examples.html) runs the help file's
+  examples, and the [help file](help.html) is on the site.
+- The same summary is available as the `totalme` option of
+  [`mecompare`](../mecompare/index.html), which places it above the
+  per-outcome marginal effects it summarizes.
+
+## Basic syntax
+
+For a single model, fit it and call `totalme` with the variable(s):
+
+```stata
+mlogit ...
+totalme varlist
+```
+
+For two models, store them and name both in `models()`:
+
+```stata
+ologit dv iv1 iv2, vce(robust)
+est store basemod
+
+ologit dv iv1 iv2 med1 med2, vce(robust)
+est store medmod
+
+totalme varlist, models(basemod medmod)
+```
+
+For two models fit on separate samples, add `groups`:
+
+```stata
+totalme varlist, models(grp1mod grp2mod) groups
+```
+
+## A first example
+
+```{.stata-run}
+<<dd_do>>
+sysuse nlsw88, clear
+drop if missing(occupation)
+recode occupation (1/2 = 1 "Professional/managerial") (3/5 = 2 "Sales/clerical/craft") ///
+                  (6/13 = 3 "Other"), gen(occ3)
+
+quietly mlogit occ3 i.collgrad c.age i.south, vce(robust)
+
+totalme collgrad
+<</dd_do>>
+```
+
+The Total ME of a college degree is the total change in the predicted
+distribution across the three occupation groups.
+
+## Citation
+
+Please cite the use of `totalme` by citing the corresponding article:
+
+> Mize, Trenton D. and Bing Han. 2025. "Inequality and Total Effect Summary
+> Measures for Nominal and Ordinal Variables." *Sociological Science* 12:
+> 115--157.
+
+## Authors
+
+`totalme` and its sister command [`meinequality`](../meinequality/index.html)
+are written by Bing Han (Population Research Institute, Penn State
+University) and Trenton D. Mize (Purdue University).

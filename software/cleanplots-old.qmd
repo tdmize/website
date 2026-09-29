@@ -1,0 +1,255 @@
+---
+search: false
+title: "cleanplots"
+subtitle: "Stata and R graphics schemes for easy and effective data visualizations"
+---
+
+## Overview
+
+`cleanplots` is a Stata and R graphics scheme to change the default look of Stata graphics and R graphics with `ggplot`. It is designed to implement data visualization best practices by default—limiting the amount of time you have to spend tweaking the graph to be maximally readable and usable. In addition, the color palette is chosen to be colorblind friendly and to automate printing in black and white, so that a single figure will work in color or printed in black and white.
+
+**This site overviews the Stata version.**
+
+**For the R version, see:** [**https://tdmize.github.io/cleanplots/**](https://tdmize.github.io/cleanplots/)
+
+The sections below detail (1) installation instructions, (2) the help file, (3) citation information, (4) features of the graphics scheme, (5) examples that compare cleanplots to Stata's default graphics scheme, (6) a note on updates to the scheme and prior versions, and (7) details on the R package version.
+
+## (1) Installation Instructions 
+
+To install in Stata:
+
+`    net install cleanplots, from("`[`https://tdmize.github.io/data`](https://tdmize.github.io/data/cleanplots)`") replace`
+
+Once installed, to change your graphics scheme:
+
+`    set scheme cleanplots, perm`
+
+## (2) Help file
+
+Read the **cleanplots** help file by executing the following command ([also available here](/software/cleanplots/help.qmd)):
+
+`    help cleanplots`
+
+## (3) Citation
+
+In general, I do not think the use of a graphics scheme requires citation. So for most cases, feel free to use `cleanplots` without citation. But, if you need/want a citation you can cite `cleanplots` as:
+
+Mize, Trenton D. 2017. "cleanplots: Stata graphics scheme for easy and effective data visualizations." https://www.trentonmize.com/software/cleanplots
+
+## (4) Details on `cleanplots` scheme.
+
+`cleanplots` implements a host of features that draw on best data visualization practices (some of which are borrowed from the excellent black and white graphics scheme `plainplots` from [Bischof (2017)](https://journals.sagepub.com/doi/pdf/10.1177/1536867X1701700313)). This allows you to make publication quality Stata graphics with very little effort. With `cleanplots`, many of the defaults you would change before via code are already changed for you. For example:
+
+1.  Default colors are easier to distinguish from each other and are more aesthetically pleasing
+2.  Default colors are colorblind friendly
+3.  Default colors allow you to make one graph which is effective in both color and when printed in black and white
+4.  Nominal and ordinal color palettes are available so your colors match your data
+5.  Marker shapes and line features (e.g. solid, dashed, etc.) better distinguish lines and ensure lines will be distinguishable if printing in black and white
+6.  All axis markers are horizontal – thus easier to read
+7.  A non-invasive light grid is placed on all plots
+8.  Both vertical and horizontal gridlines
+9.  The background of the plot is white
+10. Legends are placed to right of the graph, close to the data
+11. Text colors on the graph are consistent
+12. And many more!
+
+### Color figures convert automatically to grayscale
+
+One benefit of the `cleanplots` scheme is that you only need to create one set of figures because the colors and markers/symbols/lines `cleanplots` uses can be printed in black and white/grayscale  and still be easily distinguished. The figures below illustrate the color and grayscale version of the same figures:
+
+:::: {.columns}
+
+::: {.column width="50%"}
+
+![](/images/img-d1e29b2a394b.png)
+
+:::
+
+::: {.column width="50%"}
+
+![](/images/img-dd32173338a1.png)
+
+:::
+
+::::
+
+:::: {.columns}
+
+::: {.column width="50%"}
+
+![](/images/img-6f1da397323b.png)
+
+:::
+
+::: {.column width="50%"}
+
+![](/images/img-c64f832378b2.png)
+
+:::
+
+::::
+
+### Creating figures considerate of colorblindness
+
+About 5% of the population has some form of colorblindness (red/green being the most common which is why you should always avoid having red and green together on your figure). This excellent website [Coloring for Colorblindness](https://davidmathlogic.com/colorblind/#%23D50000-%238FC6EB-%23000000-%23909090-%23740074-%23FFB3D9-%23143755-%23C0C0C0-%23404040-%23D9D7F0) lets you check your color schemes to see how they will be viewed for those who are colorblind.
+
+The figure below shows how the first six default `cleanplots` colors ("true") look to individuals with various types of colorblindness. As the figure illustrates, the colors have been chosen because they are easily distinguishable across all types of colorblindness.  There is no red–green pair; the first five colors pass deuteranopia, protanopia, and tritanopia simulation checks with a minimum ΔE of about 21; and the dark/light alternation keeps the first several groups distinguishable in grayscale by lightness alone. 
+
+![](/images/img-e1e4b7f1b189.png)
+
+The `cleanplots` scheme includes 10 total colors, shown below with their RGB and Hex codes. The default scheme is a nominal theme with no implied ordering from the colors (see below for an ordinal version).
+
+![](/images/img-b1517f7966cd.png)
+
+For bar charts and area plots, which include lots of data ink, `cleanplots` uses a less saturated palette with softer versions of the same colors.
+
+![](/images/img-c151472323d5.png)
+
+Color alone cannot be reliably used to distinguish more than four or five aspects of a graph for the whole population; if you have more aspects of the graph, always include additional varying markers, line patterns, or other differentiators. `cleanplots` automates this. The shape and pattern assignments are coordinated with the colors, with varying marker shapes and colors ensuring maximal distinguishability.
+
+### Ordinal color palette with `cleanplots#`
+
+The default `cleanplots` colors are nominal, with no implied ordering. 
+
+To have the colors reflect ordering, use the `cleanplots#` schemes on a single graph. Five are available -- `cleanplots3`, `cleanplots5`, `cleanplots7`, `cleanplots9`, and `cleanplots11` -- where the number is how many sequential colors the scheme provides. Colors run from light yellow to dark navy, so higher categories are darker. For example, for a chart with 5 ordered groups:
+
+    sysuse auto, clear
+    graph bar price, over(rep78) asyvars scheme(cleanplots)
+
+![](/images/img-135d4068e2b6.png)
+
+The ordinal colors are from the cividis palette ([Nunez, Anderton, & Renslow 2018](https://doi.org/10.1371/journal.pone.0199239)), a variant of viridis ([Rudis, Ross and Garnier 2024](https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html)) optimized so that readers with red-green color blindness see essentially the same  palette as everyone else. Because the colors run monotonically from light to dark, the ordering itself also  survives black and white printing.
+
+The `cleanplots#` schemes inherit all layout, sizing, and legend settings from the main `cleanplots` scheme, and each series gets a distinct line pattern and marker symbol for maximum distinguishability. If a graph has more groups than the scheme has colors, the colors recycle (e.g., under `cleanplots3` the 4th group repeats color 1) while the line patterns and marker symbols continue to vary, so recycled groups never share both color and pattern/symbol.
+
+The full set of ordinal `cleanplots#` palettes:\
+
+![](/images/img-56cf28756b58.png)
+
+## (5) Examples 
+
+This section illustrates default choices of some common plots using `cleanplots` (on the left) vs Stata's default graphics scheme (`s2color`; on the right). Note I recommend more polished figures for use in papers; these are only meant to illustrate the difference in the default choices.
+
+`hist vidtv, percent`
+
+:::: {.columns}
+
+::: {.column width="50%"}
+
+![](/images/img-5db96d98f708.png)
+
+:::
+
+::: {.column width="50%"}
+
+![](/images/img-ffde00532a3b.png)
+
+:::
+
+::::
+
+`marginsplot, recastci(rline) ciopts(lpat(dash))`
+
+:::: {.columns}
+
+::: {.column width="50%"}
+
+![](/images/img-4ae6882bd1f4.png)
+
+:::
+
+::: {.column width="50%"}
+
+![](/images/img-900a5258701b.png)
+
+:::
+
+::::
+
+`twoway scatter residstd index [w=influence]`
+
+:::: {.columns}
+
+::: {.column width="50%"}
+
+![](/images/img-e1b487e65b14.png)
+
+:::
+
+::: {.column width="50%"}
+
+![](/images/img-125776026afe.png)
+
+:::
+
+::::
+
+`marginsplot, recast(scatter) x(educ) `
+
+:::: {.columns}
+
+::: {.column width="50%"}
+
+![](/images/img-b04752aedf41.png)
+
+:::
+
+::: {.column width="50%"}
+
+![](/images/img-3d912ca7e2ab.png)
+
+:::
+
+::::
+
+`cibar income, over1(occcat)`
+
+:::: {.columns}
+
+::: {.column width="50%"}
+
+![](/images/img-9189a56fcc55.png)
+
+:::
+
+::: {.column width="50%"}
+
+![](/images/img-2edb771561ad.png)
+
+:::
+
+::::
+
+`lowess job phd`
+
+:::: {.columns}
+
+::: {.column width="50%"}
+
+![](/images/img-6d69dc4a1904.png)
+
+:::
+
+::: {.column width="50%"}
+
+<!-- image could not be copied from the old site -->
+
+:::
+
+::::
+
+## (6) Version history and updates
+
+`cleanplots` was given an update in July 2026. For the primary palette, of most focus is the color choices for colors 6 - 10, which are now more colorblind friendly and more easily distinguishable. And, the intensity of colors now alternate for each odd and even aspect of the graph, aiding in black and white printing. In addition, the `cleanplots#` schemes now provide options for ordinal palettes. Finally, the legend is now due right of the graph, instead of in the bottom right.
+
+To obtain the newest version:
+
+`    net install cleanplots, from("`[`https://tdmize.github.io/data`](https://tdmize.github.io/data/cleanplots)`") replace`
+
+I recommend using the most up to date version. But, if you are feeling nostalgic and want the original scheme, it is preserved as `cleanplots_classic`:
+
+`set scheme cleanplots_classic`
+
+## (7) R package version
+
+A companion `cleanplots` package is available for R. You can read more about the R package here: <https://tdmize.github.io/cleanplots/>

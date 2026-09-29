@@ -1,0 +1,121 @@
+---
+title: "Bonus: Joint tests of interaction"
+subtitle: "Moderators with more than two categories"
+---
+
+This example is not in Mize (2019), but it uses the same Add Health data as
+the other pages in this section.
+
+When the moderator has more than two categories, there are more than two
+marginal effects to compare. A good first step is a joint test of whether they
+are all equal. If the joint test is significant, there is evidence of an
+interaction, and you can move on to testing which specific contrasts differ.
+If a specific difference is hypothesized, test it directly.
+
+## A continuous variable and a nominal moderator
+
+Does the effect of social roles on high depressive symptoms differ across the
+five levels of education?
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/nli_ah4", clear
+(Add Health Wave IV | NLI - Nonlinear Interaction Effects | 2018-12-17)
+
+. 
+. quietly logit depB c.role##i.educ i.woman i.parrole c.age i.race c.income, vce(robust)
+
+. estimates store depedmod
+
+```
+
+`by(educ)` reports the effect of one more role at each level of education, in
+rows 1 to 5. `metest 1 = 2 = 3 = 4 = 5` is the joint test that the five
+effects are equal.
+
+```{.stata-run}
+. mecompare role, models(depedmod) by(educ)
+
+
+Predicting: Pr(depB)
+
+Marginal effects (N_depedmod=4307)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+role + 1 (centered)              |                                       
+           No High School Degree |     1     -0.069      0.016      0.000
+              High School Degree |     2     -0.033      0.011      0.002
+                    Some College |     3     -0.031      0.007      0.000
+                  College Degree |     4     -0.021      0.010      0.027
+                 Graduate Degree |     5     -0.018      0.014      0.184
+
+. metest 1 = 2 = 3 = 4 = 5
+
+Tests of equality
+
+                                 |      chi2         df     pvalue 
+---------------------------------+--------------------------------
+                       1=2=3=4=5 |     7.307      4.000      0.121 
+
+```
+
+The joint test is not significant (p = 0.12), so there is no evidence that
+the effect of social roles differs by education, and we do not go on to test
+the pairs.
+
+## A nominal variable: one equality per contrast
+
+With a nominal focal variable, each contrast with the base category has its
+own rows, so the joint test lists one equality per contrast. Here, the effect
+of education on drinking for men and for women -- the other side of the gender
+× education interaction on the [Two nominal variables](nominal-by-nominal.html)
+page:
+
+```{.stata-run}
+. quietly logit alcB i.educ##i.woman c.age i.race c.income, vce(robust)
+
+. estimates store alcedmod
+
+. 
+. mecompare i.educ, models(alcedmod) by(woman)
+
+
+Predicting: Pr(alcB)
+
+Marginal effects (N_alcedmod=4307)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+educ                             |                                       
+    High School - No High Sc     |                                       
+                             Man |     1      0.025      0.047      0.590
+                           Woman |     2      0.210      0.052      0.000
+    Some Colleg - No High Sc     |                                       
+                             Man |     3      0.080      0.045      0.075
+                           Woman |     4      0.232      0.047      0.000
+    College Deg - No High Sc     |                                       
+                             Man |     5      0.099      0.047      0.036
+                           Woman |     6      0.326      0.049      0.000
+    Graduate De - No High Sc     |                                       
+                             Man |     7      0.132      0.056      0.019
+                           Woman |     8      0.294      0.054      0.000
+
+. metest (1 = 2) (3 = 4) (5 = 6) (7 = 8)
+
+Tests of equality
+
+                                 |      chi2         df     pvalue 
+---------------------------------+--------------------------------
+            (1=2)(3=4)(5=6)(7=8) |    12.497      4.000      0.014 
+
+```
+
+The joint test is significant (p = 0.014): the effects of education differ for
+men and women. `metest 1 - 2`, `metest 3 - 4`, and so on test which contrasts
+differ.
+
+With two nominal variables, the joint test is the same from either side of the
+interaction: it equals the joint test of the five gender gaps on the Two
+nominal variables page (`metest 1 = 2 = 3 = 4 = 5`; chi2 = 12.50 both ways).
+This is not true of interactions in general, e.g., when one of the variables
+is continuous.

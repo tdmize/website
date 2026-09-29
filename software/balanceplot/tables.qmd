@@ -1,0 +1,321 @@
+---
+title: "Tables and stored results"
+subtitle: "table, tablefull, store() with esttab, and the returned matrices"
+---
+
+Every `balanceplot` call returns its statistics, and the `table` options
+print them beneath the plot. The examples use `nlsw88` and compare union and
+nonunion workers.
+
+```{.stata-run}
+. sysuse nlsw88, clear
+(NLSW, 1988 extract)
+
+```
+
+## table and tablefull
+
+`table` prints one compact table per group comparison: the two group means,
+the standardized imbalance, and its p-value.
+
+```{.stata-run}
+. balanceplot wage age i.married i.race tenure, group(union) table
+
+
+NOTE: 10 observations were excluded due to missing data on
+at least one covariate, group(), or outcome() variable.
+
+
+Base category = 0_Nonunion
+Base selected by the 0/1 two-group default.
+
+
+N used in balance calculations
+- N for union = 0_Nonunion: 1408
+- N for union = 1_Union: 460
+
+Balance results: Nonunion (N=1,408) vs Union (N=460)
+
+                         |   union=0  |   union=1  | Standard~d |      _     
+               Covariate |       Mean |       Mean |  Imbalance |    p-value 
+-------------------------+------------+------------+------------+-----------
+                         |            |            |            |           
+             Hourly wage |      7.227 |      8.685 |      0.352 |      0.000 
+     Age in current year |     39.205 |     39.276 |      0.023 |      0.664 
+  Married (ref = Single) |      0.665 |      0.607 |     -0.121 |      0.023 
+-------------------------+------------+------------+------------+-----------
+Race                     |            |            |            |           
+              White(ref) |      0.743 |      0.654 |      0.000 |      1.000 
+     Black (ref = White) |      0.246 |      0.328 |      0.183 |      0.001 
+     Other (ref = White) |      0.011 |      0.017 |      0.051 |      0.319 
+-------------------------+------------+------------+------------+-----------
+                         |            |            |            |           
+      Job tenure (years) |      6.141 |      7.888 |      0.303 |      0.000 
+
+```
+
+`tablefull` adds the standard error and confidence limits.
+
+```{.stata-run}
+. balanceplot wage age i.married i.race tenure, group(union) tablefull
+
+
+NOTE: 10 observations were excluded due to missing data on
+at least one covariate, group(), or outcome() variable.
+
+
+Base category = 0_Nonunion
+Base selected by the 0/1 two-group default.
+
+
+N used in balance calculations
+- N for union = 0_Nonunion: 1408
+- N for union = 1_Union: 460
+
+Balance results: Nonunion (N=1,408) vs Union (N=460)
+
+                         |   union=0  |   union=1  | Standard~d |      _     
+               Covariate |       Mean |       Mean |  Imbalance |         SE 
+-------------------------+------------+------------+------------+------------
+                         |            |            |            |            
+             Hourly wage |      7.227 |      8.685 |      0.352 |      0.053 
+     Age in current year |     39.205 |     39.276 |      0.023 |      0.054 
+  Married (ref = Single) |      0.665 |      0.607 |     -0.121 |      0.053 
+-------------------------+------------+------------+------------+------------
+Race                     |            |            |            |            
+              White(ref) |      0.743 |      0.654 |      0.000 |      0.000 
+     Black (ref = White) |      0.246 |      0.328 |      0.183 |      0.052 
+     Other (ref = White) |      0.011 |      0.017 |      0.051 |      0.051 
+-------------------------+------------+------------+------------+------------
+                         |            |            |            |            
+      Job tenure (years) |      6.141 |      7.888 |      0.303 |      0.052 
+
+                         |         95% CI         |      _     
+               Covariate |      Lower       Upper |    p-value 
+-------------------------+------------------------+-----------
+                         |                        |           
+             Hourly wage |      0.247       0.457 |      0.000 
+     Age in current year |     -0.082       0.129 |      0.664 
+  Married (ref = Single) |     -0.226      -0.017 |      0.023 
+-------------------------+------------------------+-----------
+Race                     |                        |           
+              White(ref) |      0.000       0.000 |      1.000 
+     Black (ref = White) |      0.080       0.286 |      0.001 
+     Other (ref = White) |     -0.049       0.150 |      0.319 
+-------------------------+------------------------+-----------
+                         |                        |           
+      Job tenure (years) |      0.201       0.405 |      0.000 
+
+```
+
+## Formatting the table: decimals(), width(), and labwidth()
+
+`decimals()` sets the digits after the decimal point (default 3), `width()`
+the width of each statistic column (default 10), and `labwidth()` the width
+of the label column (default 24; longer labels are abbreviated).
+
+```{.stata-run}
+. balanceplot wage age i.married i.race tenure, group(union) table decimals(2) width(8) labwidth(30)
+
+
+NOTE: 10 observations were excluded due to missing data on
+at least one covariate, group(), or outcome() variable.
+
+
+Base category = 0_Nonunion
+Base selected by the 0/1 two-group default.
+
+
+N used in balance calculations
+- N for union = 0_Nonunion: 1408
+- N for union = 1_Union: 460
+
+Balance results: Nonunion (N=1,408) vs Union (N=460)
+
+                               |  union=0 |  union=1 | Standa~d |     _    
+                     Covariate |     Mean |     Mean | Imbala~e |  p-value 
+-------------------------------+----------+----------+----------+---------
+                               |          |          |          |         
+                   Hourly wage |     7.23 |     8.68 |     0.35 |     0.00 
+           Age in current year |    39.21 |    39.28 |     0.02 |     0.66 
+        Married (ref = Single) |     0.66 |     0.61 |    -0.12 |     0.02 
+-------------------------------+----------+----------+----------+---------
+Race                           |          |          |          |         
+                    White(ref) |     0.74 |     0.65 |     0.00 |     1.00 
+           Black (ref = White) |     0.25 |     0.33 |     0.18 |     0.00 
+           Other (ref = White) |     0.01 |     0.02 |     0.05 |     0.32 
+-------------------------------+----------+----------+----------+---------
+                               |          |          |          |         
+            Job tenure (years) |     6.14 |     7.89 |     0.30 |     0.00 
+
+```
+
+## Returned matrices
+
+The first nonbase comparison is returned in `r(bias1)` (the second in
+`r(bias2)`, and so on), and an export-ready version of each table in
+`r(table1)`, `r(table2)`, ...
+
+```{.stata-run}
+. return list
+
+scalars:
+          r(threshold) =  .
+             r(stored) =  0
+           r(absolute) =  0
+           r(labwidth) =  30
+              r(width) =  8
+          r(fadealpha) =  .05
+          r(base_sumw) =  1408
+  r(base_n_unweighted) =  1408
+             r(base_n) =  1408
+           r(weighted) =  0
+            r(cohensh) =  0
+             r(fadens) =  0
+              r(level) =  95
+              r(nrows) =  7
+            r(ngroups) =  2
+               r(base) =  0
+
+macros:
+           r(headings) : " 1.race = `"{bf:Race}"'"
+          r(tablemode) : "compact"
+           r(sortmode) : "original"
+             r(xtitle) : "Standardized Imbalance"
+            r(measure) : "standardized_difference"
+        r(plotcommand) : " (matrix(bias_0_1[,4]), ci((bias_0_1[,6] bias_0_1[,7]))   label(`"Nonu.."
+         r(coeflabels) : " 1.married = `"Married (ref = Single)"' 1.race = `"White (ref)"' 2.rac.."
+           r(rownames) : "wage age 1.married 1b.race 2.race 3.race tenure"
+  r(tablefullmatrices) : "tablefull_0_1"
+      r(tablematrices) : "table_0_1"
+           r(matrices) : "bias_0_1"
+             r(groups) : "0 1"
+               r(mode) : "group"
+
+matrices:
+         r(tablefull1) :  7 x 7
+             r(table1) :  7 x 4
+              r(bias1) :  7 x 7
+
+. matrix list r(table1)
+
+r(table1)[7,4]
+                mean_g0       mean_g1  std_imbala~e       p_value
+     wage     7.2269385     8.6845396     .35213133     5.918e-11
+      age     39.205256     39.276087      .0233567     .66430587
+1.married     .66477273     .60652174    -.12117473     .02291971
+  1b.race     .74289773     .65434783             0             1
+   2.race     .24573864     .32826087     .18305107     .00050025
+   3.race     .01136364      .0173913     .05061108      .3192061
+   tenure     6.1407434     7.8882246      .3028704     6.944e-09
+
+```
+
+## Stored results for esttab: store()
+
+`store(stub)` saves the results as stored estimates for `esttab` and `estout`
+(Jann). For a two-group comparison the names are *stub*`_mean_g#` for each
+group and *stub*`_imbalance`; the imbalance set carries standard errors, so
+`esttab` reports significance for it. `replace` overwrites results stored
+earlier under the same names.
+
+```{.stata-run}
+. balanceplot wage age i.married i.race tenure, group(union) store(bp, replace)
+
+
+NOTE: 10 observations were excluded due to missing data on
+at least one covariate, group(), or outcome() variable.
+
+
+Base category = 0_Nonunion
+Base selected by the 0/1 two-group default.
+
+
+N used in balance calculations
+- N for union = 0_Nonunion: 1408
+- N for union = 1_Union: 460
+
+. esttab bp_mean_g0 bp_mean_g1 bp_imbalance, se label mtitles
+
+--------------------------------------------------------------------
+                              (1)             (2)             (3)   
+                       bp_mean_g0      bp_mean_g1    bp_imbalance   
+--------------------------------------------------------------------
+Hourly wage                 7.227           8.685           0.352***
+                                                         (0.0535)   
+
+Age in current year         39.21           39.28          0.0234   
+                                                         (0.0538)   
+
+Married                     0.665           0.607          -0.121*  
+                                                         (0.0532)   
+
+White                       0.743           0.654               0   
+                                                              (.)   
+
+Black                       0.246           0.328           0.183***
+                                                         (0.0525)   
+
+Other                      0.0114          0.0174          0.0506   
+                                                         (0.0508)   
+
+Job tenure (years)          6.141           7.888           0.303***
+                                                         (0.0520)   
+--------------------------------------------------------------------
+Observations                 1408             460            1868   
+--------------------------------------------------------------------
+Standard errors in parentheses
+* p<0.05, ** p<0.01, *** p<0.001
+
+```
+
+With three or more groups each nonbase comparison is stored as
+*stub*`_imb_g#`:
+
+```{.stata-run}
+. balanceplot wage age i.married tenure, group(race) store(br, replace)
+
+
+NOTE: 15 observations were excluded due to missing data on
+at least one covariate, group(), or outcome() variable.
+
+
+Base category = 1_White
+Base selected as the largest complete-case group.
+
+
+N used in balance calculations
+- N for race = 1_White: 1627
+- N for race = 2_Black: 578
+- N for race = 3_Other: 26
+
+. esttab br_mean_g1 br_mean_g2 br_mean_g3 br_imb_g2 br_imb_g3, se label mtitles
+
+----------------------------------------------------------------------------------------------------
+                              (1)             (2)             (3)             (4)             (5)   
+                       br_mean_g1      br_mean_g2      br_mean_g3       br_imb_g2       br_imb_g3   
+----------------------------------------------------------------------------------------------------
+Hourly wage                 8.106           6.876           8.551          -0.222***       0.0795   
+                                                                         (0.0502)         (0.210)   
+
+Age in current year         39.27           38.81           39.31          -0.150**        0.0124   
+                                                                         (0.0488)         (0.193)   
+
+Married                     0.702           0.471           0.692          -0.483***      -0.0207   
+                                                                         (0.0474)         (0.195)   
+
+Job tenure (years)          5.808           6.502           4.949           0.125**        -0.161   
+                                                                         (0.0481)         (0.202)   
+----------------------------------------------------------------------------------------------------
+Observations                 1627             578              26            2205            1653   
+----------------------------------------------------------------------------------------------------
+Standard errors in parentheses
+* p<0.05, ** p<0.01, *** p<0.001
+
+```
+
+The stored sets are ordinary estimation results, so `estimates dir` lists
+them and `esttab` can write them to a file with its `using` clause. The
+`matchweight()` and `contreat()` forms store their own sets, described on
+the [Matching and teffects](matching.html) and
+[Continuous treatments](continuous-treatment.html) pages.

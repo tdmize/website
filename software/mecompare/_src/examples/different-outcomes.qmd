@@ -1,0 +1,44 @@
+---
+title: "Different outcomes"
+subtitle: "Example 6.4 of Mize, Doan, and Long (2019)"
+---
+<<dd_version: 2>>
+
+The same predictors can have different effects on different outcomes. Here two
+negative binomial models predict days of poor mental health and days of poor
+physical health from the same set of variables, and `mecompare` tests whether
+each predictor matters more for one outcome than the other. With no variable
+listed before the comma, `mecompare` computes marginal effects for every 
+predictor in the models.
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/gss_cme", clear
+drop if missing(mntlhlth, physhlth, woman, married, age, faminc, race, college, parent, reltrad)
+
+quietly nbreg mntlhlth i.woman i.married i.parent i.college c.age faminc i.race i.year, vce(robust)
+estimates store mental
+
+quietly nbreg physhlth i.woman i.married i.parent i.college c.age faminc i.race i.year, vce(robust)
+estimates store physical
+<</dd_do>>
+```
+
+For the count models the marginal effects are changes in the predicted rate
+(expected number of days). Continuous predictors are changed by one standard
+deviation:
+
+```{.stata-run}
+<<dd_do>>
+mecompare, models(mental physical) amount(sd)
+<</dd_do>>
+```
+
+Women report more poor physical health days, and more poor mental health days, 
+than do men. The effect of gender is similar in size and not statistically 
+significantly different across the two outcomes.
+
+Married individuals report fewer poor mental health days than do the unmarried. 
+Marriage has no significant effect on poor physical health days. The cross-model 
+difference is significant, indicating a larger effect of marriage on mental than 
+on physical health.

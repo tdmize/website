@@ -1,0 +1,142 @@
+---
+title: "Total MEs for a single model"
+subtitle: "Example 5.2.c of Mize and Han (2025)"
+---
+
+Self-rated health has five ordered categories, so in a multinomial logit each
+predictor has five marginal effects -- one per category -- and it is not
+obvious which predictor matters most. The Total ME sums the absolute effects
+across the categories (and halves the sum) to give one summary of how much
+probability each predictor moves. This example uses the 2000--2021 GSS.
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/cda_gss", clear
+(cda_gss.dta |  GSS 1972-2021 CDA - Categorical Data Analysis | date created 2023)
+
+. drop if missing(healthR, race4, age, woman, parent, married, faminc, degree)
+(22,943 observations deleted)
+
+. drop if year < 2000 | year > 2021
+(26,611 observations deleted)
+
+. 
+. mlogit healthR i.race4 c.age i.woman i.parent i.married c.faminc i.degree
+
+Iteration 0:  Log likelihood = -22624.777  
+Iteration 1:  Log likelihood = -21538.636  
+Iteration 2:  Log likelihood = -21388.465  
+Iteration 3:  Log likelihood = -21382.092  
+Iteration 4:  Log likelihood = -21382.055  
+Iteration 5:  Log likelihood = -21382.055  
+
+Multinomial logistic regression                        Number of obs =  19,292
+                                                       LR chi2(36)   = 2485.44
+                                                       Prob > chi2   =  0.0000
+Log likelihood = -21382.055                            Pseudo R2     =  0.0549
+
+-------------------------------------------------------------------------------------------
+                  healthR | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------------------+----------------------------------------------------------------
+Poor                      |
+                    race4 |
+                   Black  |     -0.192      0.100   -1.915   0.056       -0.389       0.005
+                   Other  |      0.184      0.178    1.035   0.301       -0.164       0.532
+                Hispanic  |     -0.270      0.118   -2.289   0.022       -0.501      -0.039
+                          |
+                      age |      0.024      0.002   12.070   0.000        0.020       0.028
+                          |
+                    woman |
+                   Women  |      0.025      0.071    0.347   0.729       -0.115       0.164
+                          |
+                   parent |
+                  Parent  |      0.072      0.091    0.794   0.427       -0.106       0.250
+                          |
+                  married |
+                 Married  |     -0.271      0.080   -3.370   0.001       -0.428      -0.113
+                   faminc |     -0.025      0.002  -10.036   0.000       -0.030      -0.020
+                          |
+                   degree |
+             high school  |     -0.896      0.086  -10.477   0.000       -1.064      -0.729
+associate/junior college  |     -1.207      0.158   -7.632   0.000       -1.517      -0.897
+              bachelor's  |     -1.644      0.144  -11.391   0.000       -1.926      -1.361
+                graduate  |     -1.775      0.194   -9.130   0.000       -2.155      -1.394
+                          |
+                    _cons |     -1.876      0.151  -12.392   0.000       -2.173      -1.580
+--------------------------+----------------------------------------------------------------
+Fair                      |
+                    race4 |
+                   Black  |      0.162      0.057    2.855   0.004        0.051       0.274
+                   Other  |      0.192      0.101    1.914   0.056       -0.005       0.390
+                Hispanic  |      0.230      0.062    3.713   0.000        0.109       0.352
+                          |
+                      age |      0.012      0.001    9.789   0.000        0.010       0.014
+                          |
+                    woman |
+                   Women  |     -0.006      0.040   -0.154   0.878       -0.085       0.073
+                          |
+                   parent |
+                  Parent  |     -0.048      0.050   -0.948   0.343       -0.146       0.051
+                          |
+                  married |
+                 Married  |     -0.140      0.044   -3.152   0.002       -0.227      -0.053
+                   faminc |     -0.008      0.001   -9.442   0.000       -0.010      -0.006
+                          |
+                   degree |
+             high school  |     -0.521      0.058   -8.917   0.000       -0.636      -0.407
+associate/junior college  |     -0.722      0.088   -8.170   0.000       -0.896      -0.549
+              bachelor's  |     -1.024      0.077  -13.221   0.000       -1.175      -0.872
+                graduate  |     -1.078      0.094  -11.454   0.000       -1.262      -0.893
+                          |
+                    _cons |     -0.638      0.089   -7.176   0.000       -0.813      -0.464
+--------------------------+----------------------------------------------------------------
+Good                      |  (base outcome)
+--------------------------+----------------------------------------------------------------
+Excellent                 |
+                    race4 |
+                   Black  |     -0.150      0.057   -2.656   0.008       -0.262      -0.039
+                   Other  |     -0.352      0.090   -3.890   0.000       -0.529      -0.174
+                Hispanic  |     -0.109      0.061   -1.792   0.073       -0.228       0.010
+                          |
+                      age |     -0.011      0.001   -9.245   0.000       -0.013      -0.009
+                          |
+                    woman |
+                   Women  |      0.067      0.036    1.862   0.063       -0.004       0.137
+                          |
+                   parent |
+                  Parent  |     -0.140      0.044   -3.209   0.001       -0.226      -0.055
+                          |
+                  married |
+                 Married  |      0.072      0.040    1.797   0.072       -0.007       0.150
+                   faminc |      0.005      0.001    8.929   0.000        0.004       0.006
+                          |
+                   degree |
+             high school  |      0.198      0.074    2.683   0.007        0.053       0.342
+associate/junior college  |      0.321      0.092    3.496   0.000        0.141       0.501
+              bachelor's  |      0.470      0.080    5.860   0.000        0.313       0.627
+                graduate  |      0.640      0.086    7.410   0.000        0.471       0.809
+                          |
+                    _cons |     -0.554      0.092   -6.001   0.000       -0.735      -0.373
+-------------------------------------------------------------------------------------------
+
+. totalme age married parent, amount(sd)
+
+Total ME Estimates (N = 19292)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+age                      |                                               
+         + SD (centered) |      0.051       0.003      16.847       0.000 
+-------------------------+-----------------------------------------------
+married                  |                                               
+  Married vs Not Married |      0.031       0.007       4.737       0.000 
+-------------------------+-----------------------------------------------
+parent                   |                                               
+   Parent vs No Children |      0.027       0.009       2.976       0.003 
+
+```
+
+For continuous independent variables, custom amounts of change can be
+specified in the `amount()` option; here age changes by one standard
+deviation. The Total ME for a binary variable such as `married` or `parent`
+is built from its discrete change on each outcome category, so continuous and
+binary predictors are summarized on the same scale.

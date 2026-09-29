@@ -1,0 +1,132 @@
+---
+title: "Comparing ME inequalities across models"
+subtitle: "Example 4.3.b of Mize and Han (2025): tests of mediation/attenuation"
+---
+
+How much of the racial-ethnic inequality in an outcome is accounted for by
+education and wealth? Fit the model with and without those variables, store
+both, and name them in `models()`: `meinequality` reports the ME inequality
+from each model and tests the difference. The example uses a count of
+functional limitations from the Health and Retirement Study.
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/cda_hrs", clear
+(cda_hrs.dta | Health & Retirement Study 2020)
+
+. drop if missing(iadl, race4cat, collegeB, wealth_w, income_w)
+(114 observations deleted)
+
+. 
+. nbreg iadl i.race4cat, vce(robust)
+
+Fitting Poisson model:
+
+Iteration 0:  Log pseudolikelihood = -13500.189  
+Iteration 1:  Log pseudolikelihood = -13500.189  
+
+Fitting constant-only model:
+
+Iteration 0:  Log pseudolikelihood = -11635.217  (not concave)
+Iteration 1:  Log pseudolikelihood = -10469.899  
+Iteration 2:  Log pseudolikelihood = -10464.788  
+Iteration 3:  Log pseudolikelihood = -10464.788  
+
+Fitting full model:
+
+Iteration 0:  Log pseudolikelihood = -10457.949  
+Iteration 1:  Log pseudolikelihood = -10457.922  
+Iteration 2:  Log pseudolikelihood = -10457.922  
+
+Negative binomial regression                            Number of obs = 15,609
+                                                        Wald chi2(3)  =  16.82
+Dispersion: mean                                        Prob > chi2   = 0.0008
+Log pseudolikelihood = -10457.922                       Pseudo R2     = 0.0007
+
+-------------------------------------------------------------------------------------
+                    |               Robust
+               iadl | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+--------------------+----------------------------------------------------------------
+           race4cat |
+Non-Hispanic Black  |      0.162      0.054    2.990   0.003        0.056       0.268
+          Hispanic  |      0.218      0.061    3.552   0.000        0.098       0.339
+             Other  |      0.104      0.106    0.978   0.328       -0.104       0.312
+                    |
+              _cons |     -1.189      0.031  -38.169   0.000       -1.250      -1.128
+--------------------+----------------------------------------------------------------
+           /lnalpha |      1.884      0.029                         1.827       1.941
+--------------------+----------------------------------------------------------------
+              alpha |      6.582      0.191                         6.217       6.968
+-------------------------------------------------------------------------------------
+
+. est store basemod
+
+. 
+. nbreg iadl i.race4cat i.collegeB c.wealth_w c.income_w, vce(robust)
+
+Fitting Poisson model:
+
+Iteration 0:  Log pseudolikelihood = -12622.528  
+Iteration 1:  Log pseudolikelihood = -12602.681  
+Iteration 2:  Log pseudolikelihood = -12602.675  
+Iteration 3:  Log pseudolikelihood = -12602.675  
+
+Fitting constant-only model:
+
+Iteration 0:  Log pseudolikelihood = -11635.217  (not concave)
+Iteration 1:  Log pseudolikelihood = -10469.899  
+Iteration 2:  Log pseudolikelihood = -10464.788  
+Iteration 3:  Log pseudolikelihood = -10464.788  
+
+Fitting full model:
+
+Iteration 0:  Log pseudolikelihood =  -10239.46  
+Iteration 1:  Log pseudolikelihood = -10157.912  
+Iteration 2:  Log pseudolikelihood = -10136.224  
+Iteration 3:  Log pseudolikelihood = -10136.199  
+Iteration 4:  Log pseudolikelihood = -10136.199  
+
+Negative binomial regression                            Number of obs = 15,609
+                                                        Wald chi2(6)  = 225.65
+Dispersion: mean                                        Prob > chi2   = 0.0000
+Log pseudolikelihood = -10136.199                       Pseudo R2     = 0.0314
+
+---------------------------------------------------------------------------------------
+                      |               Robust
+                 iadl | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+----------------------+----------------------------------------------------------------
+             race4cat |
+  Non-Hispanic Black  |     -0.150      0.056   -2.697   0.007       -0.260      -0.041
+            Hispanic  |     -0.187      0.063   -2.988   0.003       -0.310      -0.064
+               Other  |     -0.028      0.100   -0.282   0.778       -0.225       0.168
+                      |
+             collegeB |
+bachelor's or higher  |     -0.362      0.071   -5.087   0.000       -0.501      -0.222
+             wealth_w |     -0.000      0.000   -0.830   0.406       -0.000       0.000
+             income_w |     -0.010      0.001  -11.485   0.000       -0.012      -0.009
+                _cons |     -0.437      0.051   -8.498   0.000       -0.538      -0.337
+----------------------+----------------------------------------------------------------
+             /lnalpha |      1.643      0.035                         1.575       1.712
+----------------------+----------------------------------------------------------------
+                alpha |      5.173      0.182                         4.829       5.542
+---------------------------------------------------------------------------------------
+
+. est store medmod
+
+. 
+. meinequality race4cat, models(basemod medmod)
+
+ME Inequality Estimates (N_basemod = 15609 , N_medmod = 15609)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+race4cat ME Ineq.        |                                               
+       Model 1 (basemod) |      0.046       0.012       3.919       0.000 
+        Model 2 (medmod) |      0.038       0.011       3.353       0.001 
+       Cross-Model Diff. |      0.009       0.022       0.389       0.698 
+
+```
+
+The **Difference** row is the reduction in racial-ethnic inequality
+once education, wealth, and income are in the model, with its standard error
+and p-value: the part of the inequality those variables account for.
+

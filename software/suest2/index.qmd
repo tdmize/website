@@ -1,0 +1,139 @@
+---
+title: "suest2"
+subtitle: "Seemingly unrelated estimation for most models in Stata, with margins support"
+---
+
+`suest2` combines models that were estimated separately into one set of
+results, including the cross-model covariances needed for tests across models.
+After `suest2`, coefficients, predictions, and marginal effects from different
+models can be tested against each other with `test`, `lincom`, `nlcom`,
+`margins`, or [`mecompare`](../mecompare/index.html), which automates
+cross-model comparisons of effects.
+
+`suest2` extends Stata's `suest` to panel, multilevel, weighted, survey,
+multiply-imputed, generalized ordered, and instrumental-variable models.
+`predict`, `margins`, and `mecompare` can select one or multiple models of the
+combined system, so predictions, marginal effects, and graphs can be made
+within and across models.
+
+[`mecompare`](../mecompare/index.html),
+[`meinequality`](../meinequality/index.html), and
+[`totalme`](../totalme/index.html) use `suest2` and require it.
+
+## Installation
+
+```stata
+net install suest2, from("https://tdmize.github.io/data") replace
+```
+
+`suest2` requires Stata 16 or later.
+
+## Where to start
+
+- [Usage](usage.html): the workflow, the options of `suest2`, how to point
+  `margins` at one model of the system, and the rules for weights, survey
+  data, and multiple imputation.
+- [Predictions and graphs](plotting.html): `margins`, `marginsplot`, and
+  `coefplot` after `suest2`, remaking four figures from Mize, Doan, and Long
+  (2019) -- predictions from each model, the difference in predictions
+  across models with its confidence interval, and predicted probabilities
+  from binary, ordinal, and multinomial models.
+- [Examples from the help file](help-examples.html): single-level, panel,
+  multilevel, and instrumental-variable systems, run in full.
+- The [help file](help.html).
+
+## Basic use
+
+Fit and store the models, then combine them:
+
+```{.stata-run}
+. sysuse nlsw88, clear
+(NLSW, 1988 extract)
+
+. drop if missing(union)
+(368 observations deleted)
+
+. 
+. quietly logit union i.collgrad c.age i.south, vce(robust)
+
+. estimates store m1
+
+. 
+. quietly logit union i.collgrad c.age i.south c.wage c.ttl_exp, vce(robust)
+
+. estimates store m2
+
+. 
+. suest2 m1 m2
+
+Simultaneous results for m1, m2                          Number of obs = 1,878
+
+-------------------------------------------------------------------------------
+              |               Robust
+              | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+m1_union      |
+     collgrad |
+College grad  |      0.507      0.119    4.246   0.000        0.273       0.741
+          age |      0.009      0.018    0.519   0.604       -0.026       0.044
+              |
+        south |
+       South  |     -0.747      0.116   -6.431   0.000       -0.974      -0.519
+        _cons |     -1.340      0.704   -1.903   0.057       -2.720       0.040
+--------------+----------------------------------------------------------------
+m2_union      |
+     collgrad |
+College grad  |      0.311      0.132    2.356   0.018        0.052       0.570
+          age |      0.008      0.018    0.428   0.668       -0.028       0.043
+              |
+        south |
+       South  |     -0.677      0.118   -5.719   0.000       -0.909      -0.445
+         wage |      0.054      0.014    3.820   0.000        0.026       0.081
+      ttl_exp |      0.006      0.013    0.469   0.639       -0.020       0.032
+        _cons |     -1.761      0.719   -2.448   0.014       -3.171      -0.351
+-------------------------------------------------------------------------------
+
+```
+
+The combined results are now the active estimates. Each model is an equation,
+named after the stored estimate, so `lincom`, `test`, and `nlcom` can compare
+coefficients across the models:
+
+```{.stata-run}
+. lincom [m1_union]1.collgrad - [m2_union]1.collgrad
+
+ ( 1)  [m1_union]1.collgrad - [m2_union]1.collgrad = 0
+
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         (1) |      0.196      0.046    4.241   0.000        0.105       0.286
+------------------------------------------------------------------------------
+
+```
+
+And [`mecompare`](../mecompare/index.html) with no `models()` option picks up
+the two models of the system:
+
+```{.stata-run}
+. mecompare i.collgrad age
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_m1=1878) (N_m2=1878)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+collgrad                         |                                       
+    College gra - Not colleg     |                                       
+                              m1 |     1      0.097      0.024      0.000
+                              m2 |     2      0.057      0.025      0.023
+                      Difference |     3      0.039      0.009      0.000
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                              m1 |     4      0.002      0.003      0.604
+                              m2 |     5      0.001      0.003      0.668
+                      Difference |     6      0.000      0.001      0.587
+
+```

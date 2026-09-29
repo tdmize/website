@@ -1,0 +1,82 @@
+---
+title: "suest2"
+subtitle: "Seemingly unrelated estimation for most models in Stata, with margins support"
+---
+<<dd_version: 2>>
+
+`suest2` combines models that were estimated separately into one set of
+results, including the cross-model covariances needed for tests across models.
+After `suest2`, coefficients, predictions, and marginal effects from different
+models can be tested against each other with `test`, `lincom`, `nlcom`,
+`margins`, or [`mecompare`](../mecompare/index.html), which automates
+cross-model comparisons of effects.
+
+`suest2` extends Stata's `suest` to panel, multilevel, weighted, survey,
+multiply-imputed, generalized ordered, and instrumental-variable models.
+`predict`, `margins`, and `mecompare` can select one or multiple models of the
+combined system, so predictions, marginal effects, and graphs can be made
+within and across models.
+
+[`mecompare`](../mecompare/index.html),
+[`meinequality`](../meinequality/index.html), and
+[`totalme`](../totalme/index.html) use `suest2` and require it.
+
+## Installation
+
+```stata
+net install suest2, from("https://tdmize.github.io/data") replace
+```
+
+`suest2` requires Stata 16 or later.
+
+## Where to start
+
+- [Usage](usage.html): the workflow, the options of `suest2`, how to point
+  `margins` at one model of the system, and the rules for weights, survey
+  data, and multiple imputation.
+- [Predictions and graphs](plotting.html): `margins`, `marginsplot`, and
+  `coefplot` after `suest2`, remaking four figures from Mize, Doan, and Long
+  (2019) -- predictions from each model, the difference in predictions
+  across models with its confidence interval, and predicted probabilities
+  from binary, ordinal, and multinomial models.
+- [Examples from the help file](help-examples.html): single-level, panel,
+  multilevel, and instrumental-variable systems, run in full.
+- The [help file](help.html).
+
+## Basic use
+
+Fit and store the models, then combine them:
+
+```{.stata-run}
+<<dd_do>>
+sysuse nlsw88, clear
+drop if missing(union)
+
+quietly logit union i.collgrad c.age i.south, vce(robust)
+estimates store m1
+
+quietly logit union i.collgrad c.age i.south c.wage c.ttl_exp, vce(robust)
+estimates store m2
+
+suest2 m1 m2
+<</dd_do>>
+```
+
+The combined results are now the active estimates. Each model is an equation,
+named after the stored estimate, so `lincom`, `test`, and `nlcom` can compare
+coefficients across the models:
+
+```{.stata-run}
+<<dd_do>>
+lincom [m1_union]1.collgrad - [m2_union]1.collgrad
+<</dd_do>>
+```
+
+And [`mecompare`](../mecompare/index.html) with no `models()` option picks up
+the two models of the system:
+
+```{.stata-run}
+<<dd_do>>
+mecompare i.collgrad age
+<</dd_do>>
+```

@@ -1,0 +1,88 @@
+---
+search: false
+title: "irt_coef"
+subtitle: "Stata command for y*-standardized coefficients in item response theory models"
+---
+
+## (1) Introduction
+
+`irt_coef` is a Stata command that calculates y\*-standardized coefficients for binary and ordinal item response theory models (IRT). y\*-standardized coefficients are useful for interpreting the coefficient estimates in a common scale and for comparing across items and models.
+
+To read more about Item Response Theory and using y\*-standardized coefficients for interpretation see:
+
+- [My graduate course slides on Item Response Theory](https://drive.google.com/file/d/1G9sWGLMAN6SGWzw3XqOXyBw7MC-R_hGI/view?usp=drive_link) (pages 622 - 627 for y\*-standardized coefficients)
+
+## (2) Installation Instructions 
+
+To install in Stata:
+
+`    net install irt_coef, from("`[`https://tdmize.github.io/data`](https://tdmize.github.io/data/irt_coef)`") replace`
+
+Once installed, to read the help file (also [available here](/software/irt_coef/help.qmd)):
+
+`    help irt_coef`
+
+## (3) Citation
+
+Please cite the use of `irt_coef` as:
+
+Mize, Trenton D. 2024. "irt_coef: Stata command for y\*-standardized coefficients in item response theory models." https://www.trentonmize.com/software/irt_coef
+
+## (4) Examples
+
+For binary and ordinal IRT models, it is useful to rescale the coefficient in terms of a standard deviation of y\*. Because we don’t know the scale of y\*, putting it into a SD unit is useful for interpretation and can make comparing across models feasible. In addition, the raw binary and ordinal logit/probit coefficients are not appropriate to compare across items / models as their scale is not identified. The y\* standardized coefficients can be compared across items / models as they are all on the same scale.
+
+### irt_coef command
+
+After a binary or ordinal IRT model in Stata, use the **irt_coef** command to calculate y\* standardized coefficients for all variables.
+
+First, load the data:
+
+`use "https://tdmize.github.io/data/data/lvm_ah4", clear`
+
+Then, fit the model using the **irt** or **gsem** commands. E.g., Using the **irt grm** (graded response model) command for ordinal items:
+
+    irt grm  nocontrol handle yourway overwhelm nofutureR cantchangeR ///
+       othersdetR interfereR lowcontrolR cantsolveR
+
+Use **irt_coef** to calculate the y\*-standardized coefficients. Option **help** adds a legend to help understand the output:
+
+    irt_coef, help
+    y* standardized coefficients (and raw coefficient) from IRT model N=5113
+                 |   Std Coef        Coef   Std. Err.       P>|z| 
+    -------------+-----------------------------------------------
+       nocontrol |     -0.361      -0.702       0.034       0.000 
+          handle |      0.461       0.943       0.037       0.000 
+         yourway |      0.459       0.938       0.036       0.000 
+       overwhelm |     -0.385      -0.756       0.034       0.000 
+       nofutureR |      0.583       1.301       0.043       0.000 
+     cantchangeR |      0.732       1.950       0.059       0.000 
+      othersdetR |      0.749       2.049       0.063       0.000 
+      interfereR |      0.591       1.329       0.042       0.000 
+     lowcontrolR |      0.795       2.376       0.070       0.000 
+      cantsolveR |      0.815       2.551       0.082       0.000 
+    Std Coef : y* standardized IRT regression coefficient
+    Coef     : IRT raw regression coefficient
+    NOTE     : SE and p-value based on raw regression coefficient
+
+### Using gsem for IRT model
+
+An identical model to the one above can be fit using **gsem**. If **gsem** is used to fit the model the **latent( )** option is required to provide the name of the latent variable for which y\*-standardized coefficients should be calculated:
+
+    gsem   (Mastery -> nocontrol handle yourway overwhelm nofutureR cantchangeR ///
+       othersdetR interfereR lowcontrolR cantsolveR, ologit) ///
+      , var(Mastery@1)  
+    irt_coef,  latent(Mastery)  
+    y* standardized coefficients (and raw coefficient) from IRT model N=5113
+                 |   Std Coef        Coef   Std. Err.       P>|z| 
+    -------------+-----------------------------------------------
+       nocontrol |      0.361       0.702       0.034       0.000 
+          handle |     -0.461      -0.943       0.037       0.000 
+         yourway |     -0.459      -0.938       0.036       0.000 
+       overwhelm |      0.385       0.756       0.034       0.000 
+       nofutureR |     -0.583      -1.301       0.043       0.000 
+     cantchangeR |     -0.732      -1.950       0.059       0.000 
+      othersdetR |     -0.749      -2.049       0.063       0.000 
+      interfereR |     -0.591      -1.329       0.042       0.000 
+     lowcontrolR |     -0.795      -2.376       0.070       0.000 
+      cantsolveR |     -0.815      -2.551       0.082       0.000

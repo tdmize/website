@@ -1,0 +1,77 @@
+---
+title: "lca_entropy"
+subtitle: "Stata command for entropy fit statistics for latent class analysis"
+---
+<<dd_version: 2>>
+
+`lca_entropy` is a Stata command that calculates an entropy fit statistic
+for a latent class analysis (LCA) model. The LCA model should be fit using
+`gsem` in Stata with the `lclass()` option. Entropy summarizes how cleanly
+the model separates the observations into classes: it runs from 0 to 1, and
+values closer to 1 indicate that each observation is assigned to one class
+with high posterior probability.
+
+Entropy is discussed in my graduate course slides on latent class analysis
+(pages 742--744): [Latent Class Analysis slides](https://drive.google.com/file/d/1eyomPFrld6ByupZUpOxjXcAFkfgiRWyO/view?usp=drive_link).
+All of the materials for the course are on the
+[Latent Variable Modeling](https://www.trentonmize.com/teaching/lvm) page.
+
+## Installation
+
+```stata
+net install lca_entropy, from("https://tdmize.github.io/data") replace
+```
+
+To read the help file in Stata, type `help lca_entropy`; it is also
+[on this site](help.html).
+
+## Citation
+
+Please cite the use of `lca_entropy` as:
+
+> Mize, Trenton D. 2024. "lca_entropy: Stata command for entropy fit
+> statistics for latent class analysis."
+> <https://www.trentonmize.com/software/lca_entropy>
+
+## Example
+
+The example recreates the three-class model of cultural participation in
+Alderson, Junisbai, and Heacock (2007) from seven GSS items on attending
+the opera, dance, drama, and art museums, popular music concerts, reading
+fiction, and going to the movies. Load the 1998 and 2002 GSS respondents
+who answered every item:
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_gss", clear
+keep if year == 1998 | year == 2002
+drop if missing(opera, dance, drama, visitart, popmusic, readfict, seemovie)
+<</dd_do>>
+```
+
+Fit the LCA with `gsem`. The constraint on the intercept of `opera` in
+class 1 handles a boundary estimate -- a class in which essentially no one
+attends the opera -- so that the model converges:
+
+```{.stata-run}
+<<dd_do>>
+gsem (-> opera dance drama visitart popmusic readfict seemovie, logit) ///
+     (1: opera <- _cons@-15) ///
+     , lclass(Class 3)
+<</dd_do>>
+```
+
+Estimate entropy with `lca_entropy`; the statistic is also returned in
+`r(entropy)`:
+
+```{.stata-run}
+<<dd_do>>
+lca_entropy
+<</dd_do>>
+```
+
+## Reference
+
+> Alderson, Arthur S., Azamat Junisbai, and Isaac Heacock. 2007. "Social
+> Status and Cultural Consumption in the United States." *Poetics* 35(2--3):
+> 191--212. <https://www.sciencedirect.com/science/article/abs/pii/S0304422X07000186>

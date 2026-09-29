@@ -1,0 +1,71 @@
+---
+title: "Bonus: Joint tests of interaction"
+subtitle: "Moderators with more than two categories"
+---
+<<dd_version: 2>>
+
+This example is not in Mize (2019), but it uses the same Add Health data as
+the other pages in this section.
+
+When the moderator has more than two categories, there are more than two
+marginal effects to compare. A good first step is a joint test of whether they
+are all equal. If the joint test is significant, there is evidence of an
+interaction, and you can move on to testing which specific contrasts differ.
+If a specific difference is hypothesized, test it directly.
+
+## A continuous variable and a nominal moderator
+
+Does the effect of social roles on high depressive symptoms differ across the
+five levels of education?
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/nli_ah4", clear
+
+quietly logit depB c.role##i.educ i.woman i.parrole c.age i.race c.income, vce(robust)
+estimates store depedmod
+<</dd_do>>
+```
+
+`by(educ)` reports the effect of one more role at each level of education, in
+rows 1 to 5. `metest 1 = 2 = 3 = 4 = 5` is the joint test that the five
+effects are equal.
+
+```{.stata-run}
+<<dd_do>>
+mecompare role, models(depedmod) by(educ)
+metest 1 = 2 = 3 = 4 = 5
+<</dd_do>>
+```
+
+The joint test is not significant (p = 0.12), so there is no evidence that
+the effect of social roles differs by education, and we do not go on to test
+the pairs.
+
+## A nominal variable: one equality per contrast
+
+With a nominal focal variable, each contrast with the base category has its
+own rows, so the joint test lists one equality per contrast. Here, the effect
+of education on drinking for men and for women -- the other side of the gender
+× education interaction on the [Two nominal variables](nominal-by-nominal.html)
+page:
+
+```{.stata-run}
+<<dd_do>>
+quietly logit alcB i.educ##i.woman c.age i.race c.income, vce(robust)
+estimates store alcedmod
+
+mecompare i.educ, models(alcedmod) by(woman)
+metest (1 = 2) (3 = 4) (5 = 6) (7 = 8)
+<</dd_do>>
+```
+
+The joint test is significant (p = 0.014): the effects of education differ for
+men and women. `metest 1 - 2`, `metest 3 - 4`, and so on test which contrasts
+differ.
+
+With two nominal variables, the joint test is the same from either side of the
+interaction: it equals the joint test of the five gender gaps on the Two
+nominal variables page (`metest 1 = 2 = 3 = 4 = 5`; chi2 = 12.50 both ways).
+This is not true of interactions in general, e.g., when one of the variables
+is continuous.

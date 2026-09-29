@@ -1,0 +1,157 @@
+---
+title: "Getting started"
+subtitle: "One comparison, start to finish"
+---
+
+`mecompare` can be used to calculate marginal effects within a single model and 
+then, optionally, compare them. Or, you can fit two or more models, store them, and then 
+call `mecompare` to calculate the marginal effects from each model and compare 
+them. This page runs through one example with Stata's `nlsw88` data and then
+explains how to read the table.
+
+## 1. Fit and store the models
+
+The question: does the association between having a college degree and union
+membership change once we account for wages and work experience? Fit the model
+without those variables, then the model with them, storing each with
+`estimates store`.
+
+```{.stata-run}
+. sysuse nlsw88, clear
+(NLSW, 1988 extract)
+
+. drop if missing(union)
+(368 observations deleted)
+
+. 
+. quietly logit union i.collgrad c.age i.south i.smsa, vce(robust)
+
+. estimates store base
+
+. 
+. quietly logit union i.collgrad c.age i.south i.smsa c.wage c.ttl_exp, vce(robust)
+
+. estimates store full
+
+```
+
+Most regression commands in Stata are supported; the full list is under
+[Supported models](options.html#supported-models) on the Options page. With
+two or more models, we recommend fitting the models with `vce(robust)` as
+`suest2` is used to combine the models' estimates and it uses robust variance
+estimation. This ensures results from `mecompare` match results from the
+individual models exactly. Multilevel and panel models are the exception: fit
+them, and any model compared with them, without `vce(robust)`; `mecompare`
+clusters the standard errors on the highest-level group.
+
+## 2. Compare the marginal effects
+
+Name the variable whose effect you want and the stored models in `models()`.
+
+```{.stata-run}
+. mecompare i.collgrad, models(base full)
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_base=1878) (N_full=1878)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+collgrad                         |                                       
+    College gra - Not colleg     |                                       
+                            base |     1      0.092      0.024      0.000
+                            full |     2      0.057      0.025      0.024
+                      Difference |     3      0.035      0.009      0.000
+
+```
+
+## 3. Read the table
+
+Each block of the table is one marginal effect. For a binary or factor variable
+the effect is the discrete change in the predicted probability between its
+levels; for a continuous variable, the default is a change for a one-unit increase
+(other amounts are set with `amount()`). Within a block:
+
+- the first rows give the marginal effect in each model, in the order the
+  models were listed in `models()`;
+- the **Difference** row is the effect in the first model minus the effect in
+  the second, with its standard error and p-value.
+
+The `#` column numbers the rows so that you can refer to them in
+[`metest`](../metest/index.html) for any other contrast.
+
+## Continuous variables and the size of the change
+
+For a continuous independent variable, `amount()` sets the size of the change. Here the
+effect of a one-standard-deviation increase in age. All changes for continuous 
+independent variables are centered by default.
+
+```{.stata-run}
+. mecompare age, models(base full) amount(sd)
+
+
+Predicting: Pr(union)
+
+Marginal effects and cross-model differences (N_base=1878) (N_full=1878)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+age + SD (centered)              |                                       
+                            base |     1      0.005      0.010      0.607
+                            full |     2      0.004      0.010      0.676
+                      Difference |     3      0.001      0.002      0.553
+
+```
+
+## Comparing effects within one model
+
+With a single model in `models()`, `mecompare` reports the marginal effects of
+the variables listed, and `metest` can be used to compare them. Here, is the union-membership gap by college degree the same size as the gap by region?
+
+```{.stata-run}
+. mecompare i.collgrad i.south, models(full)
+
+
+Predicting: Pr(union)
+
+Marginal effects (N_full=1878)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+collgrad                         |                                       
+    College gra - Not colleg     |                                       
+                            full |     1      0.057      0.025      0.024
+---------------------------------+---------------------------------------
+south                            |                                       
+           South - Not south     |                                       
+                            full |     2     -0.114      0.020      0.000
+
+. metest 1 - 2
+
+                                 |  estimate         se     pvalue 
+---------------------------------+--------------------------------
+                collgrad - south |     0.171      0.034      0.000 
+
+```
+
+## Frequently used options
+
+The help file (`help mecompare`) documents everything; these are the options
+that come up most often.
+
+| Option | Purpose |
+|---|---|
+| `models(name1 [name2 ...])` | The stored estimates to compare. One model gives marginal effects for that model alone; with three or more, every model's effects are listed and `metest` can be used to test the comparisons. |
+| `amount()` | Size of the change for a continuous variable: a number, `sd` or `2sd` (one or two standard deviations), `trimrange` (5th to 95th percentile), `range` (minimum to maximum), `p#-p#` (from one percentile to another, e.g. `p10-p90`), or `rate` (the instantaneous rate of change). Several amounts for one variable go in parentheses, e.g. `amount((one sd rate))`. |
+| `start()`, `end()` | Where the change in a continuous variable begins, `start(varname=#)` or `start(atmeans)`, and, with `end(varname=#)`, where it ends. |
+| `cochange(varlist)` | Variables that change along with the focal variable, e.g. mediators; the table adds the effect *with co-change* (see [generalized marginal effects](generalized.html)). |
+| `covariates(varname=# ...)`, `atmeans` | Hold other variables at specified values or at their means (the default averages over the observed values). |
+| `by(varlist)` | Marginal effects within each level of another variable, in one table, so that they can be compared with `metest`. |
+| `over(varlist)` | Marginal effects within subsamples defined by another variable. |
+| `pwcompare` | All pairwise contrasts among the levels of a nominal variable, not just contrasts with the base level. |
+| `mcompare(method)` | Adjust the p-values of a nominal variable's contrasts for multiple comparisons (`bonferroni` or `sidak`). |
+| `groups` | The models were fit to separate groups (see the [groups example](examples/groups.html)). |
+| `totalme`, `meinequality` | Add the Total Marginal Effect and/or the marginal-effect inequality summary for the compared effects. |
+| `store(stub)` | Store the results so that they can be graphed with `coefplot` or tabled with `esttab`. |
+
