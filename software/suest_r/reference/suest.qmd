@@ -2,7 +2,7 @@
 title: "Combine fitted models with seemingly unrelated estimation"
 ---
 
-`suest()` combines two or more separately fitted models and constructs a joint model-robust covariance matrix from their observation-level score contributions. The returned object can be passed directly to [`marginaleffects::predictions()`](https://rdrr.io/pkg/marginaleffects/man/predictions.html), [`marginaleffects::avg_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/comparisons.html), [`marginaleffects::avg_slopes()`](https://rdrr.io/pkg/marginaleffects/man/slopes.html), and [`marginaleffects::hypotheses()`](https://rdrr.io/pkg/marginaleffects/man/hypotheses.html).
+`suest()` combines two or more separately fitted models into one object with a joint robust covariance matrix, so you can test whether predictions and marginal effects differ across the models. Pass the result directly to [`marginaleffects::predictions()`](https://rdrr.io/pkg/marginaleffects/man/predictions.html), [`marginaleffects::avg_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/comparisons.html), [`marginaleffects::avg_slopes()`](https://rdrr.io/pkg/marginaleffects/man/slopes.html), and [`marginaleffects::hypotheses()`](https://rdrr.io/pkg/marginaleffects/man/hypotheses.html).
 
 ## Usage
 
@@ -73,7 +73,7 @@ Ordinary linear models include an ancillary `lnvar` parameter, matching Stata's 
 
 Aliased parameters are not supported. Nonunit weights are rejected unless `weight_type = "pweight"`. Pweights must be finite and strictly positive. For observations included in any pair of models, evaluated weights must agree; weights may differ for observations unique to either model, including completely disjoint samples. Pweight support is available for linear, binary logit/probit, Poisson, negative-binomial, ordered logit/probit, and multinomial logit models.
 
-Bias-reduced, adjusted-score, Firth, and penalized GLM fits are rejected because they do not use ordinary maximum-likelihood score equations.
+Bias-reduced, adjusted-score, Firth, and penalized GLM fits are rejected because they do not use ordinary maximum-likelihood score equations. Ordinary `glm` and `glm2` fits must have converged. Penalized [`nnet::multinom`](https://rdrr.io/pkg/nnet/man/multinom.html) fits with nonzero `decay` are also rejected. Beta regression requires `type = "ML"`; bias-reduced and bias-corrected beta fits and penalized `survreg` fits are not supported. Conventional `survreg` fits with `robust = TRUE` use their model-based information for the joint sandwich covariance.
 
 ## Survey models
 
@@ -117,7 +117,7 @@ Predictions and effects use the joint design-based coefficient covariance. Avera
 
 - bivariate probit from [`mvProbit::mvProbit()`](https://rdrr.io/pkg/mvProbit/man/mvProbit.html) when both equations use the same regressors; fit with `intGrad = TRUE` and `finalHessian = TRUE`
 
-- unweighted individual fixed-effects, between-effects, and Swamy-Arora random-effects linear panel models from [`plm::plm()`](https://rdrr.io/pkg/plm/man/plm.html); balanced random- effects panels have the closest Stata parity, while unbalanced panels can retain small engine-specific differences
+- unweighted individual fixed-effects, between-effects, and Swamy-Arora random-effects linear panel models from [`plm::plm()`](https://rdrr.io/pkg/plm/man/plm.html); balanced random- effects panels have the closest Stata parity, while unbalanced panels can retain small engine-specific differences. Within-model prediction uncertainty conditions on estimation-sample means and propagates slope uncertainty. At matching evaluation means, the covariance is structurally degenerate: average-level confidence intervals and hypothesis tests are unsupported, and numerical SEs can be missing or nearly zero. Slope and finite-change comparisons remain supported.
 
 - unweighted single-level random-intercept Gaussian panel models from [`nlme::lme()`](https://rdrr.io/pkg/nlme/man/lme.html) fitted with `method = "ML"`
 

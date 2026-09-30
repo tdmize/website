@@ -225,7 +225,24 @@ def main():
                 t = t.split(f"/{pkg}/", 1)[1] if f"/{pkg}/" in t else posixpath.normpath(posixpath.join(posixpath.dirname(p), t))
                 aliases[p] = t
             pages.remove(p)
-    pages = sorted(pages)
+    # GitHub keeps pages the package no longer has; keep only the ones its site lists now
+    listed = set()
+    yml = os.path.join(site, "pkgdown.yml")
+    if os.path.exists(yml):
+        meta = yaml.safe_load(open(yml, encoding="utf-8")) or {}
+        listed |= {"articles/" + v for v in (meta.get("articles") or {}).values()}
+    ref_index = os.path.join(site, "reference", "index.html")
+    if os.path.exists(ref_index):
+        for a in BeautifulSoup(open(ref_index, encoding="utf-8").read(), "html.parser").find_all("a", href=True):
+            h = a["href"].split("#")[0]
+            if h.endswith(".html") and "/" not in h and ":" not in h:
+                listed.add("reference/" + h)
+    stale = [p for p in pages if (p.startswith("articles/") and p != "articles/index.html" and p not in listed)
+             or (p.startswith("reference/") and p != "reference/index.html" and p not in listed
+                 and not p.endswith("-package.html"))]
+    pages = sorted(p for p in pages if p not in stale)
+    if stale:
+        print(f"{pkg}: skipped {len(stale)} old pages no longer in the package: " + ", ".join(stale))
     if os.path.isdir(out):
         shutil.rmtree(out)
     titles = {}
