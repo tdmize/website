@@ -65,17 +65,17 @@ stopifnot(near(ineq$estimate, c(.046, .038), .002), near(ineq$std.error, c(.012,
 # Example 4.3.a ------------------------------------------------------------
 vars <- c("spkhomo", "reltrad", "age", "woman", "year")
 gss <- gss0[complete.cases(gss0[vars]), vars]
-gss <- gss[gss$year < 1980 | gss$year >= 2010, ]
-gss$period <- factor(ifelse(gss$year < 1980, "Before 1980", "2010 and later"),
-                     levels = c("Before 1980", "2010 and later"))
 gss[c("spkhomo", "reltrad", "woman")] <- lapply(gss[c("spkhomo", "reltrad", "woman")], as_factor)
-spkmod <- glm(spkhomo ~ (reltrad + age + woman) * period, family = binomial("logit"), data = gss)
+premod <- glm(spkhomo ~ reltrad + age + woman, family = binomial("logit"), data = gss, subset = year < 1980)
+postmod <- glm(spkhomo ~ reltrad + age + woman, family = binomial("logit"), data = gss, subset = year >= 2010)
+fit <- suest(premod, postmod, model_names = c("Before 1980", "2010 and later"))
 meineq <- function(x) {
-  est <- sapply(split(x$estimate, x$period), function(e) mean(abs(e)))
-  data.frame(term = names(est), estimate = est)
+  groups <- unique(x$group)
+  est <- sapply(groups, function(g) mean(abs(x$estimate[x$group == g])))
+  data.frame(term = groups, estimate = est)
 }
-ineq <- avg_comparisons(spkmod, variables = list(reltrad = "pairwise"), by = "period",
-                        vcov = "HC0", hypothesis = meineq)
+ineq <- avg_comparisons(fit, variables = list(reltrad = "pairwise"),
+                        newdata = suest_newdata(fit), hypothesis = meineq)
 dif <- hypotheses(ineq, hypothesis = difference ~ revpairwise)
 stopifnot(near(ineq$estimate, c(.156, .072), .002), near(ineq$std.error, c(.011, .007), .002),
           near(dif$estimate, .083, .002), near(dif$std.error, .013, .002))

@@ -1160,7 +1160,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#load-and-prepare-the-data" id="toc-load-and-prepare-the-data" class="nav-link active" data-scroll-target="#load-and-prepare-the-data">Load and prepare the data</a></li>
-  <li><a href="#fit-the-model" id="toc-fit-the-model" class="nav-link" data-scroll-target="#fit-the-model">Fit the model</a></li>
+  <li><a href="#fit-and-combine-the-models" id="toc-fit-and-combine-the-models" class="nav-link" data-scroll-target="#fit-and-combine-the-models">Fit and combine the models</a></li>
   <li><a href="#unweighted-me-inequality-in-each-period" id="toc-unweighted-me-inequality-in-each-period" class="nav-link" data-scroll-target="#unweighted-me-inequality-in-each-period">Unweighted ME inequality in each period</a></li>
   <li><a href="#test-the-difference" id="toc-test-the-difference" class="nav-link" data-scroll-target="#test-the-difference">Test the difference</a></li>
   </ul>
@@ -1189,45 +1189,45 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>When the question is about different groups or time periods, the comparison uses a different sample for each. Here the question is whether religious-tradition differences in willingness to let a gay man speak in public were larger before 1980 than after 2010. The same example in Stata is on the <a href="../../../software/meinequality/examples/across-groups.html"><code>meinequality</code> page</a>.</p>
+<p>When different samples are used for each model – different groups, or different time periods – fit a model to each sample and combine them with <a href="../../../software/suest_r/index.html"><code>suest</code></a>. Here the question is whether religious-tradition differences in willingness to let a gay man speak in public were larger before 1980 than after 2010. The same example in Stata is on the <a href="../../../software/meinequality/examples/across-groups.html"><code>meinequality</code> page</a>.</p>
 <section id="load-and-prepare-the-data" class="level2">
 <h2 class="anchored" data-anchor-id="load-and-prepare-the-data">Load and prepare the data</h2>
-<div class="r-run">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(haven)           <span class="co"># Read Stata data</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(marginaleffects) <span class="co"># Marginal effects and hypotheses</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>gss <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">"https://tdmize.github.io/data/data/cda_gss.dta"</span>)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>vars <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"spkhomo"</span>, <span class="st">"reltrad"</span>, <span class="st">"age"</span>, <span class="st">"woman"</span>, <span class="st">"year"</span>)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>gss <span class="ot">&lt;-</span> gss[<span class="fu">complete.cases</span>(gss[vars]), vars]</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>gss <span class="ot">&lt;-</span> gss[gss<span class="sc">$</span>year <span class="sc">&lt;</span> <span class="dv">1980</span> <span class="sc">|</span> gss<span class="sc">$</span>year <span class="sc">&gt;=</span> <span class="dv">2010</span>, ]</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>gss<span class="sc">$</span>period <span class="ot">&lt;-</span> <span class="fu">factor</span>(<span class="fu">ifelse</span>(gss<span class="sc">$</span>year <span class="sc">&lt;</span> <span class="dv">1980</span>, <span class="st">"Before 1980"</span>, <span class="st">"2010 and later"</span>),</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>                     <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Before 1980"</span>, <span class="st">"2010 and later"</span>))</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>gss[<span class="fu">c</span>(<span class="st">"spkhomo"</span>, <span class="st">"reltrad"</span>, <span class="st">"woman"</span>)] <span class="ot">&lt;-</span> <span class="fu">lapply</span>(gss[<span class="fu">c</span>(<span class="st">"spkhomo"</span>, <span class="st">"reltrad"</span>, <span class="st">"woman"</span>)], as_factor)</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(gss<span class="sc">$</span>period)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<pre class="r-output"><code>   Before 1980 2010 and later 
-          5593           8226 </code></pre>
-</div>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(suest)           <span class="co"># Combine models</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>gss <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">"https://tdmize.github.io/data/data/cda_gss.dta"</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>vars <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"spkhomo"</span>, <span class="st">"reltrad"</span>, <span class="st">"age"</span>, <span class="st">"woman"</span>, <span class="st">"year"</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>gss <span class="ot">&lt;-</span> gss[<span class="fu">complete.cases</span>(gss[vars]), vars]</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>gss[<span class="fu">c</span>(<span class="st">"spkhomo"</span>, <span class="st">"reltrad"</span>, <span class="st">"woman"</span>)] <span class="ot">&lt;-</span> <span class="fu">lapply</span>(gss[<span class="fu">c</span>(<span class="st">"spkhomo"</span>, <span class="st">"reltrad"</span>, <span class="st">"woman"</span>)], as_factor)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="fit-the-model" class="level2">
-<h2 class="anchored" data-anchor-id="fit-the-model">Fit the model</h2>
-<p>Interacting every predictor with <code>period</code> is the same as fitting a separate model to each period, and keeps both in one model for the comparison:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>spkmod <span class="ot">&lt;-</span> <span class="fu">glm</span>(spkhomo <span class="sc">~</span> (reltrad <span class="sc">+</span> age <span class="sc">+</span> woman) <span class="sc">*</span> period,</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> <span class="fu">binomial</span>(<span class="st">"logit"</span>), <span class="at">data =</span> gss)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="fit-and-combine-the-models" class="level2">
+<h2 class="anchored" data-anchor-id="fit-and-combine-the-models">Fit and combine the models</h2>
+<div class="r-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>premod <span class="ot">&lt;-</span> <span class="fu">glm</span>(spkhomo <span class="sc">~</span> reltrad <span class="sc">+</span> age <span class="sc">+</span> woman,</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> <span class="fu">binomial</span>(<span class="st">"logit"</span>), <span class="at">data =</span> gss, <span class="at">subset =</span> year <span class="sc">&lt;</span> <span class="dv">1980</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>postmod <span class="ot">&lt;-</span> <span class="fu">glm</span>(spkhomo <span class="sc">~</span> reltrad <span class="sc">+</span> age <span class="sc">+</span> woman,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> <span class="fu">binomial</span>(<span class="st">"logit"</span>), <span class="at">data =</span> gss, <span class="at">subset =</span> year <span class="sc">&gt;=</span> <span class="dv">2010</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="fu">nobs</span>(premod), <span class="fu">nobs</span>(postmod))</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">suest</span>(premod, postmod, <span class="at">model_names =</span> <span class="fu">c</span>(<span class="st">"Before 1980"</span>, <span class="st">"2010 and later"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="r-output"><code>[1] 5593 8226</code></pre>
+</div>
 </section>
 <section id="unweighted-me-inequality-in-each-period" class="level2">
 <h2 class="anchored" data-anchor-id="unweighted-me-inequality-in-each-period">Unweighted ME inequality in each period</h2>
-<p><code>by = "period"</code> averages each period’s effects over its own sample, and a small function takes the mean absolute pairwise difference within each period. <code>vcov = "HC0"</code> gives robust standard errors.</p>
+<p><code>suest_newdata()</code> stacks the two estimation samples, so each model’s effects are averaged over its own sample. A small function takes the mean absolute pairwise difference within each model:</p>
 <div class="r-run">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>meineq <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  est <span class="ot">&lt;-</span> <span class="fu">sapply</span>(<span class="fu">split</span>(x<span class="sc">$</span>estimate, x<span class="sc">$</span>period), <span class="cf">function</span>(e) <span class="fu">mean</span>(<span class="fu">abs</span>(e)))</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">term =</span> <span class="fu">names</span>(est), <span class="at">estimate =</span> est)</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>ineq <span class="ot">&lt;-</span> <span class="fu">avg_comparisons</span>(spkmod,</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">variables =</span> <span class="fu">list</span>(<span class="at">reltrad =</span> <span class="st">"pairwise"</span>),</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">by =</span> <span class="st">"period"</span>,</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">vcov =</span> <span class="st">"HC0"</span>,</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  groups <span class="ot">&lt;-</span> <span class="fu">unique</span>(x<span class="sc">$</span>group)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  est <span class="ot">&lt;-</span> <span class="fu">sapply</span>(groups, <span class="cf">function</span>(g) <span class="fu">mean</span>(<span class="fu">abs</span>(x<span class="sc">$</span>estimate[x<span class="sc">$</span>group <span class="sc">==</span> g])))</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">term =</span> groups, <span class="at">estimate =</span> est)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>ineq <span class="ot">&lt;-</span> <span class="fu">avg_comparisons</span>(fit,</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">variables =</span> <span class="fu">list</span>(<span class="at">reltrad =</span> <span class="st">"pairwise"</span>),</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">newdata =</span> <span class="fu">suest_newdata</span>(fit),</span>
 <span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">hypothesis =</span> meineq)</span>
 <span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>ineq</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="r-output"><code>           Term Estimate Std. Error    z Pr(&gt;|z|)     S  2.5 % 97.5 %
