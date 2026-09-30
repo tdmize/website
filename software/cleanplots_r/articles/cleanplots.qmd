@@ -1,0 +1,348 @@
+---
+title: "Getting started with cleanplots"
+---
+
+cleanplots provides publication-ready defaults for ggplot2. The goal is professional-looking figures with strong data visualization and accessibility defaults, with no per-plot effort: a color palette that is **colorblind-friendly** and remains **distinguishable when printed in black & white**, matching marker shapes and line patterns that keep groups distinct across multiple visual channels, a clean theme, and consistent figure sizing. A companion [cleanplots scheme for Stata](/software/cleanplots/index.qmd) uses the same design, so figures made in R and Stata look like siblings.
+
+The package is **layered**: use as little or as much as you want. This vignette walks from the lightest touch (colors only) to the full setup (one call that changes everything).
+
+## Functions at a glance
+
+- **[`cleanplots_defaults()`](../reference/cleanplots_defaults.html)** – One call applies the full cleanplots setup for the session: theme, automatic colors (main palette for color, soft bar palette for fill), larger markers, thicker lines, and red [`geom_smooth()`](https://ggplot2.tidyverse.org/reference/geom_smooth.html) fit lines. All sizes adjustable via arguments (e.g., `base_size = 16` for presentations and lectures).
+- **[`scale_color_cleanplots()`](../reference/scale_color_cleanplots.html)** – Applies the cleanplots colors to a plot’s `color` aesthetic; everything else is left unchanged. Options to reorder (`order = c(7, 1, 2)`) or reverse the palette.
+- **`scale_fill_cleanplots(palette = "bars")`** – Applies the softer cleanplots colors to a plot’s `fill` aesthetic, designed for ink-heavy elements like bars, boxplots, and areas. Use `palette = "default"` for the full-strength colors.
+- **[`scale_shape_cleanplots()`](../reference/scale_shape_cleanplots.html)** – Applies the cleanplots marker symbols: hollow shapes for the dark colors, solid shapes for the light colors, so groups are distinguishable even without color.
+- **[`scale_linetype_cleanplots()`](../reference/scale_shape_cleanplots.html)** – Applies the cleanplots line patterns in pairs (solid, solid, longdash, longdash, twodash, twodash, dashed, dashed, dotdash, dotdash), keeping line graphs readable in black & white and for colorblind readers.
+- **[`theme_cleanplots()`](../reference/theme_cleanplots.html)** – Applies the cleanplots look to a single plot: white background, dotted gridlines, gray axis lines, frameless legend at the right, and outlined facet strips.
+- **[`cleanplots_save()`](../reference/cleanplots_save.html)** – Saves a figure at a fixed, publication-ready size (7 x 5 inches, 300 dpi) so plots look the same regardless of your plot window. Format follows the file extension.
+- **[`cleanplots_colors()`](../reference/cleanplots_colors.html)** – Returns the palette’s hex codes, all or by name (e.g., `cleanplots_colors("red", "navy")`); add `bars = TRUE` for the soft versions. Useful for coloring single elements manually.
+- **[`palette_cleanplots()`](../reference/palette_cleanplots.html)** – The palette generator behind the color scales; rarely called directly, but useful for feeding cleanplots colors into other packages.
+
+```r
+library(ggplot2)
+library(cleanplots)
+```
+
+## 1. Colors only
+
+If all you want is the cleanplots colors – leaving the theme, sizes, and everything else exactly as they were – add [`scale_color_cleanplots()`](../reference/scale_color_cleanplots.html) (or [`scale_fill_cleanplots()`](../reference/scale_color_cleanplots.html)) to a plot, just like any other palette package:
+
+```r
+ggplot(iris, aes(Sepal.Length, Sepal.Width, color = Species)) +
+  geom_point() +
+  scale_color_cleanplots() +
+  theme_minimal()
+```
+
+![](cleanplots_files/figure-html/colors-only-1.png)
+
+One recommendation: if you are not using the full cleanplots setup ([`theme_cleanplots()`](../reference/theme_cleanplots.html) or [`cleanplots_defaults()`](../reference/cleanplots_defaults.html), below), add [`theme_minimal()`](https://ggplot2.tidyverse.org/reference/ggtheme.html) to your plots – the colors and markers are much easier to see against a white background than against ggplot2’s default gray. The examples in this vignette do this.
+
+Both scales take the same options:
+
+- `palette`: `"default"` (the main colors) or `"bars"` (softer versions for bars, areas, and pies – more on this below)
+- `order`: use the colors in a different order, e.g. `order = c(7, 1, 2)` starts with navy
+- `reverse`: reverse the palette
+
+```r
+ggplot(iris, aes(Sepal.Length, Sepal.Width, color = Species)) +
+  geom_point() +
+  scale_color_cleanplots(order = c(7, 1, 2)) +
+  theme_minimal()
+```
+
+![](cleanplots_files/figure-html/colors-order-1.png)
+
+To use individual colors manually, [`cleanplots_colors()`](../reference/cleanplots_colors.html) returns hex codes by name:
+
+::: {.r-run}
+```r
+cleanplots_colors()
+```
+```{.r-output}
+      red    ltblue     black      gray    purple      pink      navy    ltgray 
+"#D50000" "#8FC6EB" "#000000" "#909090" "#740074" "#FFB3D9" "#143755" "#C0C0C0" 
+   dkgray  lavender 
+"#404040" "#D9D7F0"
+```
+:::
+
+::: {.r-run}
+```r
+cleanplots_colors("red", "navy")
+```
+```{.r-output}
+      red      navy 
+"#D50000" "#143755"
+```
+:::
+
+## 2. The two palettes
+
+The **main palette** is used for markers, lines, and confidence intervals. It alternates darker and lighter colors so that the first several groups remain distinguishable even when printed in black & white, and it contains no red–green pair (red-green colorblindness is the most common form, affecting roughly 8% of men).
+
+The **bar palette** contains softer versions of the same colors. Bars, areas, and pie slices use far more ink than points and lines, so full-strength colors overwhelm; cleanplots uses gentler fills for these elements:
+
+```r
+titanic <- aggregate(Freq ~ Class + Sex, data = as.data.frame(Titanic), sum)
+
+ggplot(titanic, aes(Sex, Freq, fill = Class)) +
+  geom_col(position = "dodge") +
+  scale_fill_cleanplots(palette = "bars") +
+  labs(x = NULL, y = "Passengers and crew", fill = "Class") +
+  theme_minimal()
+```
+
+![](cleanplots_files/figure-html/bars-palette-1.png)
+
+### Ordinal categories: use viridis
+
+The cleanplots palettes are for **nominal** (unordered) groups. For **ordinal** or ordered categories – Likert responses, education levels, dose groups – use a palette where lightness changes with the ordering (here, darker = higher), so the order itself survives colorblindness and black & white printing. We recommend **cividis** (Nunez, Anderton, & Renslow 2018), a variant of viridis (van der Walt & Smith 2015) optimized so that readers with red-green colorblindness see essentially the same palette as everyone else. It is built into ggplot2 (no extra package needed) and combines cleanly with all other cleanplots features:
+
+```r
+ggplot(diamonds, aes(price, color = cut)) +
+  geom_density(linewidth = 0.65) +
+  scale_color_viridis_d(option = "cividis", end = 0.95, direction = -1) +
+  labs(x = "Price") +
+  theme_minimal()
+```
+
+![](cleanplots_files/figure-html/ordinal-1.png)
+
+Two notes. First, `end = 0.95` trims the palette’s lightest extreme so it remains visible against a white background (use `begin = 0.05` instead if the dark end sits on a dark fill). Second, the cividis colors can be combined with the cleanplots shapes and/or linetype scales to ensure maximum ability to distinguish between different aspects of the graph. And if you have run [`cleanplots_defaults()`](../reference/cleanplots_defaults.html), adding a viridis-family scale overrides the automatic cleanplots colors for that plot only – the theme, sizes, and everything else stay in place.
+
+These are the same colors used by the ordinal cleanplots schemes for Stata (`cleanplots3`, `cleanplots5`, `cleanplots7`, `cleanplots9`, `cleanplots11`), so ordinal figures also match exactly across the two languages.
+
+Nunez, J. R., Anderton, C. R., & Renslow, R. S. (2018). Optimizing colormaps with consideration for color vision deficiency to enable accurate interpretation of scientific data. *PLOS ONE*, 13(7), e0199239.
+
+## 3. Shapes and line patterns
+
+Color alone reliably distinguishes about 4–5 groups. Beyond that – and for black & white printing and colorblind readers – cleanplots varies **multiple visual channels at once**, so that no group pair ever depends on a single cue:
+
+- **Color and lightness**: the palette alternates dark and light.
+- **Marker shape and fill**: [`scale_shape_cleanplots()`](../reference/scale_shape_cleanplots.html) gives hollow shapes (circle, square, triangle, diamond) to the dark colors and solid shapes to the light colors.
+- **Line pattern**: [`scale_linetype_cleanplots()`](../reference/scale_shape_cleanplots.html) assigns patterns in pairs, ordered from closest to solid to furthest: solid, solid, longdash, longdash, twodash, twodash, dashed, dashed, dotdash, dotdash.
+
+The assignments are coordinated: any two groups that share a shape or a line pattern always differ strongly in lightness, so every pair of groups is separated by at least two independent channels.
+
+```r
+ggplot(mpg, aes(displ, hwy, color = class, shape = class)) +
+  geom_point(size = 1.4, stroke = 0.7) +
+  scale_color_cleanplots() +
+  scale_shape_cleanplots() +
+  theme_minimal()
+```
+
+![](cleanplots_files/figure-html/shapes-1.png)
+
+```r
+cities <- c("Collin County", "Austin", "Dallas", "Corpus Christi",
+            "Wichita Falls")
+tx <- aggregate(median ~ year + city, mean, na.rm = TRUE,
+                data = subset(txhousing, city %in% cities))
+
+ggplot(tx, aes(year, median / 1000, color = city, linetype = city)) +
+  geom_line(linewidth = 0.65) +
+  scale_color_cleanplots() +
+  scale_linetype_cleanplots() +
+  labs(x = NULL, y = "Median home price ($1,000s)", color = "", linetype = "") +
+  theme_minimal()
+```
+
+![](cleanplots_files/figure-html/linetypes-1.png)
+
+## 4. The theme
+
+[`theme_cleanplots()`](../reference/theme_cleanplots.html) applies the cleanplots layout: white background, no plot border, light gray axis lines, dotted gridlines, a frameless legend at the right, and black-outlined facet strips. Like any ggplot2 theme, add it per plot:
+
+```r
+ggplot(mpg, aes(displ, hwy, color = class, shape = class)) +
+  geom_point(size = 1.4, stroke = 0.7) +
+  scale_color_cleanplots() +
+  scale_shape_cleanplots() +
+  theme_cleanplots()
+```
+
+![](cleanplots_files/figure-html/theme-1.png)
+
+## 5. The full setup: `cleanplots_defaults()`
+
+Adding scales and themes to every plot gets repetitive. One call at the top of your script applies the complete cleanplots setup for the session:
+
+```r
+cleanplots_defaults()
+```
+
+After this, with **no scales or theme added**:
+
+- every plot uses [`theme_cleanplots()`](../reference/theme_cleanplots.html);
+- discrete `color` aesthetics use the main palette, and discrete `fill` aesthetics use the softer bar palette (bars and areas automatically get the gentler colors);
+- points have heavier outlines (`size = 1.4`, `stroke = 0.7`), so the hollow marker shapes are clearly visible;
+- lines are thicker (`linewidth = 0.65`) for [`geom_line()`](https://ggplot2.tidyverse.org/reference/geom_path.html), [`geom_path()`](https://ggplot2.tidyverse.org/reference/geom_path.html), [`geom_step()`](https://ggplot2.tidyverse.org/reference/geom_path.html), [`geom_density()`](https://ggplot2.tidyverse.org/reference/geom_density.html), [`geom_function()`](https://ggplot2.tidyverse.org/reference/geom_function.html), and [`geom_smooth()`](https://ggplot2.tidyverse.org/reference/geom_smooth.html); error bars, linereanges, and pointranges use 80% of that;
+- [`geom_smooth()`](https://ggplot2.tidyverse.org/reference/geom_smooth.html) fit lines are cleanplots red with a light gray confidence band, instead of ggplot2’s blue.
+
+```r
+ggplot(mpg, aes(displ, hwy, color = class, shape = class)) +
+  geom_point() +
+  scale_shape_cleanplots()
+```
+
+![](cleanplots_files/figure-html/defaults-demo-1.png)
+
+```r
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point(color = cleanplots_colors("gray")) +
+  geom_smooth(method = "loess", formula = y ~ x)
+```
+
+![](cleanplots_files/figure-html/defaults-smooth-1.png)
+
+All settings are arguments if you prefer different sizes:
+
+```r
+cleanplots_defaults(base_size = 12, point_size = 1.4,
+                    point_stroke = 0.7, line_width = 0.65,
+                    smooth_color = "#D50000")
+```
+
+The default text size (12) is chosen to match the body text of an academic article when the figure is saved at the recommended size (see the next section): if you can read the article, you can read the graph. For contexts that need bigger text – presentations and lectures especially – increase it:
+
+```r
+cleanplots_defaults(base_size = 16)   # presentations and lectures
+```
+
+One important exception: ggplot2 only provides session-default hooks for `color` and `fill` scales, so **shape and linetype scales cannot be applied automatically** – there is no equivalent mechanism for them. Whenever you map `shape` or `linetype` to a variable, add [`scale_shape_cleanplots()`](../reference/scale_shape_cleanplots.html) or [`scale_linetype_cleanplots()`](../reference/scale_shape_cleanplots.html) to that plot. This matters in particular for 7+ groups: ggplot2’s built-in shape scale handles a maximum of 6 shapes and silently drops the markers for additional groups, while [`scale_shape_cleanplots()`](../reference/scale_shape_cleanplots.html) provides 10.
+
+Everything remains overridable per plot: an explicit scale, theme, or aesthetic always wins. For example, to use the main palette for a fill instead of the automatic bar palette:
+
+```r
+ggplot(titanic, aes(Sex, Freq, fill = Class)) +
+  geom_col(position = "dodge") +
+  scale_fill_cleanplots(palette = "default") +
+  labs(x = NULL, y = "Passengers and crew", fill = "Class")
+```
+
+![](cleanplots_files/figure-html/override-1.png)
+
+**To restore ggplot2’s defaults**: [`cleanplots_defaults()`](../reference/cleanplots_defaults.html) sets session-wide state, which persists until you restart R. To reset manually:
+
+```r
+theme_set(theme_gray())
+options(ggplot2.discrete.colour = NULL, ggplot2.discrete.fill = NULL)
+update_geom_defaults("point", list(size = 1.5, stroke = 0.5))
+```
+
+## 6. Saving figures
+
+An important quirk of ggplot2: a plot has no intrinsic size. Text, markers, and lines are physical units (points and millimeters), and [`ggsave()`](https://ggplot2.tidyverse.org/reference/ggsave.html) **without explicit dimensions saves at whatever size your plot window happens to be** – so the same code produces figures with different proportions on different days, machines, and window layouts.
+
+The fix is to always save at explicit dimensions. [`cleanplots_save()`](../reference/cleanplots_save.html) does this with tuned defaults – 7 x 5 inches at 300 dpi:
+
+```r
+p <- ggplot(mpg, aes(displ, hwy, color = drv)) + geom_point()
+cleanplots_save("my-figure.png", p)
+```
+
+Why 7 x 5? It matches the default figure size of R Markdown (HTML) documents, and a 7-inch figure placed at the 6.5-inch text width of a US-letter manuscript scales the 12-point default text to about 11 points – comparable to the article’s body text. The file extension sets the format, so `.pdf`, `.tiff`, or `.eps` for journal submission systems work directly. Override any default as needed:
+
+```r
+cleanplots_save("slide-figure.png", p, width = 10, height = 5.6)
+```
+
+The same principle applies to other ways of saving:
+
+- **[`ggsave()`](https://ggplot2.tidyverse.org/reference/ggsave.html) directly**: always pass `width`, `height`, and `dpi`.
+- **RStudio’s Export button**: type explicit dimensions in the dialog (e.g., 2100 x 1500 pixels = 7 x 5 inches at 300 dpi) rather than accepting the window size.
+- **R Markdown / Quarto**: figures are sized by chunk options, which is already fixed-size by construction. To match [`cleanplots_save()`](../reference/cleanplots_save.html): `knitr::opts_chunk$set(fig.width = 7, fig.height = 5)` (or `fig-width`/`fig-height` in Quarto). Note that `pdf_document` defaults to 6.5 x 4.5 – article text width – which also works well.
+- **Base devices** ([`png()`](https://rdrr.io/r/grDevices/png.html) … `print(p)` … [`dev.off()`](https://rdrr.io/r/grDevices/dev.html)): pass dimensions to the device call.
+
+Avoid copy-pasting figures from the plot window into Word or PowerPoint: the result is window-sized and screen-resolution.
+
+## 7. Plots of predictions and marginal effects
+
+cleanplots works out of the box with the [marginaleffects](https://marginaleffects.com) and [modelsummary](https://modelsummary.com) packages. With [`cleanplots_defaults()`](../reference/cleanplots_defaults.html) set, their plots pick up the colors and theme automatically.
+
+The examples below use data on life satisfaction across ages:
+
+```r
+sim <- readRDS(url(
+  "https://raw.githubusercontent.com/tdmize/data/master/data/sim_lifesat.rds",
+  open = "rb"))
+```
+
+A coefficient plot of nested models with [`modelsummary::modelplot()`](https://modelsummary.com/man/modelplot.html):
+
+```r
+mod1 <- lm(lifesat ~ age + educ, data = sim)
+mod2 <- lm(lifesat ~ age + educ + married, data = sim)
+
+modelsummary::modelplot(list("Baseline" = mod1, "+ Marriage" = mod2),
+                        coef_omit = "Intercept") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  labs(x = "Coefficient estimates and 95% confidence intervals")
+```
+
+![](cleanplots_files/figure-html/coefplot-1.png)
+
+Adjusted predictions for a nominal predictor with [`marginaleffects::plot_predictions()`](https://rdrr.io/pkg/marginaleffects/man/plot_predictions.html):
+
+```r
+mod <- lm(lifesat ~ poly(age, 2) * married + educ, data = sim)
+
+marginaleffects::plot_predictions(mod, condition = c("educ", "married")) +
+  labs(y = "Predicted life satisfaction")
+```
+
+![](cleanplots_files/figure-html/preds-nominal-1.png)
+
+Predictions across a continuous predictor by group. One note here: `plot_predictions()` draws its confidence-interval ribbons with heavy transparency (alpha = 0.1), which is tuned for saturated colors. Add `scale_fill_cleanplots(palette = "default")` so the ribbons use the full-strength palette rather than the soft bar colors:
+
+```r
+marginaleffects::plot_predictions(mod, condition = c("age", "married")) +
+  scale_fill_cleanplots(palette = "default") +
+  labs(y = "Predicted life satisfaction")
+```
+
+![](cleanplots_files/figure-html/preds-continuous-1.png)
+
+For full control of the ribbons (or anything else), use `plot_predictions(..., draw = FALSE)` to get the plotting data and build the figure yourself:
+
+```r
+pr <- marginaleffects::plot_predictions(
+  mod, condition = c("age", "married"), draw = FALSE)
+
+ggplot(pr, aes(age, estimate, color = married, fill = married)) +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high),
+              alpha = .35, color = NA) +
+  geom_line() +
+  labs(y = "Predicted life satisfaction")
+```
+
+![](cleanplots_files/figure-html/preds-draw-false-1.png)
+
+And comparisons – here, the marriage gap in life satisfaction across ages – with [`marginaleffects::plot_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/plot_comparisons.html):
+
+```r
+marginaleffects::plot_comparisons(mod, variables = "married",
+                                  condition = "age") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  labs(y = "Difference in predicted life satisfaction\n(Married - Not married)")
+```
+
+![](cleanplots_files/figure-html/comparisons-1.png)
+
+## 8. For Stata users
+
+A companion cleanplots scheme for Stata shares this package’s colors, marker symbols, line patterns, and layout – the hex values in both languages are computed from the same definitions, so colors match exactly. The mapping:
+
+| Stata | R |
+|------------------------------------|------------------------------------|
+| `set scheme cleanplots` | [`cleanplots_defaults()`](../reference/cleanplots_defaults.html) |
+| `p1`–`p10` colors | [`scale_color_cleanplots()`](../reference/scale_color_cleanplots.html) |
+| `p1bar`–`p10bar` colors at `intensity bar 70` | `scale_fill_cleanplots(palette = "bars")` |
+| marker symbols (`symbol p1` …) | [`scale_shape_cleanplots()`](../reference/scale_shape_cleanplots.html) |
+| line patterns (`linepattern p1line` …) | [`scale_linetype_cleanplots()`](../reference/scale_shape_cleanplots.html) |
+| scheme layout settings | [`theme_cleanplots()`](../reference/theme_cleanplots.html) |
+| graph export sizing | [`cleanplots_save()`](../reference/cleanplots_save.html) |
+
+The Stata scheme is available at [https://www.trentonmize.com/software/cleanplots](/software/cleanplots/index.qmd).

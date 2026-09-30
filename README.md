@@ -21,7 +21,7 @@ Every address on the old Google Site has a page here, including pages that are n
 
 The older software pages (`software/*-old`) are kept only so old links keep working: nothing on the site links to them and they are left out of the site search. Link to the current pages under `software/<pkg>/` instead.
 
-Some addresses forward elsewhere: `software/cleanplots_r` goes to the cleanplots R package site, `software/mecompare-old` goes to `software/mecompare`, and `software/mecompare-old/mecompare_exs` and `software/mecompare-old/gifs` go to their new places under `research/mize_doan_long_2019_SM/`.
+Some addresses forward elsewhere: `software/mecompare-old` goes to `software/mecompare`, and `software/mecompare-old/mecompare_exs` and `software/mecompare-old/gifs` go to their new places under `research/mize_doan_long_2019_SM/`.
 
 Images are in `images/`.
 
@@ -29,6 +29,7 @@ Images are in `images/`.
 
 - **Ordinary pages** (home, research, teaching, ...): edit the `.qmd` file, then render.
 - **Stata documentation** (`software/<pkg>/`): edit only the files in `software/<pkg>/_src/`, then run `build.do` in Stata, which runs the Stata code, fills in the output, and renders. The `.qmd` files next to `_src/` are generated.
+- **R package documentation** (`software/cleanplots_r/`, `software/suest_r/`): written in the R packages themselves. After a package's pkgdown site is rebuilt, run `python tools/pkgdown2qmd.py cleanplots` (or `suest`) to bring the new version in, then render. Don't edit these folders by hand; the tool replaces them. One-time setup for the tool: `python -m pip install beautifulsoup4 pyyaml`.
 - **Look of the site**: `theme.scss` (colors, font, Stata output blocks). Menus and sidebars: `_quarto.yml`.
 
 ## Building
