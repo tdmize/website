@@ -1,0 +1,88 @@
+---
+title: "Total ME inequalities for nominal independent variables"
+subtitle: "Example 5.3 of Mize and Han (2025), in R"
+---
+
+With a nominal outcome *and* nominal independent variables there are two
+layers of summary. On each outcome category, the effect of a nominal
+predictor is its ME inequality -- the average absolute difference in that
+category's probability across the predictor's groups. The Total ME inequality
+then sums those across the outcome categories. Here race-ethnicity and degree,
+both nominal, predict self-rated health. The same example in Stata is on the
+[`totalme` page](/software/totalme/examples/inequalities.qmd).
+
+## Load and prepare the data
+
+::: {.r-run}
+```r
+library(haven)           # Read Stata data
+library(marginaleffects) # Marginal effects and hypotheses
+library(nnet)            # Multinomial logit
+
+source("https://raw.githubusercontent.com/tdmize/Rfunctions/main/ME_helper_functions.R")
+
+gss <- read_dta("https://tdmize.github.io/data/data/cda_gss.dta")
+gss <- gss[gss$year >= 2000 & gss$year <= 2021, ]
+
+vars <- c("healthR", "race4", "age", "woman", "parent", "married", "faminc", "degree")
+gss <- gss[complete.cases(gss[vars]), vars]
+
+fvars <- c("healthR", "race4", "woman", "parent", "married", "degree")
+gss[fvars] <- lapply(gss[fvars], as_factor)
+nrow(gss)
+```
+```{.r-output}
+[1] 19292
+```
+:::
+
+## Fit the multinomial logit model
+
+```r
+healthmod <- multinom(healthR ~ race4 + age + woman + parent +
+  married + faminc + degree, data = gss, trace = FALSE)
+```
+
+## Total ME inequalities
+
+For each predictor, calculate the Total ME for every pairwise contrast between
+its categories, then average those with the ME inequality weights.
+Race-ethnicity:
+
+::: {.r-run}
+```r
+avg_comparisons(healthmod,
+  variables = list(race4 = "pairwise"),
+  hypothesis = ~ I(sum(abs(x)) / 2) | contrast) |>
+  hypotheses(hypothesis = meineq_weights(healthmod, race4))
+```
+```{.r-output}
+ Estimate Std. Error    z Pr(>|z|)    S  2.5 % 97.5 %
+   0.0471    0.00679 6.94   <0.001 37.9 0.0338 0.0604
+
+Term: custom
+```
+:::
+
+Degree:
+
+::: {.r-run}
+```r
+avg_comparisons(healthmod,
+  variables = list(degree = "pairwise"),
+  hypothesis = ~ I(sum(abs(x)) / 2) | contrast) |>
+  hypotheses(hypothesis = meineq_weights(healthmod, degree))
+```
+```{.r-output}
+ Estimate Std. Error    z Pr(>|z|)     S 2.5 % 97.5 %
+    0.116    0.00554 20.9   <0.001 319.6 0.105  0.127
+
+Term: custom
+```
+:::
+
+Degree moves much more probability across the health categories than
+race-ethnicity does. The weights count each pairwise comparison in proportion
+to the share of the sample in the two groups compared. For the unweighted
+version, which gives every comparison the same weight, end with
+`hypotheses(hypothesis = ~ I(mean(x)))` instead.

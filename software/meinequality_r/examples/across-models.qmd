@@ -1,0 +1,91 @@
+---
+title: "Comparing ME inequalities across models"
+subtitle: "Example 4.3.b of Mize and Han (2025), in R: tests of mediation/attenuation"
+---
+
+How much of the racial-ethnic inequality in an outcome is accounted for by
+education and wealth? Fit the model with and without those variables and
+combine them with [`suest`](/software/suest_r/index.qmd), which gives the
+joint covariance needed to test whether the ME inequality differs across the
+models. The example uses a count of functional limitations from the Health
+and Retirement Study. The same example in Stata is on the
+[`meinequality` page](/software/meinequality/examples/across-models.qmd).
+
+## Load and prepare the data
+
+::: {.r-run}
+```r
+library(haven)           # Read Stata data
+library(marginaleffects) # Marginal effects and hypotheses
+library(MASS)            # Negative binomial regression
+library(suest)           # Combine models
+
+source("https://raw.githubusercontent.com/tdmize/Rfunctions/main/ME_helper_functions.R")
+
+hrs <- read_dta("https://tdmize.github.io/data/data/cda_hrs.dta")
+
+vars <- c("iadl", "race4cat", "collegeB", "wealth_w", "income_w")
+hrs <- hrs[complete.cases(hrs[vars]), vars]
+hrs[c("race4cat", "collegeB")] <- lapply(hrs[c("race4cat", "collegeB")], as_factor)
+nrow(hrs)
+```
+```{.r-output}
+[1] 15609
+```
+:::
+
+## Fit and combine the models
+
+```r
+basemod <- glm.nb(iadl ~ race4cat, data = hrs)
+medmod <- glm.nb(iadl ~ race4cat + collegeB + wealth_w + income_w, data = hrs)
+
+fit <- suest(basemod, medmod, model_names = c("Base", "Mediators"))
+```
+
+## ME inequality in each model
+
+The combined object returns the pairwise differences for both models. A small
+function averages them within each model using the ME inequality weights:
+
+::: {.r-run}
+```r
+weights <- meineq_weights(basemod, race4cat)
+
+meineq <- function(x) {
+  est <- sapply(split(x$estimate, x$group),
+                function(e) weighted.mean(abs(e), weights))
+  data.frame(term = names(est), estimate = est)
+}
+
+ineq <- avg_comparisons(fit,
+  variables = list(race4cat = "pairwise"),
+  newdata = hrs,
+  hypothesis = meineq)
+ineq
+```
+```{.r-output}
+      Term Estimate Std. Error    z Pr(>|z|)    S  2.5 % 97.5 %
+ Base        0.0464     0.0118 3.92   <0.001 13.5 0.0232 0.0696
+ Mediators   0.0377     0.0113 3.35   <0.001 10.3 0.0157 0.0598
+
+Type: response
+```
+:::
+
+## Test the difference
+
+::: {.r-run}
+```r
+hypotheses(ineq, hypothesis = difference ~ revpairwise)
+```
+```{.r-output}
+           Hypothesis Estimate Std. Error     z Pr(>|z|)   S   2.5 % 97.5 %
+ (Base) - (Mediators)  0.00869     0.0224 0.389    0.698 0.5 -0.0351 0.0525
+```
+:::
+
+The difference is the reduction in racial-ethnic inequality once education,
+wealth, and income are in the model, with its standard error and p-value: the
+part of the inequality those variables account for. Here the reduction is
+small and not statistically significant.

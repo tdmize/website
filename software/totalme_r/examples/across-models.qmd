@@ -1,0 +1,89 @@
+---
+title: "Comparing Total MEs across models"
+subtitle: "Example 5.2.e of Mize and Han (2025), in R: mediation/attenuation"
+---
+
+Does the total effect of a college degree on self-rated health shrink once
+family income is in the model? Fit the model without income and the model
+with it, and combine them with [`suest`](/software/suest_r/index.qmd) to test
+the difference in the Total ME. The same example in Stata is on the
+[`totalme` page](/software/totalme/examples/across-models.qmd).
+
+## Load and prepare the data
+
+::: {.r-run}
+```r
+library(haven)           # Read Stata data
+library(marginaleffects) # Marginal effects and hypotheses
+library(nnet)            # Multinomial logit
+library(suest)           # Combine models
+
+gss <- read_dta("https://tdmize.github.io/data/data/cda_gss.dta")
+gss <- gss[gss$year >= 2000 & gss$year <= 2021, ]
+
+vars <- c("healthR", "college", "race4", "age", "woman", "parent", "married", "faminc")
+gss <- gss[complete.cases(gss[vars]), vars]
+
+fvars <- c("healthR", "college", "race4", "woman", "parent", "married")
+gss[fvars] <- lapply(gss[fvars], as_factor)
+nrow(gss)
+```
+```{.r-output}
+[1] 19292
+```
+:::
+
+## Fit and combine the models
+
+```r
+basemod <- multinom(healthR ~ college + race4 + age + woman + parent +
+  married, data = gss, trace = FALSE)
+medmod <- multinom(healthR ~ college + race4 + age + woman + parent +
+  married + faminc, data = gss, trace = FALSE)
+
+fit <- suest(basemod, medmod, model_names = c("Base", "Income"))
+```
+
+## Total ME in each model
+
+The combined object labels each marginal effect with its model and outcome
+category (for example, `Base::Poor`). A small function adds up the absolute
+effects within each model and divides by two:
+
+::: {.r-run}
+```r
+totalme <- function(x) {
+  model <- sub("::.*", "", x$group)
+  est <- tapply(abs(x$estimate), model, sum)[unique(model)] / 2
+  data.frame(term = names(est), estimate = as.numeric(est))
+}
+
+tme <- avg_comparisons(fit,
+  variables = list(college = "reference"),
+  newdata = gss,
+  hypothesis = totalme)
+tme
+```
+```{.r-output}
+   Term Estimate Std. Error    z Pr(>|z|)     S 2.5 % 97.5 %
+ Base      0.159    0.00605 26.3   <0.001 505.4 0.147  0.171
+ Income    0.118    0.00673 17.5   <0.001 225.7 0.105  0.131
+
+Type: response
+```
+:::
+
+## Test the difference
+
+::: {.r-run}
+```r
+hypotheses(tme, hypothesis = difference ~ revpairwise)
+```
+```{.r-output}
+        Hypothesis Estimate Std. Error  z Pr(>|z|)     S 2.5 % 97.5 %
+ (Base) - (Income)   0.0414    0.00276 15   <0.001 166.6 0.036 0.0468
+```
+:::
+
+The difference is the part of the total college effect that family income
+accounts for, with its standard error.

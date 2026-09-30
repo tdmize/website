@@ -1,0 +1,89 @@
+---
+title: "Comparing ME inequalities across groups"
+subtitle: "Example 4.3.a of Mize and Han (2025), in R: models fit on different samples"
+---
+
+When the question is about different groups or time periods, the comparison
+uses a different sample for each. Here the question is whether
+religious-tradition differences in willingness to let a gay man speak in
+public were larger before 1980 than after 2010. The same example in Stata is
+on the [`meinequality` page](/software/meinequality/examples/across-groups.qmd).
+
+## Load and prepare the data
+
+::: {.r-run}
+```r
+library(haven)           # Read Stata data
+library(marginaleffects) # Marginal effects and hypotheses
+
+gss <- read_dta("https://tdmize.github.io/data/data/cda_gss.dta")
+
+vars <- c("spkhomo", "reltrad", "age", "woman", "year")
+gss <- gss[complete.cases(gss[vars]), vars]
+gss <- gss[gss$year < 1980 | gss$year >= 2010, ]
+gss$period <- factor(ifelse(gss$year < 1980, "Before 1980", "2010 and later"),
+                     levels = c("Before 1980", "2010 and later"))
+gss[c("spkhomo", "reltrad", "woman")] <- lapply(gss[c("spkhomo", "reltrad", "woman")], as_factor)
+table(gss$period)
+```
+```{.r-output}
+   Before 1980 2010 and later 
+          5593           8226 
+```
+:::
+
+## Fit the model
+
+Interacting every predictor with `period` is the same as fitting a separate
+model to each period, and keeps both in one model for the comparison:
+
+```r
+spkmod <- glm(spkhomo ~ (reltrad + age + woman) * period,
+  family = binomial("logit"), data = gss)
+```
+
+## Unweighted ME inequality in each period
+
+`by = "period"` averages each period's effects over its own sample, and a
+small function takes the mean absolute pairwise difference within each period.
+`vcov = "HC0"` gives robust standard errors.
+
+::: {.r-run}
+```r
+meineq <- function(x) {
+  est <- sapply(split(x$estimate, x$period), function(e) mean(abs(e)))
+  data.frame(term = names(est), estimate = est)
+}
+
+ineq <- avg_comparisons(spkmod,
+  variables = list(reltrad = "pairwise"),
+  by = "period",
+  vcov = "HC0",
+  hypothesis = meineq)
+ineq
+```
+```{.r-output}
+           Term Estimate Std. Error    z Pr(>|z|)     S  2.5 % 97.5 %
+ Before 1980      0.1556    0.01086 14.3   <0.001 152.3 0.1343 0.1768
+ 2010 and later   0.0722    0.00661 10.9   <0.001  89.7 0.0592 0.0851
+
+Type: response
+```
+:::
+
+## Test the difference
+
+::: {.r-run}
+```r
+hypotheses(ineq, hypothesis = difference ~ revpairwise)
+```
+```{.r-output}
+                       Hypothesis Estimate Std. Error    z Pr(>|z|)    S  2.5 % 97.5 %
+ (Before 1980) - (2010 and later)   0.0834     0.0127 6.56   <0.001 34.1 0.0585  0.108
+```
+:::
+
+The ME inequality is significantly larger before 1980 than after 2010:
+religious traditions have converged on this question. The unweighted version
+compares the marginal effects alone; the weighted version would also reflect
+the change in the religious makeup of the GSS between the two periods.

@@ -1,0 +1,101 @@
+---
+title: "Inequality in categorical models"
+subtitle: "Example 4.2.b of Mize and Han (2025), in R"
+---
+
+Because the statistic is built from predictions, it works the same way after
+a binary logit, where the predictions are probabilities. This example
+summarizes several nominal and binary predictors of conservative
+identification at once: gender, race-ethnicity, and subjective class. The same
+example in Stata is on the
+[`meinequality` page](/software/meinequality/examples/categorical-models.qmd).
+
+## Load and prepare the data
+
+::: {.r-run}
+```r
+library(haven)           # Read Stata data
+library(marginaleffects) # Marginal effects and hypotheses
+
+source("https://raw.githubusercontent.com/tdmize/Rfunctions/main/ME_helper_functions.R")
+
+gss <- read_dta("https://tdmize.github.io/data/data/cda_gss.dta")
+gss <- gss[gss$year == 2021, ]
+
+vars <- c("conserv", "race4", "woman", "class", "age")
+gss <- gss[complete.cases(gss[vars]), vars]
+fvars <- c("conserv", "race4", "woman", "class")
+gss[fvars] <- lapply(gss[fvars], as_factor)
+gss <- droplevels(gss)
+nrow(gss)
+```
+```{.r-output}
+[1] 3608
+```
+:::
+
+## Fit the model
+
+```r
+conmod <- glm(conserv ~ woman + race4 + class,
+  family = binomial("logit"), data = gss)
+```
+
+## ME inequality for each predictor
+
+Each predictor gets its own weights. Gender:
+
+::: {.r-run}
+```r
+w_woman <- meineq_weights(conmod, woman)
+avg_comparisons(conmod,
+  variables = list(woman = "pairwise"),
+  hypothesis = ~ I(weighted.mean(abs(x), w_woman)))
+```
+```{.r-output}
+ Estimate Std. Error    z Pr(>|z|)    S 2.5 % 97.5 %
+   0.0695     0.0156 4.47   <0.001 16.9 0.039    0.1
+
+Type: response
+```
+:::
+
+Race-ethnicity:
+
+::: {.r-run}
+```r
+w_race <- meineq_weights(conmod, race4)
+avg_comparisons(conmod,
+  variables = list(race4 = "pairwise"),
+  hypothesis = ~ I(weighted.mean(abs(x), w_race)))
+```
+```{.r-output}
+ Estimate Std. Error    z Pr(>|z|)    S  2.5 % 97.5 %
+    0.108     0.0135 7.99   <0.001 49.4 0.0814  0.134
+
+Type: response
+```
+:::
+
+Subjective class:
+
+::: {.r-run}
+```r
+w_class <- meineq_weights(conmod, class)
+avg_comparisons(conmod,
+  variables = list(class = "pairwise"),
+  hypothesis = ~ I(weighted.mean(abs(x), w_class)))
+```
+```{.r-output}
+ Estimate Std. Error     z Pr(>|z|)   S   2.5 % 97.5 %
+   0.0122     0.0174 0.701    0.484 1.0 -0.0219 0.0464
+
+Type: response
+```
+:::
+
+Class has no overall effect on conservative identification. Racial-ethnic
+groups differ by about 11 percentage points on average. For a binary variable
+such as `woman` the ME inequality is simply the absolute value of its marginal
+effect, which puts binary and multi-category predictors on the same footing
+for comparison.
