@@ -29,8 +29,13 @@ import urllib.parse
 import urllib.request
 import zipfile
 
-import yaml
-from bs4 import BeautifulSoup, Comment, NavigableString, Tag
+try:
+    import yaml
+    from bs4 import BeautifulSoup, Comment
+except ImportError:
+    sys.exit("First run:  python -m pip install beautifulsoup4 pyyaml")
+
+QUARTO = shutil.which("quarto")
 
 SKIP = {"404.html", "authors.html", "LICENSE-text.html", "LICENSE.html", "DEVELOPMENT.html"}
 IMAGE_EXT = (".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp")
@@ -150,7 +155,7 @@ def segments_md(segs):
 
 
 def to_markdown(html):
-    r = subprocess.run(["quarto", "pandoc", "-f", "html", "-t",
+    r = subprocess.run([QUARTO, "pandoc", "-f", "html", "-t",
                         "markdown-raw_html-native_divs-native_spans-bracketed_spans-link_attributes"
                         "-header_attributes-fenced_divs-smart-simple_tables-multiline_tables-grid_tables",
                         "--wrap=none"], input=html, capture_output=True, text=True, encoding="utf-8")
@@ -197,7 +202,9 @@ def main():
         sys.exit("usage: python tools/pkgdown2qmd.py <package>   (e.g. cleanplots)")
     pkg = sys.argv[1]
     if not os.path.exists("_quarto.yml"):
-        sys.exit("run this from the website folder")
+        sys.exit("run this from the website folder (cd ~/website)")
+    if QUARTO is None:
+        sys.exit("Quarto was not found; check that  quarto --version  works in this window")
     out = os.path.join("software", f"{pkg}_r")
     tmp = tempfile.mkdtemp()
     site = download(pkg, tmp)
