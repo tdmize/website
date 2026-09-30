@@ -1,0 +1,78 @@
+---
+title: "Total MEs for a single model"
+subtitle: "Example 5.2.c of Mize and Han (2025), in R"
+---
+
+Self-rated health has four ordered categories -- poor, fair, good, and
+excellent -- so in a multinomial logit each predictor has four marginal
+effects, one per category, and it is not obvious which predictor matters
+most. The Total ME sums the absolute effects across the categories (and halves
+the sum) to give one summary of how much probability each predictor moves.
+This example uses the 2000--2021 General Social Survey. The same example in
+Stata is on the [`totalme` page](/software/totalme/examples/single-model.qmd).
+
+## Load and prepare the data
+
+::: {.r-run}
+```r
+library(haven)           # Read Stata data
+library(marginaleffects) # Marginal effects and hypotheses
+library(nnet)            # Multinomial logit
+
+gss <- read_dta("https://tdmize.github.io/data/data/cda_gss.dta")
+gss <- gss[gss$year >= 2000 & gss$year <= 2021, ]
+
+vars <- c("healthR", "race4", "age", "woman", "parent", "married", "faminc", "degree")
+gss <- gss[complete.cases(gss[vars]), vars]
+
+fvars <- c("healthR", "race4", "woman", "parent", "married", "degree")
+gss[fvars] <- lapply(gss[fvars], as_factor)
+nrow(gss)
+```
+```{.r-output}
+[1] 19292
+```
+:::
+
+The sample has 19,292 people, the same as the Stata example.
+
+## Fit the multinomial logit model
+
+```r
+healthmod <- multinom(healthR ~ race4 + age + woman + parent +
+  married + faminc + degree, data = gss, trace = FALSE)
+```
+
+## Calculate the Total MEs
+
+As in the Stata example, this calculates the Total ME for a one standard
+deviation change in age and for the binary predictors `married` and `parent`.
+
+::: {.r-run}
+```r
+avg_comparisons(healthmod,
+  variables = list(age = "sd",
+                   married = "reference",
+                   parent = "reference"),
+  hypothesis = ~ I(sum(abs(x)) / 2) | term)
+```
+```{.r-output}
+    Term Estimate Std. Error     z Pr(>|z|)     S  2.5 % 97.5 %
+ age       0.0515    0.00313 16.44  < 0.001 199.3 0.0454 0.0576
+ married   0.0315    0.00665  4.74  < 0.001  18.8 0.0185 0.0445
+ parent    0.0266    0.00906  2.93  0.00337   8.2 0.0088 0.0443
+
+Type: probs
+```
+:::
+
+The Total MEs match the Stata example: 0.051 for age, 0.031 for married, and
+0.027 for parent. The standard errors are very close to Stata's but not
+identical (for age, z = 16.4 here and 16.8 in Stata).
+
+For `age`, `"sd"` asks for a one standard deviation change centered on the
+mean, as in Stata. For the binary predictors, `"reference"` is the change from
+the reference category to the other category. The Total ME puts continuous and
+binary predictors on the same scale: here, age moves about 5 percentage points
+of probability between the health categories, compared with about 3 for being
+married or a parent.

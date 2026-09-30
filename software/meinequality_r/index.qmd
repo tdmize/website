@@ -1,0 +1,73 @@
+---
+title: "ME inequality in R"
+subtitle: "Inequality summary effects of nominal and ordinal independent variables"
+---
+
+The **ME inequality** statistic from Mize and Han (2025) summarizes the effect
+of a nominal or ordinal independent variable in a single number. A nominal
+variable with *L* categories has *L(L-1)/2* pairwise marginal effects -- one
+for every pair of categories. ME inequality is the average absolute pairwise
+difference in predictions across the categories: it answers "how much does the
+outcome differ across the levels of this variable, overall?"
+
+In R, you can calculate it with the
+[`marginaleffects`](https://marginaleffects.com/) package, which handles the
+marginal effects and the standard errors. For the weighted version, a small
+helper function, [`meineq_weights()`](https://github.com/tdmize/Rfunctions/blob/main/ME_helper_functions.R),
+calculates the weights. The same statistic is available in Stata with the
+[`meinequality`](/software/meinequality/index.qmd) command.
+
+## Setup
+
+`meineq_weights()` is in my `Rfunctions` repository on GitHub. Load it with
+`source()`:
+
+```r
+library(marginaleffects) # Marginal effects and hypotheses
+
+source("https://raw.githubusercontent.com/tdmize/Rfunctions/main/ME_helper_functions.R")
+```
+
+## Weighted ME inequality
+
+Weighted ME inequality is the default in Mize and Han (2025). Each pairwise
+comparison counts in proportion to the share of the sample in the two groups
+being compared. Fit the model with the nominal variable as a factor, then:
+
+```r
+weights <- meineq_weights(mod, nominalvar)
+wmean <- function(x) weighted.mean(x, weights)
+
+avg_comparisons(mod,
+  variables = list(nominalvar = "pairwise"),
+  hypothesis = ~ I(wmean(abs(x))))
+```
+
+`avg_comparisons()` calculates every pairwise difference in predictions, and
+`hypothesis` turns them into their weighted average absolute difference.
+`meineq_weights()` takes the model rather than the data, so the weights come
+from the model's estimation sample. For survey models, it uses the
+survey-weighted share of each category.
+
+## Unweighted ME inequality
+
+The unweighted version gives every pairwise comparison the same weight:
+
+```r
+avg_comparisons(mod,
+  variables = list(nominalvar = "pairwise"),
+  hypothesis = ~ I(mean(abs(x))))
+```
+
+## Examples
+
+- [Inequality as a summary measure](examples/summary-measure.qmd) reproduces
+  Example 4.1 of Mize and Han (2025) with the 2021 General Social Survey.
+
+More of the article's examples will be added here.
+
+## Citation
+
+If you use these measures, please cite:
+
+> Mize, Trenton D. and Bing Han. 2025. "Inequality and Total Effect Summary Measures for Nominal and Ordinal Variables." *Sociological Science* 12:115–157.

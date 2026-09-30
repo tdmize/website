@@ -1,0 +1,117 @@
+---
+title: "Inequality as a summary measure"
+subtitle: "Example 4.1 of Mize and Han (2025), in R"
+---
+
+A nominal variable such as race-ethnicity has no single marginal effect: with
+four categories there are six pairwise differences in predictions. The ME
+inequality statistic summarizes them as one number -- the average absolute
+difference in the outcome across the categories. This example uses a linear
+regression of hourly wages on a four-category race-ethnicity variable in the
+2021 General Social Survey. The same example in Stata is on the
+[`meinequality` page](/software/meinequality/examples/summary-measure.qmd).
+
+## Load and prepare the data
+
+The data are read directly from the web. Keeping only the model's variables
+avoids a `marginaleffects` warning about large data frames.
+
+::: {.r-run}
+```r
+library(haven)           # Read Stata data
+library(marginaleffects) # Marginal effects and hypotheses
+
+source("https://raw.githubusercontent.com/tdmize/Rfunctions/main/ME_helper_functions.R")
+
+gss <- read_dta("https://tdmize.github.io/data/data/cda_gss.dta")
+gss <- gss[gss$year == 2021, ]
+
+vars <- c("wages", "race4", "age", "woman")
+gss <- gss[complete.cases(gss[vars]), vars]
+gss[c("race4", "woman")] <- lapply(gss[c("race4", "woman")], as_factor)
+nrow(gss)
+```
+```{.r-output}
+[1] 1714
+```
+:::
+
+The sample has 1,714 people, the same as the Stata example.
+
+## Fit the model
+
+```r
+wagemod <- lm(wages ~ race4 + age + woman, data = gss)
+```
+
+## The six pairwise differences
+
+These are the six marginal effects that ME inequality summarizes:
+
+::: {.r-run}
+```r
+avg_comparisons(wagemod, variables = list(race4 = "pairwise"))
+```
+```{.r-output}
+         Contrast Estimate Std. Error      z Pr(>|z|)    S  2.5 % 97.5 %
+ Black - White      -3.440       1.35 -2.546  0.01089  6.5  -6.09 -0.792
+ Hispanic - Black   -0.326       1.75 -0.186  0.85257  0.2  -3.76  3.111
+ Hispanic - Other  -10.430       2.03 -5.134  < 0.001 21.7 -14.41 -6.448
+ Hispanic - White   -3.766       1.29 -2.911  0.00361  8.1  -6.30 -1.230
+ Other - Black      10.104       2.08  4.855  < 0.001 19.7   6.02 14.184
+ Other - White       6.664       1.70  3.910  < 0.001 13.4   3.32 10.005
+
+Term: race4
+Type: response
+```
+:::
+
+## Weighted ME inequality
+
+Mize and Han (2025) recommend weighting each pairwise comparison by the share
+of the sample in the two groups being compared. `meineq_weights()` calculates
+those weights from the model's estimation sample.
+
+::: {.r-run}
+```r
+weights <- meineq_weights(wagemod, race4)
+wmean <- function(x) weighted.mean(x, weights)
+
+avg_comparisons(wagemod,
+  variables = list(race4 = "pairwise"),
+  hypothesis = ~ I(wmean(abs(x))))
+```
+```{.r-output}
+ Estimate Std. Error   z Pr(>|z|)    S 2.5 % 97.5 %
+      4.9       0.86 5.7   <0.001 26.3  3.22   6.59
+
+Type: response
+```
+:::
+
+The weighted ME inequality is 4.90 (SE = 0.86), matching the Stata result.
+Racial-ethnic groups' wages differ by close to $5 per hour, on average.
+
+## Unweighted ME inequality
+
+The unweighted version gives all six comparisons the same weight:
+
+::: {.r-run}
+```r
+avg_comparisons(wagemod,
+  variables = list(race4 = "pairwise"),
+  hypothesis = ~ I(mean(abs(x))))
+```
+```{.r-output}
+ Estimate Std. Error    z Pr(>|z|)    S 2.5 % 97.5 %
+     5.79       1.04 5.56   <0.001 25.1  3.75   7.83
+
+Type: response
+```
+:::
+
+The unweighted ME inequality is 5.79 (SE = 1.04), also matching Stata. It is
+larger than the weighted version because the two biggest differences
+(Hispanic vs. Other and Black vs. Other) are between smaller groups, while
+comparisons with the much larger White group count for more in the weighted
+version.

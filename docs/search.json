@@ -1271,7 +1271,7 @@
     "href": "software/totalme/index.html#where-to-start",
     "title": "totalme",
     "section": "Where to start",
-    "text": "Where to start\n\nOptions goes through every option with an example of each.\nThe Examples in the sidebar reproduce the examples from Mize and Han (2025): Total MEs for a single model, comparisons across models, and Total ME inequalities for nominal predictors.\nExamples from the help file runs the help file’s examples, and the help file is on the site.\nThe same summary is available as the totalme option of mecompare, which places it above the per-outcome marginal effects it summarizes.",
+    "text": "Where to start\n\nOptions goes through every option with an example of each.\nThe Examples in the sidebar reproduce the examples from Mize and Han (2025): Total MEs for a single model, comparisons across models, and Total ME inequalities for nominal predictors.\nExamples from the help file runs the help file’s examples, and the help file is on the site.\nThe same summary is available as the totalme option of mecompare, which places it above the per-outcome marginal effects it summarizes.\nTo calculate it in R, see Total marginal effects in R.",
     "crumbs": [
       "Software",
       "totalme"
@@ -2672,7 +2672,7 @@
     "href": "software/meinequality/index.html#where-to-start",
     "title": "meinequality",
     "section": "Where to start",
-    "text": "Where to start\n\nOptions goes through every option with an example of each.\nThe Examples in the sidebar reproduce the examples from Mize and Han (2025): inequality as a summary measure, inequality in categorical models, and comparisons of ME inequality across models and across groups.\nExamples from the help file runs the help file’s examples, and the help file is on the site.\nThe same summary is available as the meinequality option of mecompare, which places it above the pairwise contrasts it summarizes.",
+    "text": "Where to start\n\nOptions goes through every option with an example of each.\nThe Examples in the sidebar reproduce the examples from Mize and Han (2025): inequality as a summary measure, inequality in categorical models, and comparisons of ME inequality across models and across groups.\nExamples from the help file runs the help file’s examples, and the help file is on the site.\nThe same summary is available as the meinequality option of mecompare, which places it above the pairwise contrasts it summarizes.\nTo calculate it in R, see ME inequality in R.",
     "crumbs": [
       "Software",
       "meinequality"
@@ -2802,6 +2802,72 @@
       "Software",
       "metest",
       "Tests across three or more models"
+    ]
+  },
+  {
+    "objectID": "software/meinequality_r/index.html",
+    "href": "software/meinequality_r/index.html",
+    "title": "ME inequality in R",
+    "section": "",
+    "text": "The ME inequality statistic from Mize and Han (2025) summarizes the effect of a nominal or ordinal independent variable in a single number. A nominal variable with L categories has L(L-1)/2 pairwise marginal effects – one for every pair of categories. ME inequality is the average absolute pairwise difference in predictions across the categories: it answers “how much does the outcome differ across the levels of this variable, overall?”\nIn R, you can calculate it with the marginaleffects package, which handles the marginal effects and the standard errors. For the weighted version, a small helper function, meineq_weights(), calculates the weights. The same statistic is available in Stata with the meinequality command.",
+    "crumbs": [
+      "Software",
+      "meinequality (R)"
+    ]
+  },
+  {
+    "objectID": "software/meinequality_r/index.html#setup",
+    "href": "software/meinequality_r/index.html#setup",
+    "title": "ME inequality in R",
+    "section": "Setup",
+    "text": "Setup\nmeineq_weights() is in my Rfunctions repository on GitHub. Load it with source():\nlibrary(marginaleffects) # Marginal effects and hypotheses\n\nsource(\"https://raw.githubusercontent.com/tdmize/Rfunctions/main/ME_helper_functions.R\")",
+    "crumbs": [
+      "Software",
+      "meinequality (R)"
+    ]
+  },
+  {
+    "objectID": "software/meinequality_r/index.html#weighted-me-inequality",
+    "href": "software/meinequality_r/index.html#weighted-me-inequality",
+    "title": "ME inequality in R",
+    "section": "Weighted ME inequality",
+    "text": "Weighted ME inequality\nWeighted ME inequality is the default in Mize and Han (2025). Each pairwise comparison counts in proportion to the share of the sample in the two groups being compared. Fit the model with the nominal variable as a factor, then:\nweights &lt;- meineq_weights(mod, nominalvar)\nwmean &lt;- function(x) weighted.mean(x, weights)\n\navg_comparisons(mod,\n  variables = list(nominalvar = \"pairwise\"),\n  hypothesis = ~ I(wmean(abs(x))))\navg_comparisons() calculates every pairwise difference in predictions, and hypothesis turns them into their weighted average absolute difference. meineq_weights() takes the model rather than the data, so the weights come from the model’s estimation sample. For survey models, it uses the survey-weighted share of each category.",
+    "crumbs": [
+      "Software",
+      "meinequality (R)"
+    ]
+  },
+  {
+    "objectID": "software/meinequality_r/index.html#unweighted-me-inequality",
+    "href": "software/meinequality_r/index.html#unweighted-me-inequality",
+    "title": "ME inequality in R",
+    "section": "Unweighted ME inequality",
+    "text": "Unweighted ME inequality\nThe unweighted version gives every pairwise comparison the same weight:\navg_comparisons(mod,\n  variables = list(nominalvar = \"pairwise\"),\n  hypothesis = ~ I(mean(abs(x))))",
+    "crumbs": [
+      "Software",
+      "meinequality (R)"
+    ]
+  },
+  {
+    "objectID": "software/meinequality_r/index.html#examples",
+    "href": "software/meinequality_r/index.html#examples",
+    "title": "ME inequality in R",
+    "section": "Examples",
+    "text": "Examples\n\nInequality as a summary measure reproduces Example 4.1 of Mize and Han (2025) with the 2021 General Social Survey.\n\nMore of the article’s examples will be added here.",
+    "crumbs": [
+      "Software",
+      "meinequality (R)"
+    ]
+  },
+  {
+    "objectID": "software/meinequality_r/index.html#citation",
+    "href": "software/meinequality_r/index.html#citation",
+    "title": "ME inequality in R",
+    "section": "Citation",
+    "text": "Citation\nIf you use these measures, please cite:\n\nMize, Trenton D. and Bing Han. 2025. “Inequality and Total Effect Summary Measures for Nominal and Ordinal Variables.” Sociological Science 12:115–157.",
+    "crumbs": [
+      "Software",
+      "meinequality (R)"
     ]
   },
   {
@@ -3235,6 +3301,54 @@
     ]
   },
   {
+    "objectID": "software/totalme_r/examples/single-model.html",
+    "href": "software/totalme_r/examples/single-model.html",
+    "title": "Total MEs for a single model",
+    "section": "",
+    "text": "Self-rated health has four ordered categories – poor, fair, good, and excellent – so in a multinomial logit each predictor has four marginal effects, one per category, and it is not obvious which predictor matters most. The Total ME sums the absolute effects across the categories (and halves the sum) to give one summary of how much probability each predictor moves. This example uses the 2000–2021 General Social Survey. The same example in Stata is on the totalme page.",
+    "crumbs": [
+      "Software",
+      "totalme (R)",
+      "Examples"
+    ]
+  },
+  {
+    "objectID": "software/totalme_r/examples/single-model.html#load-and-prepare-the-data",
+    "href": "software/totalme_r/examples/single-model.html#load-and-prepare-the-data",
+    "title": "Total MEs for a single model",
+    "section": "Load and prepare the data",
+    "text": "Load and prepare the data\n\nlibrary(haven)           # Read Stata data\nlibrary(marginaleffects) # Marginal effects and hypotheses\nlibrary(nnet)            # Multinomial logit\n\ngss &lt;- read_dta(\"https://tdmize.github.io/data/data/cda_gss.dta\")\ngss &lt;- gss[gss$year &gt;= 2000 & gss$year &lt;= 2021, ]\n\nvars &lt;- c(\"healthR\", \"race4\", \"age\", \"woman\", \"parent\", \"married\", \"faminc\", \"degree\")\ngss &lt;- gss[complete.cases(gss[vars]), vars]\n\nfvars &lt;- c(\"healthR\", \"race4\", \"woman\", \"parent\", \"married\", \"degree\")\ngss[fvars] &lt;- lapply(gss[fvars], as_factor)\nnrow(gss)\n[1] 19292\n\nThe sample has 19,292 people, the same as the Stata example.",
+    "crumbs": [
+      "Software",
+      "totalme (R)",
+      "Examples"
+    ]
+  },
+  {
+    "objectID": "software/totalme_r/examples/single-model.html#fit-the-multinomial-logit-model",
+    "href": "software/totalme_r/examples/single-model.html#fit-the-multinomial-logit-model",
+    "title": "Total MEs for a single model",
+    "section": "Fit the multinomial logit model",
+    "text": "Fit the multinomial logit model\nhealthmod &lt;- multinom(healthR ~ race4 + age + woman + parent +\n  married + faminc + degree, data = gss, trace = FALSE)",
+    "crumbs": [
+      "Software",
+      "totalme (R)",
+      "Examples"
+    ]
+  },
+  {
+    "objectID": "software/totalme_r/examples/single-model.html#calculate-the-total-mes",
+    "href": "software/totalme_r/examples/single-model.html#calculate-the-total-mes",
+    "title": "Total MEs for a single model",
+    "section": "Calculate the Total MEs",
+    "text": "Calculate the Total MEs\nAs in the Stata example, this calculates the Total ME for a one standard deviation change in age and for the binary predictors married and parent.\n\navg_comparisons(healthmod,\n  variables = list(age = \"sd\",\n                   married = \"reference\",\n                   parent = \"reference\"),\n  hypothesis = ~ I(sum(abs(x)) / 2) | term)\n    Term Estimate Std. Error     z Pr(&gt;|z|)     S  2.5 % 97.5 %\n age       0.0515    0.00313 16.44  &lt; 0.001 199.3 0.0454 0.0576\n married   0.0315    0.00665  4.74  &lt; 0.001  18.8 0.0185 0.0445\n parent    0.0266    0.00906  2.93  0.00337   8.2 0.0088 0.0443\n\nType: probs\n\nThe Total MEs match the Stata example: 0.051 for age, 0.031 for married, and 0.027 for parent. The standard errors are very close to Stata’s but not identical (for age, z = 16.4 here and 16.8 in Stata).\nFor age, \"sd\" asks for a one standard deviation change centered on the mean, as in Stata. For the binary predictors, \"reference\" is the change from the reference category to the other category. The Total ME puts continuous and binary predictors on the same scale: here, age moves about 5 percentage points of probability between the health categories, compared with about 3 for being married or a parent.",
+    "crumbs": [
+      "Software",
+      "totalme (R)",
+      "Examples"
+    ]
+  },
+  {
     "objectID": "index.html",
     "href": "index.html",
     "title": "Overview",
@@ -3274,7 +3388,7 @@
     "href": "software.html",
     "title": "Software",
     "section": "",
-    "text": "A list of Stata commands and R packages I have written. Click on the package name below to read more about each (including links to download):\n\n\n\nbalanceplot: plots of standardized imbalance statistics\ncleanplots: Stata graphics scheme for professional and accessible graphs \ndesctable: professionally formatted descriptive statistics tables\nirt_coef: y*-standardized coefficient estimates for item response theory models\nirt_me: marginal effect estimates for item response theory models\nlca_entropy: entropy fit statistic calculation for latent class analysis models\nmecompare: comparing marginal effects across models\nmeinequality: marginal effects inequality statistics\nmetest: custom tests of marginal effects and other estimates\nsgmediation2: Stata command for Sobel-Goodman tests of statistical mediation in linear regression \nsuest2: seemingly-unrelated estimation for most regression models in Stata\ntotalme: total marginal effects estimates\nusetdm: command to download datasets off web for class and workshop examples\n\n\n\n\n\ncleanplots: cleanplots color scales and theme for ggplot2\nsuest: seemingly unrelated estimation for comparing predictions and marginal effects across models",
+    "text": "A list of Stata commands and R packages I have written. Click on the package name below to read more about each (including links to download):\n\n\n\nbalanceplot: plots of standardized imbalance statistics\ncleanplots: Stata graphics scheme for professional and accessible graphs \ndesctable: professionally formatted descriptive statistics tables\nirt_coef: y*-standardized coefficient estimates for item response theory models\nirt_me: marginal effect estimates for item response theory models\nlca_entropy: entropy fit statistic calculation for latent class analysis models\nmecompare: comparing marginal effects across models\nmeinequality: marginal effects inequality statistics\nmetest: custom tests of marginal effects and other estimates\nsgmediation2: Stata command for Sobel-Goodman tests of statistical mediation in linear regression \nsuest2: seemingly-unrelated estimation for most regression models in Stata\ntotalme: total marginal effects estimates\nusetdm: command to download datasets off web for class and workshop examples\n\n\n\n\n\ncleanplots: cleanplots color scales and theme for ggplot2\nsuest: seemingly unrelated estimation for comparing predictions and marginal effects across models\nmeinequality: marginal effects inequality statistics in R, with marginaleffects\ntotalme: total marginal effects in R, with marginaleffects",
     "crumbs": [
       "Software"
     ]
@@ -3294,7 +3408,7 @@
     "href": "software.html#r",
     "title": "Software",
     "section": "",
-    "text": "cleanplots: cleanplots color scales and theme for ggplot2\nsuest: seemingly unrelated estimation for comparing predictions and marginal effects across models",
+    "text": "cleanplots: cleanplots color scales and theme for ggplot2\nsuest: seemingly unrelated estimation for comparing predictions and marginal effects across models\nmeinequality: marginal effects inequality statistics in R, with marginaleffects\ntotalme: total marginal effects in R, with marginaleffects",
     "crumbs": [
       "Software"
     ]
@@ -4603,6 +4717,72 @@
     "text": "We have some funds available for presenting authors who could not otherwise attend the conference without travel assistance. We will make decisions about travel funds after abstracts have been accepted. Our tentative plan is to cover the hotel costs in the Purdue Union hotel for those awarded travel funds."
   },
   {
+    "objectID": "software/totalme_r/index.html",
+    "href": "software/totalme_r/index.html",
+    "title": "Total marginal effects in R",
+    "section": "",
+    "text": "In a model with several outcome categories – a multinomial or ordered logit or probit, for example – a predictor has one marginal effect per category, and no single one of them says how much the predictor matters. The Total marginal effect (Total ME) from Mize and Han (2025) summarizes them in a single number: the sum of the absolute values of the marginal effects across all outcome categories, divided by two. That is the total amount of probability the predictor moves between the categories.\nIn R, you can calculate it with the marginaleffects package, which handles the marginal effects and the standard errors. For nominal or ordinal predictors, the meineq_weights() helper calculates the weights for the weighted Total ME inequality. The same measures are available in Stata with the totalme command.",
+    "crumbs": [
+      "Software",
+      "totalme (R)"
+    ]
+  },
+  {
+    "objectID": "software/totalme_r/index.html#setup",
+    "href": "software/totalme_r/index.html#setup",
+    "title": "Total marginal effects in R",
+    "section": "Setup",
+    "text": "Setup\nmeineq_weights() is in my Rfunctions repository on GitHub. Load it with source():\nlibrary(marginaleffects) # Marginal effects and hypotheses\n\nsource(\"https://raw.githubusercontent.com/tdmize/Rfunctions/main/ME_helper_functions.R\")",
+    "crumbs": [
+      "Software",
+      "totalme (R)"
+    ]
+  },
+  {
+    "objectID": "software/totalme_r/index.html#continuous-and-binary-predictors",
+    "href": "software/totalme_r/index.html#continuous-and-binary-predictors",
+    "title": "Total marginal effects in R",
+    "section": "Continuous and binary predictors",
+    "text": "Continuous and binary predictors\nTotal MEs for several predictors can be calculated in one call:\navg_comparisons(mod,\n  variables = list(age = \"sd\",\n                   binaryvar = \"reference\"),\n  hypothesis = ~ I(sum(abs(x)) / 2) | term)\navg_comparisons() calculates each predictor’s marginal effect on every outcome category. hypothesis then adds up the absolute values and divides by two, separately for each predictor (| term).",
+    "crumbs": [
+      "Software",
+      "totalme (R)"
+    ]
+  },
+  {
+    "objectID": "software/totalme_r/index.html#nominal-or-ordinal-predictors",
+    "href": "software/totalme_r/index.html#nominal-or-ordinal-predictors",
+    "title": "Total marginal effects in R",
+    "section": "Nominal or ordinal predictors",
+    "text": "Nominal or ordinal predictors\nFor a nominal predictor, first calculate a Total ME for every pairwise contrast between its categories (| contrast), then average those using the ME inequality weights:\navg_comparisons(mod,\n  variables = list(nominalvar = \"pairwise\"),\n  hypothesis = ~ I(sum(abs(x)) / 2) | contrast) |&gt;\n  hypotheses(hypothesis = meineq_weights(mod, nominalvar))\nThe result is the weighted Total ME inequality. With the example data below, this gives 0.047 for race-ethnicity and 0.116 for degree, the same as Example 5.3 in Stata.",
+    "crumbs": [
+      "Software",
+      "totalme (R)"
+    ]
+  },
+  {
+    "objectID": "software/totalme_r/index.html#examples",
+    "href": "software/totalme_r/index.html#examples",
+    "title": "Total marginal effects in R",
+    "section": "Examples",
+    "text": "Examples\n\nTotal MEs for a single model reproduces Example 5.2.c of Mize and Han (2025) with the 2000–2021 General Social Survey.\n\nMore of the article’s examples will be added here.",
+    "crumbs": [
+      "Software",
+      "totalme (R)"
+    ]
+  },
+  {
+    "objectID": "software/totalme_r/index.html#citation",
+    "href": "software/totalme_r/index.html#citation",
+    "title": "Total marginal effects in R",
+    "section": "Citation",
+    "text": "Citation\nIf you use these measures, please cite:\n\nMize, Trenton D. and Bing Han. 2025. “Inequality and Total Effect Summary Measures for Nominal and Ordinal Variables.” Sociological Science 12:115–157.",
+    "crumbs": [
+      "Software",
+      "totalme (R)"
+    ]
+  },
+  {
     "objectID": "software/usetdm/help-examples.html",
     "href": "software/usetdm/help-examples.html",
     "title": "Examples from the help file",
@@ -4799,6 +4979,78 @@
       "Software",
       "desctable",
       "Examples from the help file"
+    ]
+  },
+  {
+    "objectID": "software/meinequality_r/examples/summary-measure.html",
+    "href": "software/meinequality_r/examples/summary-measure.html",
+    "title": "Inequality as a summary measure",
+    "section": "",
+    "text": "A nominal variable such as race-ethnicity has no single marginal effect: with four categories there are six pairwise differences in predictions. The ME inequality statistic summarizes them as one number – the average absolute difference in the outcome across the categories. This example uses a linear regression of hourly wages on a four-category race-ethnicity variable in the 2021 General Social Survey. The same example in Stata is on the meinequality page.",
+    "crumbs": [
+      "Software",
+      "meinequality (R)",
+      "Examples"
+    ]
+  },
+  {
+    "objectID": "software/meinequality_r/examples/summary-measure.html#load-and-prepare-the-data",
+    "href": "software/meinequality_r/examples/summary-measure.html#load-and-prepare-the-data",
+    "title": "Inequality as a summary measure",
+    "section": "Load and prepare the data",
+    "text": "Load and prepare the data\nThe data are read directly from the web. Keeping only the model’s variables avoids a marginaleffects warning about large data frames.\n\nlibrary(haven)           # Read Stata data\nlibrary(marginaleffects) # Marginal effects and hypotheses\n\nsource(\"https://raw.githubusercontent.com/tdmize/Rfunctions/main/ME_helper_functions.R\")\n\ngss &lt;- read_dta(\"https://tdmize.github.io/data/data/cda_gss.dta\")\ngss &lt;- gss[gss$year == 2021, ]\n\nvars &lt;- c(\"wages\", \"race4\", \"age\", \"woman\")\ngss &lt;- gss[complete.cases(gss[vars]), vars]\ngss[c(\"race4\", \"woman\")] &lt;- lapply(gss[c(\"race4\", \"woman\")], as_factor)\nnrow(gss)\n[1] 1714\n\nThe sample has 1,714 people, the same as the Stata example.",
+    "crumbs": [
+      "Software",
+      "meinequality (R)",
+      "Examples"
+    ]
+  },
+  {
+    "objectID": "software/meinequality_r/examples/summary-measure.html#fit-the-model",
+    "href": "software/meinequality_r/examples/summary-measure.html#fit-the-model",
+    "title": "Inequality as a summary measure",
+    "section": "Fit the model",
+    "text": "Fit the model\nwagemod &lt;- lm(wages ~ race4 + age + woman, data = gss)",
+    "crumbs": [
+      "Software",
+      "meinequality (R)",
+      "Examples"
+    ]
+  },
+  {
+    "objectID": "software/meinequality_r/examples/summary-measure.html#the-six-pairwise-differences",
+    "href": "software/meinequality_r/examples/summary-measure.html#the-six-pairwise-differences",
+    "title": "Inequality as a summary measure",
+    "section": "The six pairwise differences",
+    "text": "The six pairwise differences\nThese are the six marginal effects that ME inequality summarizes:\n\navg_comparisons(wagemod, variables = list(race4 = \"pairwise\"))\n         Contrast Estimate Std. Error      z Pr(&gt;|z|)    S  2.5 % 97.5 %\n Black - White      -3.440       1.35 -2.546  0.01089  6.5  -6.09 -0.792\n Hispanic - Black   -0.326       1.75 -0.186  0.85257  0.2  -3.76  3.111\n Hispanic - Other  -10.430       2.03 -5.134  &lt; 0.001 21.7 -14.41 -6.448\n Hispanic - White   -3.766       1.29 -2.911  0.00361  8.1  -6.30 -1.230\n Other - Black      10.104       2.08  4.855  &lt; 0.001 19.7   6.02 14.184\n Other - White       6.664       1.70  3.910  &lt; 0.001 13.4   3.32 10.005\n\nTerm: race4\nType: response",
+    "crumbs": [
+      "Software",
+      "meinequality (R)",
+      "Examples"
+    ]
+  },
+  {
+    "objectID": "software/meinequality_r/examples/summary-measure.html#weighted-me-inequality",
+    "href": "software/meinequality_r/examples/summary-measure.html#weighted-me-inequality",
+    "title": "Inequality as a summary measure",
+    "section": "Weighted ME inequality",
+    "text": "Weighted ME inequality\nMize and Han (2025) recommend weighting each pairwise comparison by the share of the sample in the two groups being compared. meineq_weights() calculates those weights from the model’s estimation sample.\n\nweights &lt;- meineq_weights(wagemod, race4)\nwmean &lt;- function(x) weighted.mean(x, weights)\n\navg_comparisons(wagemod,\n  variables = list(race4 = \"pairwise\"),\n  hypothesis = ~ I(wmean(abs(x))))\n Estimate Std. Error   z Pr(&gt;|z|)    S 2.5 % 97.5 %\n      4.9       0.86 5.7   &lt;0.001 26.3  3.22   6.59\n\nType: response\n\nThe weighted ME inequality is 4.90 (SE = 0.86), matching the Stata result. Racial-ethnic groups’ wages differ by close to $5 per hour, on average.",
+    "crumbs": [
+      "Software",
+      "meinequality (R)",
+      "Examples"
+    ]
+  },
+  {
+    "objectID": "software/meinequality_r/examples/summary-measure.html#unweighted-me-inequality",
+    "href": "software/meinequality_r/examples/summary-measure.html#unweighted-me-inequality",
+    "title": "Inequality as a summary measure",
+    "section": "Unweighted ME inequality",
+    "text": "Unweighted ME inequality\nThe unweighted version gives all six comparisons the same weight:\n\navg_comparisons(wagemod,\n  variables = list(race4 = \"pairwise\"),\n  hypothesis = ~ I(mean(abs(x))))\n Estimate Std. Error    z Pr(&gt;|z|)    S 2.5 % 97.5 %\n     5.79       1.04 5.56   &lt;0.001 25.1  3.75   7.83\n\nType: response\n\nThe unweighted ME inequality is 5.79 (SE = 1.04), also matching Stata. It is larger than the weighted version because the two biggest differences (Hispanic vs. Other and Black vs. Other) are between smaller groups, while comparisons with the much larger White group count for more in the weighted version.",
+    "crumbs": [
+      "Software",
+      "meinequality (R)",
+      "Examples"
     ]
   },
   {
@@ -6628,7 +6880,7 @@
     "href": "software/totalme/examples/single-model.html",
     "title": "Total MEs for a single model",
     "section": "",
-    "text": "Self-rated health has five ordered categories, so in a multinomial logit each predictor has five marginal effects – one per category – and it is not obvious which predictor matters most. The Total ME sums the absolute effects across the categories (and halves the sum) to give one summary of how much probability each predictor moves. This example uses the 2000–2021 GSS.\n\nuse \"https://tdmize.github.io/data/data/cda_gss\", clear\n(cda_gss.dta |  GSS 1972-2021 CDA - Categorical Data Analysis | date created 2023)\ndrop if missing(healthR, race4, age, woman, parent, married, faminc, degree)\n(22,943 observations deleted)\ndrop if year &lt; 2000 | year &gt; 2021\n(26,611 observations deleted)\n\n. \nmlogit healthR i.race4 c.age i.woman i.parent i.married c.faminc i.degree\nIteration 0:  Log likelihood = -22624.777  \nIteration 1:  Log likelihood = -21538.636  \nIteration 2:  Log likelihood = -21388.465  \nIteration 3:  Log likelihood = -21382.092  \nIteration 4:  Log likelihood = -21382.055  \nIteration 5:  Log likelihood = -21382.055  \n\nMultinomial logistic regression                        Number of obs =  19,292\n                                                       LR chi2(36)   = 2485.44\n                                                       Prob &gt; chi2   =  0.0000\nLog likelihood = -21382.055                            Pseudo R2     =  0.0549\n\n-------------------------------------------------------------------------------------------\n                  healthR | Coefficient  Std. err.      z    P&gt;|z|     [95% conf. interval]\n--------------------------+----------------------------------------------------------------\nPoor                      |\n                    race4 |\n                   Black  |     -0.192      0.100   -1.915   0.056       -0.389       0.005\n                   Other  |      0.184      0.178    1.035   0.301       -0.164       0.532\n                Hispanic  |     -0.270      0.118   -2.289   0.022       -0.501      -0.039\n                          |\n                      age |      0.024      0.002   12.070   0.000        0.020       0.028\n                          |\n                    woman |\n                   Women  |      0.025      0.071    0.347   0.729       -0.115       0.164\n                          |\n                   parent |\n                  Parent  |      0.072      0.091    0.794   0.427       -0.106       0.250\n                          |\n                  married |\n                 Married  |     -0.271      0.080   -3.370   0.001       -0.428      -0.113\n                   faminc |     -0.025      0.002  -10.036   0.000       -0.030      -0.020\n                          |\n                   degree |\n             high school  |     -0.896      0.086  -10.477   0.000       -1.064      -0.729\nassociate/junior college  |     -1.207      0.158   -7.632   0.000       -1.517      -0.897\n              bachelor's  |     -1.644      0.144  -11.391   0.000       -1.926      -1.361\n                graduate  |     -1.775      0.194   -9.130   0.000       -2.155      -1.394\n                          |\n                    _cons |     -1.876      0.151  -12.392   0.000       -2.173      -1.580\n--------------------------+----------------------------------------------------------------\nFair                      |\n                    race4 |\n                   Black  |      0.162      0.057    2.855   0.004        0.051       0.274\n                   Other  |      0.192      0.101    1.914   0.056       -0.005       0.390\n                Hispanic  |      0.230      0.062    3.713   0.000        0.109       0.352\n                          |\n                      age |      0.012      0.001    9.789   0.000        0.010       0.014\n                          |\n                    woman |\n                   Women  |     -0.006      0.040   -0.154   0.878       -0.085       0.073\n                          |\n                   parent |\n                  Parent  |     -0.048      0.050   -0.948   0.343       -0.146       0.051\n                          |\n                  married |\n                 Married  |     -0.140      0.044   -3.152   0.002       -0.227      -0.053\n                   faminc |     -0.008      0.001   -9.442   0.000       -0.010      -0.006\n                          |\n                   degree |\n             high school  |     -0.521      0.058   -8.917   0.000       -0.636      -0.407\nassociate/junior college  |     -0.722      0.088   -8.170   0.000       -0.896      -0.549\n              bachelor's  |     -1.024      0.077  -13.221   0.000       -1.175      -0.872\n                graduate  |     -1.078      0.094  -11.454   0.000       -1.262      -0.893\n                          |\n                    _cons |     -0.638      0.089   -7.176   0.000       -0.813      -0.464\n--------------------------+----------------------------------------------------------------\nGood                      |  (base outcome)\n--------------------------+----------------------------------------------------------------\nExcellent                 |\n                    race4 |\n                   Black  |     -0.150      0.057   -2.656   0.008       -0.262      -0.039\n                   Other  |     -0.352      0.090   -3.890   0.000       -0.529      -0.174\n                Hispanic  |     -0.109      0.061   -1.792   0.073       -0.228       0.010\n                          |\n                      age |     -0.011      0.001   -9.245   0.000       -0.013      -0.009\n                          |\n                    woman |\n                   Women  |      0.067      0.036    1.862   0.063       -0.004       0.137\n                          |\n                   parent |\n                  Parent  |     -0.140      0.044   -3.209   0.001       -0.226      -0.055\n                          |\n                  married |\n                 Married  |      0.072      0.040    1.797   0.072       -0.007       0.150\n                   faminc |      0.005      0.001    8.929   0.000        0.004       0.006\n                          |\n                   degree |\n             high school  |      0.198      0.074    2.683   0.007        0.053       0.342\nassociate/junior college  |      0.321      0.092    3.496   0.000        0.141       0.501\n              bachelor's  |      0.470      0.080    5.860   0.000        0.313       0.627\n                graduate  |      0.640      0.086    7.410   0.000        0.471       0.809\n                          |\n                    _cons |     -0.554      0.092   -6.001   0.000       -0.735      -0.373\n-------------------------------------------------------------------------------------------\ntotalme age married parent, amount(sd)\nTotal ME Estimates (N = 19292)\n\n                         |   Estimate   Std. err.           z       P&gt;|z| \n-------------------------+-----------------------------------------------\nage                      |                                               \n         + SD (centered) |      0.051       0.003      16.847       0.000 \n-------------------------+-----------------------------------------------\nmarried                  |                                               \n  Married vs Not Married |      0.031       0.007       4.737       0.000 \n-------------------------+-----------------------------------------------\nparent                   |                                               \n   Parent vs No Children |      0.027       0.009       2.976       0.003 \n\nFor continuous independent variables, custom amounts of change can be specified in the amount() option; here age changes by one standard deviation. The Total ME for a binary variable such as married or parent is built from its discrete change on each outcome category, so continuous and binary predictors are summarized on the same scale.\n\n\n\n Back to top",
+    "text": "Self-rated health has four ordered categories, so in a multinomial logit each predictor has four marginal effects – one per category – and it is not obvious which predictor matters most. The Total ME sums the absolute effects across the categories (and halves the sum) to give one summary of how much probability each predictor moves. This example uses the 2000–2021 GSS.\n\nuse \"https://tdmize.github.io/data/data/cda_gss\", clear\n(cda_gss.dta |  GSS 1972-2021 CDA - Categorical Data Analysis | date created 2023)\ndrop if missing(healthR, race4, age, woman, parent, married, faminc, degree)\n(22,943 observations deleted)\ndrop if year &lt; 2000 | year &gt; 2021\n(26,611 observations deleted)\n\n. \nmlogit healthR i.race4 c.age i.woman i.parent i.married c.faminc i.degree\nIteration 0:  Log likelihood = -22624.777  \nIteration 1:  Log likelihood = -21538.636  \nIteration 2:  Log likelihood = -21388.465  \nIteration 3:  Log likelihood = -21382.092  \nIteration 4:  Log likelihood = -21382.055  \nIteration 5:  Log likelihood = -21382.055  \n\nMultinomial logistic regression                        Number of obs =  19,292\n                                                       LR chi2(36)   = 2485.44\n                                                       Prob &gt; chi2   =  0.0000\nLog likelihood = -21382.055                            Pseudo R2     =  0.0549\n\n-------------------------------------------------------------------------------------------\n                  healthR | Coefficient  Std. err.      z    P&gt;|z|     [95% conf. interval]\n--------------------------+----------------------------------------------------------------\nPoor                      |\n                    race4 |\n                   Black  |     -0.192      0.100   -1.915   0.056       -0.389       0.005\n                   Other  |      0.184      0.178    1.035   0.301       -0.164       0.532\n                Hispanic  |     -0.270      0.118   -2.289   0.022       -0.501      -0.039\n                          |\n                      age |      0.024      0.002   12.070   0.000        0.020       0.028\n                          |\n                    woman |\n                   Women  |      0.025      0.071    0.347   0.729       -0.115       0.164\n                          |\n                   parent |\n                  Parent  |      0.072      0.091    0.794   0.427       -0.106       0.250\n                          |\n                  married |\n                 Married  |     -0.271      0.080   -3.370   0.001       -0.428      -0.113\n                   faminc |     -0.025      0.002  -10.036   0.000       -0.030      -0.020\n                          |\n                   degree |\n             high school  |     -0.896      0.086  -10.477   0.000       -1.064      -0.729\nassociate/junior college  |     -1.207      0.158   -7.632   0.000       -1.517      -0.897\n              bachelor's  |     -1.644      0.144  -11.391   0.000       -1.926      -1.361\n                graduate  |     -1.775      0.194   -9.130   0.000       -2.155      -1.394\n                          |\n                    _cons |     -1.876      0.151  -12.392   0.000       -2.173      -1.580\n--------------------------+----------------------------------------------------------------\nFair                      |\n                    race4 |\n                   Black  |      0.162      0.057    2.855   0.004        0.051       0.274\n                   Other  |      0.192      0.101    1.914   0.056       -0.005       0.390\n                Hispanic  |      0.230      0.062    3.713   0.000        0.109       0.352\n                          |\n                      age |      0.012      0.001    9.789   0.000        0.010       0.014\n                          |\n                    woman |\n                   Women  |     -0.006      0.040   -0.154   0.878       -0.085       0.073\n                          |\n                   parent |\n                  Parent  |     -0.048      0.050   -0.948   0.343       -0.146       0.051\n                          |\n                  married |\n                 Married  |     -0.140      0.044   -3.152   0.002       -0.227      -0.053\n                   faminc |     -0.008      0.001   -9.442   0.000       -0.010      -0.006\n                          |\n                   degree |\n             high school  |     -0.521      0.058   -8.917   0.000       -0.636      -0.407\nassociate/junior college  |     -0.722      0.088   -8.170   0.000       -0.896      -0.549\n              bachelor's  |     -1.024      0.077  -13.221   0.000       -1.175      -0.872\n                graduate  |     -1.078      0.094  -11.454   0.000       -1.262      -0.893\n                          |\n                    _cons |     -0.638      0.089   -7.176   0.000       -0.813      -0.464\n--------------------------+----------------------------------------------------------------\nGood                      |  (base outcome)\n--------------------------+----------------------------------------------------------------\nExcellent                 |\n                    race4 |\n                   Black  |     -0.150      0.057   -2.656   0.008       -0.262      -0.039\n                   Other  |     -0.352      0.090   -3.890   0.000       -0.529      -0.174\n                Hispanic  |     -0.109      0.061   -1.792   0.073       -0.228       0.010\n                          |\n                      age |     -0.011      0.001   -9.245   0.000       -0.013      -0.009\n                          |\n                    woman |\n                   Women  |      0.067      0.036    1.862   0.063       -0.004       0.137\n                          |\n                   parent |\n                  Parent  |     -0.140      0.044   -3.209   0.001       -0.226      -0.055\n                          |\n                  married |\n                 Married  |      0.072      0.040    1.797   0.072       -0.007       0.150\n                   faminc |      0.005      0.001    8.929   0.000        0.004       0.006\n                          |\n                   degree |\n             high school  |      0.198      0.074    2.683   0.007        0.053       0.342\nassociate/junior college  |      0.321      0.092    3.496   0.000        0.141       0.501\n              bachelor's  |      0.470      0.080    5.860   0.000        0.313       0.627\n                graduate  |      0.640      0.086    7.410   0.000        0.471       0.809\n                          |\n                    _cons |     -0.554      0.092   -6.001   0.000       -0.735      -0.373\n-------------------------------------------------------------------------------------------\ntotalme age married parent, amount(sd)\nTotal ME Estimates (N = 19292)\n\n                         |   Estimate   Std. err.           z       P&gt;|z| \n-------------------------+-----------------------------------------------\nage                      |                                               \n         + SD (centered) |      0.051       0.003      16.847       0.000 \n-------------------------+-----------------------------------------------\nmarried                  |                                               \n  Married vs Not Married |      0.031       0.007       4.737       0.000 \n-------------------------+-----------------------------------------------\nparent                   |                                               \n   Parent vs No Children |      0.027       0.009       2.976       0.003 \n\nFor continuous independent variables, custom amounts of change can be specified in the amount() option; here age changes by one standard deviation. The Total ME for a binary variable such as married or parent is built from its discrete change on each outcome category, so continuous and binary predictors are summarized on the same scale.\n\n\n\n Back to top",
     "crumbs": [
       "Software",
       "totalme",

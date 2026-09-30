@@ -1,0 +1,76 @@
+---
+title: "Total marginal effects in R"
+subtitle: "Holistic effect size measures for nominal and ordinal outcome models"
+---
+
+In a model with several outcome categories -- a multinomial or ordered logit
+or probit, for example -- a predictor has one marginal effect per category,
+and no single one of them says how much the predictor matters. The **Total
+marginal effect (Total ME)** from Mize and Han (2025) summarizes them in a
+single number: the sum of the absolute values of the marginal effects across
+all outcome categories, divided by two. That is the total amount of
+probability the predictor moves between the categories.
+
+In R, you can calculate it with the
+[`marginaleffects`](https://marginaleffects.com/) package, which handles the
+marginal effects and the standard errors. For nominal or ordinal predictors,
+the [`meineq_weights()`](https://github.com/tdmize/Rfunctions/blob/main/ME_helper_functions.R)
+helper calculates the weights for the weighted **Total ME inequality**. The
+same measures are available in Stata with the
+[`totalme`](/software/totalme/index.qmd) command.
+
+## Setup
+
+`meineq_weights()` is in my `Rfunctions` repository on GitHub. Load it with
+`source()`:
+
+```r
+library(marginaleffects) # Marginal effects and hypotheses
+
+source("https://raw.githubusercontent.com/tdmize/Rfunctions/main/ME_helper_functions.R")
+```
+
+## Continuous and binary predictors
+
+Total MEs for several predictors can be calculated in one call:
+
+```r
+avg_comparisons(mod,
+  variables = list(age = "sd",
+                   binaryvar = "reference"),
+  hypothesis = ~ I(sum(abs(x)) / 2) | term)
+```
+
+`avg_comparisons()` calculates each predictor's marginal effect on every
+outcome category. `hypothesis` then adds up the absolute values and divides by
+two, separately for each predictor (`| term`).
+
+## Nominal or ordinal predictors
+
+For a nominal predictor, first calculate a Total ME for every pairwise
+contrast between its categories (`| contrast`), then average those using the
+ME inequality weights:
+
+```r
+avg_comparisons(mod,
+  variables = list(nominalvar = "pairwise"),
+  hypothesis = ~ I(sum(abs(x)) / 2) | contrast) |>
+  hypotheses(hypothesis = meineq_weights(mod, nominalvar))
+```
+
+The result is the weighted **Total ME inequality**. With the example data
+below, this gives 0.047 for race-ethnicity and 0.116 for degree, the same as
+Example 5.3 in Stata.
+
+## Examples
+
+- [Total MEs for a single model](examples/single-model.qmd) reproduces Example
+  5.2.c of Mize and Han (2025) with the 2000--2021 General Social Survey.
+
+More of the article's examples will be added here.
+
+## Citation
+
+If you use these measures, please cite:
+
+> Mize, Trenton D. and Bing Han. 2025. "Inequality and Total Effect Summary Measures for Nominal and Ordinal Variables." *Sociological Science* 12:115–157.
