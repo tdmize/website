@@ -13,6 +13,8 @@ Run from the website folder:
     python tools/pkgdown2qmd.py cleanplots
     python tools/pkgdown2qmd.py suest
 
+The package changelog (NEWS.md) stays on GitHub and is not brought in.
+
 Needs Quarto and two Python packages
 (one time: python -m pip install beautifulsoup4 pyyaml).
 """
@@ -62,25 +64,39 @@ def fix_href(href, page, pkg, pages, aliases):
     u = urllib.parse.urlsplit(href)
     frag = ("#" + u.fragment) if u.fragment else ""
     host = u.netloc.lower()
+    news = f"https://github.com/tdmize/{pkg}/blob/main/NEWS.md"
+    own = None
     if host == "tdmize.github.io" and u.path.startswith(f"/{pkg}/"):
-        target = u.path[len(f"/{pkg}/"):] or "index.html"
+        own = u.path[len(f"/{pkg}/"):]
+    if host == "tdmize.github.io" and u.path.rstrip("/") == f"/{pkg}":
+        own = ""
+    if host in ("www.trentonmize.com", "trentonmize.com"):
+        parts = u.path.strip("/").split("/")
+        if len(parts) < 2 or parts[0] != "software":
+            return href
+        name, rest = parts[1], "/".join(parts[2:])
+        if name == f"{pkg}_r":
+            own = rest
+        else:
+            qmd = (rest[:-5] + ".qmd") if rest.endswith(".html") else posixpath.join(rest, "index.qmd")
+            qmd = posixpath.join("software", name, qmd)
+            if os.path.exists(qmd):
+                return "/" + qmd + frag
+            if name in STATA_PKGS or name.endswith("_r"):
+                return f"/software/{name}/index.qmd"
+            return href
+    if own is not None:
+        target = own or "index.html"
         if target.endswith("/"):
             target += "index.html"
+        if target.startswith("news/"):
+            return news
         target = aliases.get(target, target)
         return rel(page, target) + frag if target in pages else href
-    if host == "tdmize.github.io" and u.path.rstrip("/") == f"/{pkg}":
-        return rel(page, "index.html")
-    if host in ("www.trentonmize.com", "trentonmize.com"):
-        p = u.path.strip("/")
-        if p.startswith("software/"):
-            name = p.split("/")[1]
-            if name in STATA_PKGS:
-                return f"/software/{name}/index.qmd"
-            if name.endswith("_r"):
-                return f"/software/{name}/index.qmd"
-        return href
     if not u.scheme and not host:
         target = posixpath.normpath(posixpath.join(posixpath.dirname(page), u.path))
+        if target.startswith("news/"):
+            return news
         name = posixpath.basename(target)
         if name in ("LICENSE-text.html", "LICENSE.html"):
             return f"https://github.com/tdmize/{pkg}/blob/main/LICENSE"
@@ -134,12 +150,12 @@ def code_segments(pre):
     return out
 
 
-def segments_md(segs):
+def segments_md(segs, lang="r"):
     md, i = [], 0
     while i < len(segs):
         kind, v = segs[i]
         if kind == "code":
-            block = "```r\n" + "\n".join(v) + "\n```"
+            block = f"```{lang}\n" + "\n".join(v) + "\n```"
             if i + 1 < len(segs) and segs[i + 1][0] == "out":
                 out = "```{.r-output}\n" + "\n".join(segs[i + 1][1]) + "\n```"
                 md.append("::: {.r-run}\n" + block + "\n" + out + "\n:::")
@@ -180,7 +196,8 @@ def convert(site, page, pkg, pages, aliases):
     blocks = []
     for pre in main.find_all("pre"):
         wrap = pre.parent if pre.parent.name == "div" and "sourceCode" in (pre.parent.get("class") or []) else pre
-        blocks.append(segments_md(code_segments(pre)))
+        lang = "stata" if "stata" in (pre.get("class") or []) else "r"
+        blocks.append(segments_md(code_segments(pre), lang))
         wrap.replace_with(soup.new_string(f"@@BLOCK{len(blocks) - 1}@@"))
     for a in main.find_all("a"):
         h = fix_href(a.get("href"), page, pkg, pages, aliases)
@@ -195,6 +212,21 @@ def convert(site, page, pkg, pages, aliases):
     md = re.sub(r"(?m)^[ \t\u00a0]+$", "", md)
     md = re.sub(r"\n{3,}", "\n\n", md).strip() + "\n"
     return title, md
+
+
+def article_sections(site):
+    """(section title, [article pages]) in the order of the package's articles index."""
+    path = os.path.join(site, "articles", "index.html")
+    if not os.path.exists(path):
+        return []
+    main = BeautifulSoup(open(path, encoding="utf-8").read(), "html.parser").find("main")
+    out = []
+    for sec in main.find_all("div", class_="section"):
+        h = sec.find(["h2", "h3"])
+        arts = ["articles/" + a["href"].split("#")[0] for a in sec.select("dt a[href]")
+                if "/" not in a["href"] and ":" not in a["href"]]
+        out.append((h.get_text(" ", strip=True) if h else "Articles", arts))
+    return out
 
 
 def main():
@@ -213,7 +245,7 @@ def main():
         dirs[:] = [d for d in dirs if d not in ("deps", ".git")]
         for f in files:
             p = os.path.relpath(os.path.join(root, f), site).replace(os.sep, "/")
-            if f.endswith(".html") and f not in SKIP and (p == "index.html" or p.split("/")[0] in ("articles", "reference", "news")):
+            if f.endswith(".html") and f not in SKIP and (p == "index.html" or p.split("/")[0] in ("articles", "reference")):
                 pages.append(p)
     aliases = {}
     for p in list(pages):
@@ -263,6 +295,7 @@ def main():
                 os.makedirs(os.path.dirname(dest), exist_ok=True)
                 shutil.copy(os.path.join(root, f), dest)
                 n_img += 1
+    sections = article_sections(site)
     shutil.rmtree(tmp, ignore_errors=True)
 
     # Software menu entry for this package
@@ -272,16 +305,23 @@ def main():
     main_article = f"articles/{pkg}.html"
     if main_article in titles:
         contents.append({"text": "Getting started", "href": q(main_article)})
-    others = [p for p in pages if p.startswith("articles/") and p not in (main_article, "articles/index.html")]
+    seen = {main_article, "articles/index.html"}
+    for name, arts in sections:
+        arts = [a for a in arts if a in titles and a not in seen]
+        seen.update(arts)
+        if len(arts) == 1:
+            contents.append({"text": titles[arts[0]], "href": q(arts[0])})
+        elif arts:
+            contents.append({"section": name, "href": q(arts[0]),
+                             "contents": [{"text": titles[a], "href": q(a)} for a in arts]})
+    others = [p for p in pages if p.startswith("articles/") and p not in seen]
     if others:
-        contents.append({"section": "Examples", "href": q("articles/index.html") if "articles/index.html" in titles else q(others[0]),
+        contents.append({"section": "Examples", "href": q(others[0]),
                          "contents": [{"text": titles[p], "href": q(p)} for p in others]})
     refs = [p for p in pages if p.startswith("reference/") and p != "reference/index.html"]
     if refs:
         contents.append({"section": "Function reference", "href": q("reference/index.html"),
                          "contents": [{"text": posixpath.basename(p)[:-5], "href": q(p)} for p in refs]})
-    if "news/index.html" in titles:
-        contents.append({"text": "Changelog", "href": q("news/index.html")})
     entry = {"section": f"{pkg} (R)", "href": q("index.html"), "contents": contents}
 
     txt = open("_quarto.yml", encoding="utf-8").read()
