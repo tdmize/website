@@ -13,9 +13,40 @@ installed version. In Stata, type `help totalme`.
 
 **`totalme` --** `Total ME` (**Total** **M**arginal **E**ffects) calculates a summary of the total effects of an independent variable on a, usually multi-category outcome, such as from an ordinal or nominal model. `totalme` supports any independent variable but makes different calculations for continuous, binary, and nominal independent variables. The total marginal effect statistic is the sum of the absolute values of all marginal effects for an independent variable across all levels of the dependent variable, divided by two. For nominal independent variables, Total ME inequality (**Total** **M**arginal **E**ffects **Inequality**) is calculated, with both weighted and unweighted estimates supported (see `meinequality` for more details). The command supports estimation for one or two models. For two models, the command performs cross-model comparisons of the *totalMEs*.
 
-## General Syntax
+<span id="syntax"></span>
 
-`totalme` *varlist* *ifin* `,` [options]
+## Syntax
+
+`totalme` *varlist* *ifin* [`,` *options*]
+
+| Option | Description |
+|:--|:--|
+| *Models* | |
+| `models(list)` | stored models to use; default is the model in `e()` |
+| `groups` | the models were fit on distinct groups |
+| `groupnames(name1 name2)` | labels for the two groups |
+| *Amount of change* | |
+| `amount(list)` | change for continuous variables; default is **one** |
+| `centered` | centered change; the default |
+| `uncentered` | change from the value up by the amount |
+| *Values of the variables* | |
+| `start(list)` | starting values of the focal variables |
+| `atmeans` | hold the covariates at their means |
+| *Within levels of a variable* | |
+| `by(varname)` | Total ME at each level, as a counterfactual |
+| `over(varname)` | Total ME within each subpopulation |
+| *Nominal variables* | |
+| `weighted` | contrasts weighted by level shares; the default |
+| `unweighted` | all contrasts weighted equally |
+| `all` | report both weighted and unweighted |
+| *Reporting* | |
+| `ci` | add confidence intervals |
+| `level(#)` | confidence level; default is 95 |
+| `decimals(#)` | decimal places; default is 3 |
+| `labwidth(#)` | width of the label column; default is 24 |
+| `title(string)` | title of the table |
+| `commands` | display the commands used |
+| `details` | display the `margins` and `suest2` output |
 
 <span id="overview"></span>
 
@@ -31,6 +62,8 @@ The command calculates the Total ME for a single model or performs cross-model c
 
 ## Table of contents
 
+- [Syntax and list of options](help.html#syntax)
+
 - [Supported estimation commands](help.html#models)
 
 - [Required option for two model comparison](help.html#Models)
@@ -43,13 +76,13 @@ The command calculates the Total ME for a single model or performs cross-model c
 
 - [Setting values of the covariates](help.html#covariates)
 
-- [Weighting options for ME inequality for nominal IVs](help.html#Weighted)
-
 - [Estimations for subpopulations](help.html#byover)
 
-- [Setting sample weights and multiple imputation estimates](help.html#sampleweights)
+- [Weighting options for ME inequality for nominal IVs](help.html#Weighted)
 
-- [Optional options for formatting, reporting, missing data, etc.](help.html#options)
+- [Reporting options: confidence intervals, formatting, output](help.html#options)
+
+- [Setting sample weights and multiple imputation estimates](help.html#sampleweights)
 
 - [Saved estimates and matrices](help.html#matrices)
 
@@ -87,19 +120,19 @@ Comparing two `xtcloglog` models requires each to be fitted with `intpoints(24)`
 
 <span id="Models"></span>
 
-### Models Option
+### Models
 
 **`models(list)`** is required for cross-model comparisons. The models must be estimated and saved using `estimates store` before running `totalme`. The `models(list)` option is optional for single-model estimation; by default, `totalme` will use the model estimates in memory. `totalme` is limited to one or two models. The `vce(robust)` option is strongly recommended for the two-model case because the estimates are combined by seemingly unrelated estimation, which uses robust variance estimation. The two models specified can be the same or different estimation commands.
 
 <span id="groups"></span>
 
-### Groups options
-
 **`groups`** specifies that the two models used for comparison are fit on distinct samples. Under `groups` each model's marginal effects are averaged over its own sample. When the `groups` option is specified, the models listed in the `models(list)` option must have been fit separately across distinct samples (e.g., distinct groups in the data). `group(varname)`, the syntax of earlier versions, is also accepted; *varname* must take one value in each model's sample and a different value in each model.
+
+**`groupnames(string)`** specifies the row names in the table corresponding to the total ME for Model 1 and Model 2. Two group names must be provided. The `groups` option is required when using `groupnames(string)`. By default, the rows are named based on the stored estimate names specified in the `models(list)` option. Long names are shortened only as needed to fit the table.
 
 <span id="amount"></span>
 
-### Amount of change and related options for continuous independent variables
+### Amount of change
 
 **`amount(list)`** specifies the amount of change to be computed for the continuous independent variables. If only one value is specified in `amount( )`, this amount of change is applied to all of the continuous independent variables. To specify different amounts for each continuous independent variable, amounts in *list* are applied in the order of the continuous independent variables. E.g., In a *varlist* of *age i.woman income i.race polviews* there are three continuous variables, of which changes of (a) age + sd, (b) income + 5, and (c) polviews + one can be specified with `amount(sd 5 one)`
 
@@ -120,19 +153,29 @@ Comparing two `xtcloglog` models requires each to be fitted with `intpoints(24)`
 
 <span id="start"></span>
 
-### Setting starting values of variables in varlist
+### Values of the variables
 
 **`start(list)`** By default, the observed values of the focal independent variables specified in the *varlist* are used as the starting points for calculating the marginal effects (i.e., the margins default of *asobserved* is used; see `margins`). Other starting values can be specified within the `start( )` option, e.g. start(age=20). Multiple focal independent variables can be listed in `start( )`, e.g. start(age=20 income=100). Only one value per variable is allowed.
 
 <span id="covariates"></span>
 
-### Setting values of covariates
-
 **`atmeans`** By default, the observed values of the other variables in the model are used for calculating the marginal effects (i.e., the margins default of *asobserved* is used; see `margins`). Alternatively, the covariates can be set to their sample means with the `atmeans` option.
+
+<span id="byover"></span>
+
+### Within levels of a variable (by, over)
+
+**`by(varname)`** estimates total ME for each level of the specified binary or nominal variable, using the full sample. This is equivalent to the `margins` option at( ). For each level, the estimation is based on the entire sample with the subpopulation variable counterfactually set to that level. The subpopulation variable must be binary or nominal and must also be included as a covariate in the model.
+
+**`over(varname)`** estimates total ME separately for each level of the specified binary or nominal variable, using only the subsample of observations that have that specific value. This option uses the `over()` option from the `margins` command to compute marginal effects within each group-specific subsample; see [margins] over option.
+
+Neither option may name one of the focal variables: `totalme` does not estimate the total ME of a variable within levels of that same variable and exits with an error; [mecompare](../mecompare/help.html) handles that case.
+
+With either option the table also holds a **Diff.** row for each pair of levels of the `by()` or `over()` variable -- the total ME at the first level minus the total ME at the second, with its standard error and test, which is the test of whether the effect differs across the groups (a test of interaction). With two models the Diff. rows are given for model 1, model 2, and the cross-model difference. Rows are labelled **Diff.** when the variable has two levels and **Diff.1**, **Diff.2**, ... when it has more, one per pair; the level each row subtracts is printed under the table. All quantities come from one `margins` call, so the tests use the joint covariance of the levels.
 
 <span id="Weighted"></span>
 
-### Weighting options for total ME inequality
+### Nominal variables
 
 For nominal independent variables, total *ME inequalities* are calculated; see [meinequality](../meinequality/help.html). `weighted`, `unweighted`, and `all` options can be specified.
 
@@ -142,17 +185,23 @@ For nominal independent variables, total *ME inequalities* are calculated; see [
 
 **`all`** reports both `weighted` and `unweighted` total *ME inequalities*.
 
-<span id="byover"></span>
+<span id="options"></span>
 
-### Subpopulation estimation options
+### Reporting
 
-**`by(varname)`** estimates total ME for each level of the specified binary or nominal variable, using the full sample. This is equivalent to the `margins` option at( ). For each level, the estimation is based on the entire sample with the subpopulation variable counterfactually set to that level. The subpopulation variable must be binary or nominal and must also be included as a covariate in the model.
+**`ci`** adds the lower and upper bounds of the confidence intervals (CIs) for all estimates, at the level set by `level(#)` (95% by default).
 
-**`over(varname)`** estimates total ME separately for each level of the specified binary or nominal variable, using only the subsample of observations that have that specific value. This option uses the `over()` option from the `margins` command to compute marginal effects within each group-specific subsample; see [margins] over option.
+**`level(#)`** sets the confidence level for reported confidence intervals. The default is `level(95)`. Values can range from 10 to 99.
 
-Neither option may name one of the focal variables: `totalme` does not estimate the total ME of a variable within levels of that same variable and exits with an error; [mecompare](../mecompare/help.html) handles that case.
+**`decimals(#)`** changes the number of decimal places reported in the table. The default is 3. Any integer between 0 - 7 is allowed.
 
-With either option the table also holds a **Diff.** row for each pair of levels of the `by()` or `over()` variable -- the total ME at the first level minus the total ME at the second, with its standard error and test, which is the test of whether the effect differs across the groups (a test of interaction). With two models the Diff. rows are given for model 1, model 2, and the cross-model difference. Rows are labelled **Diff.** when the variable has two levels and **Diff.1**, **Diff.2**, ... when it has more, one per pair; the level each row subtracts is printed under the table. All quantities come from one `margins` call, so the tests use the joint covariance of the levels.
+**`labwidth(#)`** changes the width of the leftmost column of the table that provides the labels for the variables and associated marginal effects. The default is 24. Any integer between 20 - 32 is allowed.
+
+**`title(string)`** changes title of the output table. The default is "Total ME Estimates".
+
+**`commands`** displays the command of each model, the `margins` command used to estimate the marginal effects, and when two models are specified, the `suest2` command used to combine the model estimates.
+
+**`details`** displays the output of the `margins` estimates which are the constituent parts of the *total ME* calculation, and when two models are specified, the `suest2` output with the combined model estimates.
 
 <span id="sampleweights"></span>
 
@@ -163,26 +212,6 @@ With either option the table also holds a **Diff.** row for each pair of levels 
 *Multilevel models need a stage weight.* For the multilevel (`me`...) families, a weight alone is not enough: the model must carry a higher-level weight too, as in `melogit y x [pw=w2] || group:, pweight(w1)`. A model fit with a weight but no `pweight()` has no design to build from and is refused. The better alternative is the `svy:` prefix, which carries the whole design from `svyset` and is the recommended way to specify one.
 
 **`[weight]`** When possible, using `svyset` and the `svy:` prefix is the preferred way to specify weights. However, you can instead specify the weight on the **stored models** -- e.g. `logit y x [pw=w]` -- or fit them with `svy:`. With two models, both must carry the same weight.
-
-<span id="options"></span>
-
-### Additional Optional Options
-
-**`level(#)`** sets the confidence level for reported confidence intervals. The default is `level(95)`. Values can range from 10 to 99.
-
-**`decimals(#)`** changes the number of decimal places reported in the table. The default is 3. Any integer between 0 - 7 is allowed.
-
-**`ci`** adds the lower and upper bounds of the confidence intervals (CIs) for all estimates, at the level set by `level(#)` (95% by default).
-
-**`labwidth(#)`** changes the width of the leftmost column of the table that provides the labels for the variables and associated marginal effects. The default is 24. Any integer between 20 - 32 is allowed.
-
-**`title(string)`** changes title of the output table. The default is "Total ME Estimates".
-
-**`groupnames(string)`** specifies the row names in the table corresponding to the total ME for Model 1 and Model 2. Two group names must be provided. The `groups` option is required when using `groupnames(string)`. By default, the rows are named based on the stored estimate names specified in the `models(list)` option. Long names are shortened only as needed to fit the table.
-
-**`commands`** displays the command of each model, the `margins` command used to estimate the marginal effects, and when two models are specified, the `suest2` command used to combine the model estimates.
-
-**`details`** displays the output of the `margins` estimates which are the constituent parts of the *total ME* calculation, and when two models are specified, the `suest2` output with the combined model estimates.
 
 <span id="matrices"></span>
 

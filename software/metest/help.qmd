@@ -13,9 +13,29 @@ installed version. In Stata, type `help metest`.
 
 **`metest` --** tests and combines the marginal effects calculated by [mecompare](../mecompare/help.html)
 
+<span id="syntax"></span>
+
 ## Syntax
 
 `metest` [*exp*] [`,` *options*]
+
+| Option | Description |
+|:--|:--|
+| *Statistics* | |
+| `statistics(list)` | statistics to display; default is estimate, se, pvalue |
+| `allstats` | all six statistics |
+| `level(#)` | confidence level for `ll` and `ul` |
+| *Accumulating results* | |
+| `add` | add the result to the saved table |
+| `clear` | clear the saved table first |
+| *Display* | |
+| `rowname(string)` | label for the row |
+| `decimals(#)` | decimal places; default is 3 |
+| `width(#)` | width of the statistics columns; default is 9 |
+| `labwidth(#)` | width of the label column; at most 32 |
+| `title(string)` | title above the table |
+| `notable` | suppress the table |
+| `details` | show the `nlcom` or `test` output |
 
 where *exp* refers to the marginal effects either by the *ME #* shown in the `mecompare` table or by their coefficient names, combined with `+`, `-`, `*`, `/`, parentheses, or `=`.
 
@@ -40,13 +60,21 @@ metest, title("Marginal effects by race")
 
 ## Options
 
+### Statistics
+
 **`statistics(list)`** statistics to display: `estimate`, `se`, `zvalue`, `pvalue`, `ll`, `ul`, or `all`. The default is `estimate se pvalue`. Each may be abbreviated or given by a synonym -- `est`, `coef` or `b` for `estimate`; `stderr` for `se`; `z`; `p`; `lb`; `ub` -- and the list is not case sensitive. Ignored for equality tests, which always report the test statistic, its degrees of freedom, and the p-value. `stats()` is a synonym for the option itself.
 
 **`allstats`** equivalent to `statistics(all)`.
 
+**`level(#)`** confidence level for `ll` and `ul`.
+
+### Accumulating results
+
 **`add`** adds the result as another row of the saved table rather than starting a new one. `save` is a synonym.
 
 **`clear`** clears the saved table before running. `metest, clear` on its own clears it without running anything. It is an option and must follow a comma; `metest clear` is not accepted.
+
+### Display
 
 **`rowname(string)`** labels the row. A `:` in the label puts what comes before it on a row of its own, with the rest indented underneath, which is how several rows are grouped under one heading: `rowname(raceBlack - White)`. By default the row is labeled with the test that was run -- the expression with coefficient names substituted for the ME numbers -- and whatever every term has in common becomes that heading: the variable when they come from one variable (`marriedm1 - m2`), otherwise the model (`m1:married - age`). When they share neither, the expression itself is used, e.g. `(1-2)-(4-5)`. `label()` is a synonym.
 
@@ -61,8 +89,6 @@ metest, title("Marginal effects by race")
 **`notable`** suppresses the table.
 
 **`details`** shows the underlying `nlcom` or `test` output.
-
-**`level(#)`** confidence level for `ll` and `ul`.
 
 ## Saved results
 

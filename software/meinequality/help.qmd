@@ -13,9 +13,35 @@ installed version. In Stata, type `help meinequality`.
 
 **`meinequality` --** `ME Inequality` (**M**arginal **E**ffects **Inequality**) calculates marginal effects (ME) inequality statistics for independent variables specified as nominal/factors by averaging the absolute values of all marginal effects for the nominal independent variable, which represent all pairwise comparisons of predictions for the variable. The command supports estimation for one or two models. In the two model case, the inequality of the meinequality statistics across models is automatically calculated. `meinequality` can compute both weighted and unweighted ME Inequality statistics. `meinequality` can be used after most regression models.
 
-## General syntax
+<span id="syntax"></span>
 
-`meinequality` *varlist* *ifin* `,` [options]
+## Syntax
+
+`meinequality` *varlist* *ifin* [`,` *options*]
+
+| Option | Description |
+|:--|:--|
+| *Models* | |
+| `models(list)` | stored models to use; default is the model in `e()` |
+| `groups` | the models were fit on distinct groups |
+| `groupnames(name1 name2)` | labels for the two groups |
+| *Weighting* | |
+| `weighted` | contrasts weighted by level shares; the default |
+| `unweighted` | all contrasts weighted equally |
+| `all` | report both weighted and unweighted |
+| *Values of the covariates* | |
+| `atmeans` | hold the covariates at their means |
+| *Within levels of a variable* | |
+| `by(varname)` | ME inequality at each level, as a counterfactual |
+| `over(varname)` | ME inequality within each subpopulation |
+| *Reporting* | |
+| `ci` | add confidence intervals |
+| `level(#)` | confidence level; default is 95 |
+| `decimals(#)` | decimal places; default is 3 |
+| `labwidth(#)` | width of the label column; default is 24 |
+| `title(string)` | title of the table |
+| `commands` | display the commands used |
+| `details` | display the `margins` and `suest2` output |
 
 <span id="overview"></span>
 
@@ -31,21 +57,23 @@ installed version. In Stata, type `help meinequality`.
 
 ## Table of contents
 
+- [Syntax and list of options](help.html#syntax)
+
 - [Which models and estimators are supported](help.html#estimators)
-
-- [Setting weighted/unweighted calculations](help.html#Weighted)
-
-- [Setting values of the covariates](help.html#covariates)
 
 - [Required option for two model comparison](help.html#Models)
 
 - [Required option if fitting models over two distinct samples](help.html#groups)
 
+- [Setting weighted/unweighted calculations](help.html#Weighted)
+
+- [Setting values of the covariates](help.html#covariates)
+
 - [Estimations for subpopulations](help.html#by/over)
 
-- [Setting sample weights and multiple imputation estimates](help.html#sampleweights)
+- [Reporting options: confidence intervals, formatting, output](help.html#options)
 
-- [Optional options for formatting, reporting, missing data, etc.](help.html#options)
+- [Setting sample weights and multiple imputation estimates](help.html#sampleweights)
 
 - [Saved estimates and matrices](help.html#matrices)
 
@@ -109,9 +137,23 @@ For a few families the statistic [suest2](../suest2/help.html) supplies is not o
 
 ## Options
 
+<span id="Models"></span>
+
+### Models
+
+**`models(list)`** is required to compare *ME inequalities* across two models. The models must have been estimated and saved using `estimates store` before running `meinequality`. `models(list)` is optional for one model estimation; if no `models(list)` option is included the default is to use the model estimates in memory. `meinequality` is limited to one or two models. The `vce(robust)` option is strongly recommended when conducting two-model comparisons because SUEST is used to combine the model estimates which uses robust variance estimation.
+
+<span id="groups"></span>
+
+**`groups`** specifies that the two models used for comparison are fit on distinct samples. When the `groups` option is specified, the models listed in the `models(list)` option must have been fit separately across distinct samples (e.g., distinct groups in data). `group(varname)`, the syntax of earlier versions, is also accepted; *varname* must take one value in each model's sample and a different value in each model.
+
+With `groups`, a weighted ME inequality weights each model by the level proportions of **its own** sample. The comparison therefore reflects differences in the marginal effects *and* differences in composition between the samples. Use `unweighted` to compare the marginal effects alone.
+
+**`groupnames(string)`** specifies the row names in the table corresponding to the ME Inequality for Model 1 and Model 2. Two group names must be provided; there can be no spaces in each group name. The `groups` option is required when using `groupnames(string)`. By default, the rows are named based on the stored estimate names specified in the `models(list)` option. Long names are shortened only as needed to fit the table.
+
 <span id="Weighted"></span>
 
-### Weighted options
+### Weighting
 
 **`weighted`** is the default if no option is specified. A weighted *ME inequality* accounts for the relative frequency of each level of the nominal variable in the sample. The weight assigned to each pairwise comparison is the sum of the proportions of the two levels used in the comparison, with a correction for each group being used in multiple comparisons: w_ab = (prop_a + prob_b)/(L - 1). Here, prop_a and prop_b refer to the proportions of the sample in Levels A and B, respectively. The term L-1 serves as a correction for the fact that each group is represented in multiple contrasts, ensuring the total sums to 1.
 
@@ -123,27 +165,13 @@ The proportions are taken over the model's estimation sample. When two models ar
 
 <span id="covariates"></span>
 
-### Setting values of covariates
+### Values of the covariates
 
 **`atmeans`** By default, the observed values of the other variables in the model are used for calculating the marginal effects (i.e., the margins default of *asobserved* is used; see `margins`). Alternatively, the covariates can be set to their sample means with the `atmeans` option.
 
-<span id="Models"></span>
-
-### Models Option
-
-**`models(list)`** is required to compare *ME inequalities* across two models. The models must have been estimated and saved using `estimates store` before running `meinequality`. `models(list)` is optional for one model estimation; if no `models(list)` option is included the default is to use the model estimates in memory. `meinequality` is limited to one or two models. The `vce(robust)` option is strongly recommended when conducting two-model comparisons because SUEST is used to combine the model estimates which uses robust variance estimation.
-
-<span id="groups"></span>
-
-### Groups options
-
-**`groups`** specifies that the two models used for comparison are fit on distinct samples. When the `groups` option is specified, the models listed in the `models(list)` option must have been fit separately across distinct samples (e.g., distinct groups in data). `group(varname)`, the syntax of earlier versions, is also accepted; *varname* must take one value in each model's sample and a different value in each model.
-
-With `groups`, a weighted ME inequality weights each model by the level proportions of **its own** sample. The comparison therefore reflects differences in the marginal effects *and* differences in composition between the samples. Use `unweighted` to compare the marginal effects alone.
-
 <span id="by/over"></span>
 
-### Subpopulation estimation options
+### Within levels of a variable (by, over)
 
 **`by(varname)`** estimates ME inequality separately for each level of the specified binary or nominal variable, using the full sample. For each level, the estimation is based on the entire sample with the subpopulation variable counterfactually set to that level. The subpopulation variable must be binary or nominal and must also be included as a covariate in the model. This option uses the `at()` option of `margins`.
 
@@ -152,6 +180,24 @@ With `groups`, a weighted ME inequality weights each model by the level proporti
 Neither option may name one of the focal variables: `meinequality` does not estimate the ME inequality of a variable within levels of that same variable and exits with an error; [mecompare](../mecompare/help.html) handles that case.
 
 With either option the table also holds a **Diff.** row for each pair of levels of the `by()` or `over()` variable -- the ME inequality at the first level minus that at the second, with its standard error and test, which is the test of whether the inequality differs across the groups (a test of interaction). With a multi-category outcome there is one Diff. row per outcome; with two models the Diff. rows are given for model 1, model 2, and the cross-model difference. Rows are labelled **Diff.** when the variable has two levels and **Diff.1**, **Diff.2**, ... when it has more, one per pair; the level each row subtracts is printed under the table. All quantities come from one `margins` call, so the tests use the joint covariance of the levels.
+
+<span id="options"></span>
+
+### Reporting
+
+**`ci`** adds the lower and upper bounds of the confidence intervals (CIs) for all estimates, at the level set by `level(#)` (95% by default).
+
+**`level(#)`** sets the confidence level for reported confidence intervals. The default is `level(95)`. Values from 10 to 99 are allowed.
+
+**`decimals(#)`** changes the number of decimal places reported in the table. The default is 3. Any integer between 0 - 7 is allowed.
+
+**`labwidth(#)`** changes the width of the leftmost column of the table that provides the labels for the variables and associated marginal effects. The default is 24. Any integer between 20 - 32 is allowed.
+
+**`title(string)`** changes title of the output table. The default is "ME Inequality Estimates".
+
+**`commands`** displays the command of each model, the `margins` command used to calculate the predictions that make up the ME inequality estimate, and when two models are used, the `suest2` command used to combine the two models.
+
+**`details`** displays the output of the `margins` command and, when two models are used, the `suest2` output.
 
 <span id="sampleweights"></span>
 
@@ -162,26 +208,6 @@ With either option the table also holds a **Diff.** row for each pair of levels 
 *Multilevel models need a stage weight.* For the multilevel (`me`...) families, a weight alone is not enough: the model must carry a higher-level weight too, as in `melogit y x [pw=w2] || group:, pweight(w1)`. A model fit with a weight but no `pweight()` has no design to build from and is refused. The better alternative is the `svy:` prefix, which carries the whole design from `svyset` and is the recommended way to specify one.
 
 **`[weight]`** When possible, use `svyset` and the `svy:` prefix to apply weights to a model. However, you may instead specify a weight directly on the **stored models** -- e.g. `logit y x [pw=w]`. `meinequality` takes the weighting from the models, so the results reported are the ones the stored models themselves imply. With two models, both must carry the same weight.
-
-<span id="options"></span>
-
-### Additional Optional Options
-
-**`level(#)`** sets the confidence level for reported confidence intervals. The default is `level(95)`. Values from 10 to 99 are allowed.
-
-**`decimals(#)`** changes the number of decimal places reported in the table. The default is 3. Any integer between 0 - 7 is allowed.
-
-**`ci`** adds the lower and upper bounds of the confidence intervals (CIs) for all estimates, at the level set by `level(#)` (95% by default).
-
-**`labwidth(#)`** changes the width of the leftmost column of the table that provides the labels for the variables and associated marginal effects. The default is 24. Any integer between 20 - 32 is allowed.
-
-**`title(string)`** changes title of the output table. The default is "ME Inequality Estimates".
-
-**`groupnames(string)`** specifies the row names in the table corresponding to the ME Inequality for Model 1 and Model 2. Two group names must be provided; there can be no spaces in each group name. The `groups` option is required when using `groupnames(string)`. By default, the rows are named based on the stored estimate names specified in the `models(list)` option. Long names are shortened only as needed to fit the table.
-
-**`commands`** displays the command of each model, the `margins` command used to calculate the predictions that make up the ME inequality estimate, and when two models are used, the `suest2` command used to combine the two models.
-
-**`details`** displays the output of the `margins` command and, when two models are used, the `suest2` output.
 
 <span id="matrices"></span>
 
