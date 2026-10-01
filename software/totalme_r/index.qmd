@@ -13,15 +13,16 @@ probability the predictor moves between the categories.
 
 In R, you can calculate it with the
 [`marginaleffects`](https://marginaleffects.com/) package, which handles the
-marginal effects and the standard errors. For nominal or ordinal predictors,
-the [`meineq_weights()`](https://github.com/tdmize/Rfunctions/blob/main/ME_helper_functions.R)
-helper calculates the weights for the weighted **Total ME inequality**. The
-same measures are available in Stata with the
+marginal effects and the standard errors. A small helper function,
+[`totalme()`](https://github.com/tdmize/Rfunctions/blob/main/ME_helper_functions.R), turns
+the marginal effects into Total MEs, including the weighted **Total ME
+inequality** for nominal or ordinal predictors. The same measures are
+available in Stata with the
 [`totalme`](/software/totalme/index.qmd) command.
 
 ## Setup
 
-`meineq_weights()` is in my `Rfunctions` repository on GitHub. Load it with
+`totalme()` is in my `Rfunctions` repository on GitHub. Load it with
 `source()`:
 
 ```r
@@ -38,24 +39,23 @@ Total MEs for several predictors can be calculated in one call:
 avg_comparisons(mod,
   variables = list(age = "sd",
                    binaryvar = "reference"),
-  hypothesis = ~ I(sum(abs(x)) / 2) | term)
+  hypothesis = totalme(mod))
 ```
 
 `avg_comparisons()` calculates each predictor's marginal effect on every
-outcome category. `hypothesis` then adds up the absolute values and divides by
-two, separately for each predictor (`| term`).
+outcome category. `totalme()` then adds up the absolute values and divides by
+two, separately for each predictor.
 
 ## Nominal or ordinal predictors
 
-For a nominal predictor, first calculate a Total ME for every pairwise
-contrast between its categories (`| contrast`), then average those using the
-ME inequality weights:
+For a nominal predictor, request every pairwise contrast between its
+categories. `totalme()` calculates the Total ME of each contrast, then averages
+them using the ME inequality weights:
 
 ```r
 avg_comparisons(mod,
   variables = list(nominalvar = "pairwise"),
-  hypothesis = ~ I(sum(abs(x)) / 2) | contrast) |>
-  hypotheses(hypothesis = meineq_weights(mod, nominalvar))
+  hypothesis = totalme(mod))
 ```
 
 The result is the weighted **Total ME inequality**.

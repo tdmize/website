@@ -1232,17 +1232,15 @@ Type: response</code></pre>
 </section>
 <section id="weighted-me-inequality" class="level2">
 <h2 class="anchored" data-anchor-id="weighted-me-inequality">Weighted ME inequality</h2>
-<p>Mize and Han (2025) recommend weighting each pairwise comparison by the share of the sample in the two groups being compared. <code>meineq_weights()</code> calculates those weights from the model’s estimation sample.</p>
+<p>Mize and Han (2025) recommend weighting each pairwise comparison by the share of the sample in the two groups being compared. <code>meineq()</code> calculates the weighted ME inequality, with the weights from the model’s estimation sample.</p>
 <div class="r-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>weights <span class="ot">&lt;-</span> <span class="fu">meineq_weights</span>(wagemod, race4)</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>wmean <span class="ot">&lt;-</span> <span class="cf">function</span>(x) <span class="fu">weighted.mean</span>(x, weights)</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(wagemod,</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">variables =</span> <span class="fu">list</span>(<span class="at">race4 =</span> <span class="st">"pairwise"</span>),</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">hypothesis =</span> <span class="sc">~</span> <span class="fu">I</span>(<span class="fu">wmean</span>(<span class="fu">abs</span>(x))))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(wagemod,</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">variables =</span> <span class="fu">list</span>(<span class="at">race4 =</span> <span class="st">"pairwise"</span>),</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">hypothesis =</span> <span class="fu">meineq</span>(wagemod))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="r-output"><code> Estimate Std. Error   z Pr(&gt;|z|)    S 2.5 % 97.5 %
       4.9       0.86 5.7   &lt;0.001 26.3  3.22   6.59
 
+Term: race4
 Type: response</code></pre>
 </div>
 <p>Racial-ethnic groups’ wages differ by close to $5 per hour, on average.</p>
@@ -1253,10 +1251,11 @@ Type: response</code></pre>
 <div class="r-run">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(wagemod,</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">variables =</span> <span class="fu">list</span>(<span class="at">race4 =</span> <span class="st">"pairwise"</span>),</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">hypothesis =</span> <span class="sc">~</span> <span class="fu">I</span>(<span class="fu">mean</span>(<span class="fu">abs</span>(x))))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">hypothesis =</span> <span class="fu">meineq</span>(wagemod, <span class="at">weighted =</span> <span class="cn">FALSE</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="r-output"><code> Estimate Std. Error    z Pr(&gt;|z|)    S 2.5 % 97.5 %
      5.79       1.04 5.56   &lt;0.001 25.1  3.75   7.83
 
+Term: race4
 Type: response</code></pre>
 </div>
 <p>The unweighted ME inequality is larger than the weighted version because the two biggest differences (Hispanic vs.&nbsp;Other and Black vs.&nbsp;Other) are between smaller groups, while comparisons with the much larger White group count for more in the weighted version.</p>

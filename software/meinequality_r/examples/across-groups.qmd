@@ -17,6 +17,8 @@ library(haven)           # Read Stata data
 library(marginaleffects) # Marginal effects and hypotheses
 library(suest)           # Combine models
 
+source("https://raw.githubusercontent.com/tdmize/Rfunctions/main/ME_helper_functions.R")
+
 gss <- read_dta("https://tdmize.github.io/data/data/cda_gss.dta")
 
 vars <- c("spkhomo", "reltrad", "age", "woman", "year")
@@ -44,28 +46,22 @@ fit <- suest(premod, postmod, model_names = c("Before 1980", "2010 and later"))
 ## Unweighted ME inequality in each period
 
 `suest_newdata()` stacks the two estimation samples, so each model's effects
-are averaged over its own sample. A small function takes the mean absolute
-pairwise difference within each model:
+are averaged over its own sample:
 
 ::: {.r-run}
 ```r
-meineq <- function(x) {
-  groups <- unique(x$group)
-  est <- sapply(groups, function(g) mean(abs(x$estimate[x$group == g])))
-  data.frame(term = groups, estimate = est)
-}
-
 ineq <- avg_comparisons(fit,
   variables = list(reltrad = "pairwise"),
   newdata = suest_newdata(fit),
-  hypothesis = meineq)
+  hypothesis = meineq(fit, weighted = FALSE))
 ineq
 ```
 ```{.r-output}
-           Term Estimate Std. Error    z Pr(>|z|)     S  2.5 % 97.5 %
+          Group Estimate Std. Error    z Pr(>|z|)     S  2.5 % 97.5 %
  Before 1980      0.1556    0.01086 14.3   <0.001 152.3 0.1343 0.1768
  2010 and later   0.0722    0.00661 10.9   <0.001  89.7 0.0592 0.0851
 
+Term: reltrad
 Type: response
 ```
 :::

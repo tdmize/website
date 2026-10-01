@@ -519,7 +519,7 @@
     "href": "software/totalme_r/examples/single-model.html#load-and-prepare-the-data",
     "title": "Total MEs for a single model",
     "section": "Load and prepare the data",
-    "text": "Load and prepare the data\n\nlibrary(haven)           # Read Stata data\nlibrary(marginaleffects) # Marginal effects and hypotheses\nlibrary(nnet)            # Multinomial logit\n\ngss &lt;- read_dta(\"https://tdmize.github.io/data/data/cda_gss.dta\")\ngss &lt;- gss[gss$year &gt;= 2000 & gss$year &lt;= 2021, ]\n\nvars &lt;- c(\"healthR\", \"race4\", \"age\", \"woman\", \"parent\", \"married\", \"faminc\", \"degree\")\ngss &lt;- gss[complete.cases(gss[vars]), vars]\n\nfvars &lt;- c(\"healthR\", \"race4\", \"woman\", \"parent\", \"married\", \"degree\")\ngss[fvars] &lt;- lapply(gss[fvars], as_factor)\nnrow(gss)\n[1] 19292",
+    "text": "Load and prepare the data\n\nlibrary(haven)           # Read Stata data\nlibrary(marginaleffects) # Marginal effects and hypotheses\nlibrary(nnet)            # Multinomial logit\n\nsource(\"https://raw.githubusercontent.com/tdmize/Rfunctions/main/ME_helper_functions.R\")\n\ngss &lt;- read_dta(\"https://tdmize.github.io/data/data/cda_gss.dta\")\ngss &lt;- gss[gss$year &gt;= 2000 & gss$year &lt;= 2021, ]\n\nvars &lt;- c(\"healthR\", \"race4\", \"age\", \"woman\", \"parent\", \"married\", \"faminc\", \"degree\")\ngss &lt;- gss[complete.cases(gss[vars]), vars]\n\nfvars &lt;- c(\"healthR\", \"race4\", \"woman\", \"parent\", \"married\", \"degree\")\ngss[fvars] &lt;- lapply(gss[fvars], as_factor)\nnrow(gss)\n[1] 19292",
     "crumbs": [
       "Software",
       "totalme (R)",
@@ -543,7 +543,7 @@
     "href": "software/totalme_r/examples/single-model.html#calculate-the-total-mes",
     "title": "Total MEs for a single model",
     "section": "Calculate the Total MEs",
-    "text": "Calculate the Total MEs\nThis calculates the Total ME for a one standard deviation change in age and for the binary predictors married and parent.\n\navg_comparisons(healthmod,\n  variables = list(age = \"sd\",\n                   married = \"reference\",\n                   parent = \"reference\"),\n  hypothesis = ~ I(sum(abs(x)) / 2) | term)\n    Term Estimate Std. Error     z Pr(&gt;|z|)     S  2.5 % 97.5 %\n age       0.0515    0.00313 16.44  &lt; 0.001 199.3 0.0454 0.0576\n married   0.0315    0.00665  4.74  &lt; 0.001  18.8 0.0185 0.0445\n parent    0.0266    0.00906  2.93  0.00337   8.2 0.0088 0.0443\n\nType: probs\n\nFor age, \"sd\" asks for a one standard deviation change centered on the mean. For the binary predictors, \"reference\" is the change from the reference category to the other category. The Total ME puts continuous and binary predictors on the same scale: here, age moves about 5 percentage points of probability between the health categories, compared with about 3 for being married or a parent.",
+    "text": "Calculate the Total MEs\nThis calculates the Total ME for a one standard deviation change in age and for the binary predictors married and parent.\n\navg_comparisons(healthmod,\n  variables = list(age = \"sd\",\n                   married = \"reference\",\n                   parent = \"reference\"),\n  hypothesis = totalme(healthmod))\n    Term Estimate Std. Error     z Pr(&gt;|z|)     S  2.5 % 97.5 %\n age       0.0515    0.00313 16.44  &lt; 0.001 199.3 0.0454 0.0576\n married   0.0315    0.00665  4.74  &lt; 0.001  18.8 0.0185 0.0445\n parent    0.0266    0.00906  2.93  0.00337   8.2 0.0088 0.0443\n\nType: probs\n\nFor age, \"sd\" asks for a one standard deviation change centered on the mean. For the binary predictors, \"reference\" is the change from the reference category to the other category. The Total ME puts continuous and binary predictors on the same scale: here, age moves about 5 percentage points of probability between the health categories, compared with about 3 for being married or a parent.",
     "crumbs": [
       "Software",
       "totalme (R)",
@@ -568,7 +568,7 @@
     "href": "software/totalme_r/examples/across-models.html#load-and-prepare-the-data",
     "title": "Comparing Total MEs across models",
     "section": "Load and prepare the data",
-    "text": "Load and prepare the data\n\nlibrary(haven)           # Read Stata data\nlibrary(marginaleffects) # Marginal effects and hypotheses\nlibrary(nnet)            # Multinomial logit\nlibrary(suest)           # Combine models\n\ngss &lt;- read_dta(\"https://tdmize.github.io/data/data/cda_gss.dta\")\ngss &lt;- gss[gss$year &gt;= 2000 & gss$year &lt;= 2021, ]\n\nvars &lt;- c(\"healthR\", \"college\", \"race4\", \"age\", \"woman\", \"parent\", \"married\", \"faminc\")\ngss &lt;- gss[complete.cases(gss[vars]), vars]\n\nfvars &lt;- c(\"healthR\", \"college\", \"race4\", \"woman\", \"parent\", \"married\")\ngss[fvars] &lt;- lapply(gss[fvars], as_factor)\nnrow(gss)\n[1] 19292",
+    "text": "Load and prepare the data\n\nlibrary(haven)           # Read Stata data\nlibrary(marginaleffects) # Marginal effects and hypotheses\nlibrary(nnet)            # Multinomial logit\nlibrary(suest)           # Combine models\n\nsource(\"https://raw.githubusercontent.com/tdmize/Rfunctions/main/ME_helper_functions.R\")\n\ngss &lt;- read_dta(\"https://tdmize.github.io/data/data/cda_gss.dta\")\ngss &lt;- gss[gss$year &gt;= 2000 & gss$year &lt;= 2021, ]\n\nvars &lt;- c(\"healthR\", \"college\", \"race4\", \"age\", \"woman\", \"parent\", \"married\", \"faminc\")\ngss &lt;- gss[complete.cases(gss[vars]), vars]\n\nfvars &lt;- c(\"healthR\", \"college\", \"race4\", \"woman\", \"parent\", \"married\")\ngss[fvars] &lt;- lapply(gss[fvars], as_factor)\nnrow(gss)\n[1] 19292",
     "crumbs": [
       "Software",
       "totalme (R)",
@@ -594,7 +594,7 @@
     "href": "software/totalme_r/examples/across-models.html#total-me-in-each-model",
     "title": "Comparing Total MEs across models",
     "section": "Total ME in each model",
-    "text": "Total ME in each model\nThe combined object labels each marginal effect with its model and outcome category (for example, Base::Poor). A small function adds up the absolute effects within each model and divides by two:\n\ntotalme &lt;- function(x) {\n  model &lt;- sub(\"::.*\", \"\", x$group)\n  est &lt;- tapply(abs(x$estimate), model, sum)[unique(model)] / 2\n  data.frame(term = names(est), estimate = as.numeric(est))\n}\n\ntme &lt;- avg_comparisons(fit,\n  variables = list(college = \"reference\"),\n  newdata = gss,\n  hypothesis = totalme)\ntme\n   Term Estimate Std. Error    z Pr(&gt;|z|)     S 2.5 % 97.5 %\n Base      0.159    0.00605 26.3   &lt;0.001 505.4 0.147  0.171\n Income    0.118    0.00673 17.5   &lt;0.001 225.7 0.105  0.131\n\nType: response",
+    "text": "Total ME in each model\ntotalme() returns the Total ME in each model:\n\ntme &lt;- avg_comparisons(fit,\n  variables = list(college = \"reference\"),\n  newdata = gss,\n  hypothesis = totalme(fit))\ntme\n  Group Estimate Std. Error    z Pr(&gt;|z|)     S 2.5 % 97.5 %\n Base      0.159    0.00605 26.3   &lt;0.001 505.4 0.147  0.171\n Income    0.118    0.00673 17.5   &lt;0.001 225.7 0.105  0.131\n\nTerm: college\nType: response",
     "crumbs": [
       "Software",
       "totalme (R)",
@@ -1657,7 +1657,7 @@
     "href": "software/meinequality_r/examples/summary-measure.html#weighted-me-inequality",
     "title": "Inequality as a summary measure",
     "section": "Weighted ME inequality",
-    "text": "Weighted ME inequality\nMize and Han (2025) recommend weighting each pairwise comparison by the share of the sample in the two groups being compared. meineq_weights() calculates those weights from the model’s estimation sample.\n\nweights &lt;- meineq_weights(wagemod, race4)\nwmean &lt;- function(x) weighted.mean(x, weights)\n\navg_comparisons(wagemod,\n  variables = list(race4 = \"pairwise\"),\n  hypothesis = ~ I(wmean(abs(x))))\n Estimate Std. Error   z Pr(&gt;|z|)    S 2.5 % 97.5 %\n      4.9       0.86 5.7   &lt;0.001 26.3  3.22   6.59\n\nType: response\n\nRacial-ethnic groups’ wages differ by close to $5 per hour, on average.",
+    "text": "Weighted ME inequality\nMize and Han (2025) recommend weighting each pairwise comparison by the share of the sample in the two groups being compared. meineq() calculates the weighted ME inequality, with the weights from the model’s estimation sample.\n\navg_comparisons(wagemod,\n  variables = list(race4 = \"pairwise\"),\n  hypothesis = meineq(wagemod))\n Estimate Std. Error   z Pr(&gt;|z|)    S 2.5 % 97.5 %\n      4.9       0.86 5.7   &lt;0.001 26.3  3.22   6.59\n\nTerm: race4\nType: response\n\nRacial-ethnic groups’ wages differ by close to $5 per hour, on average.",
     "crumbs": [
       "Software",
       "meinequality (R)",
@@ -1669,7 +1669,7 @@
     "href": "software/meinequality_r/examples/summary-measure.html#unweighted-me-inequality",
     "title": "Inequality as a summary measure",
     "section": "Unweighted ME inequality",
-    "text": "Unweighted ME inequality\nThe unweighted version gives all six comparisons the same weight:\n\navg_comparisons(wagemod,\n  variables = list(race4 = \"pairwise\"),\n  hypothesis = ~ I(mean(abs(x))))\n Estimate Std. Error    z Pr(&gt;|z|)    S 2.5 % 97.5 %\n     5.79       1.04 5.56   &lt;0.001 25.1  3.75   7.83\n\nType: response\n\nThe unweighted ME inequality is larger than the weighted version because the two biggest differences (Hispanic vs. Other and Black vs. Other) are between smaller groups, while comparisons with the much larger White group count for more in the weighted version.",
+    "text": "Unweighted ME inequality\nThe unweighted version gives all six comparisons the same weight:\n\navg_comparisons(wagemod,\n  variables = list(race4 = \"pairwise\"),\n  hypothesis = meineq(wagemod, weighted = FALSE))\n Estimate Std. Error    z Pr(&gt;|z|)    S 2.5 % 97.5 %\n     5.79       1.04 5.56   &lt;0.001 25.1  3.75   7.83\n\nTerm: race4\nType: response\n\nThe unweighted ME inequality is larger than the weighted version because the two biggest differences (Hispanic vs. Other and Black vs. Other) are between smaller groups, while comparisons with the much larger White group count for more in the weighted version.",
     "crumbs": [
       "Software",
       "meinequality (R)",
@@ -1720,7 +1720,7 @@
     "href": "software/meinequality_r/examples/across-models.html#me-inequality-in-each-model",
     "title": "Comparing ME inequalities across models",
     "section": "ME inequality in each model",
-    "text": "ME inequality in each model\nThe combined object returns the pairwise differences for both models. A small function averages them within each model using the ME inequality weights:\n\nweights &lt;- meineq_weights(basemod, race4cat)\n\nmeineq &lt;- function(x) {\n  est &lt;- sapply(split(x$estimate, x$group),\n                function(e) weighted.mean(abs(e), weights))\n  data.frame(term = names(est), estimate = est)\n}\n\nineq &lt;- avg_comparisons(fit,\n  variables = list(race4cat = \"pairwise\"),\n  newdata = hrs,\n  hypothesis = meineq)\nineq\n      Term Estimate Std. Error    z Pr(&gt;|z|)    S  2.5 % 97.5 %\n Base        0.0464     0.0118 3.92   &lt;0.001 13.5 0.0232 0.0696\n Mediators   0.0377     0.0113 3.35   &lt;0.001 10.3 0.0157 0.0598\n\nType: response",
+    "text": "ME inequality in each model\nmeineq() returns the ME inequality in each model:\n\nineq &lt;- avg_comparisons(fit,\n  variables = list(race4cat = \"pairwise\"),\n  newdata = hrs,\n  hypothesis = meineq(fit))\nineq\n     Group Estimate Std. Error    z Pr(&gt;|z|)    S  2.5 % 97.5 %\n Base        0.0464     0.0118 3.92   &lt;0.001 13.5 0.0232 0.0696\n Mediators   0.0377     0.0113 3.35   &lt;0.001 10.3 0.0157 0.0598\n\nTerm: race4cat\nType: response",
     "crumbs": [
       "Software",
       "meinequality (R)",
@@ -7065,7 +7065,7 @@
     "href": "software/meinequality_r/examples/across-groups.html#load-and-prepare-the-data",
     "title": "Comparing ME inequalities across groups",
     "section": "Load and prepare the data",
-    "text": "Load and prepare the data\nlibrary(haven)           # Read Stata data\nlibrary(marginaleffects) # Marginal effects and hypotheses\nlibrary(suest)           # Combine models\n\ngss &lt;- read_dta(\"https://tdmize.github.io/data/data/cda_gss.dta\")\n\nvars &lt;- c(\"spkhomo\", \"reltrad\", \"age\", \"woman\", \"year\")\ngss &lt;- gss[complete.cases(gss[vars]), vars]\ngss[c(\"spkhomo\", \"reltrad\", \"woman\")] &lt;- lapply(gss[c(\"spkhomo\", \"reltrad\", \"woman\")], as_factor)",
+    "text": "Load and prepare the data\nlibrary(haven)           # Read Stata data\nlibrary(marginaleffects) # Marginal effects and hypotheses\nlibrary(suest)           # Combine models\n\nsource(\"https://raw.githubusercontent.com/tdmize/Rfunctions/main/ME_helper_functions.R\")\n\ngss &lt;- read_dta(\"https://tdmize.github.io/data/data/cda_gss.dta\")\n\nvars &lt;- c(\"spkhomo\", \"reltrad\", \"age\", \"woman\", \"year\")\ngss &lt;- gss[complete.cases(gss[vars]), vars]\ngss[c(\"spkhomo\", \"reltrad\", \"woman\")] &lt;- lapply(gss[c(\"spkhomo\", \"reltrad\", \"woman\")], as_factor)",
     "crumbs": [
       "Software",
       "meinequality (R)",
@@ -7091,7 +7091,7 @@
     "href": "software/meinequality_r/examples/across-groups.html#unweighted-me-inequality-in-each-period",
     "title": "Comparing ME inequalities across groups",
     "section": "Unweighted ME inequality in each period",
-    "text": "Unweighted ME inequality in each period\nsuest_newdata() stacks the two estimation samples, so each model’s effects are averaged over its own sample. A small function takes the mean absolute pairwise difference within each model:\n\nmeineq &lt;- function(x) {\n  groups &lt;- unique(x$group)\n  est &lt;- sapply(groups, function(g) mean(abs(x$estimate[x$group == g])))\n  data.frame(term = groups, estimate = est)\n}\n\nineq &lt;- avg_comparisons(fit,\n  variables = list(reltrad = \"pairwise\"),\n  newdata = suest_newdata(fit),\n  hypothesis = meineq)\nineq\n           Term Estimate Std. Error    z Pr(&gt;|z|)     S  2.5 % 97.5 %\n Before 1980      0.1556    0.01086 14.3   &lt;0.001 152.3 0.1343 0.1768\n 2010 and later   0.0722    0.00661 10.9   &lt;0.001  89.7 0.0592 0.0851\n\nType: response",
+    "text": "Unweighted ME inequality in each period\nsuest_newdata() stacks the two estimation samples, so each model’s effects are averaged over its own sample:\n\nineq &lt;- avg_comparisons(fit,\n  variables = list(reltrad = \"pairwise\"),\n  newdata = suest_newdata(fit),\n  hypothesis = meineq(fit, weighted = FALSE))\nineq\n          Group Estimate Std. Error    z Pr(&gt;|z|)     S  2.5 % 97.5 %\n Before 1980      0.1556    0.01086 14.3   &lt;0.001 152.3 0.1343 0.1768\n 2010 and later   0.0722    0.00661 10.9   &lt;0.001  89.7 0.0592 0.0851\n\nTerm: reltrad\nType: response",
     "crumbs": [
       "Software",
       "meinequality (R)",
@@ -7156,7 +7156,7 @@
     "href": "software/meinequality_r/examples/categorical-models.html#me-inequality-for-each-predictor",
     "title": "Inequality in categorical models",
     "section": "ME inequality for each predictor",
-    "text": "ME inequality for each predictor\nEach predictor gets its own weights. Gender:\n\nw_woman &lt;- meineq_weights(conmod, woman)\navg_comparisons(conmod,\n  variables = list(woman = \"pairwise\"),\n  hypothesis = ~ I(weighted.mean(abs(x), w_woman)))\n Estimate Std. Error    z Pr(&gt;|z|)    S 2.5 % 97.5 %\n   0.0695     0.0156 4.47   &lt;0.001 16.9 0.039    0.1\n\nType: response\n\nRace-ethnicity:\n\nw_race &lt;- meineq_weights(conmod, race4)\navg_comparisons(conmod,\n  variables = list(race4 = \"pairwise\"),\n  hypothesis = ~ I(weighted.mean(abs(x), w_race)))\n Estimate Std. Error    z Pr(&gt;|z|)    S  2.5 % 97.5 %\n    0.108     0.0135 7.99   &lt;0.001 49.4 0.0814  0.134\n\nType: response\n\nSubjective class:\n\nw_class &lt;- meineq_weights(conmod, class)\navg_comparisons(conmod,\n  variables = list(class = \"pairwise\"),\n  hypothesis = ~ I(weighted.mean(abs(x), w_class)))\n Estimate Std. Error     z Pr(&gt;|z|)   S   2.5 % 97.5 %\n   0.0122     0.0174 0.701    0.484 1.0 -0.0219 0.0464\n\nType: response\n\nClass has no overall effect on conservative identification. Racial-ethnic groups differ by about 11 percentage points on average. For a binary variable such as woman the ME inequality is simply the absolute value of its marginal effect, which puts binary and multi-category predictors on the same footing for comparison.",
+    "text": "ME inequality for each predictor\nList the predictors in variables; meineq() returns the ME inequality of each:\n\navg_comparisons(conmod,\n  variables = list(woman = \"pairwise\", race4 = \"pairwise\", class = \"pairwise\"),\n  hypothesis = meineq(conmod))\n  Term Estimate Std. Error     z Pr(&gt;|z|)    S   2.5 % 97.5 %\n class   0.0122     0.0174 0.701    0.484  1.0 -0.0219 0.0464\n race4   0.1078     0.0135 7.991   &lt;0.001 49.4  0.0814 0.1342\n woman   0.0695     0.0156 4.466   &lt;0.001 16.9  0.0390 0.1001\n\nType: response\n\nClass has no overall effect on conservative identification. Racial-ethnic groups differ by about 11 percentage points on average. For a binary variable such as woman the ME inequality is simply the absolute value of its marginal effect, which puts binary and multi-category predictors on the same footing for comparison.",
     "crumbs": [
       "Software",
       "meinequality (R)",
@@ -7169,7 +7169,7 @@
     "href": "software/meinequality_r/index.html",
     "title": "ME inequality in R",
     "section": "",
-    "text": "The ME inequality statistic from Mize and Han (2025) summarizes the effect of a nominal or ordinal independent variable in a single number. A nominal variable with L categories has L(L-1)/2 pairwise marginal effects – one for every pair of categories. ME inequality is the average absolute pairwise difference in predictions across the categories: it answers “how much does the outcome differ across the levels of this variable, overall?” It can be compared across predictors, across models, and across groups.\nIn R, you can calculate it with the marginaleffects package, which handles the marginal effects and the standard errors. For the weighted version, a small helper function, meineq_weights(), calculates the weights. The same statistic is available in Stata with the meinequality command.",
+    "text": "The ME inequality statistic from Mize and Han (2025) summarizes the effect of a nominal or ordinal independent variable in a single number. A nominal variable with L categories has L(L-1)/2 pairwise marginal effects – one for every pair of categories. ME inequality is the average absolute pairwise difference in predictions across the categories: it answers “how much does the outcome differ across the levels of this variable, overall?” It can be compared across predictors, across models, and across groups.\nIn R, you can calculate it with the marginaleffects package, which handles the marginal effects and the standard errors. A small helper function, meineq(), turns the pairwise differences into the ME inequality. The same statistic is available in Stata with the meinequality command.",
     "crumbs": [
       "Software",
       "meinequality (R)"
@@ -7180,7 +7180,7 @@
     "href": "software/meinequality_r/index.html#setup",
     "title": "ME inequality in R",
     "section": "Setup",
-    "text": "Setup\nmeineq_weights() is in my Rfunctions repository on GitHub. Load it with source():\nlibrary(marginaleffects) # Marginal effects and hypotheses\n\nsource(\"https://raw.githubusercontent.com/tdmize/Rfunctions/main/ME_helper_functions.R\")",
+    "text": "Setup\nmeineq() is in my Rfunctions repository on GitHub. Load it with source():\nlibrary(marginaleffects) # Marginal effects and hypotheses\n\nsource(\"https://raw.githubusercontent.com/tdmize/Rfunctions/main/ME_helper_functions.R\")",
     "crumbs": [
       "Software",
       "meinequality (R)"
@@ -7191,7 +7191,7 @@
     "href": "software/meinequality_r/index.html#weighted-me-inequality",
     "title": "ME inequality in R",
     "section": "Weighted ME inequality",
-    "text": "Weighted ME inequality\nWeighted ME inequality is the default in Mize and Han (2025). Each pairwise comparison counts in proportion to the share of the sample in the two groups being compared. Fit the model with the nominal variable as a factor, then:\nweights &lt;- meineq_weights(mod, nominalvar)\nwmean &lt;- function(x) weighted.mean(x, weights)\n\navg_comparisons(mod,\n  variables = list(nominalvar = \"pairwise\"),\n  hypothesis = ~ I(wmean(abs(x))))\navg_comparisons() calculates every pairwise difference in predictions, and hypothesis turns them into their weighted average absolute difference. meineq_weights() takes the model rather than the data, so the weights come from the model’s estimation sample. For survey models, it uses the survey-weighted share of each category.",
+    "text": "Weighted ME inequality\nWeighted ME inequality is the default in Mize and Han (2025). Each pairwise comparison counts in proportion to the share of the sample in the two groups being compared. Fit the model with the nominal variable as a factor, then:\navg_comparisons(mod,\n  variables = list(nominalvar = \"pairwise\"),\n  hypothesis = meineq(mod))\navg_comparisons() calculates every pairwise difference in predictions, and meineq() turns them into their weighted average absolute difference. It takes the model rather than the data, so the weights come from the model’s estimation sample; for weighted and survey models, it uses the weighted share of each category. List several variables in variables to get the ME inequality of each.",
     "crumbs": [
       "Software",
       "meinequality (R)"
@@ -7202,7 +7202,7 @@
     "href": "software/meinequality_r/index.html#unweighted-me-inequality",
     "title": "ME inequality in R",
     "section": "Unweighted ME inequality",
-    "text": "Unweighted ME inequality\nThe unweighted version gives every pairwise comparison the same weight:\navg_comparisons(mod,\n  variables = list(nominalvar = \"pairwise\"),\n  hypothesis = ~ I(mean(abs(x))))",
+    "text": "Unweighted ME inequality\nThe unweighted version gives every pairwise comparison the same weight:\navg_comparisons(mod,\n  variables = list(nominalvar = \"pairwise\"),\n  hypothesis = meineq(mod, weighted = FALSE))",
     "crumbs": [
       "Software",
       "meinequality (R)"
@@ -8477,7 +8477,7 @@
     "href": "software/totalme_r/examples/inequalities.html#total-me-inequalities",
     "title": "Total ME inequalities for nominal independent variables",
     "section": "Total ME inequalities",
-    "text": "Total ME inequalities\nFor each predictor, calculate the Total ME for every pairwise contrast between its categories, then average those with the ME inequality weights. Race-ethnicity:\n\navg_comparisons(healthmod,\n  variables = list(race4 = \"pairwise\"),\n  hypothesis = ~ I(sum(abs(x)) / 2) | contrast) |&gt;\n  hypotheses(hypothesis = meineq_weights(healthmod, race4))\n Estimate Std. Error    z Pr(&gt;|z|)    S  2.5 % 97.5 %\n   0.0471    0.00679 6.94   &lt;0.001 37.9 0.0338 0.0604\n\nTerm: custom\n\nDegree:\n\navg_comparisons(healthmod,\n  variables = list(degree = \"pairwise\"),\n  hypothesis = ~ I(sum(abs(x)) / 2) | contrast) |&gt;\n  hypotheses(hypothesis = meineq_weights(healthmod, degree))\n Estimate Std. Error    z Pr(&gt;|z|)     S 2.5 % 97.5 %\n    0.116    0.00554 20.9   &lt;0.001 319.6 0.105  0.127\n\nTerm: custom\n\nDegree moves much more probability across the health categories than race-ethnicity does. The weights count each pairwise comparison in proportion to the share of the sample in the two groups compared. For the unweighted version, which gives every comparison the same weight, end with hypotheses(hypothesis = ~ I(mean(x))) instead.",
+    "text": "Total ME inequalities\nRequest every pairwise contrast between each predictor’s categories; totalme() returns the Total ME inequality of each predictor:\n\navg_comparisons(healthmod,\n  variables = list(race4 = \"pairwise\", degree = \"pairwise\"),\n  hypothesis = totalme(healthmod))\n   Term Estimate Std. Error     z Pr(&gt;|z|)     S  2.5 % 97.5 %\n degree   0.1157    0.00554 20.89   &lt;0.001 319.6 0.1049 0.1266\n race4    0.0471    0.00679  6.94   &lt;0.001  37.9 0.0338 0.0604\n\nType: probs\n\nDegree moves much more probability across the health categories than race-ethnicity does. The weights count each pairwise comparison in proportion to the share of the sample in the two groups compared. For the unweighted version, which gives every comparison the same weight, use totalme(healthmod, weighted = FALSE).",
     "crumbs": [
       "Software",
       "totalme (R)",
@@ -8490,7 +8490,7 @@
     "href": "software/totalme_r/index.html",
     "title": "Total marginal effects in R",
     "section": "",
-    "text": "In a model with several outcome categories – a multinomial or ordered logit or probit, for example – a predictor has one marginal effect per category, and no single one of them says how much the predictor matters. The Total marginal effect (Total ME) from Mize and Han (2025) summarizes them in a single number: the sum of the absolute values of the marginal effects across all outcome categories, divided by two. That is the total amount of probability the predictor moves between the categories.\nIn R, you can calculate it with the marginaleffects package, which handles the marginal effects and the standard errors. For nominal or ordinal predictors, the meineq_weights() helper calculates the weights for the weighted Total ME inequality. The same measures are available in Stata with the totalme command.",
+    "text": "In a model with several outcome categories – a multinomial or ordered logit or probit, for example – a predictor has one marginal effect per category, and no single one of them says how much the predictor matters. The Total marginal effect (Total ME) from Mize and Han (2025) summarizes them in a single number: the sum of the absolute values of the marginal effects across all outcome categories, divided by two. That is the total amount of probability the predictor moves between the categories.\nIn R, you can calculate it with the marginaleffects package, which handles the marginal effects and the standard errors. A small helper function, totalme(), turns the marginal effects into Total MEs, including the weighted Total ME inequality for nominal or ordinal predictors. The same measures are available in Stata with the totalme command.",
     "crumbs": [
       "Software",
       "totalme (R)"
@@ -8501,7 +8501,7 @@
     "href": "software/totalme_r/index.html#setup",
     "title": "Total marginal effects in R",
     "section": "Setup",
-    "text": "Setup\nmeineq_weights() is in my Rfunctions repository on GitHub. Load it with source():\nlibrary(marginaleffects) # Marginal effects and hypotheses\n\nsource(\"https://raw.githubusercontent.com/tdmize/Rfunctions/main/ME_helper_functions.R\")",
+    "text": "Setup\ntotalme() is in my Rfunctions repository on GitHub. Load it with source():\nlibrary(marginaleffects) # Marginal effects and hypotheses\n\nsource(\"https://raw.githubusercontent.com/tdmize/Rfunctions/main/ME_helper_functions.R\")",
     "crumbs": [
       "Software",
       "totalme (R)"
@@ -8512,7 +8512,7 @@
     "href": "software/totalme_r/index.html#continuous-and-binary-predictors",
     "title": "Total marginal effects in R",
     "section": "Continuous and binary predictors",
-    "text": "Continuous and binary predictors\nTotal MEs for several predictors can be calculated in one call:\navg_comparisons(mod,\n  variables = list(age = \"sd\",\n                   binaryvar = \"reference\"),\n  hypothesis = ~ I(sum(abs(x)) / 2) | term)\navg_comparisons() calculates each predictor’s marginal effect on every outcome category. hypothesis then adds up the absolute values and divides by two, separately for each predictor (| term).",
+    "text": "Continuous and binary predictors\nTotal MEs for several predictors can be calculated in one call:\navg_comparisons(mod,\n  variables = list(age = \"sd\",\n                   binaryvar = \"reference\"),\n  hypothesis = totalme(mod))\navg_comparisons() calculates each predictor’s marginal effect on every outcome category. totalme() then adds up the absolute values and divides by two, separately for each predictor.",
     "crumbs": [
       "Software",
       "totalme (R)"
@@ -8523,7 +8523,7 @@
     "href": "software/totalme_r/index.html#nominal-or-ordinal-predictors",
     "title": "Total marginal effects in R",
     "section": "Nominal or ordinal predictors",
-    "text": "Nominal or ordinal predictors\nFor a nominal predictor, first calculate a Total ME for every pairwise contrast between its categories (| contrast), then average those using the ME inequality weights:\navg_comparisons(mod,\n  variables = list(nominalvar = \"pairwise\"),\n  hypothesis = ~ I(sum(abs(x)) / 2) | contrast) |&gt;\n  hypotheses(hypothesis = meineq_weights(mod, nominalvar))\nThe result is the weighted Total ME inequality.",
+    "text": "Nominal or ordinal predictors\nFor a nominal predictor, request every pairwise contrast between its categories. totalme() calculates the Total ME of each contrast, then averages them using the ME inequality weights:\navg_comparisons(mod,\n  variables = list(nominalvar = \"pairwise\"),\n  hypothesis = totalme(mod))\nThe result is the weighted Total ME inequality.",
     "crumbs": [
       "Software",
       "totalme (R)"

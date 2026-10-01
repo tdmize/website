@@ -13,14 +13,15 @@ compared across predictors, across models, and across groups.
 
 In R, you can calculate it with the
 [`marginaleffects`](https://marginaleffects.com/) package, which handles the
-marginal effects and the standard errors. For the weighted version, a small
-helper function, [`meineq_weights()`](https://github.com/tdmize/Rfunctions/blob/main/ME_helper_functions.R),
-calculates the weights. The same statistic is available in Stata with the
+marginal effects and the standard errors. A small helper function,
+[`meineq()`](https://github.com/tdmize/Rfunctions/blob/main/ME_helper_functions.R), turns
+the pairwise differences into the ME inequality. The same statistic is
+available in Stata with the
 [`meinequality`](/software/meinequality/index.qmd) command.
 
 ## Setup
 
-`meineq_weights()` is in my `Rfunctions` repository on GitHub. Load it with
+`meineq()` is in my `Rfunctions` repository on GitHub. Load it with
 `source()`:
 
 ```r
@@ -36,19 +37,17 @@ comparison counts in proportion to the share of the sample in the two groups
 being compared. Fit the model with the nominal variable as a factor, then:
 
 ```r
-weights <- meineq_weights(mod, nominalvar)
-wmean <- function(x) weighted.mean(x, weights)
-
 avg_comparisons(mod,
   variables = list(nominalvar = "pairwise"),
-  hypothesis = ~ I(wmean(abs(x))))
+  hypothesis = meineq(mod))
 ```
 
 `avg_comparisons()` calculates every pairwise difference in predictions, and
-`hypothesis` turns them into their weighted average absolute difference.
-`meineq_weights()` takes the model rather than the data, so the weights come
-from the model's estimation sample. For survey models, it uses the
-survey-weighted share of each category.
+`meineq()` turns them into their weighted average absolute difference. It
+takes the model rather than the data, so the weights come from the model's
+estimation sample; for weighted and survey models, it uses the weighted share
+of each category. List several variables in `variables` to get the ME
+inequality of each.
 
 ## Unweighted ME inequality
 
@@ -57,7 +56,7 @@ The unweighted version gives every pairwise comparison the same weight:
 ```r
 avg_comparisons(mod,
   variables = list(nominalvar = "pairwise"),
-  hypothesis = ~ I(mean(abs(x))))
+  hypothesis = meineq(mod, weighted = FALSE))
 ```
 
 ## Examples

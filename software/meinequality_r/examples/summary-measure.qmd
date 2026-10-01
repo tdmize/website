@@ -64,22 +64,20 @@ Type: response
 ## Weighted ME inequality
 
 Mize and Han (2025) recommend weighting each pairwise comparison by the share
-of the sample in the two groups being compared. `meineq_weights()` calculates
-those weights from the model's estimation sample.
+of the sample in the two groups being compared. `meineq()` calculates the
+weighted ME inequality, with the weights from the model's estimation sample.
 
 ::: {.r-run}
 ```r
-weights <- meineq_weights(wagemod, race4)
-wmean <- function(x) weighted.mean(x, weights)
-
 avg_comparisons(wagemod,
   variables = list(race4 = "pairwise"),
-  hypothesis = ~ I(wmean(abs(x))))
+  hypothesis = meineq(wagemod))
 ```
 ```{.r-output}
  Estimate Std. Error   z Pr(>|z|)    S 2.5 % 97.5 %
       4.9       0.86 5.7   <0.001 26.3  3.22   6.59
 
+Term: race4
 Type: response
 ```
 :::
@@ -94,12 +92,13 @@ The unweighted version gives all six comparisons the same weight:
 ```r
 avg_comparisons(wagemod,
   variables = list(race4 = "pairwise"),
-  hypothesis = ~ I(mean(abs(x))))
+  hypothesis = meineq(wagemod, weighted = FALSE))
 ```
 ```{.r-output}
  Estimate Std. Error    z Pr(>|z|)    S 2.5 % 97.5 %
      5.79       1.04 5.56   <0.001 25.1  3.75   7.83
 
+Term: race4
 Type: response
 ```
 :::

@@ -1217,29 +1217,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="total-me-inequalities" class="level2">
 <h2 class="anchored" data-anchor-id="total-me-inequalities">Total ME inequalities</h2>
-<p>For each predictor, calculate the Total ME for every pairwise contrast between its categories, then average those with the ME inequality weights. Race-ethnicity:</p>
+<p>Request every pairwise contrast between each predictor’s categories; <code>totalme()</code> returns the Total ME inequality of each predictor:</p>
 <div class="r-run">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(healthmod,</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">variables =</span> <span class="fu">list</span>(<span class="at">race4 =</span> <span class="st">"pairwise"</span>),</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">hypothesis =</span> <span class="sc">~</span> <span class="fu">I</span>(<span class="fu">sum</span>(<span class="fu">abs</span>(x)) <span class="sc">/</span> <span class="dv">2</span>) <span class="sc">|</span> contrast) <span class="sc">|&gt;</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">hypotheses</span>(<span class="at">hypothesis =</span> <span class="fu">meineq_weights</span>(healthmod, race4))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<pre class="r-output"><code> Estimate Std. Error    z Pr(&gt;|z|)    S  2.5 % 97.5 %
-   0.0471    0.00679 6.94   &lt;0.001 37.9 0.0338 0.0604
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">variables =</span> <span class="fu">list</span>(<span class="at">race4 =</span> <span class="st">"pairwise"</span>, <span class="at">degree =</span> <span class="st">"pairwise"</span>),</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">hypothesis =</span> <span class="fu">totalme</span>(healthmod))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="r-output"><code>   Term Estimate Std. Error     z Pr(&gt;|z|)     S  2.5 % 97.5 %
+ degree   0.1157    0.00554 20.89   &lt;0.001 319.6 0.1049 0.1266
+ race4    0.0471    0.00679  6.94   &lt;0.001  37.9 0.0338 0.0604
 
-Term: custom</code></pre>
+Type: probs</code></pre>
 </div>
-<p>Degree:</p>
-<div class="r-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(healthmod,</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">variables =</span> <span class="fu">list</span>(<span class="at">degree =</span> <span class="st">"pairwise"</span>),</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">hypothesis =</span> <span class="sc">~</span> <span class="fu">I</span>(<span class="fu">sum</span>(<span class="fu">abs</span>(x)) <span class="sc">/</span> <span class="dv">2</span>) <span class="sc">|</span> contrast) <span class="sc">|&gt;</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">hypotheses</span>(<span class="at">hypothesis =</span> <span class="fu">meineq_weights</span>(healthmod, degree))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<pre class="r-output"><code> Estimate Std. Error    z Pr(&gt;|z|)     S 2.5 % 97.5 %
-    0.116    0.00554 20.9   &lt;0.001 319.6 0.105  0.127
-
-Term: custom</code></pre>
-</div>
-<p>Degree moves much more probability across the health categories than race-ethnicity does. The weights count each pairwise comparison in proportion to the share of the sample in the two groups compared. For the unweighted version, which gives every comparison the same weight, end with <code>hypotheses(hypothesis = ~ I(mean(x)))</code> instead.</p>
+<p>Degree moves much more probability across the health categories than race-ethnicity does. The weights count each pairwise comparison in proportion to the share of the sample in the two groups compared. For the unweighted version, which gives every comparison the same weight, use <code>totalme(healthmod, weighted = FALSE)</code>.</p>
 
 
 </section>

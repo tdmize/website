@@ -1191,10 +1191,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <p>The <strong>ME inequality</strong> statistic from Mize and Han (2025) summarizes the effect of a nominal or ordinal independent variable in a single number. A nominal variable with <em>L</em> categories has <em>L(L-1)/2</em> pairwise marginal effects – one for every pair of categories. ME inequality is the average absolute pairwise difference in predictions across the categories: it answers “how much does the outcome differ across the levels of this variable, overall?” It can be compared across predictors, across models, and across groups.</p>
-<p>In R, you can calculate it with the <a href="https://marginaleffects.com/"><code>marginaleffects</code></a> package, which handles the marginal effects and the standard errors. For the weighted version, a small helper function, <a href="https://github.com/tdmize/Rfunctions/blob/main/ME_helper_functions.R"><code>meineq_weights()</code></a>, calculates the weights. The same statistic is available in Stata with the <a href="../../software/meinequality/index.html"><code>meinequality</code></a> command.</p>
+<p>In R, you can calculate it with the <a href="https://marginaleffects.com/"><code>marginaleffects</code></a> package, which handles the marginal effects and the standard errors. A small helper function, <a href="https://github.com/tdmize/Rfunctions/blob/main/ME_helper_functions.R"><code>meineq()</code></a>, turns the pairwise differences into the ME inequality. The same statistic is available in Stata with the <a href="../../software/meinequality/index.html"><code>meinequality</code></a> command.</p>
 <section id="setup" class="level2">
 <h2 class="anchored" data-anchor-id="setup">Setup</h2>
-<p><code>meineq_weights()</code> is in my <code>Rfunctions</code> repository on GitHub. Load it with <code>source()</code>:</p>
+<p><code>meineq()</code> is in my <code>Rfunctions</code> repository on GitHub. Load it with <code>source()</code>:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(marginaleffects) <span class="co"># Marginal effects and hypotheses</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"https://raw.githubusercontent.com/tdmize/Rfunctions/main/ME_helper_functions.R"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -1202,20 +1202,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="weighted-me-inequality" class="level2">
 <h2 class="anchored" data-anchor-id="weighted-me-inequality">Weighted ME inequality</h2>
 <p>Weighted ME inequality is the default in Mize and Han (2025). Each pairwise comparison counts in proportion to the share of the sample in the two groups being compared. Fit the model with the nominal variable as a factor, then:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>weights <span class="ot">&lt;-</span> <span class="fu">meineq_weights</span>(mod, nominalvar)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>wmean <span class="ot">&lt;-</span> <span class="cf">function</span>(x) <span class="fu">weighted.mean</span>(x, weights)</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(mod,</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">variables =</span> <span class="fu">list</span>(<span class="at">nominalvar =</span> <span class="st">"pairwise"</span>),</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">hypothesis =</span> <span class="sc">~</span> <span class="fu">I</span>(<span class="fu">wmean</span>(<span class="fu">abs</span>(x))))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><code>avg_comparisons()</code> calculates every pairwise difference in predictions, and <code>hypothesis</code> turns them into their weighted average absolute difference. <code>meineq_weights()</code> takes the model rather than the data, so the weights come from the model’s estimation sample. For survey models, it uses the survey-weighted share of each category.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(mod,</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">variables =</span> <span class="fu">list</span>(<span class="at">nominalvar =</span> <span class="st">"pairwise"</span>),</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">hypothesis =</span> <span class="fu">meineq</span>(mod))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>avg_comparisons()</code> calculates every pairwise difference in predictions, and <code>meineq()</code> turns them into their weighted average absolute difference. It takes the model rather than the data, so the weights come from the model’s estimation sample; for weighted and survey models, it uses the weighted share of each category. List several variables in <code>variables</code> to get the ME inequality of each.</p>
 </section>
 <section id="unweighted-me-inequality" class="level2">
 <h2 class="anchored" data-anchor-id="unweighted-me-inequality">Unweighted ME inequality</h2>
 <p>The unweighted version gives every pairwise comparison the same weight:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(mod,</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">variables =</span> <span class="fu">list</span>(<span class="at">nominalvar =</span> <span class="st">"pairwise"</span>),</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">hypothesis =</span> <span class="sc">~</span> <span class="fu">I</span>(<span class="fu">mean</span>(<span class="fu">abs</span>(x))))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">hypothesis =</span> <span class="fu">meineq</span>(mod, <span class="at">weighted =</span> <span class="cn">FALSE</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="examples" class="level2">
 <h2 class="anchored" data-anchor-id="examples">Examples</h2>

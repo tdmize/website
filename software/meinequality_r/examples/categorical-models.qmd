@@ -43,52 +43,20 @@ conmod <- glm(conserv ~ woman + race4 + class,
 
 ## ME inequality for each predictor
 
-Each predictor gets its own weights. Gender:
+List the predictors in `variables`; `meineq()` returns the ME inequality of
+each:
 
 ::: {.r-run}
 ```r
-w_woman <- meineq_weights(conmod, woman)
 avg_comparisons(conmod,
-  variables = list(woman = "pairwise"),
-  hypothesis = ~ I(weighted.mean(abs(x), w_woman)))
+  variables = list(woman = "pairwise", race4 = "pairwise", class = "pairwise"),
+  hypothesis = meineq(conmod))
 ```
 ```{.r-output}
- Estimate Std. Error    z Pr(>|z|)    S 2.5 % 97.5 %
-   0.0695     0.0156 4.47   <0.001 16.9 0.039    0.1
-
-Type: response
-```
-:::
-
-Race-ethnicity:
-
-::: {.r-run}
-```r
-w_race <- meineq_weights(conmod, race4)
-avg_comparisons(conmod,
-  variables = list(race4 = "pairwise"),
-  hypothesis = ~ I(weighted.mean(abs(x), w_race)))
-```
-```{.r-output}
- Estimate Std. Error    z Pr(>|z|)    S  2.5 % 97.5 %
-    0.108     0.0135 7.99   <0.001 49.4 0.0814  0.134
-
-Type: response
-```
-:::
-
-Subjective class:
-
-::: {.r-run}
-```r
-w_class <- meineq_weights(conmod, class)
-avg_comparisons(conmod,
-  variables = list(class = "pairwise"),
-  hypothesis = ~ I(weighted.mean(abs(x), w_class)))
-```
-```{.r-output}
- Estimate Std. Error     z Pr(>|z|)   S   2.5 % 97.5 %
-   0.0122     0.0174 0.701    0.484 1.0 -0.0219 0.0464
+  Term Estimate Std. Error     z Pr(>|z|)    S   2.5 % 97.5 %
+ class   0.0122     0.0174 0.701    0.484  1.0 -0.0219 0.0464
+ race4   0.1078     0.0135 7.991   <0.001 49.4  0.0814 0.1342
+ woman   0.0695     0.0156 4.466   <0.001 16.9  0.0390 0.1001
 
 Type: response
 ```

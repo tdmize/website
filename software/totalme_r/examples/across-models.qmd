@@ -18,6 +18,8 @@ library(marginaleffects) # Marginal effects and hypotheses
 library(nnet)            # Multinomial logit
 library(suest)           # Combine models
 
+source("https://raw.githubusercontent.com/tdmize/Rfunctions/main/ME_helper_functions.R")
+
 gss <- read_dta("https://tdmize.github.io/data/data/cda_gss.dta")
 gss <- gss[gss$year >= 2000 & gss$year <= 2021, ]
 
@@ -46,29 +48,22 @@ fit <- suest(basemod, medmod, model_names = c("Base", "Income"))
 
 ## Total ME in each model
 
-The combined object labels each marginal effect with its model and outcome
-category (for example, `Base::Poor`). A small function adds up the absolute
-effects within each model and divides by two:
+`totalme()` returns the Total ME in each model:
 
 ::: {.r-run}
 ```r
-totalme <- function(x) {
-  model <- sub("::.*", "", x$group)
-  est <- tapply(abs(x$estimate), model, sum)[unique(model)] / 2
-  data.frame(term = names(est), estimate = as.numeric(est))
-}
-
 tme <- avg_comparisons(fit,
   variables = list(college = "reference"),
   newdata = gss,
-  hypothesis = totalme)
+  hypothesis = totalme(fit))
 tme
 ```
 ```{.r-output}
-   Term Estimate Std. Error    z Pr(>|z|)     S 2.5 % 97.5 %
+  Group Estimate Std. Error    z Pr(>|z|)     S 2.5 % 97.5 %
  Base      0.159    0.00605 26.3   <0.001 505.4 0.147  0.171
  Income    0.118    0.00673 17.5   <0.001 225.7 0.105  0.131
 
+Term: college
 Type: response
 ```
 :::

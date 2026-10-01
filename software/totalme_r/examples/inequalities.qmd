@@ -45,44 +45,26 @@ healthmod <- multinom(healthR ~ race4 + age + woman + parent +
 
 ## Total ME inequalities
 
-For each predictor, calculate the Total ME for every pairwise contrast between
-its categories, then average those with the ME inequality weights.
-Race-ethnicity:
+Request every pairwise contrast between each predictor's categories;
+`totalme()` returns the Total ME inequality of each predictor:
 
 ::: {.r-run}
 ```r
 avg_comparisons(healthmod,
-  variables = list(race4 = "pairwise"),
-  hypothesis = ~ I(sum(abs(x)) / 2) | contrast) |>
-  hypotheses(hypothesis = meineq_weights(healthmod, race4))
+  variables = list(race4 = "pairwise", degree = "pairwise"),
+  hypothesis = totalme(healthmod))
 ```
 ```{.r-output}
- Estimate Std. Error    z Pr(>|z|)    S  2.5 % 97.5 %
-   0.0471    0.00679 6.94   <0.001 37.9 0.0338 0.0604
+   Term Estimate Std. Error     z Pr(>|z|)     S  2.5 % 97.5 %
+ degree   0.1157    0.00554 20.89   <0.001 319.6 0.1049 0.1266
+ race4    0.0471    0.00679  6.94   <0.001  37.9 0.0338 0.0604
 
-Term: custom
-```
-:::
-
-Degree:
-
-::: {.r-run}
-```r
-avg_comparisons(healthmod,
-  variables = list(degree = "pairwise"),
-  hypothesis = ~ I(sum(abs(x)) / 2) | contrast) |>
-  hypotheses(hypothesis = meineq_weights(healthmod, degree))
-```
-```{.r-output}
- Estimate Std. Error    z Pr(>|z|)     S 2.5 % 97.5 %
-    0.116    0.00554 20.9   <0.001 319.6 0.105  0.127
-
-Term: custom
+Type: probs
 ```
 :::
 
 Degree moves much more probability across the health categories than
 race-ethnicity does. The weights count each pairwise comparison in proportion
 to the share of the sample in the two groups compared. For the unweighted
-version, which gives every comparison the same weight, end with
-`hypotheses(hypothesis = ~ I(mean(x)))` instead.
+version, which gives every comparison the same weight, use
+`totalme(healthmod, weighted = FALSE)`.
