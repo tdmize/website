@@ -1204,6 +1204,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#arguments" id="toc-arguments" class="nav-link" data-scroll-target="#arguments">Arguments</a></li>
   <li><a href="#value" id="toc-value" class="nav-link" data-scroll-target="#value">Value</a></li>
   <li><a href="#details" id="toc-details" class="nav-link" data-scroll-target="#details">Details</a></li>
+  <li><a href="#marginal-effects" id="toc-marginal-effects" class="nav-link" data-scroll-target="#marginal-effects">Marginal effects</a></li>
   </ul>
 </nav>
     </div>
@@ -1279,7 +1280,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>The pooled covariance is <code>Ubar + (1 + 1 / m) B</code>, where <code>Ubar</code> is the mean within-imputation joint covariance, <code>B</code> is the between-imputation covariance of the complete joint coefficient vector, and <code>m</code> is the number of imputations. Because each within-imputation input is a complete SUEST system, cross-model covariance is retained in both components.</p>
 <p>A <code>"mira"</code> object from <a href="https://amices.org/mice/reference/with.mids.html"><code>mice::with()</code></a> is read through its public <code>analyses</code> component. The list returned by <a href="https://amices.org/mice/reference/getfit.html"><code>mice::getfit()</code></a> is accepted as well. The <code>mice</code> package is not required when pooling an ordinary list.</p>
 <p>Results from <a href="https://rdrr.io/pkg/mitools/man/with.imputationList.html"><code>mitools::with.imputationList()</code></a> use the same list-based route, with their originating call retained in the returned object. Legacy <code>"imputationResultList"</code> wrappers are accepted as well. The <code>mitools</code> package is not required for an already-created result list.</p>
-<p>This initial interface supports coefficients, covariance matrices, summaries, and coefficient-level hypotheses. Predictions, slopes, and comparisons must be estimated within each imputation and pooled as estimands; they are not yet implemented for <code>"suest_mi"</code> objects.</p>
+</section>
+<section id="marginal-effects" class="level2">
+<h2 class="anchored" data-anchor-id="marginal-effects">Marginal effects</h2>
+<p>Predictions, slopes, comparisons, and hypothesis tests from <code>marginaleffects</code> are estimated within each imputation, using that imputation’s joint SUEST covariance, and then pooled with Rubin’s rules, as Stata’s <code>mimrgns</code> does. Cross-model differences, such as <code>hypothesis = difference ~ revpairwise</code>, are pooled the same way. This works on the <code>"mira"</code> object from <code>with(imp, suest(...))</code> and equally on a <code>"suest_mi"</code> object, so the two give identical results:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>analyses <span class="ot">&lt;-</span> <span class="fu">with</span>(imp, <span class="fu">suest</span>(<span class="fu">glm</span>(y <span class="sc">~</span> x, <span class="at">family =</span> binomial),</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">glm</span>(y <span class="sc">~</span> x <span class="sc">+</span> z, <span class="at">family =</span> binomial)))</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>marginaleffects<span class="sc">::</span><span class="fu">avg_comparisons</span>(analyses, <span class="at">variables =</span> <span class="st">"x"</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">hypothesis =</span> difference <span class="sc">~</span> revpairwise)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>marginaleffects<span class="sc">::</span><span class="fu">avg_comparisons</span>(<span class="fu">suest_mi</span>(analyses), <span class="at">variables =</span> <span class="st">"x"</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">hypothesis =</span> difference <span class="sc">~</span> revpairwise)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Without <code>newdata</code>, each imputation’s completed data are used when the imputations came from <code>mice</code>. For a plain list or <code>mitools</code> results, each imputation’s own estimation sample is used instead, and <code>marginaleffects</code> warns that it could not recover the original data from a <code>mids</code> object; that warning does not apply to <a href="suest.html"><code>suest()</code></a> results. <code>mice</code> warns “Large sample assumed.” because SUEST, like Stata’s <code>suest</code>, reports large-sample (z) statistics; the pooled degrees of freedom are then Rubin’s large-sample values, as in Stata’s <code>mi estimate</code>.</p>
 
 
 </section>
