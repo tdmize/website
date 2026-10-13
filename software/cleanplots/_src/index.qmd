@@ -48,7 +48,8 @@ you need or want a citation you can cite `cleanplots` as:
 > <https://www.trentonmize.com/software/cleanplots>
 
 If you use the ordinal `cleanplots#` schemes, please also credit the
-cividis colors (Nunez, Anderton, and Renslow 2018; reference below).
+cividis colors (Nunez, Anderton, and Renslow 2018) or the viridis colors
+(van der Walt and Smith 2015); references below.
 
 ## What cleanplots changes
 
@@ -58,7 +59,7 @@ cividis colors (Nunez, Anderton, and Renslow 2018; reference below).
 - Default colors allow you to make one graph which is effective in both
   color and when printed in black and white.
 - Nominal and ordinal color palettes are available so your colors match your
-  data.
+  data, with ordinal schemes for 2 to 15 ordered categories.
 - Marker shapes and line features (e.g. solid, dashed) better distinguish
   lines and ensure lines will be distinguishable if printing in black and
   white.
@@ -163,54 +164,33 @@ protanopia, and tritanopia simulation checks. You can check the palette,
 or any set of colors, interactively at
 [Coloring for Colorblindness](https://davidmathlogic.com/colorblind/#%23D50000-%238FC6EB-%23000000-%23909090-%23740074-%23FFB3D9-%23143755-%23C0C0C0-%23404040-%23D9D7F0).
 
-## Ordinal color palettes: cleanplots3 to cleanplots11
+## Ordinal color palettes
 
-The default `cleanplots` colors are nominal, with no implied ordering. To
-have the colors reflect ordering, use the `cleanplots#` schemes on a single
-graph. Five are available -- `cleanplots3`, `cleanplots5`, `cleanplots7`,
-`cleanplots9`, and `cleanplots11` -- where the number is how many
-sequential colors the scheme provides. The colors run from light yellow to
-dark navy, so higher categories are darker; they are from the cividis
-palette, a variant of viridis optimized so that readers with red-green
-color blindness see essentially the same palette as everyone else, and the
-ordering survives black and white printing.
+The default `cleanplots` colors are nominal, with no implied ordering. For
+ordered categories, the ordinal `cleanplots#` schemes use colors that run
+from light to dark. Replace `#` with the number of ordered categories, from
+2 to 15. `cleanplots#` uses the cividis palette, `cleanplots#v` uses the
+viridis palette, and adding `r` (`cleanplots#r`, `cleanplots#vr`) reverses
+the order of the colors. The four versions for five categories:
 
 ```{.stata-run}
 <<dd_do>>
-colorpalette, span : cleanplots11 / cleanplots9 / cleanplots7 / cleanplots5 / cleanplots3
-graph export "fig/palette-ordinal.png", replace width(1400)
+colorpalette, span : cleanplots5 / cleanplots5r / cleanplots5v / cleanplots5vr
+graph export "fig/palette-ordinal-five.png", replace width(1400)
 <</dd_do>>
 ```
 
-![](fig/palette-ordinal.png){width=85% fig-alt="Five rows of swatches running from light yellow through gray to dark navy, with eleven, nine, seven, five, and three steps."}
+![](fig/palette-ordinal-five.png){width=85% fig-alt="Four rows of five swatches: cividis from light yellow to dark navy, cividis reversed, viridis from light yellow through green and blue to dark purple, and viridis reversed."}
 
-The same bar chart with the nominal palette and with `cleanplots5`, which
-matches the five ordered repair-record categories of Stata's `auto` data:
-
-```{.stata-run}
-<<dd_do>>
-sysuse auto, clear
-graph bar price, over(rep78) asyvars scheme(cleanplots) ///
-    title("Nominal colors: cleanplots")
-graph export "fig/ordinal-nominal.png", replace width(1400)
-graph bar price, over(rep78) asyvars scheme(cleanplots5) ///
-    title("Ordinal colors: cleanplots5")
-graph export "fig/ordinal-ordinal.png", replace width(1400)
-<</dd_do>>
-```
-
-::: {layout-ncol=2}
-![](fig/ordinal-nominal.png){fig-alt="Bar chart of mean price by repair record with the nominal cleanplots colors, one distinct color per bar."}
-
-![](fig/ordinal-ordinal.png){fig-alt="The same bar chart with the cleanplots5 scheme: bars run from light yellow to dark navy in the order of the repair-record categories."}
-:::
-
-The `cleanplots#` schemes inherit all layout, sizing, and legend settings
-from the main scheme, and each series still gets a distinct line pattern
-and marker symbol. If a graph has more groups than the scheme has colors,
-the colors recycle while the patterns and symbols continue to vary.
+The [Ordinal palettes](ordinal.html) page explains which version to use and
+shows them in bar charts, line graphs, and grayscale.
 
 ## Version history
+
+In October 2026, the ordinal schemes were expanded to every number of
+ordered categories from 2 to 15, in two palettes (cividis and viridis) and
+in both directions. If you installed `cleanplots` before then, run the
+installation line above again to get the new schemes.
 
 `cleanplots` was given an update in July 2026. For the primary palette, of
 most focus is the color choices for colors 6--10, which are now more
@@ -247,3 +227,6 @@ Read more about the R package at
 > "Optimizing Colormaps with Consideration for Color Vision Deficiency to
 > Enable Accurate Interpretation of Scientific Data." *PLOS ONE* 13(7):
 > e0199239.
+
+> van der Walt, Stéfan, and Nathaniel Smith. 2015. "matplotlib colormaps."
+> <https://bids.github.io/colormap/>
