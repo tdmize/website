@@ -29,7 +29,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PLACEHOLDER = "(output appears here after build.do runs the code in Stata)"
 
 RE_VERSION = re.compile(r"^[ \t]*<<dd_version:[^>]*>>[ \t]*\r?\n?", re.M)
-RE_DO = re.compile(r"<<dd_do(?::[^>]*)?>>\r?\n(.*?)<</dd_do>>", re.S)
+RE_DO = re.compile(r"<<dd_do(?::([^>]*))?>>\r?\n(.*?)<</dd_do>>", re.S)
 RE_GRAPH = re.compile(r"<<dd_graph:[^>]*>>")
 RE_DISPLAY = re.compile(r"<<dd_display:[^>]*>>")
 RE_OTHER = re.compile(r"<<dd_[a-z_]+(?::[^>]*)?>>")
@@ -39,7 +39,9 @@ def fake_dyntext(text: str) -> str:
     """Approximate what dyntext writes, without running Stata."""
 
     def do_block(m):
-        code = m.group(1).rstrip("\n")
+        if "quietly" in (m.group(1) or ""):   # dyntext shows nothing for these
+            return ""
+        code = m.group(2).rstrip("\n")
         out = []
         for line in code.split("\n"):
             if line.strip() == "":

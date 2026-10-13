@@ -425,16 +425,14 @@ def main():
     name = os.path.splitext(fname)[0]
     md = convert(text, f"{args.cmd}/help.html")
     title = args.title or f"help {name}"
-    sub = args.subtitle or "The installed help file, rendered for the web"
+    sub = f'subtitle: "{args.subtitle}"\n' if args.subtitle else ""
     page = f'''---
 title: "{title}"
-subtitle: "{sub}"
-toc-depth: 3
+{sub}toc-depth: 3
 ---
 
 ::: {{.callout-note appearance="simple"}}
-This page is generated from `{fname}` by `build.do`, so it matches the
-installed version. In Stata, type `help {name}`.
+To read the help file in Stata, type `help {name}`.
 :::
 
 {md}

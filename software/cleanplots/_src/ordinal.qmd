@@ -4,10 +4,10 @@ subtitle: "Color schemes for ordered categories"
 ---
 <<dd_version: 2>>
 
-The default `cleanplots` colors are nominal: they tell groups apart without
-implying any order. When the groups are ordered -- survey responses from
-strongly disagree to strongly agree, levels of education, self-rated health
-from poor to excellent -- the ordinal `cleanplots#` schemes use colors that
+The default `cleanplots` colors are nominal: they are designed to
+distinguish graph elements without implying any order. When the data is
+ordinal -- e.g. survey responses from strongly disagree to strongly agree,
+levels of education, self-rated health from poor to excellent -- the ordinal `cleanplots#` schemes use colors that
 run from light to dark, so the order of the colors follows the order of the
 categories.
 
@@ -19,9 +19,15 @@ matches the five ordered repair-record categories of Stata's `auto` data:
 sysuse auto, clear
 graph bar price, over(rep78) asyvars scheme(cleanplots) ///
     title("Nominal colors: cleanplots")
+<</dd_do>>
+<<dd_do: quietly>>
 graph export "fig/ordinal-nominal.png", replace width(1400)
+<</dd_do>>
+<<dd_do>>
 graph bar price, over(rep78) asyvars scheme(cleanplots5) ///
     title("Ordinal colors: cleanplots5")
+<</dd_do>>
+<<dd_do: quietly>>
 graph export "fig/ordinal-ordinal.png", replace width(1400)
 <</dd_do>>
 ```
@@ -59,9 +65,7 @@ Which version to use:
   blue, and purple -- so neighboring categories are easier to tell apart in
   color.
 - **Reversed** (`cleanplots#r` and `cleanplots#vr`) puts the darkest color
-  first. Use it when you want the first category to be the darkest. Stata
-  has no option to reverse the colors of a scheme, so choose the reversed
-  scheme instead.
+  first. Use it when you want the first category to be the darkest.
 - **Match the number to your categories.** If a graph has more series than
   the scheme has colors, the colors start over from the first color, while
   the line patterns and marker symbols keep changing.
@@ -76,15 +80,21 @@ the main scheme.
 Each scheme runs from the light end of its palette to the dark end, so the
 more categories a scheme has, the smaller the steps between neighboring
 colors. The colors of the ordinal schemes for 3, 4, 5, 6, 7, 9, and 15
-categories are also available by the scheme's name in Ben Jann's
-`colorpalette` command (from the `palettes` package on SSC). The cividis and
-viridis schemes for 3, 5, 9, and 15 categories:
+categories are also available by the scheme's name in the
+[`colorpalette`](https://repec.sowi.unibe.ch/stata/palettes/colors.html)
+command. The cividis and viridis schemes for 3, 5, 9, and 15 categories:
 
 ```{.stata-run}
 <<dd_do>>
 colorpalette, span : cleanplots3 / cleanplots5 / cleanplots9 / cleanplots15
+<</dd_do>>
+<<dd_do: quietly>>
 graph export "fig/ordinal-palette-cividis.png", replace width(1400)
+<</dd_do>>
+<<dd_do>>
 colorpalette, span : cleanplots3v / cleanplots5v / cleanplots9v / cleanplots15v
+<</dd_do>>
+<<dd_do: quietly>>
 graph export "fig/ordinal-palette-viridis.png", replace width(1400)
 <</dd_do>>
 ```
@@ -105,15 +115,29 @@ The repair-record bar chart in all four versions:
 sysuse auto, clear
 graph bar price, over(rep78) asyvars scheme(cleanplots5) ///
     title("Cividis: cleanplots5")
+<</dd_do>>
+<<dd_do: quietly>>
 graph export "fig/ordinal-bar-5.png", replace width(1400)
+<</dd_do>>
+<<dd_do>>
 graph bar price, over(rep78) asyvars scheme(cleanplots5r) ///
     title("Cividis reversed: cleanplots5r")
+<</dd_do>>
+<<dd_do: quietly>>
 graph export "fig/ordinal-bar-5r.png", replace width(1400)
+<</dd_do>>
+<<dd_do>>
 graph bar price, over(rep78) asyvars scheme(cleanplots5v) ///
     title("Viridis: cleanplots5v")
+<</dd_do>>
+<<dd_do: quietly>>
 graph export "fig/ordinal-bar-5v.png", replace width(1400)
+<</dd_do>>
+<<dd_do>>
 graph bar price, over(rep78) asyvars scheme(cleanplots5vr) ///
     title("Viridis reversed: cleanplots5vr")
+<</dd_do>>
+<<dd_do: quietly>>
 graph export "fig/ordinal-bar-5vr.png", replace width(1400)
 <</dd_do>>
 ```
@@ -142,19 +166,27 @@ use "https://tdmize.github.io/data/data/addhealth4", clear
 quietly ologit health orole vrole i.woman age income i.race i.educ
 quietly margins, at(orole=(0(1)10))
 
-marginsplot, noci scheme(cleanplots5) title("Cividis: cleanplots5") ///
-    legend(order(1 "Poor" 2 "Fair" 3 "Good" 4 "Very Good" 5 "Excellent"))
+marginsplot, recastci(rline) ciopts(lpat(dash) lcol(*.4)) ///
+    scheme(cleanplots5) title("Cividis: cleanplots5") ///
+    legend(order(6 "Poor" 7 "Fair" 8 "Good" 9 "Very Good" 10 "Excellent"))
+<</dd_do>>
+<<dd_do: quietly>>
 graph export "fig/ordinal-ologit-5.png", replace width(1400)
-marginsplot, noci scheme(cleanplots5v) title("Viridis: cleanplots5v") ///
-    legend(order(1 "Poor" 2 "Fair" 3 "Good" 4 "Very Good" 5 "Excellent"))
+<</dd_do>>
+<<dd_do>>
+marginsplot, recastci(rline) ciopts(lpat(dash) lcol(*.4)) ///
+    scheme(cleanplots5v) title("Viridis: cleanplots5v") ///
+    legend(order(6 "Poor" 7 "Fair" 8 "Good" 9 "Very Good" 10 "Excellent"))
+<</dd_do>>
+<<dd_do: quietly>>
 graph export "fig/ordinal-ologit-5v.png", replace width(1400)
 <</dd_do>>
 ```
 
 ::: {layout-ncol=2}
-![](fig/ordinal-ologit-5.png){fig-alt="Predicted probabilities of five self-rated health categories across a count of obligatory roles with cleanplots5: the lines run from light yellow for poor to dark navy for excellent, each with its own marker and line pattern."}
+![](fig/ordinal-ologit-5.png){fig-alt="Predicted probabilities of five self-rated health categories across a count of obligatory roles with cleanplots5: the lines run from light yellow for poor to dark navy for excellent, each with its own marker and line pattern, and lighter dashed lines in the same colors show the confidence intervals."}
 
-![](fig/ordinal-ologit-5v.png){fig-alt="The same plot with cleanplots5v: the lines run from light yellow for poor through green and blue to dark purple for excellent."}
+![](fig/ordinal-ologit-5v.png){fig-alt="The same plot with cleanplots5v: the lines run from light yellow for poor through green and blue to dark purple for excellent, with lighter dashed confidence-interval lines."}
 :::
 
 ## Printing in black and white
@@ -166,8 +198,14 @@ color and in grayscale:
 ```{.stata-run}
 <<dd_do>>
 colorpalette, span : cleanplots9 / cleanplots9v
+<</dd_do>>
+<<dd_do: quietly>>
 graph export "fig/ordinal-9-color.png", replace width(1400)
+<</dd_do>>
+<<dd_do>>
 colorpalette, gscale span : cleanplots9 / cleanplots9v
+<</dd_do>>
+<<dd_do: quietly>>
 graph export "fig/ordinal-9-gray.png", replace width(1400)
 <</dd_do>>
 ```
@@ -191,5 +229,6 @@ If you use the ordinal schemes, please credit the palette you used: cividis
 > Enable Accurate Interpretation of Scientific Data." *PLOS ONE* 13(7):
 > e0199239.
 
-> van der Walt, Stéfan, and Nathaniel Smith. 2015. "matplotlib colormaps."
+> van der Walt, Stéfan, and Nathaniel Smith. 2015. "Viridis: A Better Default
+> Colormap for Matplotlib."
 > <https://bids.github.io/colormap/>

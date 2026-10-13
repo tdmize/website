@@ -1,12 +1,10 @@
 ---
 title: "mecompare help file"
-subtitle: "The installed help file, rendered for the web"
 toc-depth: 3
 ---
 
 ::: {.callout-note appearance="simple"}
-This page is generated from `mecompare.sthlp` by `build.do`, so it matches the
-installed version. In Stata, type `help mecompare`.
+To read the help file in Stata, type `help mecompare`.
 :::
 
 ## Title
@@ -166,7 +164,7 @@ See [Models that can be compared](help.html#model_combos) below for the cross-fa
 
 ### Models
 
-**`models(list)`** names the stored model estimates to use: one or more models that were saved using `estimates store` before running `mecompare`. With two models the table reports each model's marginal effects and, beneath them, the cross-model Difference in each. With three or more models the table lists every model's marginal effects, one set of rows per model, and reports no differences: choose the comparisons you want and test them with [metest](../metest/help.html) (e.g. `metest 1 - 2`). A focal variable absent from one of the models gets a blank row for that model.
+**`models(list)`** names the stored model estimates to use: one or more models that were saved using `estimates store` before running `mecompare`. With two models the table reports each model's marginal effects and, beneath them, the cross-model Difference in each. With three or more models the table lists every model's marginal effects, one set of rows per model, and reports no differences: choose the comparisons you want and test them with [metest](../metest/help.html) (e.g. `metest 1 - 2`). A focal variable absent from one of the models gets a blank row for that model. When a multilevel or panel model is among the models, fit every model without `vce(robust)`; `suest2` then clusters the standard errors on the highest-level group.
 
 `models( )` may be omitted, in which case the estimates are taken from e():
 
@@ -321,7 +319,7 @@ With **two or more** models, a non-default prediction can be requested if it ret
 
 ### Models that can be compared
 
-Models are comparable when they all return the **same number of predictions**. Same-family sets (e.g., two logits, three glms, two mestregs) always qualify. Cross-family sets qualify on the same rule: `logit` vs `regress`, `logit` vs `melogit`, `xtlogit` vs `mixed`, or any pair of binary-, count-, or continuous-outcome models; and any pair of ordinal or nominal models with the same number of outcome categories (`ologit` vs `oprobit`, `mlogit` vs `ologit`, and so on). Each model contributes its own default prediction, or the one given in `predict()`, so a cross-family comparison contrasts, e.g., logit's predicted probabilities with regress's linear predictions. Models that return different numbers of predictions (e.g. a 3-category `ologit` vs a `logit`) cannot be compared.
+Models are comparable when they all return the **same number of predictions**. Same-family sets (e.g., two logits, three glms, two mestregs) always qualify. Cross-family sets qualify on the same rule: `logit` vs `regress`, `logit` vs `melogit`, `xtlogit` vs `mixed`, or any pair of binary-, count-, or continuous-outcome models; and any pair of ordinal or nominal models with the same number of outcome categories (`ologit` vs `oprobit`, `mlogit` vs `ologit`, and so on). Each model contributes its own default prediction, or the one given in `predict()`, so a cross-family comparison contrasts, e.g., logit's predicted probabilities with regress's linear predictions. Models that return different numbers of predictions (e.g. a 3-category `ologit` vs a `logit`) cannot be compared. A multilevel or panel model can be paired with a single-level model only if the single-level model is a `regress`, `logit`, `probit`, `cloglog`, `poisson`, `nbreg`, `ologit`, or `oprobit` model.
 
 When the models have a multi-category outcome, the outcome categories are matched *in order*, so the dependent variables must have the same number of categories *and the same values*. `mecompare` errors if they differ (e.g. one outcome coded 0/1/2 and another 1/2/3). If the values agree but the value labels differ, the comparison proceeds and the table is labeled with the first model's labels.
 

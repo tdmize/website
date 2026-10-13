@@ -1279,13 +1279,11 @@ age + 1 (uncentered)             |
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">xlabel</span>(20(5)85) <span class="kw">ylabel</span>(0(10000)50000) <span class="bn">xtitle</span>(<span class="st">"Age of respondent"</span>) <span class="bn">ytitle</span>(<span class="st">"Income"</span>) <span class="co">///</span></span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"Figure 2. Predicted income by age, cubic specification"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Variables that uniquely identify margins: age</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">graph</span> <span class="kw">export</span> <span class="st">"fig/chapter-income-age.png"</span>, <span class="kw">replace</span> <span class="kw">width</span>(1400)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<pre class="stata-output"><code>file fig/chapter-income-age.png saved as PNG format</code></pre>
 </div>
 <p><img src="../fig/chapter-income-age.png" class="img-fluid" style="width:80.0%" alt="Predicted income across the range of age from a regression with age, age squared, and age cubed: rising to a peak near age 50 and declining after."></p>
 <p>The chapter compares a ten-year increase in age starting at 30 with one starting at 60. <code>amount(10)</code> sets the size of the change and <code>start(age=(30 60))</code> the two starting points; <code>uncentered</code> again makes the change run upward from the start (30 to 40, and 60 to 70). Because both effects are rows of one table, <a href="../../metest/index.html"><code>metest</code></a> can test whether they differ:</p>
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>mecompare age, models(cubmod) <span class="bn">start</span>(age=(30 60)) amount(10) uncentered</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>mecompare age, models(cubmod) <span class="bn">start</span>(age=(30 60)) amount(10) uncentered</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Predicting: Linear prediction
 Marginal effects (N_cubmod=38993)
 
@@ -1294,7 +1292,7 @@ Marginal effects (N_cubmod=38993)
 age + 10 (uncentered)            |                                       
                            at 30 |     1   9947.741    131.062      0.000
                            at 60 |     2  -7209.963    383.977      0.000</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>metest 1 - 2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>metest 1 - 2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>                                 |  estimate         se     pvalue 
 ---------------------------------+--------------------------------
              age_at30 - age_at60 | 17157.704    469.938      0.000 </code></pre>
@@ -1305,10 +1303,10 @@ age + 10 (uncentered)            |
 <h3 class="anchored" data-anchor-id="categorical-models">Categorical models</h3>
 <p>The same calculation in a logit model of employment status on age, for men. A logit is inherently nonlinear, so the marginal effects differ across ages even with only a linear term for age in the model. The chapter compares a ten-year increase starting at 20 with one starting at 60:</p>
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> <span class="kw">logit</span> employed c.age <span class="kw">if</span> woman == 0, <span class="kw">vce</span>(<span class="kw">robust</span>)</span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> empmen</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> <span class="kw">logit</span> employed c.age <span class="kw">if</span> woman == 0, <span class="kw">vce</span>(<span class="kw">robust</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> empmen</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>. </code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>mecompare age, models(empmen) <span class="bn">start</span>(age=(20 60)) amount(10) uncentered</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>mecompare age, models(empmen) <span class="bn">start</span>(age=(20 60)) amount(10) uncentered</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Predicting: Pr(employed)
 Marginal effects (N_empmen=30162)
 
@@ -1317,7 +1315,7 @@ Marginal effects (N_empmen=30162)
 age + 10 (uncentered)            |                                       
                            at 20 |     1     -0.054      0.001      0.000
                            at 60 |     2     -0.139      0.002      0.000</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>metest 1 - 2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>metest 1 - 2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>                                 |  estimate         se     pvalue 
 ---------------------------------+--------------------------------
              age_at20 - age_at60 |     0.084      0.003      0.000 </code></pre>
@@ -1329,14 +1327,14 @@ age + 10 (uncentered)            |
 <h2 class="anchored" data-anchor-id="summary-measures-section-2">Summary measures (Section 2)</h2>
 <p>The rest of the chapter’s calculations use a logit of employment status on age, gender, years of education, and race-ethnicity, for all respondents.</p>
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> <span class="kw">logit</span> employed c.age i.woman c.edyrs i.race4, <span class="kw">vce</span>(<span class="kw">robust</span>)</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> empmod</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> <span class="kw">logit</span> employed c.age i.woman c.edyrs i.race4, <span class="kw">vce</span>(<span class="kw">robust</span>)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> empmod</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <section id="marginal-effect-at-the-mean-mem" class="level3">
 <h3 class="anchored" data-anchor-id="marginal-effect-at-the-mean-mem">Marginal effect at the mean (MEM)</h3>
 <p>A MEM holds every variable in the model at its sample mean: the focal variable starts at its mean (<code>start(atmeans)</code>) and the control variables are held at theirs (<code>covariates(atmeans)</code>, or simply <code>atmeans</code>). Here the change is one standard deviation of age, centered on the mean – half a standard deviation below to half above – which is <code>mecompare</code>’s default for any amount:</p>
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>mecompare age, models(empmod) amount(<span class="fu">sd</span>) <span class="bn">start</span>(atmeans) covariates(atmeans)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>mecompare age, models(empmod) amount(<span class="fu">sd</span>) <span class="bn">start</span>(atmeans) covariates(atmeans)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Predicting: Pr(employed)
 Marginal effects (N_empmod=68050)
 
@@ -1351,7 +1349,7 @@ age + SD (centered)              |
 <h3 class="anchored" data-anchor-id="average-marginal-effect-ame">Average marginal effect (AME)</h3>
 <p>An AME calculates the change for every observation, starting from its own values, and averages. It is the default: nothing needs to be specified beyond the amount of change. The chapter reports the AME of a one-year increase and of a standard-deviation increase:</p>
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>mecompare age, models(empmod)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>mecompare age, models(empmod)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Predicting: Pr(employed)
 Marginal effects (N_empmod=68050)
 
@@ -1359,7 +1357,7 @@ Marginal effects (N_empmod=68050)
 ---------------------------------+---------------------------------------
 age + 1 (centered)               |                                       
                           empmod |     1     -0.009      0.000      0.000</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>mecompare age, models(empmod) amount(<span class="fu">sd</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>mecompare age, models(empmod) amount(<span class="fu">sd</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Predicting: Pr(employed)
 Marginal effects (N_empmod=68050)
 
@@ -1374,7 +1372,7 @@ age + SD (centered)              |
 <h3 class="anchored" data-anchor-id="marginal-effects-at-representative-values-mers">Marginal effects at representative values (MERs)</h3>
 <p>A MER puts the focal variable at a value of substantive interest – the chapter’s example is 55, an ideal type of “middle age” – and calculates the change from there. <code>start(age=55)</code> sets everyone to 55, and <code>uncentered</code> runs the change upward from 55 (to 56 for a one-unit change, and to about 73 for a standard-deviation change). The other variables stay at their observed values; add <code>atmeans</code> to hold them at their means instead (the chapter’s Equations 24–25).</p>
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>mecompare age, models(empmod) <span class="bn">start</span>(age=55) uncentered</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>mecompare age, models(empmod) <span class="bn">start</span>(age=55) uncentered</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Predicting: Pr(employed)
 Marginal effects (N_empmod=68050)
 
@@ -1382,7 +1380,7 @@ Marginal effects (N_empmod=68050)
 ---------------------------------+---------------------------------------
 age + 1 (uncentered)             |                                       
                           empmod |     1     -0.010      0.000      0.000</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>mecompare age, models(empmod) <span class="bn">start</span>(age=55) amount(<span class="fu">sd</span>) uncentered</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>mecompare age, models(empmod) <span class="bn">start</span>(age=55) amount(<span class="fu">sd</span>) uncentered</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Predicting: Pr(employed)
 Marginal effects (N_empmod=68050)
 
@@ -1396,11 +1394,11 @@ age + SD (uncentered)            |
 <h3 class="anchored" data-anchor-id="ideal-types">Ideal types</h3>
 <p>Ideal types extend the idea from one focal variable to a cluster of characteristics. The chapter adds parenthood and number of children to the model and defines two ideal types: a “middle-aged mother” (age 55, a woman, a parent, two children) and a “young single man” (age 25, a man, not a parent, no children). <code>covariates()</code> sets the characteristics of each ideal type, and <code>start(age=55) amount(5) uncentered</code> is the change from 55 to 60 for the first and <code>start(age=25)</code> the change from 25 to 30 for the second. Each <code>mecompare</code> call is one ideal type, so the question “is the effect of aging the same for each?” is answered by running both:</p>
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> <span class="kw">logit</span> employed c.age i.woman i.parent c.numchild c.edyrs i.race4, <span class="kw">vce</span>(<span class="kw">robust</span>)</span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> empmod2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> <span class="kw">logit</span> employed c.age i.woman i.parent c.numchild c.edyrs i.race4, <span class="kw">vce</span>(<span class="kw">robust</span>)</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> empmod2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>. </code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>mecompare age, models(empmod2) <span class="bn">start</span>(age=55) amount(5) uncentered <span class="co">///</span></span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>          covariates(woman=1 parent=1 numchild=2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>mecompare age, models(empmod2) <span class="bn">start</span>(age=55) amount(5) uncentered <span class="co">///</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>          covariates(woman=1 parent=1 numchild=2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Predicting: Pr(employed)
 Marginal effects (N_empmod2=67869)
 
@@ -1408,8 +1406,8 @@ Marginal effects (N_empmod2=67869)
 ---------------------------------+---------------------------------------
 age + 5 (uncentered)             |                                       
                          empmod2 |     1     -0.054      0.001      0.000</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>mecompare age, models(empmod2) <span class="bn">start</span>(age=25) amount(5) uncentered <span class="co">///</span></span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>          covariates(woman=0 parent=0 numchild=0)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>mecompare age, models(empmod2) <span class="bn">start</span>(age=25) amount(5) uncentered <span class="co">///</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>          covariates(woman=0 parent=0 numchild=0)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Predicting: Pr(employed)
 Marginal effects (N_empmod2=67869)
 
