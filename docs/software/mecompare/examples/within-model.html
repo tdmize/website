@@ -1253,17 +1253,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <pre class="stata-output"><code>(64,814 observations deleted)</code></pre>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">drop</span> <span class="kw">if</span> <span class="fu">missing</span>(polviews, race4, woman, <span class="kw">class</span>, age)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>(424 observations deleted)</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">clonevar</span> conpolviews = polviews</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<pre class="stata-output"><code>. </code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> <span class="kw">regress</span> conpolviews c.age##c.age i.woman i.race4 i.<span class="kw">class</span>, <span class="kw">vce</span>(<span class="kw">robust</span>)</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> polmod</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">clonevar</span> conpolviews = polviews</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> <span class="kw">regress</span> conpolviews c.age##c.age i.woman i.race4 i.<span class="kw">class</span>, <span class="kw">vce</span>(<span class="kw">robust</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> polmod</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="one-call-for-every-predictor" class="level2">
 <h2 class="anchored" data-anchor-id="one-call-for-every-predictor">2. One call for every predictor</h2>
 <p><code>amount(trimrange)</code> applies to the continuous variables in the varlist (here, age); <code>meinequality</code> adds the ME inequality above the contrasts of each nominal variable (race-ethnicity and class). Binary variables need nothing extra.</p>
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>mecompare age woman race4 <span class="kw">class</span>, models(polmod) amount(trimrange) meinequality</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>mecompare age woman race4 <span class="kw">class</span>, models(polmod) amount(trimrange) meinequality</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Predicting: Linear prediction
 Marginal effects (N_polmod=3608)
 
@@ -1302,7 +1301,7 @@ class                            |
 </ul>
 <p>The 5th and 95th percentiles that define the trimmed range of age are:</p>
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">centile</span> age, <span class="kw">centile</span>(5 95)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">centile</span> age, <span class="kw">centile</span>(5 95)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>                                                          Binom. interp.   
     Variable |       Obs  Percentile    Centile        [95% conf. interval]
 -------------+-------------------------------------------------------------
@@ -1314,30 +1313,30 @@ class                            |
 <h2 class="anchored" data-anchor-id="test-the-differences-in-effect-size">3. Test the differences in effect size</h2>
 <p>To compare effect sizes and ignore direction, use the absolute value of a signed effect; here the gender gap is negative. <code>add</code> collects the tests in one table, and <code>rowname()</code> labels each row.</p>
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>metest, <span class="kw">clear</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>metest 1 - <span class="fu">abs</span>(2), add rowname(<span class="st">"age - woman"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>metest, <span class="kw">clear</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>metest 1 - <span class="fu">abs</span>(2), add rowname(<span class="st">"age - woman"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>                                 |  estimate         se     pvalue 
 ---------------------------------+--------------------------------
                      age - woman |     0.609      0.098      0.000 </code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>metest 1 - 3,      add rowname(<span class="st">"age - race4"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>metest 1 - 3,      add rowname(<span class="st">"age - race4"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>                                 |  estimate         se     pvalue 
 ---------------------------------+--------------------------------
                      age - woman |     0.609      0.098      0.000 
                      age - race4 |     0.612      0.094      0.000 </code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>metest 1 - 7,      add rowname(<span class="st">"age - class"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>metest 1 - 7,      add rowname(<span class="st">"age - class"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>                                 |  estimate         se     pvalue 
 ---------------------------------+--------------------------------
                      age - woman |     0.609      0.098      0.000 
                      age - race4 |     0.612      0.094      0.000 
                      age - class |     0.511      0.101      0.000 </code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>metest 3 - <span class="fu">abs</span>(2), add rowname(<span class="st">"race4 - woman"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>metest 3 - <span class="fu">abs</span>(2), add rowname(<span class="st">"race4 - woman"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>                                 |  estimate         se     pvalue 
 ---------------------------------+--------------------------------
                      age - woman |     0.609      0.098      0.000 
                      age - race4 |     0.612      0.094      0.000 
                      age - class |     0.511      0.101      0.000 
                    race4 - woman |    -0.003      0.069      0.971 </code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>metest 3 - 7,      add rowname(<span class="st">"race4 - class"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>metest 3 - 7,      add rowname(<span class="st">"race4 - class"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>                                 |  estimate         se     pvalue 
 ---------------------------------+--------------------------------
                      age - woman |     0.609      0.098      0.000 
@@ -1345,7 +1344,7 @@ class                            |
                      age - class |     0.511      0.101      0.000 
                    race4 - woman |    -0.003      0.069      0.971 
                    race4 - class |    -0.101      0.081      0.212 </code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>metest 7 - <span class="fu">abs</span>(2), add rowname(<span class="st">"class - woman"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>metest 7 - <span class="fu">abs</span>(2), add rowname(<span class="st">"class - woman"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>                                 |  estimate         se     pvalue 
 ---------------------------------+--------------------------------
                      age - woman |     0.609      0.098      0.000 
@@ -1354,7 +1353,7 @@ class                            |
                    race4 - woman |    -0.003      0.069      0.971 
                    race4 - class |    -0.101      0.081      0.212 
                    class - woman |     0.098      0.077      0.202 </code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>metest, <span class="bn">title</span>(<span class="st">"Effect size comparison of predictors of political views"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>metest, <span class="bn">title</span>(<span class="st">"Effect size comparison of predictors of political views"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Effect size comparison of predictors of political views
 
                                  |  estimate         se     pvalue 
@@ -1372,7 +1371,7 @@ class                            |
 <h2 class="anchored" data-anchor-id="alternative-a-two-standard-deviation-change">Alternative: a two-standard-deviation change</h2>
 <p><code>amount(2sd)</code> is the other common way to make a continuous variable comparable with a binary one. A two-standard-deviation change is centered on each observation’s own age (one SD below to one SD above); the trimmed-range change is the same change, from the 5th to the 95th percentile, for everyone. With a nonlinear effect the two can differ:</p>
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>mecompare age, models(polmod) amount(2sd)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>mecompare age, models(polmod) amount(2sd)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Predicting: Linear prediction
 Marginal effects (N_polmod=3608)
 
@@ -1380,7 +1379,7 @@ Marginal effects (N_polmod=3608)
 ---------------------------------+---------------------------------------
 age + 2SD (centered)             |                                       
                           polmod |     1      0.496      0.053      0.000</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>mecompare age, models(polmod) amount(trimrange)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>mecompare age, models(polmod) amount(trimrange)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Predicting: Linear prediction
 Marginal effects (N_polmod=3608)
 

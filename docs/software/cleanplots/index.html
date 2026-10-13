@@ -1210,6 +1210,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#citation" id="toc-citation" class="nav-link" data-scroll-target="#citation">Citation</a></li>
   <li><a href="#what-cleanplots-changes" id="toc-what-cleanplots-changes" class="nav-link" data-scroll-target="#what-cleanplots-changes">What cleanplots changes</a></li>
   <li><a href="#the-colors" id="toc-the-colors" class="nav-link" data-scroll-target="#the-colors">The colors</a></li>
+  <li><a href="#markers-and-line-patterns" id="toc-markers-and-line-patterns" class="nav-link" data-scroll-target="#markers-and-line-patterns">Markers and line patterns</a></li>
   <li><a href="#color-figures-convert-automatically-to-grayscale" id="toc-color-figures-convert-automatically-to-grayscale" class="nav-link" data-scroll-target="#color-figures-convert-automatically-to-grayscale">Color figures convert automatically to grayscale</a></li>
   <li><a href="#creating-figures-considerate-of-colorblindness" id="toc-creating-figures-considerate-of-colorblindness" class="nav-link" data-scroll-target="#creating-figures-considerate-of-colorblindness">Creating figures considerate of colorblindness</a></li>
   <li><a href="#ordinal-color-palettes" id="toc-ordinal-color-palettes" class="nav-link" data-scroll-target="#ordinal-color-palettes">Ordinal color palettes</a></li>
@@ -1303,11 +1304,46 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p><img src="fig/palette-compare.png" class="img-fluid" style="width:85.0%" alt="Three rows of ten color swatches: the cleanplots palette, the stcolor palette, and the s2color palette."></p>
 </section>
+<section id="markers-and-line-patterns" class="level2">
+<h2 class="anchored" data-anchor-id="markers-and-line-patterns">Markers and line patterns</h2>
+<p>Along with its color, each series gets a marker symbol and a line pattern. The ten marker symbols and line patterns, drawn with the <a href="https://repec.sowi.unibe.ch/stata/palettes/help-palettes.html"><code>symbolpalette</code></a> and <a href="https://repec.sowi.unibe.ch/stata/palettes/help-palettes.html"><code>linepalette</code></a> commands:</p>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>symbolpalette smcircle_hollow smcircle smsquare_hollow smsquare smtriangle_hollow <span class="co">///</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    smtriangle smdiamond_hollow smdiamond plus plus, <span class="bn">title</span>(<span class="st">"cleanplots marker symbols"</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>linepalette solid solid <span class="kw">dash</span> <span class="kw">dash</span> shortdash shortdash longdash longdash solid solid, <span class="co">///</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"cleanplots line patterns"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="quarto-layout-panel" data-layout-ncol="2">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
+<p><img src="fig/palette-symbols.png" class="img-fluid" alt="The ten cleanplots marker symbols, numbered 1 to 10: hollow circle, circle, hollow square, square, hollow triangle, triangle, hollow diamond, diamond, plus, and plus."></p>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
+<p><img src="fig/palette-lines.png" class="img-fluid" alt="The ten cleanplots line patterns, numbered 1 to 10: solid, solid, dash, dash, short dash, short dash, long dash, long dash, solid, and solid."></p>
+</div>
+</div>
+</div>
+<p>The ten series as <code>cleanplots</code> draws them, with each series’ color, marker symbol, and line pattern together:</p>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">clear</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">set</span> <span class="kw">obs</span> 4</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Number of observations (_N) was 0, now 4.</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">generate</span> x = <span class="dt">_n</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">forvalues</span> i = 1/10 {</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">generate</span> y<span class="ot">`i'</span> = <span class="ot">`i'</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="kw">twoway</span> connected y1-y10 x, msize(vlarge ...) lwid(<span class="bn">medthick</span> ...) <span class="co">///</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="bn">yscale</span>(<span class="fu">reverse</span>) <span class="kw">ylabel</span>(1/10, <span class="bn">nogrid</span>) <span class="bn">ytitle</span>(<span class="st">"Series"</span>) <span class="co">///</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="bn">xscale</span>(<span class="kw">off</span>) <span class="kw">xlabel</span>(, <span class="bn">nogrid</span>) <span class="bn">legend</span>(<span class="kw">off</span>) <span class="co">///</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"cleanplots markers and line patterns"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><img src="fig/palette-series.png" class="img-fluid" style="width:85.0%" alt="Ten horizontal lines, one per series, each drawn in its cleanplots color with its marker symbol and line pattern."></p>
+</section>
 <section id="color-figures-convert-automatically-to-grayscale" class="level2">
 <h2 class="anchored" data-anchor-id="color-figures-convert-automatically-to-grayscale">Color figures convert automatically to grayscale</h2>
 <p>One benefit of the <code>cleanplots</code> scheme is that you only need to create one set of figures: the colors and the markers, symbols, and lines that <code>cleanplots</code> uses can be printed in black and white or grayscale and still be easily distinguished. The palette alternates darker and lighter colors so that the first several groups differ in lightness alone, and every series also gets its own marker symbol and line pattern. The same palettes as above, in grayscale:</p>
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>colorpalette, gscale span n(10) : cleanplots / <span class="kw">st</span> / s2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>colorpalette, gscale span n(10) : cleanplots / <span class="kw">st</span> / s2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p><img src="fig/palette-compare-gray.png" class="img-fluid" style="width:85.0%" alt="The same three palettes converted to grayscale; the cleanplots row alternates dark and light swatches while the other two rows have several swatches of similar gray."></p>
 <p>A plot of predicted probabilities from an ordinal logit model, in color and as it prints in grayscale; the five outcome categories remain distinguishable by their line patterns and markers:</p>
@@ -1330,7 +1366,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="ordinal-color-palettes">Ordinal color palettes</h2>
 <p>The default <code>cleanplots</code> colors are nominal, with no implied ordering. For ordered categories, the ordinal <code>cleanplots#</code> schemes use colors that run from light to dark. Replace <code>#</code> with the number of ordered categories, from 2 to 15. <code>cleanplots#</code> uses the cividis palette, <code>cleanplots#v</code> uses the viridis palette, and adding <code>r</code> (<code>cleanplots#r</code>, <code>cleanplots#vr</code>) reverses the order of the colors. The four versions for five categories:</p>
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>colorpalette, span : cleanplots5 / cleanplots5r / cleanplots5v / cleanplots5vr</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>colorpalette, span : cleanplots5 / cleanplots5r / cleanplots5v / cleanplots5vr</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p><img src="fig/palette-ordinal-five.png" class="img-fluid" style="width:85.0%" alt="Four rows of five swatches: cividis from light yellow to dark navy, cividis reversed, viridis from light yellow through green and blue to dark purple, and viridis reversed."></p>
 <p>The <a href="ordinal.html">Ordinal palettes</a> page explains which version to use and shows them in bar charts, line graphs, and grayscale.</p>
@@ -1340,7 +1376,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>In October 2026, the ordinal schemes were expanded to every number of ordered categories from 2 to 15, in two palettes (cividis and viridis) and in both directions. If you installed <code>cleanplots</code> before then, run the installation line above again to get the new schemes.</p>
 <p>In July 2026, <code>cleanplots</code> was given an update. For the primary palette, of most focus is the color choices for colors 6–10, which are now more colorblind friendly and more easily distinguishable. And, the intensity of colors now alternates for each odd and even aspect of the graph, aiding in black and white printing. In addition, the <code>cleanplots#</code> schemes now provide options for ordinal palettes. Finally, the legend is now due right of the graph, instead of in the bottom right.</p>
 <p>I recommend using the most up to date version. But, if you are feeling nostalgic and want the original scheme, it is preserved as <code>cleanplots_classic</code>:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">set</span> <span class="dv">scheme</span> cleanplots_classic</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">set</span> <span class="dv">scheme</span> cleanplots_classic</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Many of the features of <code>cleanplots</code> are adapted from the excellent black and white scheme <code>plotplain</code> (Bischof 2017).</p>
 </section>
 <section id="r-package-version" class="level2">

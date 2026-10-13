@@ -119,6 +119,53 @@ current default scheme (`stcolor`, since Stata 18) and its previous default
 
 ![](fig/palette-compare.png){width=85% fig-alt="Three rows of ten color swatches: the cleanplots palette, the stcolor palette, and the s2color palette."}
 
+## Markers and line patterns
+
+Along with its color, each series gets a marker symbol and a line pattern.
+The ten marker symbols and line patterns, drawn with the
+[`symbolpalette`](https://repec.sowi.unibe.ch/stata/palettes/help-palettes.html)
+and [`linepalette`](https://repec.sowi.unibe.ch/stata/palettes/help-palettes.html)
+commands:
+
+```{.stata-run}
+. symbolpalette smcircle_hollow smcircle smsquare_hollow smsquare smtriangle_hollow ///
+>     smtriangle smdiamond_hollow smdiamond plus plus, title("cleanplots marker symbols")
+
+. linepalette solid solid dash dash shortdash shortdash longdash longdash solid solid, ///
+>     title("cleanplots line patterns")
+
+```
+
+::: {layout-ncol=2}
+![](fig/palette-symbols.png){fig-alt="The ten cleanplots marker symbols, numbered 1 to 10: hollow circle, circle, hollow square, square, hollow triangle, triangle, hollow diamond, diamond, plus, and plus."}
+
+![](fig/palette-lines.png){fig-alt="The ten cleanplots line patterns, numbered 1 to 10: solid, solid, dash, dash, short dash, short dash, long dash, long dash, solid, and solid."}
+:::
+
+The ten series as `cleanplots` draws them, with each series' color, marker
+symbol, and line pattern together:
+
+```{.stata-run}
+. clear
+
+. set obs 4
+Number of observations (_N) was 0, now 4.
+
+. generate x = _n
+
+. forvalues i = 1/10 {
+  2.     generate y`i' = `i'
+  3. }
+
+. twoway connected y1-y10 x, msize(vlarge ...) lwid(medthick ...) ///
+>     yscale(reverse) ylabel(1/10, nogrid) ytitle("Series") ///
+>     xscale(off) xlabel(, nogrid) legend(off) ///
+>     title("cleanplots markers and line patterns")
+
+```
+
+![](fig/palette-series.png){width=85% fig-alt="Ten horizontal lines, one per series, each drawn in its cleanplots color with its marker symbol and line pattern."}
+
 ## Color figures convert automatically to grayscale
 
 One benefit of the `cleanplots` scheme is that you only need to create one

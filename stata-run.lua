@@ -28,8 +28,9 @@
 -- noprompt), the whole block is treated as output. Non-HTML formats are left
 -- untouched.
 
+-- a bare ". " prompt is Stata's echo of a blank code line: treat it as blank
 local function is_blank(s)
-  return s:match("^%s*$") ~= nil
+  return s:match("^%s*$") ~= nil or s:match("^%.%s*$") ~= nil
 end
 
 local function trim_blank_lines(lines)
@@ -80,7 +81,7 @@ function CodeBlock(el)
     -- them) into one command block and everything else into output blocks.
     -- Blank lines are held back ("pending") so that they separate output
     -- lines but do not split two adjacent commands into two blocks.
-    local kind, buf, pending = nil, {}, 0
+    local kind, buf, pending, depth = nil, {}, 0, 0
     for _, l in ipairs(lines) do
       if is_blank(l) then
         pending = pending + 1
@@ -88,11 +89,21 @@ function CodeBlock(el)
         local k, txt
         if l:match("^%. %S") then
           k, txt = "cmd", l:sub(3)
+        elseif depth > 0 and l:match("^%s*%d+%.") then
+          -- a line inside a loop or { } block, which Stata echoes as "  2. ..."
+          k, txt = "cmd", (l:gsub("^%s*%d+%. ?", "", 1))
         elseif kind == "cmd" and pending == 0 and l:match("^> ") then
           -- continuation of a long command broken with ///
           k, txt = "cmd", l:sub(3)
         else
           k, txt = "out", l
+        end
+        if k == "cmd" then
+          local _, open = txt:gsub("{", "")
+          local _, close = txt:gsub("}", "")
+          depth = math.max(0, depth + open - close)
+        else
+          depth = 0
         end
         if kind ~= nil and k ~= kind then
           push(make_block(kind, buf))
