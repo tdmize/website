@@ -223,6 +223,7 @@ class Renderer:
                     self.code.append(t)
                 else:
                     self.flush_code()
+                    t = re.sub(r"^\((\w{1,3})\)(?=\s)", r"\\(\1)", t)  # "(c) ..." is not a list
                     self.out.append(("- " if self.bullet else "") + t)
             self.para = []
         self.bullet = False
