@@ -4,8 +4,9 @@ subtitle: "Every mecompare option, with an example of each"
 ---
 <<dd_version: 2>>
 
-This page runs each option of `mecompare` on Stata's `nlsw88` data, in the
-order of the [help file](help.html). The [Getting
+This page runs each option of `mecompare` on Stata's `nlsw88` data (the
+`rratios` example uses the Health and Retirement Study 2020), in the order of
+the [help file](help.html). The [Getting
 started](getting-started.html) page explains how to read the table.
 
 ```{.stata-run}
@@ -149,6 +150,35 @@ The default columns are the estimate, its standard error, and the p-value.
 ```{.stata-run}
 <<dd_do>>
 mecompare i.married age, models(m1 m2) statistics(est se ll ul)
+<</dd_do>>
+```
+
+## `rratios` -- risk ratios beside the marginal effects
+
+`rratios` adds, under each variable's marginal effects, the ratio of the same
+two predictions: a risk ratio when the predictions are probabilities, and a
+ratio of counts or means otherwise. As in Stata's `eform` output, the p-value
+and confidence interval are calculated on the log scale, testing that the
+ratio equals 1. No ratio is reported for `amount(rate)` or when a prediction
+is zero or negative.
+
+E.g., in the Health and Retirement Study 2020:
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_hrs", clear
+drop if missing(cogB, marstatB, collegeB, woman, age)
+
+quietly logit cogB i.collegeB i.marstatB i.woman c.age, vce(robust)
+mecompare collegeB, rratios
+<</dd_do>>
+<<dd_do: quietly>>
+sysuse nlsw88, clear
+drop if missing(union, married, age, race, hours, collgrad, ttl_exp, grade, wage)
+quietly logit union i.married age i.race hours i.collgrad, vce(robust)
+estimates store m1
+quietly logit union i.married age i.race hours i.collgrad wage grade, vce(robust)
+estimates store m2
 <</dd_do>>
 ```
 

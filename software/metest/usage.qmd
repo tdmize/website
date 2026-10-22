@@ -395,8 +395,8 @@ Tests of equality
 ```
 
 After `margins, post`, a number refers to a row of the `margins` table. E.g.,
-a risk ratio -- the ratio of two predicted probabilities, averaging over
-observed values -- in the Health and Retirement Study 2020:
+the difference in two predicted probabilities, averaging over observed values,
+in the Health and Retirement Study 2020; this replicates `mecompare collegeB`:
 
 ```{.stata-run}
 . use "https://tdmize.github.io/data/data/cda_hrs", clear
@@ -406,7 +406,7 @@ observed values -- in the Health and Retirement Study 2020:
 (761 observations deleted)
 
 . 
-. logit cogB i.collegeB i.marstatB i.woman c.age, or
+. logit cogB i.collegeB i.marstatB i.woman c.age
 
 Iteration 0:  Log likelihood = -2466.5782  
 Iteration 1:  Log likelihood = -2311.9677  
@@ -421,20 +421,19 @@ Logistic regression                                     Number of obs = 14,962
 Log likelihood = -2282.3924                             Pseudo R2     = 0.0747
 
 ---------------------------------------------------------------------------------------
-                 cogB | Odds ratio   Std. err.      z    P>|z|     [95% conf. interval]
+                 cogB | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
 ----------------------+----------------------------------------------------------------
              collegeB |
-bachelor's or higher  |      0.233      0.037   -9.269   0.000        0.171       0.317
+bachelor's or higher  |     -1.458      0.157   -9.269   0.000       -1.766      -1.150
                       |
              marstatB |
-   currently married  |      0.556      0.051   -6.401   0.000        0.465       0.666
+   currently married  |     -0.586      0.092   -6.401   0.000       -0.766      -0.407
                       |
                 woman |
-               woman  |      0.802      0.073   -2.428   0.015        0.671       0.958
-                  age |      1.049      0.004   12.085   0.000        1.041       1.057
-                _cons |      0.003      0.001  -19.128   0.000        0.001       0.005
+               woman  |     -0.221      0.091   -2.428   0.015       -0.400      -0.043
+                  age |      0.048      0.004   12.085   0.000        0.040       0.056
+                _cons |     -5.926      0.310  -19.128   0.000       -6.533      -5.318
 ---------------------------------------------------------------------------------------
-Note: _cons estimates baseline odds.
 
 . 
 . margins collegeB, post
@@ -453,13 +452,18 @@ Expression: Pr(cogB), predict()
 bachelor's or higher  |      0.012      0.002    6.758   0.000        0.008       0.015
 ---------------------------------------------------------------------------------------
 
-. metest 1 / 2
+. metest 2 - 1
 
                                  |  estimate         se     pvalue 
 ---------------------------------+--------------------------------
-       0bn_collegeB / 1_collegeB |     4.065      0.626      0.000 
+       1_collegeB - 0bn_collegeB |    -0.036      0.003      0.000 
 
 ```
+
+For risk ratios, use the
+[`rratios` option](../mecompare/options.html#rratios-risk-ratios-beside-the-marginal-effects)
+of `mecompare`, which tests each ratio against 1. `metest` would test a risk
+ratio against a null of 0, which is not appropriate for risk ratios.
 
 Omitted (`o.`) coefficients are skipped when numbering, so check the numbers
 with `matrix list e(b)`. After some commands `test` reports *F* rather than

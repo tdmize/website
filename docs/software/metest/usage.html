@@ -1595,13 +1595,13 @@ age          |
 ---------------------------------+--------------------------------
                         age * 10 |    -1.011      0.370      0.006 </code></pre>
 </div>
-<p>After <code>margins, post</code>, a number refers to a row of the <code>margins</code> table. E.g., a risk ratio – the ratio of two predicted probabilities, averaging over observed values – in the Health and Retirement Study 2020:</p>
+<p>After <code>margins, post</code>, a number refers to a row of the <code>margins</code> table. E.g., the difference in two predicted probabilities, averaging over observed values, in the Health and Retirement Study 2020; this replicates <code>mecompare collegeB</code>:</p>
 <div class="stata-run">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb62"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="st">"https://tdmize.github.io/data/data/cda_hrs"</span>, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>(cda_hrs.dta | Health &amp; Retirement Study 2020)</code></pre>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb64"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="kw">drop</span> <span class="kw">if</span> <span class="fu">missing</span>(cogB, marstatB, collegeB, woman, age)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>(761 observations deleted)</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb66"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="kw">logit</span> cogB i.collegeB i.marstatB i.woman c.age, <span class="kw">or</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb66"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="kw">logit</span> cogB i.collegeB i.marstatB i.woman c.age</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Iteration 0:  Log likelihood = -2466.5782  
 Iteration 1:  Log likelihood = -2311.9677  
 Iteration 2:  Log likelihood = -2282.8575  
@@ -1615,20 +1615,19 @@ Logistic regression                                     Number of obs = 14,962
 Log likelihood = -2282.3924                             Pseudo R2     = 0.0747
 
 ---------------------------------------------------------------------------------------
-                 cogB | Odds ratio   Std. err.      z    P&gt;|z|     [95% conf. interval]
+                 cogB | Coefficient  Std. err.      z    P&gt;|z|     [95% conf. interval]
 ----------------------+----------------------------------------------------------------
              collegeB |
-bachelor's or higher  |      0.233      0.037   -9.269   0.000        0.171       0.317
+bachelor's or higher  |     -1.458      0.157   -9.269   0.000       -1.766      -1.150
                       |
              marstatB |
-   currently married  |      0.556      0.051   -6.401   0.000        0.465       0.666
+   currently married  |     -0.586      0.092   -6.401   0.000       -0.766      -0.407
                       |
                 woman |
-               woman  |      0.802      0.073   -2.428   0.015        0.671       0.958
-                  age |      1.049      0.004   12.085   0.000        1.041       1.057
-                _cons |      0.003      0.001  -19.128   0.000        0.001       0.005
----------------------------------------------------------------------------------------
-Note: _cons estimates baseline odds.</code></pre>
+               woman  |     -0.221      0.091   -2.428   0.015       -0.400      -0.043
+                  age |      0.048      0.004   12.085   0.000        0.040       0.056
+                _cons |     -5.926      0.310  -19.128   0.000       -6.533      -5.318
+---------------------------------------------------------------------------------------</code></pre>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb68"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a>margins collegeB, <span class="kw">post</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Predictive margins                                      Number of obs = 14,962
 Model VCE: OIM
@@ -1643,11 +1642,12 @@ Expression: Pr(cogB), predict()
        no bachelor's  |      0.048      0.002   23.986   0.000        0.044       0.052
 bachelor's or higher  |      0.012      0.002    6.758   0.000        0.008       0.015
 ---------------------------------------------------------------------------------------</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb70"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>metest 1 / 2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb70"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>metest 2 - 1</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>                                 |  estimate         se     pvalue 
 ---------------------------------+--------------------------------
-       0bn_collegeB / 1_collegeB |     4.065      0.626      0.000 </code></pre>
+       1_collegeB - 0bn_collegeB |    -0.036      0.003      0.000 </code></pre>
 </div>
+<p>For risk ratios, use the <a href="../mecompare/options.html#rratios-risk-ratios-beside-the-marginal-effects"><code>rratios</code> option</a> of <code>mecompare</code>, which tests each ratio against 1. <code>metest</code> would test a risk ratio against a null of 0, which is not appropriate for risk ratios.</p>
 <p>Omitted (<code>o.</code>) coefficients are skipped when numbering, so check the numbers with <code>matrix list e(b)</code>. After some commands <code>test</code> reports <em>F</em> rather than chi-squared; run <code>metest, clear</code> before accumulating results from a model of the other kind.</p>
 
 

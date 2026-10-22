@@ -1432,12 +1432,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><code>metest abs(1) - abs(2)</code> which effect is larger in magnitude</p>
 <p><code>metest min(1,2)</code> the smaller of the two</p>
 <p><code>metest _b[age] * #10</code> by name, scaled by ten</p>
-<p>After margins, post, a number refers to a row of the <code>margins</code> table. E.g., a risk ratio – the ratio of two predicted probabilities, averaging over observed values – in the Health and Retirement Study 2020:</p>
+<p>After margins, post, a number refers to a row of the <code>margins</code> table. E.g., the difference in two predicted probabilities, averaging over observed values, in the Health and Retirement Study 2020; this replicates <code>mecompare collegeB</code>:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> https:<span class="co">//tdmize.github.io/data/data/cda_hrs, clear</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">drop</span> <span class="kw">if</span> <span class="fu">missing</span>(cogB, marstatB, collegeB, woman, age)</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="kw">logit</span> cogB i.collegeB i.marstatB i.woman c.age, <span class="kw">or</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="kw">logit</span> cogB i.collegeB i.marstatB i.woman c.age</span>
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>margins collegeB, <span class="kw">post</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>metest 1 / 2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>metest 2 - 1</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>For risk ratios, use the <code>rratios</code> option of <a href="../mecompare/help.html">mecompare</a>, which tests each ratio against 1. <code>metest</code> would test a risk ratio against a null of 0, which is not appropriate for risk ratios.</p>
 <p>Two things to keep in mind away from <code>mecompare</code>. Omitted (<code>o.</code>) coefficients are skipped when numbering, so a number may not match the position in the displayed regression table – check with <code>matrix list e(b)</code>. And after some commands <code>test</code> reports <em>F</em> rather than <em>chi2</em>; the two cannot be stacked in one accumulated table, so run <code>metest, clear</code> when switching between models of the two kinds.</p>
 </section>
 <section id="also-see" class="level2">

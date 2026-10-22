@@ -157,20 +157,25 @@ metest _b[age] * #10
 ```
 
 After `margins, post`, a number refers to a row of the `margins` table. E.g.,
-a risk ratio -- the ratio of two predicted probabilities, averaging over
-observed values -- in the Health and Retirement Study 2020:
+the difference in two predicted probabilities, averaging over observed values,
+in the Health and Retirement Study 2020; this replicates `mecompare collegeB`:
 
 ```{.stata-run}
 <<dd_do>>
 use "https://tdmize.github.io/data/data/cda_hrs", clear
 drop if missing(cogB, marstatB, collegeB, woman, age)
 
-logit cogB i.collegeB i.marstatB i.woman c.age, or
+logit cogB i.collegeB i.marstatB i.woman c.age
 
 margins collegeB, post
-metest 1 / 2
+metest 2 - 1
 <</dd_do>>
 ```
+
+For risk ratios, use the
+[`rratios` option](../mecompare/options.html#rratios-risk-ratios-beside-the-marginal-effects)
+of `mecompare`, which tests each ratio against 1. `metest` would test a risk
+ratio against a null of 0, which is not appropriate for risk ratios.
 
 Omitted (`o.`) coefficients are skipped when numbering, so check the numbers
 with `matrix list e(b)`. After some commands `test` reports *F* rather than
