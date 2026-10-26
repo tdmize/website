@@ -1,0 +1,59 @@
+---
+title: "2.8 Comparing Effects Across IVs"
+---
+<<dd_version: 2>>
+
+*Research question: what social factors most strongly pattern political views?*
+
+- Sometimes, want to compare effect sizes across predictors (IVs) within a model
+  - Complicated by variables on different metric (e.g., age vs income), by variables of different types (e.g., binary vs continuous), and by nonlinearities of continuous IVs
+- For binary IVs, the 0 vs 1 effect already provides the full summary
+- For nominal IVs, can use an ME inequality
+- For continuous IVs, calculate marginal effects, even with nonlinearities
+  - Can still provide an answer for the average effect
+  - For comparing effect sizes across binary and continuous predictors, a +2 SD change is sometimes recommended ([Gelman 2008](https://doi.org/10.1002/sim.3107)) as comparable
+  - More robust alternative is ME across trimmed range (5^th^ to 95^th^ percentile)
+    - Logic: binary 0 vs 1 or ME inequality is entire range of variable's effect; trimmed range similarly expresses entire range of continuous IV's effect while protecting against outliers ([Mize and Han 2025](/research/mize_han_socsci_2025.qmd))
+
+### Comparing marginal effects within a model
+
+- In Stata, [**mecompare**](/software/mecompare/index.qmd) can simultaneously calculate multiple MEs, and then use **metest** for additional tests of equality
+  - **amount(trimrange)** for 5^th^ to 95^th^ percentile change for continuous IVs
+  - **meinequality** option for nominal IVs
+- In R, use **avg_comparisons** and specify each predictor of interest in a **list( )**
+  - For a significance test of the difference in marginal effects, use the **hypothesis** option\*
+    - **hypothesis = \~ pairwise** will calculate all contrasts, but be careful with multiple exploratory hypothesis tests
+- To compare pure effect sizes and ignore direction, take the absolute value of the marginal effects before testing their equality
+
+The example is adapted from [Mize and Han (2025)](/research/mize_han_socsci_2025.qmd):
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_gss", clear
+keep if year == 2021
+drop if missing(polviews, race4, woman, class, age)
+clonevar conpolviews = polviews
+
+regress conpolviews c.age##c.age i.woman i.race4 i.class
+est store mod42b
+
+mecompare age woman race4 class, amount(trimrange) meinequality model(mod42b)
+<</dd_do>>
+```
+
+```{.stata-run}
+<<dd_do>>
+metest, clear
+metest 1 - abs(2), add rowname("age - woman")
+metest 1 - 3,      add rowname("age - race4")
+metest 1 - 7,      add rowname("age - class")
+metest 3 - abs(2), add rowname("race4 - woman")
+metest 3 - 7,      add rowname("race4 - class")
+metest 7 - abs(2), add rowname("class - woman")
+metest, title("Effect size comparison of predictors of political views")
+<</dd_do>>
+```
+
+> *Age has a larger effect on political views than does gender, race-ethnicity, or social class*
+>
+> *The effects of gender, race-ethnicity, and class are similar in size, with no significant differences in effect size*

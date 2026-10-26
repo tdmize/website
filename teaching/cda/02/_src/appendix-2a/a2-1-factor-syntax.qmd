@@ -1,0 +1,122 @@
+---
+title: "A2.1 Stata factor syntax"
+---
+<<dd_version: 2>>
+
+- *You should always use factor syntax when fitting a regression model in Stata*
+  - *Factor syntax provides information to Stata about whether an IV should be treated as continuous or as nominal/binary*
+  - *Extremely important for calculations of predictions and marginal effects*
+    - *Also important when you have "linked" IVs such as polynomials, e.g. age and age^2^*
+- *The "**c.**" prefix to an IV tells Stata that variable is to be treated as continuous*
+- *The "**i.**" prefix tells Stata the IV should be treated as nominal/binary*
+  - *Added benefit of not needing to create a series of dummy variables for nominal IVs with ≥ 3 categories. Stata will make the series of dummies for you*
+  - *By default, the first category is omitted as the reference group*
+  - *You can change this with **ib#.** where the **\#** indicates which category to omit*
+  - *You can omit no categories with **ibn.** ("indicator base none")*
+    - *Not commonly used in a regression model; helpful for descriptives*
+
+*Examples below...*
+
+### Example of nominal variables with factor syntax
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/addhealth4", clear
+
+sum ibn.race
+sum i.race
+sum ib2.race
+<</dd_do>>
+```
+
+### Regression models with factor syntax
+
+- For linear regression models in Stata, use the **regress** command:
+
+```stata
+regress depvar indepvar1 indepvar2 indepvar3 …
+```
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_gss", clear
+
+regress occprest c.age i.woman i.college
+<</dd_do>>
+```
+
+### Estimating and Plotting Predictions in Stata
+
+- **mtable** is an SPost13 command that reports tables of predictions
+
+::: {.callout-note icon="false" appearance="simple"}
+**mtable**'s columns tell you (1) the name/number of the prediction, (2) what value of the IV the prediction was made at, and (3) the prediction itself (notated "xb" for $\mathbf{x\beta}$ in linear regression models)
+
+Stata syntax to specify a range of values is **start(gap)end**. For example 10(2)20 is just shorthand for 10, 12, 14, 16, 18, 20. Note the second column to see how **age(20(5)90)** is interpreted by Stata
+:::
+
+```{.stata-run}
+<<dd_do>>
+mtable, at(age=(20(5)90))
+<</dd_do>>
+```
+
+### Plotting predictions
+
+- The easiest way to plot predictions is to make them with **margins** and then plot them with **marginsplot**
+  - *Note that **margins** gives you the same output as **mtable**, just in a messier and less helpful format. Therefore, I am running it **quietly** so I don't see the table of predictions again (see below)*
+- ***marginsplot** makes the plot of the predictions*
+  - *I always recommend letting **marginsplot** make its default plot first before fiddling with options*
+  - *Literally: you should just type **marginsplot** and nothing else and see what you get as the first step*
+  - *It is helpful to see the default and then edit from there*
+
+```{.stata-run}
+<<dd_do>>
+qui margins, at(age=(20(5)90))
+marginsplot
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_a2-1-marginsplot-default.png", replace width(1400)
+<</dd_do>>
+```
+
+![](../fig/cda-02_a2-1-marginsplot-default.png){width=80% fig-alt="Default marginsplot: predicted occupational prestige by age with confidence interval caps at each point."}
+
+This is a pretty nice plot given all we had to type was **marginsplot**. However, some options make it more informative
+
+```{.stata-run}
+<<dd_do>>
+marginsplot, ///
+    recastci(rline) ciopts(lpat(dash) col(gs12)) ylab(38(2)46) ///
+    title("Predicted Occupational Prestige Based on Person's Age") ///
+    ytitle("Occupational Prestige")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_a2-1-marginsplot-options.png", replace width(1400)
+<</dd_do>>
+```
+
+![](../fig/cda-02_a2-1-marginsplot-options.png){width=80% fig-alt="The same predictions with a title, axis labels, and dashed grey confidence interval lines."}
+
+### Confidence interval options with marginsplot
+
+- For line plots, I dislike the default confidence intervals (**rcap**) that **marginsplot** uses
+  - It is up to personal preference, but I also prefer light grey CIs instead of having CIs being the same color as the respective line
+- For line plots, using **rarea** or **rline** options for CIs works well
+  - You specify these as a **recastci( )** option on your **marginsplot** command
+
+```stata
+marginsplot, recastci(rarea)
+```
+
+- To change the color of the CIs, use the **ciopts( )** option and then specify the color. The graph above uses a mid-grayscale color: **gs12**
+
+```stata
+marginsplot, recastci(rarea) ciopts(col(gs12))
+```
+
+- For line plots, I like dashed CIs which you specify with the **lpattern** option or **lpat** for short. E.g. **lpat(dash)**
+
+```stata
+marginsplot, recastci(rline) ciopts(col(gs12) lpat(dash))
+```

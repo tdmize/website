@@ -1,0 +1,92 @@
+---
+title: "A2.6 Tools for examining distributions"
+---
+<<dd_version: 2>>
+
+### Frequency tables & bar charts
+
+- Stata's **tabulate** (**tab** for short) command produces frequency tables
+  - I prefer the user-written fre command
+    - Shows missing data by default
+    - Shows both value label and numeric label
+  - Compare output from:
+
+```stata
+tab degree
+fre degree
+```
+
+- Bar charts can be useful to visualize nominal variables
+  - I prefer horizontal bar charts to the default vertical bar charts (easier to add labels, read when there are many categories, and compare across bars)
+
+```stata
+graph hbar, over(degree)
+
+graph hbar, over(degree) ///
+    title("Distribution of educational attainment: GSS 2000 - 2016") ///
+    ytitle("% of sample with this degree")
+```
+
+### Histograms
+
+- Histograms are a good first step for continuous variables (**hist** command in Stata)
+  - The **percent** option is helpful to plot the % of the sample in each bin
+  - The **frequency** option is an alternative for the \# of observations in each bin
+
+```stata
+hist wages, percent fcol(none) ///
+    title("Distribution of Hourly Wages")
+```
+
+### Kernel density plots
+
+- Kernel density plots are helpful to examine a smoothed version of the distribution (rather than each specific bin as with a histogram)
+  - In Stata, **twoway kdensity**
+  - Note that density ≈ proportion of observations at that value
+
+```stata
+twoway kdensity wages, ///
+    title("Distribution of Hourly Wages")
+```
+
+- Kernel density plots are also helpful to overlay plots across multiple groups
+  - In Stata, you can overlay plots by using two vertical bars **\|\|** between each set of code for subgraphs
+
+```stata
+twoway kdensity wages if woman == 0 || ///
+    kdensity wages if woman == 1 ||, ///
+    title("Distribution of Hourly Wages for Men and Women") ///
+    legend(order(1 "Men" 2 "Women"))
+```
+
+### gladder to choose the right transformation
+
+- The Stata command **gladder** is helpful to quickly visualize what various transformations would look like
+- Note that many transformations are impossible with negative values (e.g. taking the log of anything ≤ 0 causes Stata to cry and your computer to explode \[n.b. Not really, it is just undefined\])
+  - Therefore, it can be a good idea to add a constant to a variable (if it includes negative values and/or zeroes) before using **gladder**
+  - Starting at 1 is a good rule of thumb as $ln(1) = 0$; numbers between 0 and 1 will be drawn quite far into a left tail if you take the log of them
+  - E.g. **gen wagesC = wages + 1**
+    - If *wages* contains some zeroes (but no negative values):
+      - *wagesC* can be logged
+      - *wages* will be problematic if logged because of the zeroes
+
+```stata
+gladder wagesC, title("Distributions of Various Transformations of Wages")
+```
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_ah4", clear
+
+sum exercisSS
+clonevar exercisSS2 = exercisSS
+replace exercisSS2 = exercisSS2 + 1
+sum exercisSS exercisSS2
+pwcorr exercisSS exercisSS2
+<</dd_do>>
+```
+
+```stata
+gladder exercisSS2, title("Distributions of Various Transformations") ///
+    subtitle("Activity Scale: Times Active in Last Week")
+```

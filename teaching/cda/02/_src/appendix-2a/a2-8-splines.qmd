@@ -1,0 +1,73 @@
+---
+title: "A2.8 Splines"
+---
+<<dd_version: 2>>
+
+- Stata command **mkspline** will "make spline" variables for you
+  - Specify names of new variables and the knot locations
+- Which creates the variables:
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_gss", clear
+
+mkspline year_lt90 1990 year_90_96 1996 year_96_06 2006 year_06_18 = year
+codebook year*, c
+<</dd_do>>
+```
+
+- Simply add the new spline variables as IVs instead of the original *year* var:
+
+```stata
+reg samesexop year_lt90 year_90_96 year_96_06 year_06_18
+```
+
+### Plotting spline regression predictions
+
+- To plot predictions from the spline regression model, use the original *year* variable and **over( )** with **margins**. Then plot as normal with **marginsplot**
+
+```stata
+margins, over(year)
+
+marginsplot, recastci(rarea) ciopts(col(gs13)) plotopts(msymbol(none)) ///
+    xlab(1974(4)2018) ylab(1(1)4) ///
+    ytitle("Support for same-gender relationships") xtitle("Year of survey") ///
+    title("Support for same-gender relationships - GSS 1973 - 2018", size(medlarge)) ///
+    subtitle("Regression splines with knots at 1990, 1996, and 2006")
+```
+
+### Cubic splines
+
+- Cubic splines are especially helpful for modeling complex nonlinearities
+  - Allows for both changes of directions at "knots" **and** for nonlinearities between the knots
+- Can specify where knots are yourself (e.g. after examining the nominal specification)
+  - Or, can specify \# of knots and let software find best places
+- Note this introduces complications in estimation, plotting, and testing effects
+  - I mostly use cubic splines only as exploratory. I would worry about "overfitting" your data if you tried to use them in a confirmatory regression model
+
+![](../images/cubic-splines-mental-health-1.png){width=80% fig-alt="Cubic spline model for mental health by age with knots at 18, 28, 68, and 100 years."}
+
+![](../images/cubic-splines-mental-health-2.png){width=80% fig-alt="Cubic spline model for mental health by age with 6 knots at automatically chosen locations."}
+
+### Estimating and plotting cubic spline models
+
+- For cubic splines, use **cubic** option on **mkspline** (see help file for options. By default, it will choose the \# of knots (5) and the locations)
+  - Note I recommend using **mkspline2** so you can use **adjustrcspline** to plot the predictions
+    - Both are part of [Buis's package **postrcspline**](https://core.ac.uk/download/pdf/6276812.pdf) which is very useful for plotting cubic spline model predictions
+
+```{.stata-run}
+<<dd_do>>
+mkspline2 yearS = year, cubic
+reg samesexop yearS*
+adjustrcspline, ciopts(col(gs13)) ///
+    xlab(1974(4)2018) ylab(1(1)4) ///
+    ytitle("Support for same-gender relationships") xtitle("Year of survey") ///
+    title("[2.7.d] Support for same-gender relationships - GSS 1973 - 2018", size(medlarge)) ///
+    subtitle("Regression splines with knots at 1990, 1996, and 2006")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_07_d-splines-03.png", replace width(1400)
+<</dd_do>>
+```
+
+![](../fig/cda-02_07_d-splines-03.png){width=80% fig-alt="Cubic spline predictions of support for same-gender relationships by survey year: flat until about 1990 and rising after."}

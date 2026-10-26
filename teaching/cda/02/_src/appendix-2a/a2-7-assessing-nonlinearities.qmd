@@ -1,0 +1,141 @@
+---
+title: "A2.7 Assessing nonlinearities"
+---
+<<dd_version: 2>>
+
+- To examine the bivariate relationship between two variables, scatterplots can be helpful
+  - Note this is most helpful when the relationship between variables is strong and when you have a relatively small dataset (n.b. can plot random subset of data when *N* is large)
+- In Stata: **twoway scatter *var1 var2***
+  - ***var1*** will be on the y-axis; ***var2*** on the x-axis
+  - Often, you will want to "jitter" the plot so that observations do not overlap
+    - This adds random noise to where exactly the observation is plotted on the scatterplot (see the following two examples)
+    - This is helpful to avoid falsely concluding there are few observations at places with lots of overlapping data
+
+```stata
+twoway scatter job phd, jitter(3) ///
+    title("Job Prestige and Prestige of PhD Program")
+```
+
+### Plotting across groups of a nominal variable
+
+- Relationships across groups of a categorical variable can be examined
+  - You can overlay multiple plots with **\|\|** and note different categories via different markers on the plot
+  - Alternatively, you can use the **by(groupvar)** option for side-by-side plots separately for each group
+
+```stata
+twoway scatter job phd if fem == 0, jitter(3) || ///
+    scatter job phd if fem == 1, jitter(3) || , ///
+    title("Job Prestige and Prestige of PhD Program") ///
+    legend(order(1 "Men" 2 "Women"))
+
+twoway scatter job phd, by(fem) jitter(3) ///
+    title("Job Prestige and Prestige of PhD Program")
+```
+
+### Lowess
+
+- To fit a lowess use **lowess *DV IV***
+  - Specify the bandwidth in option **bw( )**
+    - I generally find 0.3 or 0.4 works well
+  - Sometimes useful to save the lowess line predictions (e.g. for plotting later alongside a model's predictions)
+    - Do this with the **gen( )** option
+
+```stata
+lowess job phd, bw(0.4)
+```
+
+### Higher order polynomial models
+
+- The lowess suggested three turns in the regression line, suggesting we try including *phd^1^*, *phd^2^*, *phd^3^*, and *phd^4^*
+  - With the **c.** prefix and the **\##** Stata makes it easy to add higher order terms to the model
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/regjob3", clear
+
+regress job c.phd##c.phd##c.phd##c.phd
+<</dd_do>>
+```
+
+### Local polynomial smoothing
+
+- **lpoly** in Stata fits a local polynomial smoothed line
+  - By default, a scatterplot is included. I find this distracting and prefer to remove it with the **noscatter** option
+  - I always find confidence intervals helpful. Include them with the **ci** option
+  - The legend isn't useful here so turn it off with option **legend(off)**
+  - If desired, can try different options for the polynomial with the **degree( )** option
+    - See other options for smoothing the line in the help file
+
+```stata
+lpoly depressSS role
+
+* I prefer to omit the scatterplot, add CIs, etc.
+lpoly depressSS role, noscatter ci legend(off)
+```
+
+### Binned scatterplots
+
+- The Stata user-written programs [**binscatter**](https://michaelstepner.com/binscatter/binscatter-StataConference2014.pdf) and [**binscatterhist**](https://ideas.repec.org/c/boc/bocode/s458855.html) are both extremely useful
+  - Check out the examples in the help files---they nicely display the features of each program
+
+```stata
+*Binned scatterplot
+binscatter Sphealth age, ///
+    title("Binned scatterplot for physical health by age") ///
+    ytitle("Physical health scale") line(none)
+
+*Add histogram
+binscatterhist Sphealth age, hist(Sphealth age) xmin(15)
+
+*Try a quadratic line fit
+binscatterhist Sphealth age, ///
+    hist(Sphealth age) xmin(15) ymin(40) line(qfit) ///
+    title("Binned scatterplot for physical health by age") ///
+    subtitle("Including a quadratic line fit") ///
+    ytitle("Physical health scale")
+```
+
+### Treating continuous & ordinal IVs as nominal
+
+- Enter the continuous variable as nominal in the model with **i.**
+  - Then, plot predictions as if IV was entered as continuous
+
+```stata
+reg Smhealth i.roles ///
+    i.male c.hhincome c.age i.educ c.totalc c.physact i.Bcigs
+
+qui margins, at(roles=(0(1)9))
+
+marginsplot, recast(scatter) ciopts(color(gs10)) ///
+    title("Predictions from Categorical Form of Social Roles") ///
+    ytitle("Mental Health Scale") xtitle("Number of Social Roles")
+```
+
+- If IV has many categories, bin it first (**egen... cut( )** is useful)
+  - E.g. To make age categories in 10-year increments (e.g. 20-30, 31-40, 41-50, etc.)
+
+```stata
+egen age_bins = cut(age), at(20(10)100)
+```
+
+#### Ordinal independent variables
+
+- The strategy for assessing the linearity of the effects of ordinal IVs is the same as the strategy for treating a continuous variable as nominal
+  - Here, do not want to bin---want to keep all values and enter ordinal IV as **c.var** in one model and **i.var** in the next model
+  - Then, make predictions with **margins** and plot as usual with **marginsplot**
+
+```stata
+reg stressSS c.health
+margins, at(health=(1(1)5))
+marginsplot, ///
+    ylab(-1(.5)1) ytitle("Stress scale score") ///
+    title("Overall stress levels by health self-assessment", size(medlarge)) ///
+    subtitle("Linear (continuous) IV specification of health")
+
+reg stressSS i.health
+margins, at(health=(1(1)5))
+marginsplot, ///
+    ylab(-1(.5)1) ytitle("Stress scale score") ///
+    title("Overall stress levels by health self-assessment", size(medlarge)) ///
+    subtitle("Nominal IV specification of health")
+```

@@ -1,0 +1,81 @@
+---
+title: "A2.9 Loglinear regression models"
+---
+<<dd_version: 2>>
+
+```{.stata-run}
+<<dd_do>>
+* Model from Table 2 of Mize (2016) ASR
+usetdm smi_gss, clear
+
+svy: reg logwages i.partners75 age i.educcat i.race year ///
+    numchild married i.region4 i.metro parttime i.isco88cat ///
+    if male==0, eform(Factor)
+<</dd_do>>
+```
+
+*Stata will exponentiate the coefficients for you with the **eform()** option. Here, I have given it the name "Factor" which labels the column in the output*
+
+### Predictions in loglinear regression models
+
+**margins** in Stata will exponentiate predictions to get back into natural metric of the DV (\$ hourly wage units) with the **expression(exp(predict(xb)))** option
+
+```{.stata-run}
+<<dd_do>>
+qui margins, at(age=(20(5)80)) expression(exp(predict(xb)))
+marginsplot, recastci(rline) ciopts(lpat(dash) col(gs14)) ///
+    title("[2.8.d] Predicted Hourly Wages by Age (Women Workers Only)") ///
+    ytitle("Hourly Wages") ylab(5(5)30)
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_08_d-loglinear-4.png", replace width(1400)
+<</dd_do>>
+```
+
+![](../fig/cda-02_08_d-loglinear-4.png){width=80% fig-alt="Predicted hourly wages by age for women, curving upward."}
+
+- Note that the effect on the predictions in the *log of wages* metric is linear
+  - The effect in the natural metric of the DV (*wages*) is nonlinear
+- Can calculate predictions with **margins** and plot them with **marginsplot** in the same manner as before; only need the extra **expression( )** option to convert the predictions back to the *wages* metric:
+
+```stata
+qui margins, at(age=(20(5)80) partners75=(1 2 3)) expression(exp(predict(xb)))
+
+marginsplot, noci title("Predicted Hourly Wages by Age") ///
+    ytitle("Hourly Wages") ylab(5(5)30)
+```
+
+*Can easily allow the effect of age to be (more) nonlinear and allow for interaction effects between age and sexual orientation just as we did in earlier examples:*
+
+```{.stata-run}
+<<dd_do>>
+svy: reg logwages i.partners75##c.age##c.age i.educcat i.race year ///
+    numchild married i.region4 i.metro parttime i.isco88cat ///
+    if male==0, eform(Factor)
+est store smimod
+
+qui margins, at(age=(20(5)80) partners75=(1 2 3)) expression(exp(predict(xb)))
+marginsplot, noci title("[2.8.f] Predicted Hourly Wages by Age (Women Workers Only)") ///
+    ytitle("Hourly Wages") ylab(0(5)25)
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_08_f-loglinear-6.png", replace width(1400)
+<</dd_do>>
+```
+
+![](../fig/cda-02_08_f-loglinear-6.png){width=80% fig-alt="Predicted hourly wages by age for heterosexual, bisexual, and lesbian women: curves that rise, peak in midlife, and fall, at different levels."}
+
+### Loglinear regression models---marginal effects
+
+The coefficients are no longer directly interpretable when we have quadratic and/or interaction terms as we do for the model presented in the plot above. Marginal effects can still provide an overall summary for the effects of interest---for this example, the effect of sexual orientation for women:
+
+```{.stata-run}
+<<dd_do>>
+est restore smimod
+mchange partners75, expression(exp(predict(xb)))
+<</dd_do>>
+```
+
+> *Bisexual women earn about \$1.19 less an hour than heterosexual women*
+>
+> *On average, lesbian women earn about \$1.68 more per hour than heterosexual women and about \$2.87 more than bisexual women*

@@ -1,0 +1,106 @@
+---
+title: "Appendix 2C: Splines"
+---
+<<dd_version: 2>>
+
+- Sometimes polynomials do not model nonlinearities well enough
+  - E.g., Too many turns in the line, very quick changes of direction, etc.
+- Splines allow you to specify a structural "break" (AKA a "knot") in the regression line
+  - Slope can be completely different before and after the knot (e.g., before and after age 60)
+    - Estimate separate coefficient for age \< 60 and age ≥ 60
+- Parametric technique; you get a coefficient (and associated SE/CI/*p*-value) for the slope between each knot
+  - Works with almost any regression model
+- I give only a quick introduction here. For details on splines, [Marsh and Cormier's 2002 Sage QASS](https://methods.sagepub.com/book/spline-regression-models) book is a good and accessible introduction to splines
+  - Also see [Edwards and Parry 2018](https://doi.org/10.1177/1094428117715067)
+  - See [Appendix A2.8](appendix-2a/a2-8-splines.qmd) and [**mkspline**](https://www.stata.com/manuals/rmkspline.pdf) for some details on cubic splines which combine splines and nonlinearities
+
+![](images/spline-example.png){width=50% fig-alt="Scatterplot with a linear spline: a line that falls to a knot and then rises."}
+
+## Linear splines
+
+- How do we estimate the two different slopes shown on the graph above?
+  - Create two variables for *x*: one summarizes the relationship \< 60 and one for the relationship ≥ 60
+    - Note 60 is the "knot" placement
+- First variable summarizes relationship for age \< 60. Defined as:
+
+$${age}_{< 60} = original\ value\ of\ age\ if\ age < 60$$
+
+$${age}_{< 60} = 60\ if\ age \geq 60$$
+
+- Second variable summarizes relationship for $age \geq 60$. Defined as age difference from last knot:
+
+$${age}_{\geq 60} = 0\ if\ age \leq 60$$
+
+$${age}_{\geq 60} = \#\ of\ years\ since\ last\ knot\ (age\ 60)$$
+
+- For example, age 65 is coded as 5 on ${age}_{\geq 60}$; age 80 is coded as 20 on ${age}_{\geq 60}$
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_gss", clear
+
+lpoly samesexop year, ///
+    xlab(1974(4)2018) ylab(1(1)4) noscatter ci legend(off) ///
+    ytitle("Support for same-gender relationships") ///
+    subtitle("Local polynomial smoothing") ///
+    title("[2.7.a] Change in supportive attitudes toward same-gender relationships from 1972 to 2020")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_07_a-splines-01.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-02_07_a-splines-01.png){width=80% fig-alt="Local polynomial smooth of support for same-gender relationships by survey year: flat until about 1990, then rising, with changes in slope around 1996 and 2006."}
+
+\*Where would you place the "knots" to model this with splines?
+
+### Interpreting linear splines
+
+- Linear splines specify linear relationships between each "knot"
+  - I chose knots at 1990, 1996, and 2006 based on graph above
+  - Here are the variables we need:
+
+```{.stata-run}
+<<dd_do>>
+mkspline year_lt90 1990 year_90_96 1996 year_96_06 2006 year_06_18 = year
+codebook year*, c
+<</dd_do>>
+```
+
+```{.stata-run}
+<<dd_do>>
+reg samesexop year_lt90 year_90_96 year_96_06 year_06_18
+est store splinemod
+est table splinemod, ///
+    title("[2.7.b] Spline regression model for opinion of same-gender relationships") ///
+    b(%5.3f) star(.05 .01 .001)
+<</dd_do>>
+```
+
+- What do the coefficients mean?\*
+
+$$\beta_{year\_lt90} = slope\ if\ year < 1990$$
+
+$$\beta_{year\_90-96} = slope\ if\ year \geq 1990\ \&\ year < 1996$$
+
+$$\beta_{year\_96-06} = slope\ if\ year \geq 1996\ \&\ year < 2006$$
+
+$$\beta_{year\_06-18} = slope\ if\ year > 2006$$
+
+\*We will learn how to test the equality of these coefficients in the 05 Testing section
+
+```{.stata-run}
+<<dd_do>>
+margins, over(year)
+marginsplot, recastci(rarea) ciopts(col(gs13)) plotopts(msymbol(none)) ///
+    xlab(1974(4)2018) ylab(1(1)4) ///
+    ytitle("Support for same-gender relationships") xtitle("Year of survey") ///
+    title("[2.7.c] Support for same-gender relationships - GSS 1973 - 2018", size(medlarge)) ///
+    subtitle("Regression splines with knots at 1990, 1996, and 2006")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_07_c-splines-02.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-02_07_c-splines-02.png){width=80% fig-alt="Predicted support for same-gender relationships from the spline model: four straight segments joined at 1990, 1996, and 2006."}

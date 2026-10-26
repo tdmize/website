@@ -1,0 +1,169 @@
+---
+title: "2.4 Nonlinear Interaction Effects"
+---
+<<dd_version: 2>>
+
+- Things get complicated quickly when we combine interaction effects with nonlinearities
+  - When we get to models for categorical DVs, these are **inherently nonlinear *and* interactive**
+  - Linear regression models **can be** nonlinear and interactive
+- From the examples above, we already know that: (a) age has a nonlinear effect (*age^2^* coefficient was significant), and that (b) age has a different effect for men and women (*age X woman* product term coefficient is significant)
+- *Note (below) that to correctly model the nonlinear interaction effect you need five coefficients: age, age^2^, woman, woman\*age, and woman\*age^2^*
+  - *All five coefficients are necessary to properly estimate the nonlinear interaction effect*
+
+## The limits of coefficients
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_gss", clear
+
+regress occprest c.age##c.age##i.woman i.college
+est store opintnlmod
+est table opintnlmod, ///
+    title("[2.4.a] Occupational prestige linear regression model" ///
+          "Nonlinear interaction effects") ///
+    b(%5.3f) star(.05 .01 .001)
+<</dd_do>>
+```
+
+::: {.callout-note icon="false" appearance="simple"}
+I find the coefficients more or less useless in nonlinear interactive models.
+
+Here, I would go straight to a plot of predictions (include CIs!). Based on what the plot shows, I would then use that to guide further investigation---specifically, what MEs are likely to be informative.
+:::
+
+*¯\\\_(ツ)\_/¯*
+
+```{.stata-run}
+<<dd_do>>
+qui margins, at(age=(20(5)80) woman=(0 1))
+marginsplot, ///
+    title("[2.4.b] Predicted Occupational Prestige Based on Person's Age and Gender", size(med)) ///
+    subtitle("Interactive and Nonlinear Effect") ///
+    ytitle("Occupational Prestige") ///
+    recastci(rline) ciopts(lpat(dash) col(gs14)) ylab(38(2)46)
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_04_b-interaction-2.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-02_04_b-interaction-2.png){width=80% fig-alt="Predicted occupational prestige by age for men and women: two curved lines; men rise more steeply and peak higher, and the lines cross twice."}
+
+*Now, the effect of age depends both on the value of age considered and based on whether the prediction is for a man or a woman*
+
+### Interpreting nonlinear interaction effects with MEs
+
+- It is best to provide examples and interpretations that best answer your research question
+  - Let's say we are writing an article on the transition into early adulthood, thus we are mainly interested in the effect of age for those in their twenties
+    - Remember the effect will be different for men and women, so need to calculate an ME for men and an ME for women
+
+```{.stata-run}
+<<dd_do>>
+mecompare age, start(age=20) covariates(woman=0) amount(10) models(opintnlmod)
+mecompare age, start(age=20) covariates(woman=1) amount(10) models(opintnlmod)
+<</dd_do>>
+```
+
+> *A 10-year increase in age for 20-year-old men leads to about 2 points higher job prestige on average. For women, the same increase in age leads to about 1.26 points higher job prestige.*
+>
+> *OR*
+>
+> *On average, 30-year-old men are predicted to hold jobs that are about 2 points higher in job prestige than those held by 20-year-old men. 30-year-old women's job prestige is higher than 20-year-old women's by 1.26 points.*
+
+\*See [Appendix A2.5](appendix-2a/a2-5-nonlinear-interactions.qmd) for more on how to calculate these MEs
+
+### Equality of marginal effects: second differences
+
+- Sometimes (depending on pattern of nonlinearities), can still be interesting / useful to examine if the effect, on average, differs across groups
+  - *Does aging, on average, have a different effect for men and women?*
+    - The test of the equality of MEs (sometimes called 1^st^ differences) is called a 2^nd^ difference
+
+```{.stata-run}
+<<dd_do>>
+est restore opintnlmod
+mecompare age, by(woman) amount(sd)
+metest 2 - 1
+<</dd_do>>
+```
+
+> *On average, a standard deviation increase in age for men is associated with a 1.50 point increase in occupational prestige. For women, aging shows a smaller, but still significant increase in job prestige (ME~+SD\ |\ woman\ =\ 1~ = 0.59; 2^nd^ difference p \< .001).*
+
+### A caution about overlapping CIs
+
+- *An important (and often overlooked) part of interaction effects is the marginal effect of the secondary variable. E.g., The interpretations above focus on the effect of age---gender is a secondary consideration. However, what about the effect of gender? There is an interesting story there too*
+  - *Importantly, when confidence intervals **do not overlap** this indicates that the group difference (i.e., men vs women in our plot) is significant. When the confidence interval **does overlap** this **may or may not** indicate the group difference is non-significant\*: you must test for this directly. As* [Belia et al. (2005)](http://psychology.okstate.edu/faculty/jgrice/psyc5314/ConfidenceConfusion_2005.pdf) *gently put it:*
+
+![](images/belia-2005-abstract.png){width=80% fig-alt="Abstract of Belia et al. (2005): many researchers misunderstand how confidence intervals and standard error bars relate to statistical significance."}
+
+*\*NOTE: These general rules are only true for independent non-overlapping samples. It is even more complicated with clustered data (e.g., multilevel or longitudinal data)*
+
+### Visualizing significant group differences
+
+- Fortunately, there are fairly straightforward ways to calculate and visualize significance information for group differences
+- The first method I recommend is to calculate and then plot the marginal effect of the binary/nominal IV across the range of the continuous IV (here, the ME of *gender* across the *range of age*)
+  - Go back to the last graph. What is the ME of gender? It is simply the gap between the red and blue lines. That shows you the difference between men and women at each age
+- Compare the last graph to the one below
+
+```{.stata-run}
+<<dd_do>>
+est restore opintnlmod
+qui margins, dydx(woman) at(age=(20(5)80))
+marginsplot, ///
+    recastci(rline) ciopts(lpat(dash) col(gs14)) yline(0) ylab(-2(1)2) ///
+    title("[2.4.c] Marginal Effect of Gender across Range of Age", size(medlarge)) ///
+    subtitle("Effects above zero indicate women have higher job prestige") ///
+    ytitle("Effect of Gender: Women - Men")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_04_c-interaction-3.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-02_04_c-interaction-3.png){width=80% fig-alt="Marginal effect of gender (women minus men) across age with confidence intervals: positive at young ages, crossing zero around age 40, and negative at older ages."}
+
+*\*This is a direct test of the effect of gender: whenever the confidence interval overlaps zero = no significant group difference (see interpretation below)*
+
+#### Example interpretation of the plot above
+
+> *As Figure \# shows, at younger ages, women have **higher** occupational prestige than men (from age 20 to about age 37). From ages 37 to 45, men and women have similar occupational prestige scores. A gender gap reappears after age 45; however, at these older ages, the gender gap reverses, with **men having higher** occupational prestige than do women.*
+
+To see at exactly what ages the group difference is or is not significant:
+
+```{.stata-run}
+<<dd_do>>
+mtable, dydx(woman) at(age=(20(1)80)) stat(est se p)
+<</dd_do>>
+```
+
+### Presenting nonlinear interaction effects
+
+- *I would always include the plot of predictions in an article for a nonlinear interaction effect (figure 2.4.b above)*
+  - *These are familiar to readers and easily understood*
+- *The graph of MEs (2.4.c above) is harder to understand, especially out of context*
+  - *I usually present these second in my article; when possible, alongside the graph of predictions (see below)*
+
+:::: {.columns}
+::: {.column width="50%"}
+![](images/petts-kaufman-mize-2023-predictions.png){fig-alt="Figure 1 of Petts, Kaufman, and Mize (2023): predicted perceptions of a good parent by weeks of leave taken, for fathers and mothers."}
+:::
+::: {.column width="50%"}
+![](images/petts-kaufman-mize-2023-marginal-effects.png){fig-alt="Figure 3 of Petts, Kaufman, and Mize (2023): marginal effect of parental gender across weeks of leave taken."}
+:::
+::::
+
+\*I like including both graphs in a single paper (often as separate panels) to help the reader follow what the second graph shows. Example from [Petts, Kaufman, and Mize 2023](https://doi.org/10.1111/jomf.12875)
+
+### Example write-up of occupational prestige findings
+
+```{.stata-run}
+<<dd_do>>
+est restore opintnlmod
+mecompare age woman, amount(sd) models(opintnlmod)
+<</dd_do>>
+```
+
+::: {.callout-note icon="false" appearance="simple"}
+overall average effects of age and gender
+:::
+
+> *Overall, individuals tend to hold more prestigious jobs when they are older compared to when they were younger---but the relationship is nonlinear. On average, a standard deviation increase in age (about 17.2 years) is associated with a 1.01 increase in occupational prestige (p \< 0.001). However, Figure \# illustrates the nonlinearities: aging is associated with increased occupational prestige until the late 50s, but the effect then reverses, with aging associated with lower occupational prestige late in life. In addition to the nonlinear effect of age, there are important differences in the effect of age based on a person's gender. Women have higher occupational prestige than men from age 20 to about 37, but the effect then reverses, with men having higher occupational prestige after the age of about 45. Overall, aging shows a stronger association for men than women (2^nd^ diff p \< .001).*

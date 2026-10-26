@@ -1,0 +1,381 @@
+---
+title: "2.6 Assessing and Modeling Complex Nonlinearities for Independent Variables"
+---
+<<dd_version: 2>>
+
+- Thus far, we have only covered the relatively simple case of adding a squared term for a continuous IV. However, there are many other ways to assess and model nonlinearities in regression models
+- **Note it is not always best to use the most complicated solution**
+  - Indeed, some of these more flexible methods are helpful for assessing when you are OK using the simpler solution
+  - However, it is generally impossible to know whether the simpler solution is OK ***unless you have also tried the more complicated solution***
+    - A footnote stating *"I tried it the more sophisticated way and found basically the same exact result as the easier way"* can be very reassuring to reviewers; in that case, present the easier way in the main text
+    - **All else equal, simplicity is a virtue. However, simplicity is *not* a valid justification for inaccurately modeling your data\***
+
+\*E.g., Would you be comfortable writing a paper with the occupational prestige, gender, and age data above that did not include *age^2^*? That did not include interactions between *age* and *gender*?
+
+## Scatterplots
+
+- For bivariate relationships, scatterplots can be helpful
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/regjob3", clear
+sort phd
+
+twoway scatter job phd, jitter(3) ///
+    title("[2.6.a] Job Prestige and Prestige of PhD Program")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_06_a-scatter.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-02_06_a-scatter.png){width=80% fig-alt="Jittered scatterplot of first-job prestige against the prestige of the PhD program."}
+
+```{.stata-run}
+<<dd_do>>
+twoway scatter job phd if fem == 0, jitter(3) || ///
+    scatter job phd if fem == 1, jitter(3) || , ///
+    title("[2.6.b] Job Prestige and Prestige of PhD Program") ///
+    legend(order(1 "Men" 2 "Women"))
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_06_b-scatter.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-02_06_b-scatter.png){width=80% fig-alt="The same jittered scatterplot with separate markers for men and women."}
+
+## LOWESS: locally weighted scatterplot smoothing
+
+- Lowess performs "local" regressions sequentially across subsets of your data, showing how one continuous IV relates to a DV across the range of your data
+  - This is primarily an exploratory technique---you can plot the smoothed regression line but you do not get parameter estimates or tests of statistical significance
+  - It can be a helpful way to quickly assess nonlinearity and often suggests possible parametric modeling solutions for the nonlinearity (e.g., need both *age* and *age^2^* in model)
+- Since a *lowess* plot is non-parametric it does not constrain the shape of the relationship between an IV and the DV in any way
+- A bandwidth can be specified to determine just how **local** you want the lowess to calculate the regression estimate
+  - A bandwidth of 0.4 means you want the 40% of the data closest to a given point used to calculate the regression line for that point (data points closer to the middle of the bandwidth are given more weight)
+  - Smaller bandwidths will let you find more nonlinearities but are more susceptible to outliers and other quirks of your data
+
+```{.stata-run}
+<<dd_do>>
+lowess job phd, bwidth(0.8)
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_06_lowess-bw08.png", replace width(1400)
+<</dd_do>>
+<<dd_do>>
+lowess job phd, bwidth(0.2)
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_06_lowess-bw02.png", replace width(1400)
+<</dd_do>>
+```
+
+:::: {.columns}
+::: {.column width="50%"}
+![](fig/cda-02_06_lowess-bw08.png){fig-alt="Lowess smoother with bandwidth 0.8: a nearly straight line."}
+:::
+::: {.column width="50%"}
+![](fig/cda-02_06_lowess-bw02.png){fig-alt="Lowess smoother with bandwidth 0.2: a jagged line with sharp jumps."}
+:::
+::::
+
+- Bandwidth of 0.8 too wide to be informative (left panel above); mostly same as a linear fit
+- Bandwidth of 0.2 is too small: it picks up on too many quirks of the data that we don't want to model (right panel above)
+  - Sharp jumps in the line often suggest a too-small bandwidth
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_gss", clear
+
+replace freespchSS = freespchSS * 100
+
+hist freespchSS, percent ///
+    title("[2.6.g] Distribution of support for free speech scale") ///
+    subtitle("0% = restrict free speech in all cases; 100% = support free speech in all cases")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_06_g-hist_freespch.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-02_06_g-hist_freespch.png){width=80% fig-alt="Histogram of the support for free speech scale, with a large spike at 100 percent."}
+
+```{.stata-run}
+<<dd_do>>
+lowess freespchSS edyrs, bwidth(.4) jitter(3) xlab(0(2)20) gen(lowpr) ///
+    title("[2.6.h] Relationship between support for free speech and education") ///
+    subtitle("With lowess smoothed trend line") ytitle("Support for free speech")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_06_h-lowess_freespch.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-02_06_h-lowess_freespch.png){width=80% fig-alt="Jittered scatterplot of support for free speech by years of education with a lowess line that dips at low education and rises steadily after."}
+
+```{.stata-run}
+<<dd_do>>
+reg freespchSS c.edyrs##c.edyrs##c.edyrs
+<</dd_do>>
+```
+
+> All three *edyrs* coefficients are highly significant, suggesting that including them improves model fit (but note this is a very large sample)
+
+```{.stata-run}
+<<dd_do>>
+margins, at(edyrs=(0(1)20))
+marginsplot, plotop(msymbol(none)) recastci(rline) ciopt(lpat(dash) lcol(*.4)) ///
+    ylab(0(10)100) ytitle("free speech support") ///
+    title("[2.6.i] Predicted support for free speech by education in years") ///
+    addplot(connected lowpr edyrs, sort msymbol(none) lcol(eltblue)) ///
+    legend(order(2 "edyrs^3" 3 "lowess"))
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_06_i-prs_freespch.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-02_06_i-prs_freespch.png){width=80% fig-alt="Predictions from the cubic model of education closely following the lowess line."}
+
+## Splines
+
+- An alternative to polynomial IVs is splines which allow for an abrupt change in the prediction line
+  - Essentially, estimate a coefficient for each piece of the relationship separately allowing entirely different slopes
+- For an overview of splines, see [Appendix 2C](appendix-2c-splines.qmd)
+  - For details on coding splines in Stata, see [Appendix A2.8](appendix-2a/a2-8-splines.qmd)
+
+![](images/spline-example.png){width=50% fig-alt="Scatterplot with a linear spline: a line that falls to a knot and then rises."}
+
+## Binned scatterplots
+
+- Scatterplot methods are less useful when you have lots of data
+  - Graphs become impossible to read (but could plot random subsample) and lowess becomes computationally intensive
+- A binned scatterplot is a useful tool for these and other cases ([Stepner 2014](https://michaelstepner.com/binscatter/binscatter-StataConference2014.pdf))
+  - "bin" the *x* variable into groups (e.g., 20 age groups) and then calculate the mean of the *y* variable for each bin
+
+**Table 1:** Descriptive Statistics for 20 waves of longitudinal data of Australians (*N~2~* = 26,489; *N~1~* = 225,541)
+
+|                        |  Mean |    SD |  Min. |   Max. |
+|:-----------------------|------:|------:|------:|-------:|
+| *Physical Health Scale* | 50.21 |  9.85 | 12.37 |  72.84 |
+| *Mental Health Scale*   | 50.07 |  9.95 |  9.54 |  75.61 |
+| *Role Count*            |  4.01 |  1.35 |  0.00 |   8.00 |
+| *Age*                   | 46.39 | 17.60 | 18.00 | 100.00 |
+
+*The rest of this page uses restricted-access data (the HILDA survey), so the data file is not available to download.*
+
+```{.stata-run}
+<<dd_do: quietly>>
+global cda02_dir "`c(pwd)'"
+c rxa
+cd "- Data"
+<</dd_do>>
+<<dd_do>>
+use "RxA-03-listwise", clear
+<</dd_do>>
+<<dd_do: quietly>>
+cd "$cda02_dir"
+<</dd_do>>
+<<dd_do>>
+scatter Sphealth age, jitter(3) ///
+    title("[2.6.j] HILDA data: N = 225,541")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_06_j-binscatter.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-02_06_j-binscatter.png){width=80% fig-alt="Scatterplot of physical health by age with so many points that it is a solid mass."}
+
+```{.stata-run}
+<<dd_do>>
+binscatter Sphealth age, ///
+    title("[2.6.k] Binned scatterplot for physical health by age") ///
+    ytitle("Physical health scale") line(none)
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_06_k-binscatter.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-02_06_k-binscatter.png){width=80% fig-alt="Binned scatterplot: mean physical health in 20 age bins, declining at an increasing rate with age."}
+
+```{.stata-run}
+<<dd_do>>
+binscatterhist Sphealth age, ///
+    hist(Sphealth age) xmin(15) ymin(40) line(qfit) ///
+    title("[2.6.l] Binned scatterplot for physical health by age") ///
+    subtitle("Including a quadratic line fit") ///
+    ytitle("Physical health scale")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_06_l-binscatter.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-02_06_l-binscatter.png){width=80% fig-alt="Binned scatterplot with a quadratic fit line and histograms of physical health and age along the axes."}
+
+\*Histograms show the distribution of the *x* and *y* variables
+
+## Treating a continuous or ordinal IV as nominal
+
+- A limitation of the methods covered above is they only examine bivariate relationships\*; often, we want to know conditional relationships after controlling for other variables
+  - Also limited to relatively simple regressions; e.g., cannot examine multilevel or fixed effect models
+- An elegantly simple but remarkably flexible way to examine the functional form of a continuous IV is to treat it as a nominal variable in your regression model
+  - E.g., Omit 0 as reference category for social roles; add coefficients for 1, 2, 3, 4...9 roles
+  - For IVs with lots of values, you can "coarsen" or "bin" them first
+    - E.g., Create age categories of 20 -- 30, 31 -- 40, 41 -- 50, etc.
+- Can use this technique for almost any regression model and almost any DV type
+- For this technique, you want to go straight to graphs rather than worrying about the coefficient estimates
+
+\*Can use lowess with control variables with the [**mlowess**](http://fmwww.bc.edu/RePEc/bocode/m/mlowess.html) command but it is limited
+
+```{.stata-run}
+<<dd_do>>
+reg Smhealth i.roles ///
+    i.male c.hhincome c.age i.educ c.totalc c.physact i.Bcigs i.wave, cluster(ID)
+
+qui margins, at(roles=(0(1)8)) saving(m_cat, replace)
+marginsplot, ///
+    title("[2.6.m] Predictions from Categorical Form of Social Roles", size(med)) ///
+    ytitle("Mental Health Scale") xtitle("Number of Social Roles") ylab(40(5)55)
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_06_m-indicators.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-02_06_m-indicators.png){width=80% fig-alt="Predicted mental health for each number of social roles, rising steeply at first and then leveling off."}
+
+Note, despite this pattern, there is no monotonic restriction on the functional form
+
+- Can we model this relationship parametrically?
+
+```{.stata-run}
+<<dd_do>>
+reg Smhealth c.roles##c.roles ///
+    i.male c.hhincome c.age i.educ c.totalc c.physact i.Bcigs i.wave, cluster(ID)
+
+qui margins, at(roles=(0(.25)8))
+marginsplot, plotopt(lcol(eltblue) msym(none)) ///
+    recastci(rline) ciopts(lpat(dash) col(eltblue*.5)) ///
+    title("[2.6.n] Predictions from Quadratic Form of Social Roles", size(med)) ///
+    ytitle("Mental Health Scale") xtitle("Number of Social Roles") ylab(40(5)55)
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_06_n-indicators.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-02_06_n-indicators.png){width=80% fig-alt="Predicted mental health from the quadratic specification of social roles: a smooth curve that rises and levels off."}
+
+\*Note: The addition of the polynomial *roles^2^* allows for a change in the slope
+
+```{.stata-run}
+<<dd_do>>
+qui margins, at(roles=(0(1)8)) saving(m_sq, replace)
+
+combomarginsplot m_cat m_sq, ///
+    labels("Categorical Model" "Quadratic Model") ///
+    title("[2.6.o] Comparison of Predictions for Various Functional Forms of Roles", size(med)) ///
+    ytitle("Mental Health Scale") xtitle("Number of Social Roles")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_06_o-indicators.png", replace width(1400)
+<</dd_do>>
+```
+
+:::: {.columns}
+::: {.column width="25%"}
+![](images/chefs-kiss.png){fig-alt="Chef's kiss emoji."}
+:::
+::: {.column width="75%"}
+![](fig/cda-02_06_o-indicators.png){fig-alt="Predictions from the categorical and quadratic specifications of social roles, nearly identical."}
+:::
+::::
+
+The simple addition of *roles^2^* does a remarkably good job here
+
+```{.stata-run}
+<<dd_do>>
+xtset ID wave
+
+sum age
+egen ageC = cut(age), at(18(5)110)
+fre ageC
+recode ageC 93/110 = 93
+
+xtreg Smhealth i.ageC ///
+    c.oroles##c.oroles c.vroles##c.vroles ///
+    c.orolesM c.oroles2M c.vrolesM c.vroles2M ///
+    STDrolephys ib3.educ c.hhincome i.wave, re
+
+margins ageC
+marginsplot, recast(scatter) ylab(40(5)60) ylab(42(2)58) ///
+    title("[2.6.p] Psychological well-being across ages (binned)", size(medlarge)) ///
+    subtitle("Fixed effects model with controls") ///
+    xtitle("Age bins in 5 year increments") ytitle("Mental health")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_06_p-indicators.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-02_06_p-indicators.png){width=80% fig-alt="Predicted mental health for 5-year age bins: flat until the 40s, rising through the 60s, and dipping at the oldest ages."}
+
+\*Note: Two clear "turns" in the slope so need to add both *age^2^* and *age^3^* to model
+
+```{.stata-run}
+<<dd_do>>
+xtreg Smhealth c.age##c.age##c.age ///
+    c.oroles##c.oroles c.vroles##c.vroles ///
+    c.orolesM c.oroles2M c.vrolesM c.vroles2M ///
+    STDrolephys ib3.educ c.hhincome i.wave, re
+est store age3_mod
+
+margins, at(age=(18(2)90))
+marginsplot, recastci(rline) ciopt(col(eltblue*.6) lpat(dash)) ///
+    plotop(msym(none) lcol(eltblue)) ///
+    ylab(42(2)58) xlab(20(10)90) ///
+    title("[2.6.q] Psychological well-being across ages (cubic specification)", size(medlarge)) ///
+    subtitle("Fixed effects model with controls") ///
+    xtitle("Age at current wave") ytitle("Mental health")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_06_q-indicators.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-02_06_q-indicators.png){width=80% fig-alt="Predicted mental health from the cubic specification of age: a smooth S-shaped curve."}
+
+```{.stata-run}
+<<dd_do>>
+levelsof ageC
+global agecats = "`r(levels)'"
+
+preserve
+rename age ageold
+rename ageC age
+qui xtreg Smhealth i.age ///
+    c.oroles##c.oroles c.vroles##c.vroles ///
+    c.orolesM c.oroles2M c.vrolesM c.vroles2M ///
+    STDrolephys ib3.educ c.hhincome i.wave, re
+qui margins, at(age=($agecats)) saving(ageC_prs, replace)
+restore
+
+est restore age3_mod
+qui margins, at(age=($agecats)) saving(age3_prs, replace)
+
+combomarginsplot ageC_prs age3_prs, ///
+    labels("Categorical Model" "Cubic Model") ///
+    title("[2.6.r] Comparison of Predictions for Various Functional Forms of Age", size(med)) ///
+    ytitle("Mental Health Scale") legend(pos(6) row(1)) ylab(42(2)58)
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_06_r-indicators.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-02_06_r-indicators.png){width=80% fig-alt="Predictions from the binned and cubic specifications of age, closely matching each other."}
+
+![](images/xkcd-curve-fitting.png){width=50% fig-alt="xkcd comic 'Curve-fitting methods and the messages they send'."}

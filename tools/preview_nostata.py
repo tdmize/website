@@ -3,8 +3,8 @@
 preview_nostata.py -- render the site WITHOUT running Stata, for checking
 layout, navigation, and prose.
 
-build.do is the real build: it runs the Stata code in the <<dd_do>> blocks and
-fills in the output. This script stands in for that step when Stata is not
+build.do and build_teaching.do are the real builds: they run the Stata code in the <<dd_do>> blocks and
+fill in the output. This script stands in for that step when Stata is not
 available (for example when editing pages on another machine). It copies the
 repository to a temporary folder, replaces every <<dd_do>> block with the echoed
 commands plus a placeholder line, and runs `quarto render` there. Nothing in the
@@ -17,6 +17,7 @@ Usage (from anywhere):
     python tools/preview_nostata.py --out DIR  # render into DIR instead of a temp folder
 """
 import argparse
+import glob
 import http.server
 import os
 import re
@@ -26,7 +27,7 @@ import sys
 import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PLACEHOLDER = "(output appears here after build.do runs the code in Stata)"
+PLACEHOLDER = "(output appears here after build.do / build_teaching.do runs the code in Stata)"
 
 RE_VERSION = re.compile(r"^[ \t]*<<dd_version:[^>]*>>[ \t]*\r?\n?", re.M)
 RE_DO = re.compile(r"<<dd_do(?::([^>]*))?>>\r?\n(.*?)<</dd_do>>", re.S)
@@ -57,7 +58,7 @@ def fake_dyntext(text: str) -> str:
 
     text = RE_VERSION.sub("", text)
     text = RE_DO.sub(do_block, text)
-    text = RE_GRAPH.sub("*(graph appears here after build.do)*", text)
+    text = RE_GRAPH.sub("*(graph appears here after the Stata build)*", text)
     text = RE_DISPLAY.sub("*value*", text)
     text = RE_OTHER.sub("", text)
     return text
@@ -79,14 +80,14 @@ def main():
     )
 
     n = 0
-    base = os.path.join(work, "software")
-    for pkg in sorted(os.listdir(base)):
-        src = os.path.join(base, pkg, "_src")
-        if not os.path.isdir(src):
-            continue
+    # software/<pkg>/_src and teaching/<course>/<section>/_src
+    srcs = glob.glob(os.path.join(work, "software", "*", "_src")) + \
+        glob.glob(os.path.join(work, "teaching", "*", "*", "_src"))
+    for src in sorted(srcs):
+        out_dir = os.path.dirname(src)
         for dirpath, _, files in os.walk(src):
             rel = os.path.relpath(dirpath, src)
-            dest_dir = os.path.join(base, pkg) if rel == "." else os.path.join(base, pkg, rel)
+            dest_dir = out_dir if rel == "." else os.path.join(out_dir, rel)
             os.makedirs(dest_dir, exist_ok=True)
             for f in files:
                 if not f.endswith(".qmd"):

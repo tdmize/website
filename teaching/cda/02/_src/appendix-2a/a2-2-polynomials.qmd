@@ -1,0 +1,30 @@
+---
+title: "A2.2 Polynomial IVs with factor syntax"
+---
+<<dd_version: 2>>
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_gss", clear
+
+regress occprest c.age##c.age i.woman i.college
+<</dd_do>>
+```
+
+Stata makes it easy to put in quadratic transformations of your independent variables. Make sure to use the "**c.**" prefix so Stata knows it is a continuous variable, then add **\##** between the variable---this tells Stata to estimate a linear term (*age*) and a quadratic term (*age^2^*)
+
+### Plotting predictions
+
+- The code for making predictions when you have a quadratic term in the model is the **exact same** as before in the linear case if you use the proper **c.** and **i.** prefixes and specify quadratics using **\##**
+
+```stata
+regress occprest c.age##c.age i.woman i.college
+
+qui margins, at(age=(20(5)90))
+
+marginsplot, ///
+    title("Predicted Occupational Prestige Based on Person's Age") ///
+    subtitle("Quadratic Term for Age", size(small)) ///
+    ytitle("Occupational Prestige") ///
+    recastci(rarea) ylab(38(2)46)
+```

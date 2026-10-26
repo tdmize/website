@@ -1,0 +1,88 @@
+---
+title: "A2.5 Nonlinear interaction effects"
+---
+<<dd_version: 2>>
+
+- Estimating a nonlinear interactive model in Stata is easy:
+
+```stata
+regress occprest c.age##c.age##i.woman i.college
+```
+
+- *The key is to use the "**\##**" operators in Stata along with the appropriate **c.** or **i.** prefix. If you do that, Stata takes care of the rest to estimate the appropriate model (see output below)*
+  - *Both polynomial terms and product (interaction) terms are just variables multiplied together---so the **\##** operator works for both*
+  - *Note (below) Stata correctly includes coefficients for age, age^2^, woman, woman\*age, and woman\*age^2^*
+    - *All five coefficients are necessary to properly estimate the nonlinear interaction effect*
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_gss", clear
+
+regress occprest c.age##c.age##i.woman i.college
+<</dd_do>>
+```
+
+### Plotting nonlinear interaction effects
+
+*Fortunately, the code to plot this model is the exact same as it was when the model was linear and/or additive (i.e. non-multiplicative---no product term):*
+
+```stata
+qui margins, at(age=(20(5)80) woman=(0 1))
+
+marginsplot, ///
+    recastci(rline) ciopts(lpat(dash) col(gs14)) ylab(38(2)46) ///
+    title("Predicted Occupational Prestige Based on Person's Age and Gender") ///
+    subtitle("Interactive and Nonlinear Effect") ///
+    ytitle("Occupational Prestige")
+```
+
+### Interpreting nonlinear interaction effects with MEs
+
+It is best to provide examples and interpretations that best answer your research question. Let's say we are writing an article on the transition into early adulthood, thus we are mainly interested in the effect of age for those in their twenties (because the effect of age is different for men and women I'm also specifying the calculations be made for men specifically with *woman=0* in the **at( )** statement)
+
+```{.stata-run}
+<<dd_do>>
+mchange age, at(age=20 woman=0)
+<</dd_do>>
+```
+
+*Now, **mchange** reports marginal effects for men starting at age 20 (from 20 to 21, from 20 to 20 + SD, and the instantaneous rate of change at age 20)*
+
+*If we want a non-standard unit of change, e.g. a 10 year increase in age, we can ask for it via the "**delta**" option with **mchange**:*
+
+```{.stata-run}
+<<dd_do>>
+mchange age, at(age=20 woman=0) delta(10)
+<</dd_do>>
+```
+
+::: {.callout-note icon="false" appearance="simple"}
+Remember this is the effect for men---the effect for women will be different. To calculate the effect for women would need to run **mchange** again with *woman=1* in the **at( )** statement
+:::
+
+> *A 10 year increase in age for 20 year old men leads to about 2 points higher job prestige on average*
+>
+> *OR*
+>
+> *On average, 30 year old men are predicted to hold jobs that are about 2 points higher in job prestige than those held by 20 year old men*
+
+### Visualizing significant group differences
+
+Fortunately, there are fairly straightforward ways to calculate and visualize significance information for group differences
+
+```stata
+*Plot marginal effect of gender over the range of age:
+qui margins, dydx(woman) at(age=(20(5)80))
+```
+
+> *NOTE: The option **dydx()** calculates the marginal effect (0 vs. 1) for a binary variable. So this command gives us the marginal effect of gender across the range of age (which we have specified in the **at( )** statement)*
+
+```stata
+marginsplot, ///
+    recastci(rline) ciopts(lpat(dash) col(gs14)) yline(0) ///
+    title("Marginal Effect of Gender across Range of Age") ///
+    subtitle("Effects above zero: women have higher job prestige") ///
+    ytitle("Effect of Gender: Women vs. Men")
+```
+
+*NOTE: It is almost always useful to make sure your y-axis includes zero on plots of marginal effects (via the **ylab( )** option). The option **yline(0)** plots a horizontal line at zero. This is helpful to interpret the plot as a marginal effect of zero indicates no difference between men and women*

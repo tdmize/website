@@ -1,0 +1,89 @@
+---
+title: "2.5 Examining Distributions"
+---
+<<dd_version: 2>>
+
+- The first commandment of data analysis is **look at your data**
+  - Many (most?) common problems in data analysis can be easily ascertained via relatively simple techniques for examining your data
+  - Graphical solutions are most helpful for continuous and count variables as they often contain many values (e.g., too many values to easily notice patterns via tables)
+  - For binary, nominal, and ordinal variables a frequency table and/or bar chart often suffices
+
+![](images/look-at-your-data.png){width=40% fig-alt="Meme of Moses holding stone tablets: 'Look at your data!'"}
+
+## Frequency tables & bar charts
+
+- For a nominal/binary IV, can just look at frequency (or %) in each category
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/gss", clear
+
+fre degree if year >= 2010
+<</dd_do>>
+```
+
+::: {.callout-note icon="false" appearance="simple"}
+**Stata**: I much prefer the [**fre**](https://github.com/benjann/fre) command to **tabulate**, as you get: numeric value, value label, frequency counts, percents, and missing data all shown by default.
+
+**R**: I like the **frq()** function from [**library(sjmisc)**](https://strengejacke.github.io/sjmisc/articles/exploringdatasets.html).
+:::
+
+```{.stata-run}
+<<dd_do>>
+graph hbar if year >= 2010, over(degree) ///
+    title("[2.5.a] Distribution of educational attainment: GSS 2000 - 2016") ///
+    ytitle("% of sample with this degree")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_05_a-dist-1.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-02_05_a-dist-1.png){width=80% fig-alt="Horizontal bar chart of the percentage of respondents with each educational degree; high school is the largest category."}
+
+## Tools for examining distributions
+
+- Histograms are a good first step for continuous variables
+  - Separate "bins" for ranges of continuous variables (e.g., age 20-25, 26-30, 31-35, 36-40, etc.)
+- Kernel density plots are helpful to examine a smoothed version of the distribution (rather than each specific bin as with a histogram)
+  - Kernel density plots are also helpful to overlay plots across multiple groups
+- See examples below
+
+```{.stata-run}
+<<dd_do>>
+hist wages, percent fcol(none) ///
+    title("[2.5.b] Distribution of Hourly Wages")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_05_b-dist-2.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-02_05_b-dist-2.png){width=80% fig-alt="Histogram of hourly wages, strongly skewed to the right."}
+
+```{.stata-run}
+<<dd_do>>
+twoway kdensity wages, ///
+    title("[2.5.c] Distribution of Hourly Wages") ///
+    xtitle("Hourly Wages")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_05_c-dist-3.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-02_05_c-dist-3.png){width=80% fig-alt="Kernel density plot of hourly wages, peaking near 10 dollars with a long right tail."}
+
+```{.stata-run}
+<<dd_do>>
+twoway kdensity wages if woman == 0 || ///
+    kdensity wages if woman == 1 ||, ///
+    title("[2.5.d] Distribution of Hourly Wages for Men and Women") ///
+    xtitle("Hourly Wages") legend(order(1 "Men" 2 "Women"))
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_05_d-dist-4.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-02_05_d-dist-4.png){width=80% fig-alt="Kernel density plots of hourly wages for men and women; women's wages are more concentrated at lower values."}

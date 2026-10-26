@@ -1,0 +1,202 @@
+---
+title: "2.7 Categorical Independent Variables"
+---
+<<dd_version: 2>>
+
+## Ordinal independent variables
+
+- Independent variables can be entered into a regression model one of two ways:
+  - Continuous
+  - Nominal (n.b., binary is nominal but with only 2 categories)
+- For an ordinal IV, you must choose how to enter it (ordinal is not an option)
+
+::: {.callout-note icon="false" appearance="simple"}
+**Stata**: Use [factor syntax](https://www.stata.com/links/stata-basics/factor-variable-notation/) with **c.** to specify a continuous predictor; **i.** for a nominal predictor
+
+**R**: Use [**as_numeric**](https://www.rdocumentation.org/packages/sjlabelled/versions/1.2.0/topics/as_numeric) to specify a continuous variable; [**as_factor**](https://www.rdocumentation.org/packages/haven/versions/2.5.4/topics/as_factor) for a nominal variable
+:::
+
+### Continuous vs nominal specifications
+
+- A continuous specification is simpler
+  - E.g., For a 5-category ordinal IV only need to estimate 1 coefficient
+- A nominal is more complicated but always more accurate\*
+  - If entering as nominal, need 4 coefficients (representing 4 categories and one omitted reference category)
+  - 4 coefficients will always provide a somewhat better fit\* than 1
+- Which should you choose? Try both:
+  - If inferences are very similar, choose the simpler specification (continuous)
+  - If inferences diverge, choose the more complicated but more accurate specification (nominal)
+
+\*We will cover how to provide a significance test of this in the Testing section. But *R*^2^ will always be same or higher in nominal specification (even if not significantly different)
+
+The examples use the 2020 American National Election Studies (ANES):
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_anes", clear
+drop if missing(feel_trump, age, hhincome, woman, lgb, race4, ///
+    educ, relimport, wrongtrack)
+
+regress feel_trump c.relimport i.educ age hhincome i.woman ///
+    i.lgb i.race4 i.wrongtrack
+margins, at(relimport=(1(1)5)) saving(con_reli, replace)
+
+regress feel_trump i.relimport i.educ age hhincome i.woman ///
+    i.lgb i.race4 i.wrongtrack
+margins, at(relimport=(1(1)5)) saving(nom_reli, replace)
+
+combomarginsplot con_reli nom_reli, ///
+    labels("Continuous" "Nominal") xtitle("Importance of religion") ///
+    xlab(1 "Extremely" 2 "Very" 3 "Moderately" 4 "A little" 5 "Not at all") ///
+    title("[2.7.a] Trump feeling thermometer by importance of religion", size(medlarge)) ///
+    subtitle("Nominal vs continuous specification of {it:relimport}")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_07_a-ordinal_IVs-01-relimport.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-02_07_a-ordinal_IVs-01-relimport.png){width=80% fig-alt="Predicted Trump feeling thermometer by importance of religion from the continuous and nominal specifications; the two sets of predictions are close."}
+
+\*These look similar enough to probably choose the continuous specification. But I would also do some statistical tests to decide (more in the Testing section of the class)
+
+```{.stata-run}
+<<dd_do>>
+regress feel_trump c.educ i.relimport age hhincome i.woman ///
+    i.lgb i.race4 i.wrongtrack
+margins, at(educ=(1(1)5)) saving(con_educ, replace)
+
+regress feel_trump i.educ i.relimport age hhincome i.woman ///
+    i.lgb i.race4 i.wrongtrack
+margins, at(educ=(1(1)5)) saving(nom_educ, replace)
+
+combomarginsplot con_educ nom_educ, ///
+    labels("Continuous" "Nominal") ///
+    xlab(1 "< High School" 2 "High School" 3 "Some College" 4 "College Degree" 5 "Grad+") ///
+    title("[2.7.b] Trump feeling thermometer by educational attainment", size(medlarge)) ///
+    subtitle("Nominal vs continuous specification of {it:education}")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_07_b-ordinal_IVs-02-educ.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-02_07_b-ordinal_IVs-02-educ.png){width=80% fig-alt="Predicted Trump feeling thermometer by educational attainment from the continuous and nominal specifications; the nominal predictions depart from the straight line."}
+
+\*These look quite different to me. I would *not* feel comfortable using the continuous specification and would instead use the nominal specification of educational attainment
+
+## Nominal independent variables
+
+- The traditional approach for interpreting nominal IVs involves specifying an omitted reference category and interpreting the coefficients which represent contrasts between the omitted category and each included group
+  - An issue with this approach is you do not know how included categories compare to each other
+    - This approach also reifies the omitted category as the most important ([Johfre and Freese 2021](https://doi.org/10.1177/0081175020982632))
+  - You also do not have any sense of how large an effect the nominal IV has overall (only specific contrasts)
+- One partial solution is to plot predictions for all categories of the nominal IV
+  - There is no reference group in this approach
+
+::: {.callout-note icon="false" appearance="simple"}
+**Stata**: **marginsplot** with **recast(scatter)** for a dot plot; do not use default which connects dots with a line. Or, use **coefplot**
+
+**R**: Use [**plot_predictions**](https://marginaleffects.com/bonus/plot.html) which is a dot plot by default
+:::
+
+```{.stata-run}
+<<dd_do>>
+regress feel_trump c.relimport i.educ age hhincome i.woman ///
+    i.lgb i.race4 i.wrongtrack
+est store ftmod
+
+margins race4
+marginsplot, recast(scatter) ///
+    ylab(0(10)70) ytitle("Trump feeling thermometer") ///
+    title("[2.7.c] Feelings toward Trump based on race-ethnicity", size(medlarge))
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-02_07_c-nominal_IVs-01-race.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-02_07_c-nominal_IVs-01-race.png){width=80% fig-alt="Dot plot of predicted Trump feeling thermometer for White, Black, Hispanic, and Other respondents, with confidence intervals."}
+
+### Examining all pairwise comparisons
+
+- To obtain a significance test for all contrasts between all categories, you can conduct pairwise comparisons
+
+```{.stata-run}
+<<dd_do>>
+mecompare race4, models(ftmod) pwcompare
+<</dd_do>>
+```
+
+- *Black adults feel less warmly toward Trump than do White adults*
+- *...*
+- *Hispanic adults feel more warmly toward Trump than do Black adults*
+- Etc.
+
+### Alternative interpretations of nominal IVs
+
+- Some alternatives use different contrasts
+- Mean contrasts compare a group to the overall sample mean
+  - Limitation is the group being compared is part of the overall sample
+- Binary contrasts compare that group to all other groups (pooled)
+  - In Stata, use the [**binarycontrast**](https://journals.sagepub.com/doi/full/10.1177/1536867X221083900) command ([Freese and Johfre 2022](https://journals.sagepub.com/doi/full/10.1177/1536867X221083900))
+  - In R, [**avg_predictions**](https://marginaleffects.com/man/r/predictions.html) with **hypothesis = \~ meanotherdev** is similar, comparing group's prediction to the mean across all other groups
+    - But, doesn't account for differing group sizes
+
+### Quantifying holistic effects of nominal IVs
+
+- An important issue with any pairwise comparison approach is the high chance of a Type I error (false positive)
+  - We will cover this more in the Testing section of the class
+- Another set of alternatives examine the holistic effect of the IV
+  - The sheaf coefficient provides a single value for the overall effect of the nominal IV ([Heise 1972](https://journals.sagepub.com/doi/abs/10.1177/004912417200100201))
+    - Key limitation is it has no clear/satisfying interpretation
+
+![](images/sheaf-coefficient.png){width=45% fig-alt="Path diagram from Heise (1972): English, French, and SES combined into a sheaf coefficient for ethnicity predicting attitude toward education."}
+
+::: {.callout-note icon="false" appearance="simple"}
+*"There are many cases in which a summary of a nominal or ordinal independent variable's (IV) effect as a holistic construct...is needed and useful for interpretation. For example, does educational attainment or occupational sector have a larger impact on wages? Both variables in this case involve multiple categories and answering this question requires somehow quantifying each IVs' holistic effect" ([Mize and Han 2025](/research/mize_han_socsci_2025.qmd))*
+:::
+
+### Marginal effect (ME) inequality statistics
+
+- A new approach summarizes the average level of **inequality** patterned by the nominal IV using marginal effects ([Mize and Han 2025](/research/mize_han_socsci_2025.qmd))
+  - I.e., How different the predictions are across the nominal groupings, on average
+- Define each pairwise comparison (category *a* vs. *b*) as a ME:
+
+$$pairwise\ comparisons = ME = \eta\left( x_{k} = a,\mathbf{x}_{- k} = {\mathbf{x}_{- k}}^{*} \right) - \eta\left( x_{k} = b,\mathbf{x}_{- k} = {\mathbf{x}_{- k}}^{*} \right);\ for\ all\ b > a$$
+
+- The **unweighted ME inequality** is simply the average of the (absolute values) of all pairwise comparisons
+
+$$unweighted\ ME\ inequality \equiv |unweighted\ average\ ME\ inequality|$$
+
+$$= \frac{Sum\ of\ all\ |pairwise\ comparisons\ of\ MEs|}{\#\ of\ comparisons}$$
+
+$$= \frac{\sum_{a = 1}^{L}\sum_{b = 2;\ b > a}^{L}\left| \eta\left( x_{k} = a,\ \mathbf{x}_{- k} = {\mathbf{x}_{- k}}^{*} \right) - \eta\left( x_{k} = b,\mathbf{x}_{- k} = {\mathbf{x}_{- k}}^{*} \right) \right|}{\frac{L(L - 1)}{2}}$$
+
+- Usually, the various groups of the nominal IV will differ in size, so should be given different weight in the ME inequality, proportional to their size
+  - Define weights
+
+$$a\ vs\ b\ contrast\ weight = w_{a,b} = \frac{n_{a} + n_{b}}{N}$$
+
+- The weighted **ME inequality** is then
+
+$$ME\ inequality \equiv |weighted\ average\ ME\ inequality|$$
+
+$$= \sum_{a = 1}^{L}\sum_{b = 2;\ b > a}^{L}\frac{w_{a,b}}{L - 1}*\left| \eta\left( x_{k} = a,\mathbf{x}_{- k} = {\mathbf{x}_{- k}}^{*} \right) - \eta\left( x_{k} = b,\mathbf{x}_{- k} = {\mathbf{x}_{- k}}^{*} \right) \right|$$
+
+> *"...ME inequality can be described as the average difference in outcomes between observations in distinct groups."*
+>
+> *"Alternatively, ME inequality could be used to quantify a causal effect of a nominal or ordinal IV. In this case, ME inequality summarizes how outcomes would typically change if an observation switched from their current category to another category."* ([Mize and Han 2025](/research/mize_han_socsci_2025.qmd))
+
+### Calculating ME inequalities in Stata and R
+
+- In Stata, use the [**meinequality**](/software/meinequality/index.qmd) command or the **meinequality** option on **mecompare**
+- In R, use the [**meinq()** function with **avg_comparisons**](/software/meinequality_r/index.qmd)
+
+```{.stata-run}
+<<dd_do>>
+meinequality race4, models(ftmod)
+<</dd_do>>
+```
+
+> *On average, members of different racial-ethnic groups differ by about 13 points in their feelings towards Trump*

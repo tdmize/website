@@ -1,0 +1,96 @@
+---
+title: "A2.3 Calculating marginal effects"
+---
+<<dd_version: 2>>
+
+- The example that follows shows how to calculate a ME using **mtable** and **mlincom**
+  - This is to show you exactly what is happening behind the scenes
+  - I recommend letting **mchange** do this for you in most cases
+
+The examples use the model with a quadratic term for age from [2.2](../2-2-nonlinear-effects.qmd):
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_gss", clear
+
+regress occprest c.age##c.age i.woman i.college
+est store opmod
+<</dd_do>>
+```
+
+- First, find the mean of age and calculate what mean + SD is
+
+```{.stata-run}
+<<dd_do>>
+sum age if e(sample)    // Ensure same sample as regression model
+di 46.165 + 17.15691
+<</dd_do>>
+```
+
+### Calculating marginal effects with mtable and mlincom
+
+- *Can use **mtable** to make predictions at the mean and one standard deviation above the mean*
+  - *Two options are important here: "**atmeans**" tells Stata to hold the control variables constant at their means; "**post**" allows you to test the predictions with subsequent commands*
+
+```{.stata-run}
+<<dd_do>>
+mtable, at(age=(46.165 63.32191)) atmeans post
+<</dd_do>>
+```
+
+::: {.callout-note icon="false" appearance="simple"}
+**Note:** these are the sample means for the control variables
+:::
+
+- ***mlincom** allows you test whether the predictions that **mtable** gave you are significantly different (i.e. whether the marginal effect for that independent variable is statistically significant)*
+- ***mlincom**'s syntax refers to the row number of the prediction from **mtable**. See the example above: the first column of **mtable** tells you the row number for that prediction*
+
+```{.stata-run}
+<<dd_do>>
+mlincom 2 - 1
+<</dd_do>>
+```
+
+### Calculating marginal effects with mchange
+
+**mchange** is a command that automatically calculates marginal effects for you. By default, for continuous independent variables **mchange** calculates discrete changes of mean + 1, mean + SD, and the instantaneous change (labeled as "marginal"). For binary variables it reports 1 vs. 0 (note this is one of the reasons it is vital to use the **c.** and **i.** prefixes in your regression command so you get the correct MEs)
+
+::: {.callout-note icon="false" appearance="simple"}
+NOTE: The default in Stata is to calculate AMEs---so **mtable**, **mchange**, or **margins** run without the "**atmeans**" options will calculate AMEs
+
+For MEMs, use:
+
+**mchange... , atmeans**
+:::
+
+```{.stata-run}
+<<dd_do>>
+est restore opmod
+mchange age college
+<</dd_do>>
+```
+
+> *On average, a standard deviation increase in age (about 17.2 years) is predicted to increase occupational prestige by 0.293 points*
+
+```{.stata-run}
+<<dd_do>>
+* AMEs
+est restore opmod
+mtable, at(age=(46.165 63.32191)) post
+mlincom 2 - 1
+<</dd_do>>
+```
+
+::: {.callout-note icon="false" appearance="simple"}
+Compare these results (and code) to those in [Calculating MEMs](../2-2-nonlinear-effects.qmd#calculating-mems). The only difference is where the control variables are held. The **No at( )** listing in the table indicates that control variables were held at their observed values for each observation (i.e. AMEs). The difference in the code is the omission of **atmeans** (which would lead to a MEM)
+:::
+
+### Quick note: Predictions vs MEs and significance tests
+
+- Note that a marginal effect (ME) is an **effect**: the result of an increase in a focal IV from a starting value to an ending value
+- The two individual pieces of the ME (prediction at starting value and prediction at ending values) are **predictions**
+  - We can make predictions at all values of an IV, e.g. when we plot a continuous IV (e.g. graph age predictions from age 18 to 90)
+- Often want to construct a statistical significance test on a ME: almost always whether the ME is not zero (this is what **mchange** is doing)
+  - Statistical significance tests for predictions are less useful as whether the prediction is zero or not is rarely of interest (e.g. what **margins, at(age=(20(10)80))** gives you)
+    - However, the confidence intervals on predictions can be useful (especially for a plot)
+    - I always recommend adding CIs to plots of predictions

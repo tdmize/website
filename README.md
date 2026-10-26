@@ -11,7 +11,8 @@ Each page's address matches its file:
 | `index.qmd` | www.trentonmize.com/ (and /home) |
 | `research.qmd` | /research |
 | `research/mize_2019_SocSci.qmd` | /research/mize_2019_SocSci |
-| `teaching/cda.qmd` | /teaching/cda |
+| `teaching/cda/index.qmd` | /teaching/cda/ (and /teaching/cda) |
+| `teaching/cda/02/2-1-marginal-effects.qmd` | /teaching/cda/02/2-1-marginal-effects |
 | `software/mecompare/index.qmd` | /software/mecompare |
 | `software/mecompare/interactions/index.qmd` | /software/mecompare/interactions/ |
 
@@ -29,6 +30,7 @@ Images are in `images/`.
 
 - **Ordinary pages** (home, research, teaching, ...): edit the `.qmd` file, then render.
 - **Stata documentation** (`software/<pkg>/`): edit only the files in `software/<pkg>/_src/`, then run `build.do` in Stata, which runs the Stata code, fills in the output, and renders. The `.qmd` files next to `_src/` are generated.
+- **Teaching sections with Stata code** (`teaching/<course>/<section>/`, e.g. `teaching/cda/02/`): edit only the files in `_src/`, then run `build_teaching.do` in Stata (`do build_teaching.do cda 02`), which runs the Stata code, fills in the output, and renders. A new section is drafted from its Word slides with `python tools/slides2qmd.py cda 03 "path/to/slides.docx"` (writes drafts to `teaching/cda/03/_draft/`; copy them into `_src/` and put the do-file code in place of each `slide-output` block). One-time setup for the tool: `python -m pip install lxml`. Pages that use restricted data switch to its folder in hidden code with fastcd (`c rxa`), so the data never goes in the repository.
 - **R package documentation** (`software/cleanplots_r/`, `software/suest_r/`): written in the R packages themselves. After a package's pkgdown site is rebuilt, run `python tools/pkgdown2qmd.py cleanplots` (or `suest`) to bring the new version in, then render. Don't edit these folders by hand; the tool replaces them. One-time setup for the tool: `python -m pip install beautifulsoup4 pyyaml`.
 - **Look of the site**: `theme.scss` (colors, font, Stata output blocks). Menus and sidebars: `_quarto.yml`.
 
@@ -40,6 +42,6 @@ From the repository folder:
 quarto render
 ```
 
-or, in Stata, `do build.do render` (render only) / `do build.do mecompare` (rerun one package's Stata output, then render). Then commit and push, including `docs/`.
+or, in Stata, `do build.do render` (render only) / `do build.do mecompare` (rerun one package's Stata output, then render) / `do build_teaching.do cda 02` (rerun one teaching section's Stata output, then render). Then commit and push, including `docs/`.
 
 `python tools/preview_nostata.py --serve` builds a preview without Stata and serves it at http://127.0.0.1:8765/.
