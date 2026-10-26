@@ -80,16 +80,15 @@ lpoly depressSS role, noscatter ci legend(off)
 
 ```stata
 *Binned scatterplot
-binscatter Sphealth age, ///
+binscatter PHscale age, ///
     title("Binned scatterplot for physical health by age") ///
     ytitle("Physical health scale") line(none)
 
 *Add histogram
-binscatterhist Sphealth age, hist(Sphealth age) xmin(15)
+binscatterhist PHscale age, hist(PHscale age) xmin(15)
 
 *Try a quadratic line fit
-binscatterhist Sphealth age, ///
-    hist(Sphealth age) xmin(15) ymin(40) line(qfit) ///
+binscatterhist PHscale age, line(qfit) ///
     title("Binned scatterplot for physical health by age") ///
     subtitle("Including a quadratic line fit") ///
     ytitle("Physical health scale")
@@ -101,10 +100,10 @@ binscatterhist Sphealth age, ///
   - Then, plot predictions as if IV was entered as continuous
 
 ```stata
-reg Smhealth i.roles ///
-    i.male c.hhincome c.age i.educ c.totalc c.physact i.Bcigs
+reg MHscale i.roles ///
+    i.male c.hhincome c.age i.educ i.wave, cluster(ID)
 
-qui margins, at(roles=(0(1)9))
+qui margins, at(roles=(0(1)8))
 
 marginsplot, recast(scatter) ciopts(color(gs10)) ///
     title("Predictions from Categorical Form of Social Roles") ///

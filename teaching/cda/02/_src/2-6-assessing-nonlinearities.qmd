@@ -153,32 +153,35 @@ graph export "fig/cda-02_06_i-prs_freespch.png", replace width(1400)
 - A binned scatterplot is a useful tool for these and other cases ([Stepner 2014](https://michaelstepner.com/binscatter/binscatter-StataConference2014.pdf))
   - "bin" the *x* variable into groups (e.g., 20 age groups) and then calculate the mean of the *y* variable for each bin
 
-**Table 1:** Descriptive Statistics for 20 waves of longitudinal data of Australians (*N~2~* = 26,489; *N~1~* = 225,541)
+**Table 1:** Descriptive Statistics for 21 waves of longitudinal data of Australians (*N~2~* = 29,186; *N~1~* = 242,933)
 
 |                        |  Mean |    SD |  Min. |   Max. |
 |:-----------------------|------:|------:|------:|-------:|
-| *Physical Health Scale* | 50.21 |  9.85 | 12.37 |  72.84 |
-| *Mental Health Scale*   | 50.07 |  9.95 |  9.54 |  75.61 |
-| *Role Count*            |  4.01 |  1.35 |  0.00 |   8.00 |
-| *Age*                   | 46.39 | 17.60 | 18.00 | 100.00 |
+| *Physical Health Scale* | 77.37 | 21.38 |  0.00 | 100.00 |
+| *Mental Health Scale*   | 72.23 | 19.13 |  0.00 | 100.00 |
+| *Role Count*            |  4.15 |  1.33 |  0.00 |   8.00 |
+| *Age*                   | 46.57 | 17.93 | 18.00 | 101.00 |
 
 *The rest of this page uses restricted-access data (the HILDA survey), so the data file is not available to download.*
 
 ```{.stata-run}
 <<dd_do: quietly>>
 global cda02_dir "`c(pwd)'"
-c rxa
+c rarc
 cd "- Data"
 <</dd_do>>
 <<dd_do>>
-use "RxA-03-listwise", clear
+use "RaRc-03-analysis", clear
 <</dd_do>>
 <<dd_do: quietly>>
 cd "$cda02_dir"
 <</dd_do>>
 <<dd_do>>
-scatter Sphealth age, jitter(3) ///
-    title("[2.6.j] HILDA data: N = 225,541")
+gen roles = oroles + vroles
+lab var roles "Number of social roles"
+
+scatter PHscale age, jitter(3) ///
+    title("[2.6.j] HILDA data: N = 242,933")
 <</dd_do>>
 <<dd_do: quietly>>
 graph export "fig/cda-02_06_j-binscatter.png", replace width(1400)
@@ -189,7 +192,7 @@ graph export "fig/cda-02_06_j-binscatter.png", replace width(1400)
 
 ```{.stata-run}
 <<dd_do>>
-binscatter Sphealth age, ///
+binscatter PHscale age, ///
     title("[2.6.k] Binned scatterplot for physical health by age") ///
     ytitle("Physical health scale") line(none)
 <</dd_do>>
@@ -198,12 +201,11 @@ graph export "fig/cda-02_06_k-binscatter.png", replace width(1400)
 <</dd_do>>
 ```
 
-![](fig/cda-02_06_k-binscatter.png){width=80% fig-alt="Binned scatterplot: mean physical health in 20 age bins, declining at an increasing rate with age."}
+![](fig/cda-02_06_k-binscatter.png){width=80% fig-alt="Binned scatterplot: mean physical health in 20 age bins, declining with age."}
 
 ```{.stata-run}
 <<dd_do>>
-binscatterhist Sphealth age, ///
-    hist(Sphealth age) xmin(15) ymin(40) line(qfit) ///
+binscatterhist PHscale age, line(qfit) ///
     title("[2.6.l] Binned scatterplot for physical health by age") ///
     subtitle("Including a quadratic line fit") ///
     ytitle("Physical health scale")
@@ -213,16 +215,14 @@ graph export "fig/cda-02_06_l-binscatter.png", replace width(1400)
 <</dd_do>>
 ```
 
-![](fig/cda-02_06_l-binscatter.png){width=80% fig-alt="Binned scatterplot with a quadratic fit line and histograms of physical health and age along the axes."}
-
-\*Histograms show the distribution of the *x* and *y* variables
+![](fig/cda-02_06_l-binscatter.png){width=80% fig-alt="Binned scatterplot of physical health by age with a quadratic fit line."}
 
 ## Treating a continuous or ordinal IV as nominal
 
 - A limitation of the methods covered above is they only examine bivariate relationships\*; often, we want to know conditional relationships after controlling for other variables
   - Also limited to relatively simple regressions; e.g., cannot examine multilevel or fixed effect models
 - An elegantly simple but remarkably flexible way to examine the functional form of a continuous IV is to treat it as a nominal variable in your regression model
-  - E.g., Omit 0 as reference category for social roles; add coefficients for 1, 2, 3, 4...9 roles
+  - E.g., Omit 0 as reference category for social roles; add coefficients for 1, 2, 3, 4...8 roles
   - For IVs with lots of values, you can "coarsen" or "bin" them first
     - E.g., Create age categories of 20 -- 30, 31 -- 40, 41 -- 50, etc.
 - Can use this technique for almost any regression model and almost any DV type
@@ -232,13 +232,13 @@ graph export "fig/cda-02_06_l-binscatter.png", replace width(1400)
 
 ```{.stata-run}
 <<dd_do>>
-reg Smhealth i.roles ///
-    i.male c.hhincome c.age i.educ c.totalc c.physact i.Bcigs i.wave, cluster(ID)
+reg MHscale i.roles ///
+    i.male c.hhincome c.age i.educ i.wave, cluster(ID)
 
 qui margins, at(roles=(0(1)8)) saving(m_cat, replace)
 marginsplot, ///
-    title("[2.6.m] Predictions from Categorical Form of Social Roles", size(med)) ///
-    ytitle("Mental Health Scale") xtitle("Number of Social Roles") ylab(40(5)55)
+    title("[2.6.m] Predictions from Categorical Form of Social Roles", size(medium)) ///
+    ytitle("Mental Health Scale") xtitle("Number of Social Roles")
 <</dd_do>>
 <<dd_do: quietly>>
 graph export "fig/cda-02_06_m-indicators.png", replace width(1400)
@@ -253,14 +253,14 @@ Note, despite this pattern, there is no monotonic restriction on the functional 
 
 ```{.stata-run}
 <<dd_do>>
-reg Smhealth c.roles##c.roles ///
-    i.male c.hhincome c.age i.educ c.totalc c.physact i.Bcigs i.wave, cluster(ID)
+reg MHscale c.roles##c.roles ///
+    i.male c.hhincome c.age i.educ i.wave, cluster(ID)
 
 qui margins, at(roles=(0(.25)8))
 marginsplot, plotopt(lcol(eltblue) msym(none)) ///
     recastci(rline) ciopts(lpat(dash) col(eltblue*.5)) ///
-    title("[2.6.n] Predictions from Quadratic Form of Social Roles", size(med)) ///
-    ytitle("Mental Health Scale") xtitle("Number of Social Roles") ylab(40(5)55)
+    title("[2.6.n] Predictions from Quadratic Form of Social Roles", size(medium)) ///
+    ytitle("Mental Health Scale") xtitle("Number of Social Roles")
 <</dd_do>>
 <<dd_do: quietly>>
 graph export "fig/cda-02_06_n-indicators.png", replace width(1400)
@@ -277,7 +277,7 @@ qui margins, at(roles=(0(1)8)) saving(m_sq, replace)
 
 combomarginsplot m_cat m_sq, ///
     labels("Categorical Model" "Quadratic Model") ///
-    title("[2.6.o] Comparison of Predictions for Various Functional Forms of Roles", size(med)) ///
+    title("[2.6.o] Comparison of Predictions for Various Functional Forms of Roles", size(medium)) ///
     ytitle("Mental Health Scale") xtitle("Number of Social Roles")
 <</dd_do>>
 <<dd_do: quietly>>
@@ -305,13 +305,19 @@ egen ageC = cut(age), at(18(5)110)
 fre ageC
 recode ageC 93/110 = 93
 
-xtreg Smhealth i.ageC ///
+* Person means of the role counts and their squares
+bysort ID: egen orolesM  = mean(oroles)
+bysort ID: egen oroles2M = mean(oroles^2)
+bysort ID: egen vrolesM  = mean(vroles)
+bysort ID: egen vroles2M = mean(vroles^2)
+
+xtreg MHscale i.ageC ///
     c.oroles##c.oroles c.vroles##c.vroles ///
     c.orolesM c.oroles2M c.vrolesM c.vroles2M ///
-    STDrolephys ib3.educ c.hhincome i.wave, re
+    physfunc ib3.educ c.hhincome i.wave, re
 
 margins ageC
-marginsplot, recast(scatter) ylab(40(5)60) ylab(42(2)58) ///
+marginsplot, recast(scatter) ///
     title("[2.6.p] Psychological well-being across ages (binned)", size(medlarge)) ///
     subtitle("Fixed effects model with controls") ///
     xtitle("Age bins in 5 year increments") ytitle("Mental health")
@@ -321,22 +327,21 @@ graph export "fig/cda-02_06_p-indicators.png", replace width(1400)
 <</dd_do>>
 ```
 
-![](fig/cda-02_06_p-indicators.png){width=80% fig-alt="Predicted mental health for 5-year age bins: flat until the 40s, rising through the 60s, and dipping at the oldest ages."}
+![](fig/cda-02_06_p-indicators.png){width=80% fig-alt="Predicted mental health for 5-year age bins: dipping slightly through the 30s, rising through the 60s, and declining slightly at the oldest ages."}
 
 \*Note: Two clear "turns" in the slope so need to add both *age^2^* and *age^3^* to model
 
 ```{.stata-run}
 <<dd_do>>
-xtreg Smhealth c.age##c.age##c.age ///
+xtreg MHscale c.age##c.age##c.age ///
     c.oroles##c.oroles c.vroles##c.vroles ///
     c.orolesM c.oroles2M c.vrolesM c.vroles2M ///
-    STDrolephys ib3.educ c.hhincome i.wave, re
+    physfunc ib3.educ c.hhincome i.wave, re
 est store age3_mod
 
 margins, at(age=(18(2)90))
 marginsplot, recastci(rline) ciopt(col(eltblue*.6) lpat(dash)) ///
-    plotop(msym(none) lcol(eltblue)) ///
-    ylab(42(2)58) xlab(20(10)90) ///
+    plotop(msym(none) lcol(eltblue)) xlab(20(10)90) ///
     title("[2.6.q] Psychological well-being across ages (cubic specification)", size(medlarge)) ///
     subtitle("Fixed effects model with controls") ///
     xtitle("Age at current wave") ytitle("Mental health")
@@ -356,10 +361,10 @@ global agecats = "`r(levels)'"
 preserve
 rename age ageold
 rename ageC age
-qui xtreg Smhealth i.age ///
+qui xtreg MHscale i.age ///
     c.oroles##c.oroles c.vroles##c.vroles ///
     c.orolesM c.oroles2M c.vrolesM c.vroles2M ///
-    STDrolephys ib3.educ c.hhincome i.wave, re
+    physfunc ib3.educ c.hhincome i.wave, re
 qui margins, at(age=($agecats)) saving(ageC_prs, replace)
 restore
 
@@ -368,8 +373,8 @@ qui margins, at(age=($agecats)) saving(age3_prs, replace)
 
 combomarginsplot ageC_prs age3_prs, ///
     labels("Categorical Model" "Cubic Model") ///
-    title("[2.6.r] Comparison of Predictions for Various Functional Forms of Age", size(med)) ///
-    ytitle("Mental Health Scale") legend(pos(6) row(1)) ylab(42(2)58)
+    title("[2.6.r] Comparison of Predictions for Various Functional Forms of Age", size(medium)) ///
+    ytitle("Mental Health Scale") legend(pos(6) row(1))
 <</dd_do>>
 <<dd_do: quietly>>
 graph export "fig/cda-02_06_r-indicators.png", replace width(1400)

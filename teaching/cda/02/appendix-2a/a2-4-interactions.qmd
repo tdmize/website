@@ -1,0 +1,119 @@
+---
+title: "A2.4 Interaction effect with factor syntax"
+---
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/cda_gss", clear
+(cda_gss.dta |  GSS 1972-2021 CDA - Categorical Data Analysis | date created 202
+> 3)
+
+. 
+. regress occprest c.age##i.woman i.college
+
+      Source |       SS           df       MS      Number of obs   =    58,304
+-------------+----------------------------------   F(4, 58299)     =   4703.09
+       Model |  2777942.63         4  694485.657   Prob > F        =    0.0000
+    Residual |  8608766.27    58,299  147.665762   R-squared       =    0.2440
+-------------+----------------------------------   Adj R-squared   =    0.2439
+       Total |  11386708.9    58,303  195.302281   Root MSE        =    12.152
+
+-------------------------------------------------------------------------------
+     occprest | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+          age |      0.072      0.004   16.316   0.000        0.063       0.081
+              |
+        woman |
+       Women  |      2.365      0.290    8.146   0.000        1.796       2.934
+              |
+  woman#c.age |
+       Women  |     -0.055      0.006   -9.343   0.000       -0.067      -0.044
+              |
+      college |
+College De..  |     16.392      0.121  135.948   0.000       16.156      16.628
+        _cons |     35.226      0.216  162.811   0.000       34.802      35.650
+-------------------------------------------------------------------------------
+
+```
+
+\*Stata makes it easy to include product terms for interaction effects. Make sure you have specified **c.** or **i.** on the variables of interest and then add **\##** between them. Stata will include each constituent variable's main effect and the product term
+
+### Plotting interaction effects
+
+We can easily plot the effects from an interactive model with **margins** and **marginsplot.** No special code is needed; the code is the same with or without interaction effects---however, you must have used the **i.** and **c.** prefixes on the regress command
+
+```stata
+qui margins, at(age=(20(5)80) woman=(0 1))
+
+marginsplot, ///
+    recastci(rline) ciopts(lpat(dash) col(gs14)) ylab(38(2)46) ///
+    title("Predicted Occupational Prestige Based on Person's Age and Gender") ///
+    subtitle("Interaction Term: Gender X Age") ///
+    ytitle("Occupational Prestige")
+```
+
+### Interpreting interaction effects using marginal effects
+
+One thing the coefficients cannot tell us is whether the effect of age is significant for both men and women. That is, the significance test on the product term coefficient indicates that the effects differ---but are either significant? In addition, while we can add multiple coefficients together to get what the effects are for each group (i.e. effect of age for men; effect of age for women)---this is only the case when the effects are linear. Marginal effects can tell us whether each effect is significant and what the effect is regardless as to whether the effect is linear or nonlinear
+
+```{.stata-run}
+. *Calculate AMEs of age for men and women
+. mchange age, at(woman=0)
+
+regress: Changes in xb | Number of obs = 58304
+
+Expression: Linear prediction, predict()
+
+             |    Change    p-value 
+-------------+---------------------
+age          |                     
+          +1 |     0.072      0.000 
+         +SD |     1.235      0.000 
+    Marginal |     0.072      0.000 
+
+Average prediction
+
+   42.247 
+
+Base values of regressors
+
+             |     woman 
+-------------+----------
+          at |         0 
+
+
+```
+
+::: {.callout-note icon="false" appearance="simple"}
+**margins** commands (and those based on it like **mtable** and **mchange**) allow you to specify values of your IVs to make predictions at (and/or calculate marginal effects at). Add an **at( )** statement where you specify desired IV levels in the parenthetical
+:::
+
+```{.stata-run}
+. mchange age, at(woman=1)
+
+regress: Changes in xb | Number of obs = 58304
+
+Expression: Linear prediction, predict()
+
+             |    Change    p-value 
+-------------+---------------------
+age          |                     
+          +1 |     0.017      0.000 
+         +SD |     0.287      0.000 
+    Marginal |     0.017      0.000 
+
+Average prediction
+
+   42.063 
+
+Base values of regressors
+
+             |     woman 
+-------------+----------
+          at |         1 
+
+
+```
+
+> *On average, for men an additional year of age is associated with a 0.072 point increase in occupational prestige*
+>
+> *On average, for women an additional year of age is associated with a 0.017 point increase in occupational prestige*

@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Appendix 2B: Logged DV Regression Models – Trenton D. Mize</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../teaching/cda/02/appendix-2c-splines.html" rel="next">
+<link href="../../../teaching/cda/02/appendix-2a/a2-10-transforming.html" rel="prev">
+<script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-6af6771539d6c5b03cf43084788a8ce4.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">Trenton D. Mize</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../cv.html"> 
+<span class="menu-text">CV</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../research.html"> 
+<span class="menu-text">Research</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../software.html"> 
+<span class="menu-text">Software</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="../../../teaching.html" aria-current="page"> 
+<span class="menu-text">Teaching</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../resources.html"> 
+<span class="menu-text">Links</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../help.html"> 
+<span class="menu-text">Asking for Help</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/tdmize"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../teaching/cda/index.html">Categorical Data Analysis (Soc 681)</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/02/index.html">02 Nonlinearities &amp; Categorical IVs</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/02/appendix-2b-logged-dv.html">Appendix 2B: Logged DV Regression Models</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Teaching</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Categorical Data Analysis (Soc 681)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/02/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">02 Nonlinearities &amp; Categorical IVs</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-1-marginal-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.1 Interpretation with Marginal Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-2-nonlinear-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.2 Marginal Effects with Nonlinearities</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-3-linear-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.3 Linear Interaction Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-4-nonlinear-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.4 Nonlinear Interaction Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-5-distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.5 Examining Distributions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-6-assessing-nonlinearities.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.6 Assessing and Modeling Complex Nonlinearities for Independent Variables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-7-categorical-ivs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.7 Categorical Independent Variables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-8-comparing-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.8 Comparing Effects Across IVs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/02/appendix-2a/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 2A: Stata Code and Tips</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-1-factor-syntax.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.1 Stata factor syntax</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-2-polynomials.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.2 Polynomial IVs with factor syntax</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-3-calculating-mes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.3 Calculating marginal effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-4-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.4 Interaction effect with factor syntax</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-5-nonlinear-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.5 Nonlinear interaction effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-6-distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.6 Tools for examining distributions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-7-assessing-nonlinearities.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.7 Assessing nonlinearities</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-8-splines.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.8 Splines</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-9-loglinear.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.9 Loglinear regression models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-10-transforming.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.10 Transforming variables</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2b-logged-dv.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Appendix 2B: Logged DV Regression Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2c-splines.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 2C: Splines</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cdash.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Categorical Data Analysis (Statistical Horizons)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cdaws.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Categorical Data Analysis Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/workflow.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Management / Workflow Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/dataviz.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Visualization</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/dvs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Visualization Using Stata and LLMs</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/dmv.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data &amp; Model Visualization Workshop</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/dmv/r-output.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">R Output</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/em.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Experimental Methods: Design &amp; Analysis</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/int.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Interaction Effects Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/irt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Item Response Theory</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/lvm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Latent Variable Modeling</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/mcapsi.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Longitudinal Data Analysis</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/miss.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Missing Data Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/spgrad.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Social Psychology (Graduate)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/spug.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Social Psychology (Undergrad)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Stata Programming Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/surveys.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Survey Design Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/sew.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Survey Experiments Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/twm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Teaching Workshops &amp; Methods</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#logged-dv-regression-models" id="toc-logged-dv-regression-models" class="nav-link active" data-scroll-target="#logged-dv-regression-models">2.9 Logged DV regression models</a></li>
+  <li><a href="#logged-dv-regression-models-1" id="toc-logged-dv-regression-models-1" class="nav-link" data-scroll-target="#logged-dv-regression-models-1">Logged DV regression models</a></li>
+  <li><a href="#interpreting-logged-dv-regression-models" id="toc-interpreting-logged-dv-regression-models" class="nav-link" data-scroll-target="#interpreting-logged-dv-regression-models">Interpreting logged DV regression models</a>
+  <ul class="collapse">
+  <li><a href="#factor-change-in-y-interpretations" id="toc-factor-change-in-y-interpretations" class="nav-link" data-scroll-target="#factor-change-in-y-interpretations">Factor change in y interpretations</a></li>
+  <li><a href="#interpreting-logged-dv-regression-models-with-factor-changes" id="toc-interpreting-logged-dv-regression-models-with-factor-changes" class="nav-link" data-scroll-target="#interpreting-logged-dv-regression-models-with-factor-changes">Interpreting logged DV regression models with factor changes</a></li>
+  <li><a href="#factor-change-interpretations" id="toc-factor-change-interpretations" class="nav-link" data-scroll-target="#factor-change-interpretations">Factor change interpretations</a></li>
+  <li><a href="#percentage-change-interpretations" id="toc-percentage-change-interpretations" class="nav-link" data-scroll-target="#percentage-change-interpretations">Percentage change interpretations</a></li>
+  <li><a href="#logged-dv-regression-model-ex-sexual-orientation-and-wages" id="toc-logged-dv-regression-model-ex-sexual-orientation-and-wages" class="nav-link" data-scroll-target="#logged-dv-regression-model-ex-sexual-orientation-and-wages">Logged DV regression model ex: sexual orientation and wages</a></li>
+  </ul></li>
+  <li><a href="#interpretation-in-the-natural-metric-of-the-dv" id="toc-interpretation-in-the-natural-metric-of-the-dv" class="nav-link" data-scroll-target="#interpretation-in-the-natural-metric-of-the-dv">Interpretation in the natural metric of the DV</a>
+  <ul class="collapse">
+  <li><a href="#converting-predictions-to-natural-metric-of-dv" id="toc-converting-predictions-to-natural-metric-of-dv" class="nav-link" data-scroll-target="#converting-predictions-to-natural-metric-of-dv">Converting predictions to natural metric of DV</a></li>
+  <li><a href="#logged-dv-regression-modelsmarginal-effects" id="toc-logged-dv-regression-modelsmarginal-effects" class="nav-link" data-scroll-target="#logged-dv-regression-modelsmarginal-effects">Logged DV regression models—marginal effects</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../teaching/cda/index.html">Categorical Data Analysis (Soc 681)</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/02/index.html">02 Nonlinearities &amp; Categorical IVs</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/02/appendix-2b-logged-dv.html">Appendix 2B: Logged DV Regression Models</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Appendix 2B: Logged DV Regression Models</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="logged-dv-regression-models" class="level2">
+<h2 class="anchored" data-anchor-id="logged-dv-regression-models">2.9 Logged DV regression models</h2>
+<ul>
+<li>A linear regression model can be used in which the dependent variable has been logged and then a linear regression model has been fit
+<ul>
+<li>E.g., Often used when income or wages is the DV due to a strong positive skew</li>
+</ul></li>
+<li>Logged DV models introduce complications for interpretation for:
+<ul>
+<li>Coefficients</li>
+<li>Predictions</li>
+<li>Marginal effects</li>
+</ul></li>
+<li>Many of these complications mirror those in binary regression models (e.g., logit and probit)</li>
+<li>Linear regression models with logged DVs are inherently nonlinear via a transformation of the dependent variable</li>
+<li>The DV is the <strong>natural log</strong> of the original variable; e.g.&nbsp;<em>ln(wages)</em> is a common DV in labor market analyses
+<ul>
+<li>Need a refresher on logs and natural logs? The <a href="https://en.wikipedia.org/wiki/Natural_logarithm">Wikipedia article</a> is quite good. The natural logarithm has the mathematical constant <em>e</em> (≈2.718) as its base</li>
+</ul></li>
+</ul>
+<p><span class="math display">\[\log_{e}x = \ln(x) \qquad c = \ln(x) \qquad e^{c} = x \qquad \ln(e) = 1 \qquad e^{1} = e\]</span></p>
+<ul>
+<li>Why log your DV? Positively skewed DVs are a common motivation*
+<ul>
+<li>Recall that regression models expectations (means) and conditional expectations. Is the mean a good summary of a positively skewed distribution? (See graph below)</li>
+</ul></li>
+</ul>
+<p>*Poisson models are a possible alternative (<a href="https://blog.stata.com/2011/08/22/use-poisson-rather-than-regress-tell-a-friend/">Gould 2011</a>). More on these in the Count section of the class</p>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>usetdm smi_gss, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Loading dataset...
+(SMI | Mize 2016 ASR | GSS Data on Sexual Behavior and Wages)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">sum</span> wages logwages</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+       wages |     13,064    18.81297    38.21546          1     1773.6
+    logwages |     13,064    2.541626    .8696813          0   7.480767</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">hist</span> wages <span class="kw">if</span> wages &lt;= 150, <span class="kw">percent</span> <span class="bn">title</span>(<span class="st">"[2.8.a] Distribution of Wages"</span>) <span class="co">///</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    fc(<span class="kw">none</span>) <span class="bn">xline</span>(18.81, lcolor(<span class="kw">red</span>) lstyle(solid) lwidth(thick)) <span class="co">///</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">normal</span> <span class="bn">text</span>(10 40 <span class="st">"mean = $18.81"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(bin=41, start=1, width=3.5150627)</code></pre>
+</div>
+<p><img src="fig/cda-02_08_a-loglinear-1.png" class="img-fluid" style="width:80.0%" alt="Histogram of hourly wages with a normal curve and a red line at the mean of 18.81 dollars; the distribution is strongly right-skewed."></p>
+<p>Is the mean a good summary of this distribution?</p>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">hist</span> logwages, <span class="kw">percent</span> <span class="bn">title</span>(<span class="st">"[2.8.b] Distribution of Logged Wages"</span>) <span class="co">///</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    fc(<span class="kw">none</span>) <span class="bn">xline</span>(2.54, lcolor(<span class="kw">red</span>) lstyle(solid) lwidth(thick)) <span class="co">///</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">normal</span> <span class="bn">text</span>(9 4 <span class="st">"mean = 2.54"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(bin=41, start=0, width=.18245773)</code></pre>
+</div>
+<p><img src="fig/cda-02_08_b-loglinear-2.png" class="img-fluid" style="width:80.0%" alt="Histogram of logged hourly wages with a normal curve and a red line at the mean of 2.54; close to symmetric."></p>
+<p>Logging positively skewed variables helps normalize the distribution/pull in outliers</p>
+</section>
+<section id="logged-dv-regression-models-1" class="level2">
+<h2 class="anchored" data-anchor-id="logged-dv-regression-models-1">Logged DV regression models</h2>
+<ul>
+<li>First, a little bit more math review:</li>
+</ul>
+<p><span class="math display">\[\exp(a + b) = \exp(a)*\exp(b)\]</span></p>
+<p><span class="math display">\[\log\left\lbrack \exp(a + b) \right\rbrack = a + b\]</span></p>
+<ul>
+<li>An exponential model is <strong><em>multiplicative</em></strong> on the y metric</li>
+</ul>
+<p><span class="math display">\[y = \exp\left( \beta_{0} + \beta_{k}x_{k} + \beta_{2}x_{2} + \varepsilon \right)\]</span></p>
+<p><span class="math display">\[= \exp(\beta_{0})\exp(\beta_{k}x_{k})\exp(\beta_{2}x_{2})\exp(\varepsilon)\]</span></p>
+<ul>
+<li>To get back to a model that looks like linear regression, we can take the log of the entire model making the model <strong><em>loglinear</em></strong> [<em>y</em> becomes ln(<em>y</em>)]
+<ul>
+<li>The model becomes <strong><em>additive</em></strong>—but only in the ln(<em>y</em>) metric</li>
+</ul></li>
+</ul>
+</section>
+<section id="interpreting-logged-dv-regression-models" class="level2">
+<h2 class="anchored" data-anchor-id="interpreting-logged-dv-regression-models">Interpreting logged DV regression models</h2>
+<ul>
+<li>The model after taking the natural log:</li>
+</ul>
+<p><span class="math display">\[\ln(y) = \ln\left\lbrack \exp\left( \beta_{0} + \beta_{k}x_{k} + \beta_{2}x_{2} + \varepsilon \right) \right\rbrack\]</span></p>
+<p><span class="math display">\[= \beta_{0} + \beta_{k}x_{k} + \beta_{2}x_{2} + \varepsilon\]</span></p>
+<ul>
+<li><span class="math inline">\(\beta_{k}\)</span> is interpreted as:
+<ul>
+<li>For a unit increase in <em>x<sub>k</sub></em>, <strong><em>the log of y</em></strong> is expected to increase by β<sub>k</sub> units, holding other variables constant</li>
+<li>This is an <strong>additive</strong> effect (i.e.&nbsp;each one unit increase in <em>x<sub>k</sub></em> leads to an additional β<sub>k</sub> units)</li>
+</ul></li>
+<li><em>However, a change in the <strong>log of y</strong></em> is often substantively unclear
+<ul>
+<li>E.g. Do you want to interpret effects in terms of the <em>log of wages</em>?</li>
+</ul></li>
+<li>We can instead interpret <strong>factor changes</strong>: multiplicative effects in the <em>y</em> metric (defined below)</li>
+</ul>
+<section id="factor-change-in-y-interpretations" class="level3">
+<h3 class="anchored" data-anchor-id="factor-change-in-y-interpretations">Factor change in y interpretations</h3>
+<ul>
+<li><strong>Start value</strong>: Let y(<em>x<sub>k</sub></em>, <span class="math inline">\(\mathbf{x}_{- k}\)</span>) be the value of <em>y</em> focusing on <em>x<sub>k</sub></em>:</li>
+</ul>
+<p><span class="math display">\[y\left( x_{k},\mathbf{x}_{- k} \right) = \exp(\beta_{0} + \beta_{k}x_{k} + \beta_{2}x_{2} + \varepsilon)\]</span></p>
+<p><span class="math display">\[= \exp(\beta_{0})\exp(\beta_{k}x_{k})\exp(\beta_{2}x_{2})\exp(\varepsilon)\]</span></p>
+<ul>
+<li><strong>End value</strong>: y(<em>x<sub>k</sub></em>+1, <span class="math inline">\(\mathbf{x}_{- k}\)</span>) is the value of <em>y</em> after increasing <em>x<sub>k</sub></em> by 1:</li>
+</ul>
+<p><span class="math display">\[y\left( x_{k} + 1,\mathbf{x}_{- k} \right) = \exp(\beta_{0})\exp\left\lbrack \beta_{k}\left( x_{k} + 1 \right) \right\rbrack\exp(\beta_{2}x_{2})\exp(\varepsilon)\]</span></p>
+<p><span class="math display">\[= \exp(\beta_{0})\exp(\beta_{k}x_{k})\exp(\beta_{k})\exp(\beta_{2}x_{2})\exp(\varepsilon)\]</span></p>
+<ul>
+<li>The ratio y(<em>x<sub>k</sub></em>+1, <span class="math inline">\(\mathbf{x}_{- k}\)</span>)/y(<em>x<sub>k</sub></em>, <span class="math inline">\(\mathbf{x}_{- k}\)</span>) is the <strong><em>factor change</em></strong> in <em>y</em> for a unit increase in <em>x<sub>k</sub></em>; it is a <strong>multiplicative</strong> effect with an increase in <em>x<sub>k</sub></em> leading to <em>y</em> changing by a factor of <span class="math inline">\(\exp(\beta_{k})\)</span>:</li>
+</ul>
+<p><span class="math display">\[\frac{y_{end}}{y_{start}} = \frac{y(x_{k} + 1,\ \mathbf{x}_{- k})}{y(x_{k},\ \mathbf{x}_{- k})}\]</span></p>
+<p><span class="math display">\[= \frac{\exp\left( \beta_{0} \right)\exp\left( \beta_{k}x_{k} \right)\exp\left( \beta_{k} \right)\exp\left( \beta_{2}x_{2} \right)\exp(\varepsilon)}{\exp\left( \beta_{0} \right)\exp\left( \beta_{k}x_{k} \right)\exp\left( \beta_{2}x_{2} \right)\exp(\varepsilon)} = \exp(\beta_{k})\]</span></p>
+</section>
+<section id="interpreting-logged-dv-regression-models-with-factor-changes" class="level3">
+<h3 class="anchored" data-anchor-id="interpreting-logged-dv-regression-models-with-factor-changes">Interpreting logged DV regression models with factor changes</h3>
+<section id="what-is-a-factor-change-multiplicative-effect" class="level4">
+<h4 class="anchored" data-anchor-id="what-is-a-factor-change-multiplicative-effect">What is a “factor change?” Multiplicative effect:</h4>
+<p><em>Need to know the starting value. E.g.</em> <em>y</em> = 10</p>
+<ul>
+<li><strong>Factor change of 2</strong>: <em>y</em> is doubled or twice as large: 2*10 = 20</li>
+<li><strong>Factor change of 0.5</strong>: <em>y</em> is reduced in half: 0.5*10 = 5</li>
+</ul>
+</section>
+<section id="factor-change-ranges" class="level4">
+<h4 class="anchored" data-anchor-id="factor-change-ranges">Factor change ranges</h4>
+<p>Factor changes larger than 1 indicate a positive effect; there is no upper ceiling on how large the factor change can be</p>
+<p>Factor changes between 0 and 1 indicate a negative effect; there is a floor at 0</p>
+<ul>
+<li>If <em>y</em> is 2 times larger: <em>y</em> doubles (i.e.&nbsp;*2)</li>
+<li>If <em>y</em> is 1.5 times larger: <em>y</em> increases by one and a half times (i.e.&nbsp;*1.5)</li>
+<li>If <em>y</em> is 0.5 times smaller: <em>y</em> is reduced by half (i.e.&nbsp;*0.5)</li>
+<li>If <em>y</em> is 0 times smaller: <em>y</em> is reduced to 0 regardless of its start value (i.e.&nbsp;* 0)</li>
+</ul>
+</section>
+</section>
+<section id="factor-change-interpretations" class="level3">
+<h3 class="anchored" data-anchor-id="factor-change-interpretations">Factor change interpretations</h3>
+<ul>
+<li><strong>Factor change interpretation</strong>: for a unit increase in <em>x<sub>k</sub></em>, <em>y</em> is expected to be exp(β<sub>k</sub>) <strong>times</strong> larger (or smaller), holding other variables constant
+<ul>
+<li>The factor change is in the <em>y</em> metric [not <em>ln(y)</em>] but is <strong>multiplicative</strong>; not additive</li>
+<li>For <strong>multiplicative</strong> effects: Take the starting value and multiply it by exp(β<sub>k</sub>) to determine the ending value</li>
+</ul></li>
+<li>For example, consider a model for the unconditional gender wage gap in 2018:</li>
+</ul>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="st">"https://tdmize.github.io/data/data/cda_gss"</span>, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(cda_gss.dta |  GSS 1972-2021 CDA - Categorical Data Analysis | date created 202
+&gt; 3)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">gen</span> logwages = <span class="fu">ln</span>(wages)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(35,686 missing values generated)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">reg</span> logwages i.woman <span class="kw">if</span> <span class="fu">year</span> == 2018</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>      Source |       SS           df       MS      Number of obs   =     1,176
+-------------+----------------------------------   F(1, 1174)      =     23.13
+       Model |  23.8153521         1  23.8153521   Prob &gt; F        =    0.0000
+    Residual |  1208.56142     1,174  1.02943903   R-squared       =    0.0193
+-------------+----------------------------------   Adj R-squared   =    0.0185
+       Total |  1232.37677     1,175   1.0488313   Root MSE        =    1.0146
+
+------------------------------------------------------------------------------
+    logwages | Coefficient  Std. err.      t    P&gt;|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+       woman |
+      Women  |     -0.285      0.059   -4.810   0.000       -0.401      -0.169
+       _cons |      2.646      0.042   62.312   0.000        2.562       2.729
+------------------------------------------------------------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">di</span> <span class="fu">exp</span>(-0.285)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>.75201425</code></pre>
+</div>
+<ul>
+<li>The factor change (<span class="math inline">\(\exp\left( \beta_{woman} \right) = 0.75\)</span>) can be interpreted as either*:</li>
+</ul>
+<blockquote class="blockquote">
+<p><em>Women’s hourly wages are lower than men’s by a factor of 0.75</em></p>
+<p><em>Women earn 0.75 times less than men</em></p>
+</blockquote>
+<ul>
+<li>Is 0.75 a big effect? Small effect? Medium-sized effect? Effects in a multiplicative metric make contextualizing effect sizes difficult
+<ul>
+<li>The size of the effect depends on where you start!</li>
+<li>In this case, the starting value for <em>x<sub>woman</sub></em> is 0 which is men (i.e.&nbsp;they are the reference group)</li>
+</ul></li>
+<li>For example:
+<ul>
+<li>If men’s hourly wages are $10:
+<ul>
+<li>Calculate women’s hourly wages as: $10 * 0.75 = $7.50</li>
+</ul></li>
+<li>If men’s hourly wages are $30:
+<ul>
+<li>Calculate women’s hourly wages as: $30 * 0.75 = $22.50</li>
+</ul></li>
+</ul></li>
+</ul>
+<p><strong>*NOTE</strong> my use of “by a factor of” or “times” in the interpretations. These are <strong><em>necessary</em></strong> to indicate the effect is multiplicative; not additive</p>
+</section>
+<section id="percentage-change-interpretations" class="level3">
+<h3 class="anchored" data-anchor-id="percentage-change-interpretations">Percentage change interpretations</h3>
+<ul>
+<li>A complementary interpretation is to translate the factor change exp(β<sub>k</sub>) to a percentage change:</li>
+</ul>
+<p><span class="math display">\[100\left\lbrack \frac{y\left( x_{k} + 1,\ \mathbf{x} \right) - y\left( x_{k},\ \mathbf{x} \right)}{y\left( x_{k},\ \mathbf{x} \right)} \right\rbrack = 100\left\lbrack \exp\left( \beta_{k} \right) - 1 \right\rbrack\]</span></p>
+<ul>
+<li>E.g. If you make $10/hour and get a raise to $11/hour, a 10% raise:</li>
+</ul>
+<p><span class="math display">\[100\ \frac{\$11 - \$10}{\$10} = 100\left\lbrack \frac{\$11}{\$10} - \frac{\$10}{\$10} \right\rbrack = 100\left\lbrack \frac{\$1}{\$10} \right\rbrack = \frac{100}{\$10} = 10\%\]</span></p>
+<ul>
+<li>Factor and percentage changes can be used interchangeably; they provide the same information. Pick your favorite and be consistent in your interpretations:
+<ul>
+<li>For a unit increase in <em>x<sub>k</sub></em>, <em>y</em> is expected to change by 100[exp(β<sub>1</sub>)-1] percent, holding other variables constant</li>
+<li>For a unit increase in <em>x<sub>k</sub></em>, y is expected to be exp(β<sub>k</sub>) times larger (or smaller), holding other variables constant</li>
+</ul></li>
+</ul>
+</section>
+<section id="logged-dv-regression-model-ex-sexual-orientation-and-wages" class="level3">
+<h3 class="anchored" data-anchor-id="logged-dv-regression-model-ex-sexual-orientation-and-wages">Logged DV regression model ex: sexual orientation and wages</h3>
+<p>Example is from <a href="https://scholar.google.com/scholar?hl=en&amp;as_sdt=0%2C15&amp;q=trenton+mize&amp;btnG=&amp;oq=tren">Mize (2016) <em>ASR</em></a>*</p>
+<blockquote class="blockquote">
+<p><strong><em>Analytic Strategy</em></strong></p>
+<p><em>For all analyses, I use the log of wages as the dependent variable to help normalize the distribution and minimize the influence of outliers. All models are linear regression models; I report factor change coefficients in the text and tables that are the exponentiated regression coefficients. The omitted focal independent variable category for all models is heterosexual; factor change coefficients less than one for bisexual or gay/lesbian individuals therefore represent lower earnings than those of heterosexual individuals.</em></p>
+<p><em>… Any remaining unexplained portion of the wage gap is suggestive of discrimination—however, it is impossible to provide a causal test of discrimination without an experimental design. Therefore, unobserved factors outside of those included in the model could still account for any unexplained amount of the wage gap.</em></p>
+</blockquote>
+<p>*NOTE: Minor rewrites here for clarity of example out of context of the full article</p>
+<p><img src="images/mize-2016-asr-table2.png" class="img-fluid" style="width:80.0%" alt="Excerpt of Table 2 from Mize (2016): OLS regressions for log hourly wages by sexual orientation for women in the GSS."></p>
+<div class="callout callout-style-simple callout-note no-icon">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><strong>Side note</strong>: I recommend titling a table “linear regression” rather than “OLS regression” as OLS is the estimator, not the model type.</p>
+</div>
+</div>
+</div>
+<blockquote class="blockquote">
+<p><em>Table 2 shows results of regression models of log wages for women… bisexual women earn 11 percent less than heterosexual women at baseline (e<sup>b</sup> = .89, p &lt; .05). After accounting for all other factors, bisexual women still earn 7 percent less than comparable heterosexual women, providing support for Hypothesis 6 (e<sup>b</sup> = .93, p &lt; .10)… Lesbian women earn more than heterosexual women at baseline (e<sup>b</sup> = 1.16, p &lt; .05). This difference remains significant and substantively similar in size after accounting for all factors (e<sup>b</sup> = 1.15, p &lt; .01).</em></p>
+</blockquote>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>* Model from Table 2 <span class="kw">of</span> Mize (2016) ASR</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>usetdm smi_gss, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Loading dataset...
+(SMI | Mize 2016 ASR | GSS Data on Sexual Behavior and Wages)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">svy</span>: <span class="kw">reg</span> logwages i.partners75 age i.educcat i.race <span class="fu">year</span> <span class="co">///</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    numchild married i.region4 i.metro parttime i.isco88cat <span class="co">///</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> male==0, <span class="kw">eform</span>(Factor)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(running regress on estimation sample)
+
+Survey: Linear regression
+
+Number of strata =   1                            Number of obs   =      6,550
+Number of PSUs   = 336                            Population size = 6,567.8471
+                                                  Design df       =        335
+                                                  F(26, 310)      =      67.90
+                                                  Prob &gt; F        =     0.0000
+                                                  R-squared       =     0.2560
+
+-------------------------------------------------------------------------------
+              |             Linearized
+     logwages |     Factor   std. err.      t    P&gt;|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+   partners75 |
+    Bisexual  |      0.931      0.040   -1.658   0.098        0.855       1.013
+         Gay  |      1.153      0.062    2.652   0.008        1.037       1.282
+              |
+          age |      1.016      0.001   15.741   0.000        1.014       1.018
+              |
+      educcat |
+ high school  |      1.389      0.070    6.502   0.000        1.258       1.534
+junior col..  |      1.730      0.094   10.032   0.000        1.554       1.926
+    bachelor  |      1.899      0.109   11.201   0.000        1.697       2.126
+    graduate  |      2.445      0.153   14.283   0.000        2.162       2.765
+              |
+         race |
+       black  |      1.034      0.032    1.077   0.282        0.973       1.100
+       other  |      0.999      0.054   -0.023   0.982        0.897       1.112
+              |
+         year |      0.996      0.002   -2.535   0.012        0.993       0.999
+     numchild |      0.965      0.008   -4.316   0.000        0.950       0.981
+      married |      1.087      0.024    3.756   0.000        1.040       1.135
+              |
+      region4 |
+     Midwest  |      0.889      0.039   -2.666   0.008        0.815       0.970
+       South  |      0.856      0.038   -3.540   0.000        0.785       0.933
+        West  |      0.979      0.047   -0.439   0.661        0.891       1.076
+              |
+      1.metro |      1.050      0.033    1.552   0.122        0.987       1.118
+     parttime |      0.842      0.024   -6.000   0.000        0.795       0.891
+              |
+    isco88cat |
+lo control..  |      0.844      0.025   -5.633   0.000        0.795       0.895
+routine no..  |      0.659      0.023  -11.957   0.000        0.616       0.706
+sempl with..  |      0.717      0.056   -4.252   0.000        0.614       0.836
+sempl with..  |      0.557      0.042   -7.763   0.000        0.480       0.646
+manual sup..  |      0.916      0.083   -0.963   0.336        0.767       1.095
+skilled ma..  |      0.742      0.042   -5.290   0.000        0.665       0.829
+semi-unski..  |      0.611      0.025  -12.130   0.000        0.564       0.662
+  farm labor  |      0.572      0.078   -4.071   0.000        0.437       0.749
+selfempl f..  |      0.645      0.216   -1.310   0.191        0.334       1.246
+              |
+        _cons |  25685.979  86067.823    3.030   0.003       35.251    1.87e+07
+-------------------------------------------------------------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="fu">at</span>(age=(20(5)80))</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>marginsplot, recastci(rline) ciopts(lpat(<span class="kw">dash</span>) col(gs14)) <span class="co">///</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[2.8.c] Predicted Log Wages by Age (Women Workers Only)"</span>) <span class="co">///</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="bn">ytitle</span>(<span class="st">"Log Wages"</span>) ylab(1(0.5)3.5)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Variables that uniquely identify margins: age</code></pre>
+</div>
+<p><img src="fig/cda-02_08_c-loglinear-3.png" class="img-fluid" style="width:80.0%" alt="Predicted log wages by age for women: a straight rising line."></p>
+<p>The effect on the <em>log of wages</em> is linear (but how would you interpret log wages?)</p>
+</section>
+</section>
+<section id="interpretation-in-the-natural-metric-of-the-dv" class="level2">
+<h2 class="anchored" data-anchor-id="interpretation-in-the-natural-metric-of-the-dv">Interpretation in the natural metric of the DV</h2>
+<ul>
+<li>Logged DV regression models can be very useful; however, you almost certainly do not set out to study effects on the <em>log of wages.</em> Interpreting the factor change coefficients is one useful alternative
+<ul>
+<li>Factor change coefficients are in the natural metric of the DV (a plus), but are multiplicative rather than additive (generally, a negative)</li>
+</ul></li>
+<li>Focusing on interpreting predictions and marginal effects (which are calculated from the predictions) hold key benefits here as you can convert the prediction back into the natural metric of the DV (in this example, <em>wages</em>) <strong>and</strong> MEs are additive effects (just like your trusty linear regression coefficients)</li>
+<li>Recall the general formula for a marginal effect:</li>
+</ul>
+<p><span class="math display">\[ME = \eta\left( x_{k} = end,\ \mathbf{x}_{- k} = \mathbf{x}^{\mathbf{*}} \right) - \eta\left( x_{k} = start,\ \mathbf{x}_{- k} = \mathbf{x}^{\mathbf{*}} \right)\]</span></p>
+<ul>
+<li>For our linear regression examples earlier, <span class="math inline">\(\eta\)</span> (the prediction) was easy to solve for as it was just the result of solving the regression equation for <span class="math inline">\(\mathbf{x\beta}\)</span>
+<ul>
+<li>This is because our linear regression model coefficients were already in the natural metric of the DV (e.g.&nbsp;occupational prestige)</li>
+</ul></li>
+</ul>
+<section id="converting-predictions-to-natural-metric-of-dv" class="level3">
+<h3 class="anchored" data-anchor-id="converting-predictions-to-natural-metric-of-dv">Converting predictions to natural metric of DV</h3>
+<ul>
+<li>For logged DV regression models, fairly straightforward to transform the <span class="math inline">\(\mathbf{x\beta}\)</span> prediction (which is in <span class="math inline">\(ln(y)\)</span> metric) back to the natural <em>y</em> metric by exponentiating it*. E.g.</li>
+</ul>
+<p><span class="math display">\[\widehat{\ln(wages)} = \mathbf{x\beta}\]</span></p>
+<p><span class="math display">\[\eta = \widehat{wages} = \exp(\mathbf{x\beta})\]</span></p>
+<ul>
+<li>Note the formula for marginal effects are identical in logged DV regression models as they are in linear models (i.e., the <a href="../../../teaching/cda/02/2-1-marginal-effects.html#marginal-effects-defined">formulas shown earlier</a> in these notes are equally applicable in both types of models)
+<ul>
+<li>The only difference is that the formula for <span class="math inline">\(\eta\)</span> has changed</li>
+<li>I.e. We are still interpreting effects in terms of differences in predictions; the only thing that has changed is how we get to the prediction (<span class="math inline">\(\eta\)</span>) of interest</li>
+</ul></li>
+</ul>
+<p>*But <a href="https://www.stata.com/stata-news/news34-2/spotlight/">note some important complications</a> if you had values &lt;1 in the original metric of the variable</p>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="fu">at</span>(age=(20(5)80)) expression(<span class="fu">exp</span>(<span class="kw">predict</span>(<span class="kw">xb</span>)))</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>marginsplot, recastci(rline) ciopts(lpat(<span class="kw">dash</span>) col(gs14)) <span class="co">///</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[2.8.d] Predicted Hourly Wages by Age (Women Workers Only)"</span>) <span class="co">///</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    <span class="bn">ytitle</span>(<span class="st">"Hourly Wages"</span>) ylab(5(5)30)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Variables that uniquely identify margins: age</code></pre>
+</div>
+<p><img src="fig/cda-02_08_d-loglinear-4.png" class="img-fluid" style="width:80.0%" alt="Predicted hourly wages by age for women, curving upward."></p>
+<p>Note the nonlinearities. This is despite no <em>age<sup>2</sup></em> coefficient in the model. The model is inherently nonlinear in the wages metric due to ln(wages) used as the DV</p>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="fu">at</span>(age=(20(5)80) partners75=(1 2 3)) expression(<span class="fu">exp</span>(<span class="kw">predict</span>(<span class="kw">xb</span>)))</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>marginsplot, noci <span class="bn">title</span>(<span class="st">"[2.8.e] Predicted Hourly Wages by Age (Women Workers </span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="st">Only)"</span>) <span class="co">///</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="bn">ytitle</span>(<span class="st">"Hourly Wages"</span>) ylab(5(5)30)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Variables that uniquely identify margins: age partners75</code></pre>
+</div>
+<p><img src="fig/cda-02_08_e-loglinear-5.png" class="img-fluid" style="width:80.0%" alt="Predicted hourly wages by age for heterosexual, bisexual, and lesbian women: three upward curves that spread apart with age."></p>
+<p><strong>*Note</strong> the interaction effect (e.g.&nbsp;size of sexuality gaps vary at different ages) despite no interaction terms in model. Nonlinearities produce interaction effect</p>
+<p><em>What happens when we add age<sup>2</sup> to the model? Even more nonlinearities and interaction effects. Just as in linear regression, in loglinear regression the polynomial allows for the slope of the prediction line to change at some point. Here the effect reverses at higher ages.</em></p>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">svy</span>: <span class="kw">reg</span> logwages i.partners75##c.age##c.age i.educcat i.race <span class="fu">year</span> <span class="co">///</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    numchild married i.region4 i.metro parttime i.isco88cat <span class="co">///</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> male==0, <span class="kw">eform</span>(Factor)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(running regress on estimation sample)
+
+Survey: Linear regression
+
+Number of strata =   1                            Number of obs   =      6,550
+Number of PSUs   = 336                            Population size = 6,567.8471
+                                                  Design df       =        335
+                                                  F(31, 305)      =      61.30
+                                                  Prob &gt; F        =     0.0000
+                                                  R-squared       =     0.2715
+
+-------------------------------------------------------------------------------
+              |             Linearized
+     logwages |     Factor   std. err.      t    P&gt;|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+   partners75 |
+    Bisexual  |      0.644      0.386   -0.734   0.463        0.198       2.094
+         Gay  |      1.388      0.837    0.543   0.587        0.424       4.548
+              |
+          age |      1.073      0.006   12.347   0.000        1.061       1.085
+              |
+   partners75#|
+        c.age |
+    Bisexual  |      1.020      0.032    0.634   0.526        0.960       1.084
+         Gay  |      0.988      0.028   -0.438   0.662        0.934       1.045
+              |
+  c.age#c.age |      0.999      0.000   -9.638   0.000        0.999       1.000
+              |
+   partners75#|
+  c.age#c.age |
+    Bisexual  |      1.000      0.000   -0.678   0.498        0.999       1.000
+         Gay  |      1.000      0.000    0.534   0.594        1.000       1.001
+              |
+      educcat |
+ high school  |      1.350      0.067    6.099   0.000        1.226       1.488
+junior col..  |      1.639      0.088    9.218   0.000        1.475       1.821
+    bachelor  |      1.808      0.102   10.446   0.000        1.617       2.021
+    graduate  |      2.313      0.144   13.496   0.000        2.047       2.614
+              |
+         race |
+       black  |      1.020      0.031    0.639   0.524        0.960       1.083
+       other  |      0.996      0.054   -0.078   0.938        0.896       1.107
+              |
+         year |      0.997      0.002   -1.768   0.078        0.994       1.000
+     numchild |      0.954      0.008   -5.793   0.000        0.939       0.970
+      married |      1.045      0.022    2.047   0.041        1.002       1.089
+              |
+      region4 |
+     Midwest  |      0.896      0.038   -2.574   0.010        0.824       0.974
+       South  |      0.864      0.037   -3.398   0.001        0.794       0.940
+        West  |      0.972      0.045   -0.602   0.548        0.887       1.066
+              |
+      1.metro |      1.057      0.033    1.765   0.078        0.994       1.124
+     parttime |      0.884      0.025   -4.327   0.000        0.836       0.935
+              |
+    isco88cat |
+lo control..  |      0.845      0.025   -5.637   0.000        0.796       0.896
+routine no..  |      0.666      0.023  -11.812   0.000        0.623       0.713
+sempl with..  |      0.724      0.056   -4.142   0.000        0.621       0.844
+sempl with..  |      0.549      0.041   -8.053   0.000        0.475       0.636
+manual sup..  |      0.922      0.080   -0.929   0.354        0.778       1.094
+skilled ma..  |      0.745      0.041   -5.339   0.000        0.668       0.830
+semi-unski..  |      0.617      0.025  -11.920   0.000        0.570       0.668
+  farm labor  |      0.581      0.077   -4.102   0.000        0.448       0.754
+selfempl f..  |      0.644      0.221   -1.281   0.201        0.328       1.266
+              |
+        _cons |    671.048   2236.546    1.953   0.052        0.954    4.72e+05
+-------------------------------------------------------------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> smimod</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="fu">at</span>(age=(20(5)80) partners75=(1 2 3)) expression(<span class="fu">exp</span>(<span class="kw">predict</span>(<span class="kw">xb</span>)))</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>marginsplot, noci <span class="bn">title</span>(<span class="st">"[2.8.f] Predicted Hourly Wages by Age (Women Workers </span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="st">Only)"</span>) <span class="co">///</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>    <span class="bn">ytitle</span>(<span class="st">"Hourly Wages"</span>) ylab(0(5)25)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Variables that uniquely identify margins: age partners75</code></pre>
+</div>
+<p><img src="fig/cda-02_08_f-loglinear-6.png" class="img-fluid" style="width:80.0%" alt="Predicted hourly wages by age for heterosexual, bisexual, and lesbian women: curves that rise, peak in midlife, and fall, at different levels."></p>
+</section>
+<section id="logged-dv-regression-modelsmarginal-effects" class="level3">
+<h3 class="anchored" data-anchor-id="logged-dv-regression-modelsmarginal-effects">Logged DV regression models—marginal effects</h3>
+<ul>
+<li>The coefficients are no longer directly interpretable when we have quadratic and/or interaction terms as we do for the model presented in the plot above</li>
+<li>Marginal effects can still provide an overall summary for the effects of interest—for this example, the effect of sexual identity for women
+<ul>
+<li>Remember to exponentiate the predictions when you calculate the MEs so you are in the wage metric instead of the ln(wage) metric [which will be the default]</li>
+</ul></li>
+</ul>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">restore</span> smimod</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(results smimod are active now)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>mchange partners75, expression(<span class="fu">exp</span>(<span class="kw">predict</span>(<span class="kw">xb</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>svy regress: Changes in Margin | Number of obs = 6550
+
+Expression: , exp(predict(xb))
+
+                          |    Change    p-value 
+--------------------------+---------------------
+partners75                |                     
+ Bisexual vs Heterosexual |    -1.191      0.017 
+      Gay vs Heterosexual |     1.676      0.019 
+          Gay vs Bisexual |     2.867      0.001 
+
+Average prediction
+
+   11.998 </code></pre>
+</div>
+<blockquote class="blockquote">
+<p><em>Bisexual women earn about $1.19 less an hour than heterosexual women</em></p>
+<p><em>On average, lesbian women earn about $1.68 more per hour than heterosexual women and about $2.87 more than bisexual women</em></p>
+</blockquote>
+<ul>
+<li>These interpretations are useful and straightforward summaries of the effect of sexual identity—despite the rather complicated model that produced them
+<ul>
+<li>I would include these <strong>and</strong> the plot above. Probably start with the overall effects (MEs) and then move on to the complications (plot)</li>
+</ul></li>
+</ul>
+
+
+</section>
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/www\.trentonmize\.com");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../../../teaching/cda/02/appendix-2a/a2-10-transforming.html" class="pagination-link" aria-label="A2.10 Transforming variables">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">A2.10 Transforming variables</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../../teaching/cda/02/appendix-2c-splines.html" class="pagination-link" aria-label="Appendix 2C: Splines">
+        <span class="nav-page-text">Appendix 2C: Splines</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Trenton D. Mize, Purdue University</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org">Quarto</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

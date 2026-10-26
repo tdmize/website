@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>2.7 Categorical Independent Variables – Trenton D. Mize</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../teaching/cda/02/2-8-comparing-effects.html" rel="next">
+<link href="../../../teaching/cda/02/2-6-assessing-nonlinearities.html" rel="prev">
+<script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-6af6771539d6c5b03cf43084788a8ce4.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">Trenton D. Mize</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../cv.html"> 
+<span class="menu-text">CV</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../research.html"> 
+<span class="menu-text">Research</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../software.html"> 
+<span class="menu-text">Software</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="../../../teaching.html" aria-current="page"> 
+<span class="menu-text">Teaching</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../resources.html"> 
+<span class="menu-text">Links</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../help.html"> 
+<span class="menu-text">Asking for Help</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/tdmize"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../teaching/cda/index.html">Categorical Data Analysis (Soc 681)</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/02/index.html">02 Nonlinearities &amp; Categorical IVs</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/02/2-7-categorical-ivs.html">2.7 Categorical Independent Variables</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Teaching</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Categorical Data Analysis (Soc 681)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/02/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">02 Nonlinearities &amp; Categorical IVs</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-1-marginal-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.1 Interpretation with Marginal Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-2-nonlinear-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.2 Marginal Effects with Nonlinearities</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-3-linear-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.3 Linear Interaction Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-4-nonlinear-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.4 Nonlinear Interaction Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-5-distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.5 Examining Distributions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-6-assessing-nonlinearities.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.6 Assessing and Modeling Complex Nonlinearities for Independent Variables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-7-categorical-ivs.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">2.7 Categorical Independent Variables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-8-comparing-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.8 Comparing Effects Across IVs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/02/appendix-2a/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 2A: Stata Code and Tips</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-1-factor-syntax.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.1 Stata factor syntax</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-2-polynomials.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.2 Polynomial IVs with factor syntax</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-3-calculating-mes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.3 Calculating marginal effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-4-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.4 Interaction effect with factor syntax</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-5-nonlinear-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.5 Nonlinear interaction effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-6-distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.6 Tools for examining distributions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-7-assessing-nonlinearities.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.7 Assessing nonlinearities</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-8-splines.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.8 Splines</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-9-loglinear.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.9 Loglinear regression models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-10-transforming.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.10 Transforming variables</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2b-logged-dv.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 2B: Logged DV Regression Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2c-splines.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 2C: Splines</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cdash.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Categorical Data Analysis (Statistical Horizons)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cdaws.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Categorical Data Analysis Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/workflow.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Management / Workflow Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/dataviz.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Visualization</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/dvs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Visualization Using Stata and LLMs</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/dmv.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data &amp; Model Visualization Workshop</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/dmv/r-output.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">R Output</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/em.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Experimental Methods: Design &amp; Analysis</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/int.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Interaction Effects Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/irt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Item Response Theory</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/lvm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Latent Variable Modeling</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/mcapsi.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Longitudinal Data Analysis</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/miss.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Missing Data Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/spgrad.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Social Psychology (Graduate)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/spug.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Social Psychology (Undergrad)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Stata Programming Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/surveys.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Survey Design Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/sew.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Survey Experiments Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/twm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Teaching Workshops &amp; Methods</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#ordinal-independent-variables" id="toc-ordinal-independent-variables" class="nav-link active" data-scroll-target="#ordinal-independent-variables">Ordinal independent variables</a>
+  <ul class="collapse">
+  <li><a href="#continuous-vs-nominal-specifications" id="toc-continuous-vs-nominal-specifications" class="nav-link" data-scroll-target="#continuous-vs-nominal-specifications">Continuous vs nominal specifications</a></li>
+  </ul></li>
+  <li><a href="#nominal-independent-variables" id="toc-nominal-independent-variables" class="nav-link" data-scroll-target="#nominal-independent-variables">Nominal independent variables</a>
+  <ul class="collapse">
+  <li><a href="#examining-all-pairwise-comparisons" id="toc-examining-all-pairwise-comparisons" class="nav-link" data-scroll-target="#examining-all-pairwise-comparisons">Examining all pairwise comparisons</a></li>
+  <li><a href="#alternative-interpretations-of-nominal-ivs" id="toc-alternative-interpretations-of-nominal-ivs" class="nav-link" data-scroll-target="#alternative-interpretations-of-nominal-ivs">Alternative interpretations of nominal IVs</a></li>
+  <li><a href="#quantifying-holistic-effects-of-nominal-ivs" id="toc-quantifying-holistic-effects-of-nominal-ivs" class="nav-link" data-scroll-target="#quantifying-holistic-effects-of-nominal-ivs">Quantifying holistic effects of nominal IVs</a></li>
+  <li><a href="#marginal-effect-me-inequality-statistics" id="toc-marginal-effect-me-inequality-statistics" class="nav-link" data-scroll-target="#marginal-effect-me-inequality-statistics">Marginal effect (ME) inequality statistics</a></li>
+  <li><a href="#calculating-me-inequalities-in-stata-and-r" id="toc-calculating-me-inequalities-in-stata-and-r" class="nav-link" data-scroll-target="#calculating-me-inequalities-in-stata-and-r">Calculating ME inequalities in Stata and R</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../teaching/cda/index.html">Categorical Data Analysis (Soc 681)</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/02/index.html">02 Nonlinearities &amp; Categorical IVs</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/02/2-7-categorical-ivs.html">2.7 Categorical Independent Variables</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">2.7 Categorical Independent Variables</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="ordinal-independent-variables" class="level2">
+<h2 class="anchored" data-anchor-id="ordinal-independent-variables">Ordinal independent variables</h2>
+<ul>
+<li>Independent variables can be entered into a regression model one of two ways:
+<ul>
+<li>Continuous</li>
+<li>Nominal (n.b., binary is nominal but with only 2 categories)</li>
+</ul></li>
+<li>For an ordinal IV, you must choose how to enter it (ordinal is not an option)</li>
+</ul>
+<div class="callout callout-style-simple callout-note no-icon">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><strong>Stata</strong>: Use <a href="https://www.stata.com/links/stata-basics/factor-variable-notation/">factor syntax</a> with <strong>c.</strong> to specify a continuous predictor; <strong>i.</strong> for a nominal predictor</p>
+<p><strong>R</strong>: Use <a href="https://www.rdocumentation.org/packages/sjlabelled/versions/1.2.0/topics/as_numeric"><strong>as_numeric</strong></a> to specify a continuous variable; <a href="https://www.rdocumentation.org/packages/haven/versions/2.5.4/topics/as_factor"><strong>as_factor</strong></a> for a nominal variable</p>
+</div>
+</div>
+</div>
+<section id="continuous-vs-nominal-specifications" class="level3">
+<h3 class="anchored" data-anchor-id="continuous-vs-nominal-specifications">Continuous vs nominal specifications</h3>
+<ul>
+<li>A continuous specification is simpler
+<ul>
+<li>E.g., For a 5-category ordinal IV only need to estimate 1 coefficient</li>
+</ul></li>
+<li>A nominal is more complicated but always more accurate*
+<ul>
+<li>If entering as nominal, need 4 coefficients (representing 4 categories and one omitted reference category)</li>
+<li>4 coefficients will always provide a somewhat better fit* than 1</li>
+</ul></li>
+<li>Which should you choose? Try both:
+<ul>
+<li>If inferences are very similar, choose the simpler specification (continuous)</li>
+<li>If inferences diverge, choose the more complicated but more accurate specification (nominal)</li>
+</ul></li>
+</ul>
+<p>*We will cover how to provide a significance test of this in the Testing section. But <em>R</em><sup>2</sup> will always be same or higher in nominal specification (even if not significantly different)</p>
+<p>The examples use the 2020 American National Election Studies (ANES):</p>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="st">"https://tdmize.github.io/data/data/cda_anes"</span>, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(American National Election Study 2020 - Pre-election | CDA | 2021-09-26)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">drop</span> <span class="kw">if</span> <span class="fu">missing</span>(feel_trump, age, hhincome, woman, lgb, race4, <span class="co">///</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    educ, relimport, wrongtrack)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(1,125 observations deleted)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">regress</span> feel_trump c.relimport i.educ age hhincome i.woman <span class="co">///</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    i.lgb i.race4 i.wrongtrack</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>      Source |       SS           df       MS      Number of obs   =     7,155
+-------------+----------------------------------   F(13, 7141)     =    506.04
+       Model |   5562481.5        13  427883.192   Prob &gt; F        =    0.0000
+    Residual |  6038073.21     7,141  845.550093   R-squared       =    0.4795
+-------------+----------------------------------   Adj R-squared   =    0.4786
+       Total |  11600554.7     7,154  1621.54804   Root MSE        =    29.078
+
+-------------------------------------------------------------------------------
+   feel_trump | Coefficient  Std. err.      t    P&gt;|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    relimport |     -5.949      0.249  -23.879   0.000       -6.438      -5.461
+              |
+         educ |
+2. High sc..  |      1.915      1.851    1.035   0.301       -1.713       5.543
+3. Some po..  |      0.002      1.747    0.001   0.999       -3.422       3.426
+4. Bachelo..  |     -6.789      1.808   -3.755   0.000      -10.333      -3.244
+5. Graduat..  |    -11.486      1.880   -6.108   0.000      -15.173      -7.800
+              |
+          age |     -0.051      0.021   -2.401   0.016       -0.093      -0.009
+     hhincome |     -0.014      0.006   -2.501   0.012       -0.025      -0.003
+              |
+        woman |
+       Woman  |     -4.472      0.700   -6.392   0.000       -5.844      -3.101
+              |
+          lgb |
+         LGB  |    -10.331      1.409   -7.331   0.000      -13.093      -7.568
+              |
+        race4 |
+       Black  |    -24.256      1.274  -19.037   0.000      -26.754     -21.758
+    Hispanic  |    -11.116      1.230   -9.038   0.000      -13.527      -8.705
+       Other  |     -4.763      1.234   -3.861   0.000       -7.181      -2.345
+              |
+   wrongtrack |
+ Wrong track  |    -49.332      0.832  -59.312   0.000      -50.963     -47.702
+        _cons |    107.667      2.319   46.433   0.000      103.121     112.212
+-------------------------------------------------------------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="fu">at</span>(relimport=(1(1)5)) <span class="kw">saving</span>(con_reli, <span class="kw">replace</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Predictive margins                                       Number of obs = 7,155
+Model VCE: OLS
+
+Expression: Linear prediction, predict()
+1._at: relimport = 1
+2._at: relimport = 2
+3._at: relimport = 3
+4._at: relimport = 4
+5._at: relimport = 5
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |     Margin   std. err.      t    P&gt;|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         _at |
+          1  |     50.688      0.576   88.008   0.000       49.559      51.817
+          2  |     44.739      0.404  110.633   0.000       43.946      45.531
+          3  |     38.789      0.346  112.216   0.000       38.112      39.467
+          4  |     32.840      0.447   73.509   0.000       31.964      33.716
+          5  |     26.891      0.635   42.316   0.000       25.645      28.136
+------------------------------------------------------------------------------
+(file con_reli.dta not found)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">regress</span> feel_trump i.relimport i.educ age hhincome i.woman <span class="co">///</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    i.lgb i.race4 i.wrongtrack</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>      Source |       SS           df       MS      Number of obs   =     7,155
+-------------+----------------------------------   F(16, 7138)     =    412.05
+       Model |  5569952.94        16  348122.059   Prob &gt; F        =    0.0000
+    Residual |  6030601.77     7,138  844.858752   R-squared       =    0.4801
+-------------+----------------------------------   Adj R-squared   =    0.4790
+       Total |  11600554.7     7,154  1621.54804   Root MSE        =    29.066
+
+-------------------------------------------------------------------------------
+   feel_trump | Coefficient  Std. err.      t    P&gt;|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    relimport |
+2. Very im..  |     -6.789      1.037   -6.545   0.000       -8.823      -4.756
+3. Moderat..  |    -10.903      1.039  -10.496   0.000      -12.939      -8.867
+4. A littl..  |    -15.893      1.193  -13.320   0.000      -18.232     -13.554
+5. Not imp..  |    -24.797      1.063  -23.327   0.000      -26.881     -22.713
+              |
+         educ |
+2. High sc..  |      2.052      1.851    1.109   0.268       -1.576       5.680
+3. Some po..  |      0.169      1.747    0.097   0.923       -3.256       3.595
+4. Bachelo..  |     -6.614      1.809   -3.657   0.000      -10.160      -3.068
+5. Graduat..  |    -11.321      1.882   -6.016   0.000      -15.010      -7.632
+              |
+          age |     -0.051      0.021   -2.395   0.017       -0.093      -0.009
+     hhincome |     -0.014      0.006   -2.548   0.011       -0.025      -0.003
+              |
+        woman |
+       Woman  |     -4.465      0.699   -6.384   0.000       -5.836      -3.094
+              |
+          lgb |
+         LGB  |    -10.203      1.409   -7.240   0.000      -12.966      -7.441
+              |
+        race4 |
+       Black  |    -24.244      1.274  -19.034   0.000      -26.741     -21.747
+    Hispanic  |    -11.164      1.230   -9.074   0.000      -13.576      -8.752
+       Other  |     -4.751      1.233   -3.852   0.000       -7.168      -2.333
+              |
+   wrongtrack |
+ Wrong track  |    -49.298      0.832  -59.257   0.000      -50.929     -47.667
+        _cons |    101.470      2.272   44.660   0.000       97.016     105.924
+-------------------------------------------------------------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="fu">at</span>(relimport=(1(1)5)) <span class="kw">saving</span>(nom_reli, <span class="kw">replace</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Predictive margins                                       Number of obs = 7,155
+Model VCE: OLS
+
+Expression: Linear prediction, predict()
+1._at: relimport = 1
+2._at: relimport = 2
+3._at: relimport = 3
+4._at: relimport = 4
+5._at: relimport = 5
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |     Margin   std. err.      t    P&gt;|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         _at |
+          1  |     50.616      0.689   73.494   0.000       49.266      51.966
+          2  |     43.826      0.793   55.237   0.000       42.271      45.382
+          3  |     39.713      0.783   50.732   0.000       38.178      41.247
+          4  |     34.723      0.953   36.440   0.000       32.855      36.590
+          5  |     25.819      0.765   33.749   0.000       24.319      27.318
+------------------------------------------------------------------------------
+(file nom_reli.dta not found)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>combomarginsplot con_reli nom_reli, <span class="co">///</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    labels(<span class="st">"Continuous"</span> <span class="st">"Nominal"</span>) <span class="bn">xtitle</span>(<span class="st">"Importance of religion"</span>) <span class="co">///</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    xlab(1 <span class="st">"Extremely"</span> 2 <span class="st">"Very"</span> 3 <span class="st">"Moderately"</span> 4 <span class="st">"A little"</span> 5 <span class="st">"Not at all"</span>) <span class="co">//</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>/</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[2.7.a] Trump feeling thermometer by importance of religion"</span>, <span class="kw">size</span>(</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>medlarge)) <span class="co">///</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="bn">subtitle</span>(<span class="st">"Nominal vs continuous specification of {it:relimport}"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>  Variables that uniquely identify margins: relimport _filenumber</code></pre>
+</div>
+<p><img src="fig/cda-02_07_a-ordinal_IVs-01-relimport.png" class="img-fluid" style="width:80.0%" alt="Predicted Trump feeling thermometer by importance of religion from the continuous and nominal specifications; the two sets of predictions are close."></p>
+<p>*These look similar enough to probably choose the continuous specification. But I would also do some statistical tests to decide (more in the Testing section of the class)</p>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">regress</span> feel_trump c.educ i.relimport age hhincome i.woman <span class="co">///</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    i.lgb i.race4 i.wrongtrack</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>      Source |       SS           df       MS      Number of obs   =     7,155
+-------------+----------------------------------   F(13, 7141)     =    502.86
+       Model |  5544245.54        13  426480.426   Prob &gt; F        =    0.0000
+    Residual |  6056309.17     7,141  848.103791   R-squared       =    0.4779
+-------------+----------------------------------   Adj R-squared   =    0.4770
+       Total |  11600554.7     7,154  1621.54804   Root MSE        =    29.122
+
+-------------------------------------------------------------------------------
+   feel_trump | Coefficient  Std. err.      t    P&gt;|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+         educ |     -4.097      0.341  -12.002   0.000       -4.767      -3.428
+              |
+    relimport |
+2. Very im..  |     -6.751      1.039   -6.496   0.000       -8.789      -4.714
+3. Moderat..  |    -11.021      1.040  -10.593   0.000      -13.061      -8.982
+4. A littl..  |    -15.969      1.195  -13.359   0.000      -18.312     -13.626
+5. Not imp..  |    -24.793      1.065  -23.279   0.000      -26.880     -22.705
+              |
+          age |     -0.055      0.021   -2.574   0.010       -0.097      -0.013
+     hhincome |     -0.016      0.006   -2.890   0.004       -0.027      -0.005
+              |
+        woman |
+       Woman  |     -4.329      0.700   -6.187   0.000       -5.701      -2.958
+              |
+          lgb |
+         LGB  |    -10.317      1.412   -7.309   0.000      -13.084      -7.550
+              |
+        race4 |
+       Black  |    -24.192      1.275  -18.967   0.000      -26.692     -21.691
+    Hispanic  |    -11.368      1.230   -9.238   0.000      -13.780      -8.955
+       Other  |     -4.881      1.235   -3.952   0.000       -7.302      -2.460
+              |
+   wrongtrack |
+ Wrong track  |    -49.475      0.833  -59.405   0.000      -51.108     -47.842
+        _cons |    112.350      1.860   60.408   0.000      108.704     115.996
+-------------------------------------------------------------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="fu">at</span>(educ=(1(1)5)) <span class="kw">saving</span>(con_educ, <span class="kw">replace</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Predictive margins                                       Number of obs = 7,155
+Model VCE: OLS
+
+Expression: Linear prediction, predict()
+1._at: educ = 1
+2._at: educ = 2
+3._at: educ = 3
+4._at: educ = 4
+5._at: educ = 5
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |     Margin   std. err.      t    P&gt;|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         _at |
+          1  |     49.467      0.887   55.754   0.000       47.728      51.207
+          2  |     45.370      0.588   77.196   0.000       44.218      46.522
+          3  |     41.273      0.370  111.613   0.000       40.548      41.998
+          4  |     37.175      0.401   92.604   0.000       36.388      37.962
+          5  |     33.078      0.647   51.122   0.000       31.810      34.347
+------------------------------------------------------------------------------
+(file con_educ.dta not found)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">regress</span> feel_trump i.educ i.relimport age hhincome i.woman <span class="co">///</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    i.lgb i.race4 i.wrongtrack</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>      Source |       SS           df       MS      Number of obs   =     7,155
+-------------+----------------------------------   F(16, 7138)     =    412.05
+       Model |  5569952.94        16  348122.059   Prob &gt; F        =    0.0000
+    Residual |  6030601.77     7,138  844.858752   R-squared       =    0.4801
+-------------+----------------------------------   Adj R-squared   =    0.4790
+       Total |  11600554.7     7,154  1621.54804   Root MSE        =    29.066
+
+-------------------------------------------------------------------------------
+   feel_trump | Coefficient  Std. err.      t    P&gt;|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+         educ |
+2. High sc..  |      2.052      1.851    1.109   0.268       -1.576       5.680
+3. Some po..  |      0.169      1.747    0.097   0.923       -3.256       3.595
+4. Bachelo..  |     -6.614      1.809   -3.657   0.000      -10.160      -3.068
+5. Graduat..  |    -11.321      1.882   -6.016   0.000      -15.010      -7.632
+              |
+    relimport |
+2. Very im..  |     -6.789      1.037   -6.545   0.000       -8.823      -4.756
+3. Moderat..  |    -10.903      1.039  -10.496   0.000      -12.939      -8.867
+4. A littl..  |    -15.893      1.193  -13.320   0.000      -18.232     -13.554
+5. Not imp..  |    -24.797      1.063  -23.327   0.000      -26.881     -22.713
+              |
+          age |     -0.051      0.021   -2.395   0.017       -0.093      -0.009
+     hhincome |     -0.014      0.006   -2.548   0.011       -0.025      -0.003
+              |
+        woman |
+       Woman  |     -4.465      0.699   -6.384   0.000       -5.836      -3.094
+              |
+          lgb |
+         LGB  |    -10.203      1.409   -7.240   0.000      -12.966      -7.441
+              |
+        race4 |
+       Black  |    -24.244      1.274  -19.034   0.000      -26.741     -21.747
+    Hispanic  |    -11.164      1.230   -9.074   0.000      -13.576      -8.752
+       Other  |     -4.751      1.233   -3.852   0.000       -7.168      -2.333
+              |
+   wrongtrack |
+ Wrong track  |    -49.298      0.832  -59.257   0.000      -50.929     -47.667
+        _cons |    101.470      2.272   44.660   0.000       97.016     105.924
+-------------------------------------------------------------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="fu">at</span>(educ=(1(1)5)) <span class="kw">saving</span>(nom_educ, <span class="kw">replace</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Predictive margins                                       Number of obs = 7,155
+Model VCE: OLS
+
+Expression: Linear prediction, predict()
+1._at: educ = 1
+2._at: educ = 2
+3._at: educ = 3
+4._at: educ = 4
+5._at: educ = 5
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |     Margin   std. err.      t    P&gt;|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         _at |
+          1  |     43.157      1.658   26.033   0.000       39.907      46.407
+          2  |     45.209      0.877   51.563   0.000       43.490      46.928
+          3  |     43.326      0.592   73.214   0.000       42.166      44.486
+          4  |     36.543      0.685   53.343   0.000       35.200      37.885
+          5  |     31.836      0.817   38.990   0.000       30.235      33.437
+------------------------------------------------------------------------------
+(file nom_educ.dta not found)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>combomarginsplot con_educ nom_educ, <span class="co">///</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    labels(<span class="st">"Continuous"</span> <span class="st">"Nominal"</span>) <span class="co">///</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    xlab(1 <span class="st">"&lt; High School"</span> 2 <span class="st">"High School"</span> 3 <span class="st">"Some College"</span> 4 <span class="st">"College Degree"</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a> 5 <span class="st">"Grad+"</span>) <span class="co">///</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[2.7.b] Trump feeling thermometer by educational attainment"</span>, <span class="kw">size</span>(</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>medlarge)) <span class="co">///</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    <span class="bn">subtitle</span>(<span class="st">"Nominal vs continuous specification of {it:education}"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>  Variables that uniquely identify margins: educ _filenumber</code></pre>
+</div>
+<p><img src="fig/cda-02_07_b-ordinal_IVs-02-educ.png" class="img-fluid" style="width:80.0%" alt="Predicted Trump feeling thermometer by educational attainment from the continuous and nominal specifications; the nominal predictions depart from the straight line."></p>
+<p>*These look quite different to me. I would <em>not</em> feel comfortable using the continuous specification and would instead use the nominal specification of educational attainment</p>
+</section>
+</section>
+<section id="nominal-independent-variables" class="level2">
+<h2 class="anchored" data-anchor-id="nominal-independent-variables">Nominal independent variables</h2>
+<ul>
+<li>The traditional approach for interpreting nominal IVs involves specifying an omitted reference category and interpreting the coefficients which represent contrasts between the omitted category and each included group
+<ul>
+<li>An issue with this approach is you do not know how included categories compare to each other
+<ul>
+<li>This approach also reifies the omitted category as the most important (<a href="https://doi.org/10.1177/0081175020982632">Johfre and Freese 2021</a>)</li>
+</ul></li>
+<li>You also do not have any sense of how large an effect the nominal IV has overall (only specific contrasts)</li>
+</ul></li>
+<li>One partial solution is to plot predictions for all categories of the nominal IV
+<ul>
+<li>There is no reference group in this approach</li>
+</ul></li>
+</ul>
+<div class="callout callout-style-simple callout-note no-icon">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><strong>Stata</strong>: <strong>marginsplot</strong> with <strong>recast(scatter)</strong> for a dot plot; do not use default which connects dots with a line. Or, use <strong>coefplot</strong></p>
+<p><strong>R</strong>: Use <a href="https://marginaleffects.com/bonus/plot.html"><strong>plot_predictions</strong></a> which is a dot plot by default</p>
+</div>
+</div>
+</div>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">regress</span> feel_trump c.relimport i.educ age hhincome i.woman <span class="co">///</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    i.lgb i.race4 i.wrongtrack</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>      Source |       SS           df       MS      Number of obs   =     7,155
+-------------+----------------------------------   F(13, 7141)     =    506.04
+       Model |   5562481.5        13  427883.192   Prob &gt; F        =    0.0000
+    Residual |  6038073.21     7,141  845.550093   R-squared       =    0.4795
+-------------+----------------------------------   Adj R-squared   =    0.4786
+       Total |  11600554.7     7,154  1621.54804   Root MSE        =    29.078
+
+-------------------------------------------------------------------------------
+   feel_trump | Coefficient  Std. err.      t    P&gt;|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+    relimport |     -5.949      0.249  -23.879   0.000       -6.438      -5.461
+              |
+         educ |
+2. High sc..  |      1.915      1.851    1.035   0.301       -1.713       5.543
+3. Some po..  |      0.002      1.747    0.001   0.999       -3.422       3.426
+4. Bachelo..  |     -6.789      1.808   -3.755   0.000      -10.333      -3.244
+5. Graduat..  |    -11.486      1.880   -6.108   0.000      -15.173      -7.800
+              |
+          age |     -0.051      0.021   -2.401   0.016       -0.093      -0.009
+     hhincome |     -0.014      0.006   -2.501   0.012       -0.025      -0.003
+              |
+        woman |
+       Woman  |     -4.472      0.700   -6.392   0.000       -5.844      -3.101
+              |
+          lgb |
+         LGB  |    -10.331      1.409   -7.331   0.000      -13.093      -7.568
+              |
+        race4 |
+       Black  |    -24.256      1.274  -19.037   0.000      -26.754     -21.758
+    Hispanic  |    -11.116      1.230   -9.038   0.000      -13.527      -8.705
+       Other  |     -4.763      1.234   -3.861   0.000       -7.181      -2.345
+              |
+   wrongtrack |
+ Wrong track  |    -49.332      0.832  -59.312   0.000      -50.963     -47.702
+        _cons |    107.667      2.319   46.433   0.000      103.121     112.212
+-------------------------------------------------------------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> ftmod</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>margins race4</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Predictive margins                                       Number of obs = 7,155
+Model VCE: OLS
+
+Expression: Linear prediction, predict()
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |     Margin   std. err.      t    P&gt;|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+       race4 |
+      White  |     43.283      0.408  106.133   0.000       42.484      44.083
+      Black  |     19.027      1.192   15.960   0.000       16.690      21.364
+   Hispanic  |     32.167      1.150   27.979   0.000       29.913      34.421
+      Other  |     38.521      1.161   33.171   0.000       36.244      40.797
+------------------------------------------------------------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>marginsplot, <span class="kw">recast</span>(<span class="kw">scatter</span>) <span class="co">///</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    ylab(0(10)70) <span class="bn">ytitle</span>(<span class="st">"Trump feeling thermometer"</span>) <span class="co">///</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[2.7.c] Feelings toward Trump based on race-ethnicity"</span>, <span class="kw">size</span>(medlar</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>ge))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Variables that uniquely identify margins: race4</code></pre>
+</div>
+<p><img src="fig/cda-02_07_c-nominal_IVs-01-race.png" class="img-fluid" style="width:80.0%" alt="Dot plot of predicted Trump feeling thermometer for White, Black, Hispanic, and Other respondents, with confidence intervals."></p>
+<section id="examining-all-pairwise-comparisons" class="level3">
+<h3 class="anchored" data-anchor-id="examining-all-pairwise-comparisons">Examining all pairwise comparisons</h3>
+<ul>
+<li>To obtain a significance test for all contrasts between all categories, you can conduct pairwise comparisons</li>
+</ul>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>mecompare race4, models(ftmod) pwcompare</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Predicting: Linear prediction
+Marginal effects (N_ftmod=7155)
+
+                                 |  ME #   Estimate         SE      P&gt;|z|
+---------------------------------+---------------------------------------
+race4                            |                                       
+               Black - White     |                                       
+                           ftmod |     1    -24.256      1.274      0.000
+            Hispanic - White     |                                       
+                           ftmod |     2    -11.116      1.230      0.000
+               Other - White     |                                       
+                           ftmod |     3     -4.763      1.234      0.000
+            Hispanic - Black     |                                       
+                           ftmod |     4     13.140      1.632      0.000
+               Other - Black     |                                       
+                           ftmod |     5     19.494      1.664      0.000
+            Other - Hispanic     |                                       
+                           ftmod |     6      6.354      1.627      0.000</code></pre>
+</div>
+<ul>
+<li><em>Black adults feel less warmly toward Trump than do White adults</em></li>
+<li><em>…</em></li>
+<li><em>Hispanic adults feel more warmly toward Trump than do Black adults</em></li>
+<li>Etc.</li>
+</ul>
+</section>
+<section id="alternative-interpretations-of-nominal-ivs" class="level3">
+<h3 class="anchored" data-anchor-id="alternative-interpretations-of-nominal-ivs">Alternative interpretations of nominal IVs</h3>
+<ul>
+<li>Some alternatives use different contrasts</li>
+<li>Mean contrasts compare a group to the overall sample mean
+<ul>
+<li>Limitation is the group being compared is part of the overall sample</li>
+</ul></li>
+<li>Binary contrasts compare that group to all other groups (pooled)
+<ul>
+<li>In Stata, use the <a href="https://journals.sagepub.com/doi/full/10.1177/1536867X221083900"><strong>binarycontrast</strong></a> command (<a href="https://journals.sagepub.com/doi/full/10.1177/1536867X221083900">Freese and Johfre 2022</a>)</li>
+<li>In R, <a href="https://marginaleffects.com/man/r/predictions.html"><strong>avg_predictions</strong></a> with <strong>hypothesis = ~ meanotherdev</strong> is similar, comparing group’s prediction to the mean across all other groups
+<ul>
+<li>But, doesn’t account for differing group sizes</li>
+</ul></li>
+</ul></li>
+</ul>
+</section>
+<section id="quantifying-holistic-effects-of-nominal-ivs" class="level3">
+<h3 class="anchored" data-anchor-id="quantifying-holistic-effects-of-nominal-ivs">Quantifying holistic effects of nominal IVs</h3>
+<ul>
+<li>An important issue with any pairwise comparison approach is the high chance of a Type I error (false positive)
+<ul>
+<li>We will cover this more in the Testing section of the class</li>
+</ul></li>
+<li>Another set of alternatives examine the holistic effect of the IV
+<ul>
+<li>The sheaf coefficient provides a single value for the overall effect of the nominal IV (<a href="https://journals.sagepub.com/doi/abs/10.1177/004912417200100201">Heise 1972</a>)
+<ul>
+<li>Key limitation is it has no clear/satisfying interpretation</li>
+</ul></li>
+</ul></li>
+</ul>
+<p><img src="images/sheaf-coefficient.png" class="img-fluid" style="width:45.0%" alt="Path diagram from Heise (1972): English, French, and SES combined into a sheaf coefficient for ethnicity predicting attitude toward education."></p>
+<div class="callout callout-style-simple callout-note no-icon">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><em>“There are many cases in which a summary of a nominal or ordinal independent variable’s (IV) effect as a holistic construct…is needed and useful for interpretation. For example, does educational attainment or occupational sector have a larger impact on wages? Both variables in this case involve multiple categories and answering this question requires somehow quantifying each IVs’ holistic effect” (<a href="../../../research/mize_han_socsci_2025.html">Mize and Han 2025</a>)</em></p>
+</div>
+</div>
+</div>
+</section>
+<section id="marginal-effect-me-inequality-statistics" class="level3">
+<h3 class="anchored" data-anchor-id="marginal-effect-me-inequality-statistics">Marginal effect (ME) inequality statistics</h3>
+<ul>
+<li>A new approach summarizes the average level of <strong>inequality</strong> patterned by the nominal IV using marginal effects (<a href="../../../research/mize_han_socsci_2025.html">Mize and Han 2025</a>)
+<ul>
+<li>I.e., How different the predictions are across the nominal groupings, on average</li>
+</ul></li>
+<li>Define each pairwise comparison (category <em>a</em> vs.&nbsp;<em>b</em>) as a ME:</li>
+</ul>
+<p><span class="math display">\[pairwise\ comparisons = ME = \eta\left( x_{k} = a,\mathbf{x}_{- k} = {\mathbf{x}_{- k}}^{*} \right) - \eta\left( x_{k} = b,\mathbf{x}_{- k} = {\mathbf{x}_{- k}}^{*} \right);\ for\ all\ b &gt; a\]</span></p>
+<ul>
+<li>The <strong>unweighted ME inequality</strong> is simply the average of the (absolute values) of all pairwise comparisons</li>
+</ul>
+<p><span class="math display">\[unweighted\ ME\ inequality \equiv |unweighted\ average\ ME\ inequality|\]</span></p>
+<p><span class="math display">\[= \frac{Sum\ of\ all\ |pairwise\ comparisons\ of\ MEs|}{\#\ of\ comparisons}\]</span></p>
+<p><span class="math display">\[= \frac{\sum_{a = 1}^{L}\sum_{b = 2;\ b &gt; a}^{L}\left| \eta\left( x_{k} = a,\ \mathbf{x}_{- k} = {\mathbf{x}_{- k}}^{*} \right) - \eta\left( x_{k} = b,\mathbf{x}_{- k} = {\mathbf{x}_{- k}}^{*} \right) \right|}{\frac{L(L - 1)}{2}}\]</span></p>
+<ul>
+<li>Usually, the various groups of the nominal IV will differ in size, so should be given different weight in the ME inequality, proportional to their size
+<ul>
+<li>Define weights</li>
+</ul></li>
+</ul>
+<p><span class="math display">\[a\ vs\ b\ contrast\ weight = w_{a,b} = \frac{n_{a} + n_{b}}{N}\]</span></p>
+<ul>
+<li>The weighted <strong>ME inequality</strong> is then</li>
+</ul>
+<p><span class="math display">\[ME\ inequality \equiv |weighted\ average\ ME\ inequality|\]</span></p>
+<p><span class="math display">\[= \sum_{a = 1}^{L}\sum_{b = 2;\ b &gt; a}^{L}\frac{w_{a,b}}{L - 1}*\left| \eta\left( x_{k} = a,\mathbf{x}_{- k} = {\mathbf{x}_{- k}}^{*} \right) - \eta\left( x_{k} = b,\mathbf{x}_{- k} = {\mathbf{x}_{- k}}^{*} \right) \right|\]</span></p>
+<blockquote class="blockquote">
+<p><em>“…ME inequality can be described as the average difference in outcomes between observations in distinct groups.”</em></p>
+<p><em>“Alternatively, ME inequality could be used to quantify a causal effect of a nominal or ordinal IV. In this case, ME inequality summarizes how outcomes would typically change if an observation switched from their current category to another category.”</em> (<a href="../../../research/mize_han_socsci_2025.html">Mize and Han 2025</a>)</p>
+</blockquote>
+</section>
+<section id="calculating-me-inequalities-in-stata-and-r" class="level3">
+<h3 class="anchored" data-anchor-id="calculating-me-inequalities-in-stata-and-r">Calculating ME inequalities in Stata and R</h3>
+<ul>
+<li>In Stata, use the <a href="../../../software/meinequality/index.html"><strong>meinequality</strong></a> command or the <strong>meinequality</strong> option on <strong>mecompare</strong></li>
+<li>In R, use the <a href="../../../software/meinequality_r/index.html"><strong>meinq()</strong> function with <strong>avg_comparisons</strong></a></li>
+</ul>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>meinequality race4, models(ftmod)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>ME Inequality Estimates (N = 7155)
+
+                         |   Estimate   Std. err.           z       P&gt;|z| 
+-------------------------+-----------------------------------------------
+ME Inequality            |                                               
+                   race4 |     13.303       0.699      19.026       0.000 </code></pre>
+</div>
+<blockquote class="blockquote">
+<p><em>On average, members of different racial-ethnic groups differ by about 13 points in their feelings towards Trump</em></p>
+</blockquote>
+
+
+</section>
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/www\.trentonmize\.com");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../../../teaching/cda/02/2-6-assessing-nonlinearities.html" class="pagination-link" aria-label="2.6 Assessing and Modeling Complex Nonlinearities for Independent Variables">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">2.6 Assessing and Modeling Complex Nonlinearities for Independent Variables</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../../teaching/cda/02/2-8-comparing-effects.html" class="pagination-link" aria-label="2.8 Comparing Effects Across IVs">
+        <span class="nav-page-text">2.8 Comparing Effects Across IVs</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Trenton D. Mize, Purdue University</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org">Quarto</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

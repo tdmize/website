@@ -1,0 +1,53 @@
+---
+title: "A2.2 Polynomial IVs with factor syntax"
+---
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/cda_gss", clear
+(cda_gss.dta |  GSS 1972-2021 CDA - Categorical Data Analysis | date created 202
+> 3)
+
+. 
+. regress occprest c.age##c.age i.woman i.college
+
+      Source |       SS           df       MS      Number of obs   =    58,304
+-------------+----------------------------------   F(4, 58299)     =   4746.11
+       Model |  2797112.11         4  699278.027   Prob > F        =    0.0000
+    Residual |  8589596.79    58,299  147.336949   R-squared       =    0.2456
+-------------+----------------------------------   Adj R-squared   =    0.2456
+       Total |  11386708.9    58,303  195.302281   Root MSE        =    12.138
+
+-------------------------------------------------------------------------------
+     occprest | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+          age |      0.284      0.017   16.988   0.000        0.251       0.317
+              |
+  c.age#c.age |     -0.002      0.000  -14.751   0.000       -0.003      -0.002
+              |
+        woman |
+       Women  |     -0.159      0.101   -1.576   0.115       -0.357       0.039
+              |
+      college |
+College De..  |     16.238      0.121  134.149   0.000       16.001      16.475
+        _cons |     31.359      0.389   80.511   0.000       30.595      32.122
+-------------------------------------------------------------------------------
+
+```
+
+Stata makes it easy to put in quadratic transformations of your independent variables. Make sure to use the "**c.**" prefix so Stata knows it is a continuous variable, then add **\##** between the variable---this tells Stata to estimate a linear term (*age*) and a quadratic term (*age^2^*)
+
+### Plotting predictions
+
+- The code for making predictions when you have a quadratic term in the model is the **exact same** as before in the linear case if you use the proper **c.** and **i.** prefixes and specify quadratics using **\##**
+
+```stata
+regress occprest c.age##c.age i.woman i.college
+
+qui margins, at(age=(20(5)90))
+
+marginsplot, ///
+    title("Predicted Occupational Prestige Based on Person's Age") ///
+    subtitle("Quadratic Term for Age", size(small)) ///
+    ytitle("Occupational Prestige") ///
+    recastci(rarea) ylab(38(2)46)
+```

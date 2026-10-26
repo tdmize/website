@@ -1,0 +1,179 @@
+---
+title: "A2.3 Calculating marginal effects"
+---
+
+- The example that follows shows how to calculate a ME using **mtable** and **mlincom**
+  - This is to show you exactly what is happening behind the scenes
+  - I recommend letting **mchange** do this for you in most cases
+
+The examples use the model with a quadratic term for age from [2.2](../2-2-nonlinear-effects.qmd):
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/cda_gss", clear
+(cda_gss.dta |  GSS 1972-2021 CDA - Categorical Data Analysis | date created 202
+> 3)
+
+. 
+. regress occprest c.age##c.age i.woman i.college
+
+      Source |       SS           df       MS      Number of obs   =    58,304
+-------------+----------------------------------   F(4, 58299)     =   4746.11
+       Model |  2797112.11         4  699278.027   Prob > F        =    0.0000
+    Residual |  8589596.79    58,299  147.336949   R-squared       =    0.2456
+-------------+----------------------------------   Adj R-squared   =    0.2456
+       Total |  11386708.9    58,303  195.302281   Root MSE        =    12.138
+
+-------------------------------------------------------------------------------
+     occprest | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+          age |      0.284      0.017   16.988   0.000        0.251       0.317
+              |
+  c.age#c.age |     -0.002      0.000  -14.751   0.000       -0.003      -0.002
+              |
+        woman |
+       Women  |     -0.159      0.101   -1.576   0.115       -0.357       0.039
+              |
+      college |
+College De..  |     16.238      0.121  134.149   0.000       16.001      16.475
+        _cons |     31.359      0.389   80.511   0.000       30.595      32.122
+-------------------------------------------------------------------------------
+
+. est store opmod
+
+```
+
+- First, find the mean of age and calculate what mean + SD is
+
+```{.stata-run}
+. sum age if e(sample)    // Ensure same sample as regression model
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+         age |     58,304      46.165    17.15691         18         89
+
+. di 46.165 + 17.15691
+63.32191
+
+```
+
+### Calculating marginal effects with mtable and mlincom
+
+- *Can use **mtable** to make predictions at the mean and one standard deviation above the mean*
+  - *Two options are important here: "**atmeans**" tells Stata to hold the control variables constant at their means; "**post**" allows you to test the predictions with subsequent commands*
+
+```{.stata-run}
+. mtable, at(age=(46.165 63.32191)) atmeans post
+
+Expression: Linear prediction, predict()
+
+           |      age        xb
+ ----------+-------------------
+         1 |     46.2    42.850
+         2 |     63.3    43.143
+
+Specified values of covariates
+
+           |        1.         1.
+           |    woman    college
+ ----------+--------------------
+   Current |     .542       .226
+
+```
+
+::: {.callout-note icon="false" appearance="simple"}
+**Note:** these are the sample means for the control variables
+:::
+
+- ***mlincom** allows you test whether the predictions that **mtable** gave you are significantly different (i.e. whether the marginal effect for that independent variable is statistically significant)*
+- ***mlincom**'s syntax refers to the row number of the prediction from **mtable**. See the example above: the first column of **mtable** tells you the row number for that prediction*
+
+```{.stata-run}
+. mlincom 2 - 1
+
+             |   lincom    pvalue        ll        ul 
+-------------+---------------------------------------
+           1 |    0.293     0.000     0.180     0.406 
+
+```
+
+### Calculating marginal effects with mchange
+
+**mchange** is a command that automatically calculates marginal effects for you. By default, for continuous independent variables **mchange** calculates discrete changes of mean + 1, mean + SD, and the instantaneous change (labeled as "marginal"). For binary variables it reports 1 vs. 0 (note this is one of the reasons it is vital to use the **c.** and **i.** prefixes in your regression command so you get the correct MEs)
+
+::: {.callout-note icon="false" appearance="simple"}
+NOTE: The default in Stata is to calculate AMEs---so **mtable**, **mchange**, or **margins** run without the "**atmeans**" options will calculate AMEs
+
+For MEMs, use:
+
+**mchange... , atmeans**
+:::
+
+```{.stata-run}
+. est restore opmod
+(results opmod are active now)
+
+. mchange age college
+
+regress: Changes in xb | Number of obs = 58304
+
+Expression: Linear prediction, predict()
+
+                                 |    Change    p-value 
+---------------------------------+---------------------
+age                              |                     
+                              +1 |     0.056      0.000 
+                             +SD |     0.293      0.000 
+                        Marginal |     0.059      0.000 
+college                          |                     
+ College Degree vs No Col Degree |    16.238      0.000 
+
+Average prediction
+
+   42.133 
+
+
+```
+
+> *On average, a standard deviation increase in age (about 17.2 years) is predicted to increase occupational prestige by 0.293 points*
+
+```{.stata-run}
+. * AMEs
+. est restore opmod
+(results opmod are active now)
+
+. mtable, at(age=(46.165 63.32191)) post
+
+Expression: Linear prediction, predict()
+
+           |      age        xb
+ ----------+-------------------
+         1 |     46.2    42.850
+         2 |     63.3    43.143
+
+Specified values where .n indicates no values specified with at()
+
+           |  No at()
+ ----------+---------
+   Current |       .n
+
+. mlincom 2 - 1
+
+             |   lincom    pvalue        ll        ul 
+-------------+---------------------------------------
+           1 |    0.293     0.000     0.180     0.406 
+
+```
+
+::: {.callout-note icon="false" appearance="simple"}
+Compare these results (and code) to those in [Calculating MEMs](../2-2-nonlinear-effects.qmd#calculating-mems). The only difference is where the control variables are held. The **No at( )** listing in the table indicates that control variables were held at their observed values for each observation (i.e. AMEs). The difference in the code is the omission of **atmeans** (which would lead to a MEM)
+:::
+
+### Quick note: Predictions vs MEs and significance tests
+
+- Note that a marginal effect (ME) is an **effect**: the result of an increase in a focal IV from a starting value to an ending value
+- The two individual pieces of the ME (prediction at starting value and prediction at ending values) are **predictions**
+  - We can make predictions at all values of an IV, e.g. when we plot a continuous IV (e.g. graph age predictions from age 18 to 90)
+- Often want to construct a statistical significance test on a ME: almost always whether the ME is not zero (this is what **mchange** is doing)
+  - Statistical significance tests for predictions are less useful as whether the prediction is zero or not is rarely of interest (e.g. what **margins, at(age=(20(10)80))** gives you)
+    - However, the confidence intervals on predictions can be useful (especially for a plot)
+    - I always recommend adding CIs to plots of predictions
