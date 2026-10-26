@@ -14,6 +14,9 @@ title: "2.5 Examining Distributions"
 
 - For a nominal/binary IV, can just look at frequency (or %) in each category
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 use "https://tdmize.github.io/data/data/gss", clear
@@ -22,11 +25,33 @@ fre degree if year >= 2010
 <</dd_do>>
 ```
 
+## R
+
+```{r}
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(sjmisc)          # frequency tables
+library(ggplot2)         # graphs
+library(cleanplots)      # graph scheme
+cleanplots_defaults()
+
+gss <- read_dta("https://tdmize.github.io/data/data/gss.dta")
+
+gss10 <- gss |> filter(year >= 2010)
+
+frq(gss10, degree)
+```
+
+:::
+
 ::: {.callout-note icon="false" appearance="simple"}
 **Stata**: I much prefer the [**fre**](https://github.com/benjann/fre) command to **tabulate**, as you get: numeric value, value label, frequency counts, percents, and missing data all shown by default.
 
 **R**: I like the **frq()** function from [**library(sjmisc)**](https://strengejacke.github.io/sjmisc/articles/exploringdatasets.html).
 :::
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 <<dd_do>>
@@ -41,6 +66,18 @@ graph export "fig/cda-02_05_a-dist-1.png", replace width(1400)
 
 ![](fig/cda-02_05_a-dist-1.png){width=80% fig-alt="Horizontal bar chart of the percentage of respondents with each educational degree; high school is the largest category."}
 
+## R
+
+```{r}
+#| fig-alt: "Horizontal bar chart of the percentage of respondents with each educational degree; high school is the largest category."
+ggplot(filter(gss10, !is.na(degree)), aes(y = as_factor(degree))) +
+  geom_bar() +
+  labs(title = "[2.5.a] Distribution of educational attainment: GSS 2000 - 2016",
+    x = "Number of respondents with this degree", y = NULL)
+```
+
+:::
+
 ## Tools for examining distributions
 
 - Histograms are a good first step for continuous variables
@@ -48,6 +85,9 @@ graph export "fig/cda-02_05_a-dist-1.png", replace width(1400)
 - Kernel density plots are helpful to examine a smoothed version of the distribution (rather than each specific bin as with a histogram)
   - Kernel density plots are also helpful to overlay plots across multiple groups
 - See examples below
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 <<dd_do>>
@@ -60,6 +100,20 @@ graph export "fig/cda-02_05_b-dist-2.png", replace width(1400)
 ```
 
 ![](fig/cda-02_05_b-dist-2.png){width=80% fig-alt="Histogram of hourly wages, strongly skewed to the right."}
+
+## R
+
+```{r}
+#| fig-alt: "Histogram of hourly wages, strongly skewed to the right."
+ggplot(gss, aes(wages)) +
+  geom_histogram(fill = NA, color = "black") +
+  labs(title = "[2.5.b] Distribution of Hourly Wages", x = "Hourly Wages")
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 <<dd_do>>
@@ -74,6 +128,20 @@ graph export "fig/cda-02_05_c-dist-3.png", replace width(1400)
 
 ![](fig/cda-02_05_c-dist-3.png){width=80% fig-alt="Kernel density plot of hourly wages, peaking near 10 dollars with a long right tail."}
 
+## R
+
+```{r}
+#| fig-alt: "Kernel density plot of hourly wages, peaking near 10 dollars with a long right tail."
+ggplot(gss, aes(wages)) +
+  geom_density() +
+  labs(title = "[2.5.c] Distribution of Hourly Wages", x = "Hourly Wages")
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 twoway kdensity wages if woman == 0 || ///
@@ -87,3 +155,15 @@ graph export "fig/cda-02_05_d-dist-4.png", replace width(1400)
 ```
 
 ![](fig/cda-02_05_d-dist-4.png){width=80% fig-alt="Kernel density plots of hourly wages for men and women; women's wages are more concentrated at lower values."}
+
+## R
+
+```{r}
+#| fig-alt: "Kernel density plots of hourly wages for men and women; women's wages are more concentrated at lower values."
+ggplot(gss, aes(wages, color = as_factor(woman))) +
+  geom_density() +
+  labs(title = "[2.5.d] Distribution of Hourly Wages for Men and Women",
+    x = "Hourly Wages", color = NULL)
+```
+
+:::

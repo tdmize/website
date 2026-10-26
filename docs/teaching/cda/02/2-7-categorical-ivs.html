@@ -82,7 +82,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../site_libs/bootstrap/bootstrap-6af6771539d6c5b03cf43084788a8ce4.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-d1074f4552fd9e64773fe67262ebb1c3.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -607,6 +607,10 @@ window.Quarto = {
 </ul>
 <p>*We will cover how to provide a significance test of this in the Testing section. But <em>R</em><sup>2</sup> will always be same or higher in nominal specification (even if not significantly different)</p>
 <p>The examples use the 2020 American National Election Studies (ANES):</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
 <div class="stata-run">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="st">"https://tdmize.github.io/data/data/cda_anes"</span>, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>(American National Election Study 2020 - Pre-election | CDA | 2021-09-26)</code></pre>
@@ -749,10 +753,91 @@ Expression: Linear prediction, predict()
 <pre class="stata-output"><code>  Variables that uniquely identify margins: relimport _filenumber</code></pre>
 </div>
 <p><img src="fig/cda-02_07_a-ordinal_IVs-01-relimport.png" class="img-fluid" style="width:80.0%" alt="Predicted Trump feeling thermometer by importance of religion from the continuous and nominal specifications; the two sets of predictions are close."></p>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(haven)           <span class="co"># import Stata data and labels</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)           <span class="co"># data manipulation</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)         <span class="co"># graphs</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(marginaleffects) <span class="co"># predictions and marginal effects</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(cleanplots)      <span class="co"># graph scheme</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cleanplots_defaults</span>()</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"https://raw.githubusercontent.com/tdmize/Rfunctions/main/ME_helper_functions.R"</span>)</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>anes <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">"https://tdmize.github.io/data/data/cda_anes.dta"</span>)</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep only model vars and drop any missing data on them</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>anes <span class="ot">&lt;-</span> anes[<span class="fu">c</span>(<span class="st">"feel_trump"</span>, <span class="st">"age"</span>, <span class="st">"hhincome"</span>, <span class="st">"woman"</span>, <span class="st">"lgb"</span>, <span class="st">"race4"</span>,</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>  <span class="st">"educ"</span>, <span class="st">"relimport"</span>, <span class="st">"wrongtrack"</span>)]</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>anes <span class="ot">&lt;-</span> anes[<span class="fu">complete.cases</span>(anes), ]</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Treat binary/nominal variables as factors using their value labels</span></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>anes <span class="ot">&lt;-</span> anes <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">woman =</span> <span class="fu">as_factor</span>(woman), <span class="at">lgb =</span> <span class="fu">as_factor</span>(lgb),</span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">race4 =</span> <span class="fu">as_factor</span>(race4), <span class="at">wrongtrack =</span> <span class="fu">as_factor</span>(wrongtrack))</span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>conmod <span class="ot">&lt;-</span> <span class="fu">lm</span>(feel_trump <span class="sc">~</span> <span class="fu">as.numeric</span>(relimport) <span class="sc">+</span> <span class="fu">as_factor</span>(educ) <span class="sc">+</span> age <span class="sc">+</span> hhincome <span class="sc">+</span></span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>  woman <span class="sc">+</span> lgb <span class="sc">+</span> race4 <span class="sc">+</span> wrongtrack, <span class="at">data =</span> anes)</span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>con_reli <span class="ot">&lt;-</span> <span class="fu">avg_predictions</span>(conmod, <span class="at">by =</span> <span class="st">"relimport"</span>,</span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">newdata =</span> <span class="fu">datagrid</span>(<span class="at">relimport =</span> unique, <span class="at">grid_type =</span> <span class="st">"counterfactual"</span>))</span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a>con_reli</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+ relimport Estimate Std. Error     z Pr(&gt;|z|)   S 2.5 % 97.5 %
+         1     50.7      0.576  88.0   &lt;0.001 Inf  49.6   51.8
+         2     44.7      0.404 110.6   &lt;0.001 Inf  43.9   45.5
+         3     38.8      0.346 112.2   &lt;0.001 Inf  38.1   39.5
+         4     32.8      0.447  73.5   &lt;0.001 Inf  32.0   33.7
+         5     26.9      0.635  42.3   &lt;0.001 Inf  25.6   28.1
+
+Type: response</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>nommod <span class="ot">&lt;-</span> <span class="fu">lm</span>(feel_trump <span class="sc">~</span> <span class="fu">as_factor</span>(relimport) <span class="sc">+</span> <span class="fu">as_factor</span>(educ) <span class="sc">+</span> age <span class="sc">+</span> hhincome <span class="sc">+</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  woman <span class="sc">+</span> lgb <span class="sc">+</span> race4 <span class="sc">+</span> wrongtrack, <span class="at">data =</span> anes)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>nom_reli <span class="ot">&lt;-</span> <span class="fu">avg_predictions</span>(nommod, <span class="at">by =</span> <span class="st">"relimport"</span>,</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">newdata =</span> <span class="fu">datagrid</span>(<span class="at">relimport =</span> unique, <span class="at">grid_type =</span> <span class="st">"counterfactual"</span>))</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>nom_reli</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+ relimport Estimate Std. Error    z Pr(&gt;|z|)     S 2.5 % 97.5 %
+         1     50.6      0.689 73.5   &lt;0.001   Inf  49.3   52.0
+         2     43.8      0.793 55.2   &lt;0.001   Inf  42.3   45.4
+         3     39.7      0.783 50.7   &lt;0.001   Inf  38.2   41.2
+         4     34.7      0.953 36.4   &lt;0.001 963.4  32.9   36.6
+         5     25.8      0.765 33.7   &lt;0.001 827.0  24.3   27.3
+
+Type: response</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>reli_prs <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(<span class="at">Continuous =</span> con_reli, <span class="at">Nominal =</span> nom_reli, <span class="at">.id =</span> <span class="st">"spec"</span>)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(reli_prs, <span class="fu">aes</span>(<span class="at">x =</span> relimport, <span class="at">y =</span> estimate, <span class="at">ymin =</span> conf.low, <span class="at">ymax =</span> conf.high,</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> spec)) <span class="sc">+</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_pointrange</span>(<span class="at">position =</span> <span class="fu">position_dodge</span>(<span class="at">width =</span> <span class="fl">0.2</span>)) <span class="sc">+</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">position =</span> <span class="fu">position_dodge</span>(<span class="at">width =</span> <span class="fl">0.2</span>)) <span class="sc">+</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>,</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Extremely"</span>, <span class="st">"Very"</span>, <span class="st">"Moderately"</span>, <span class="st">"A little"</span>, <span class="st">"Not at all"</span>)) <span class="sc">+</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"[2.7.a] Trump feeling thermometer by importance of religion"</span>,</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Nominal vs continuous specification of relimport"</span>,</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Importance of religion"</span>, <span class="at">y =</span> <span class="st">"Trump feeling thermometer"</span>, <span class="at">color =</span> <span class="cn">NULL</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2-7-categorical-ivs_files/figure-html/unnamed-chunk-1-1.png" class="img-fluid figure-img" style="width:80.0%" alt="Predicted Trump feeling thermometer by importance of religion from the continuous and nominal specifications; the two sets of predictions are close."></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 <p>*These look similar enough to probably choose the continuous specification. But I would also do some statistical tests to decide (more in the Testing section of the class)</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">regress</span> feel_trump c.educ i.relimport age hhincome i.woman <span class="co">///</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    i.lgb i.race4 i.wrongtrack</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">regress</span> feel_trump c.educ i.relimport age hhincome i.woman <span class="co">///</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    i.lgb i.race4 i.wrongtrack</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>      Source |       SS           df       MS      Number of obs   =     7,155
 -------------+----------------------------------   F(13, 7141)     =    502.86
        Model |  5544245.54        13  426480.426   Prob &gt; F        =    0.0000
@@ -789,7 +874,7 @@ Expression: Linear prediction, predict()
  Wrong track  |    -49.475      0.833  -59.405   0.000      -51.108     -47.842
         _cons |    112.350      1.860   60.408   0.000      108.704     115.996
 -------------------------------------------------------------------------------</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="fu">at</span>(educ=(1(1)5)) <span class="kw">saving</span>(con_educ, <span class="kw">replace</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="fu">at</span>(educ=(1(1)5)) <span class="kw">saving</span>(con_educ, <span class="kw">replace</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Predictive margins                                       Number of obs = 7,155
 Model VCE: OLS
 
@@ -812,8 +897,8 @@ Expression: Linear prediction, predict()
           5  |     33.078      0.647   51.122   0.000       31.810      34.347
 ------------------------------------------------------------------------------
 (file con_educ.dta not found)</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">regress</span> feel_trump i.educ i.relimport age hhincome i.woman <span class="co">///</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    i.lgb i.race4 i.wrongtrack</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">regress</span> feel_trump i.educ i.relimport age hhincome i.woman <span class="co">///</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    i.lgb i.race4 i.wrongtrack</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>      Source |       SS           df       MS      Number of obs   =     7,155
 -------------+----------------------------------   F(16, 7138)     =    412.05
        Model |  5569952.94        16  348122.059   Prob &gt; F        =    0.0000
@@ -854,7 +939,7 @@ Expression: Linear prediction, predict()
  Wrong track  |    -49.298      0.832  -59.257   0.000      -50.929     -47.667
         _cons |    101.470      2.272   44.660   0.000       97.016     105.924
 -------------------------------------------------------------------------------</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="fu">at</span>(educ=(1(1)5)) <span class="kw">saving</span>(nom_educ, <span class="kw">replace</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="fu">at</span>(educ=(1(1)5)) <span class="kw">saving</span>(nom_educ, <span class="kw">replace</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Predictive margins                                       Number of obs = 7,155
 Model VCE: OLS
 
@@ -877,16 +962,73 @@ Expression: Linear prediction, predict()
           5  |     31.836      0.817   38.990   0.000       30.235      33.437
 ------------------------------------------------------------------------------
 (file nom_educ.dta not found)</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>combomarginsplot con_educ nom_educ, <span class="co">///</span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    labels(<span class="st">"Continuous"</span> <span class="st">"Nominal"</span>) <span class="co">///</span></span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    xlab(1 <span class="st">"&lt; High School"</span> 2 <span class="st">"High School"</span> 3 <span class="st">"Some College"</span> 4 <span class="st">"College Degree"</span></span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a> 5 <span class="st">"Grad+"</span>) <span class="co">///</span></span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[2.7.b] Trump feeling thermometer by educational attainment"</span>, <span class="kw">size</span>(</span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>medlarge)) <span class="co">///</span></span>
-<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    <span class="bn">subtitle</span>(<span class="st">"Nominal vs continuous specification of {it:education}"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>combomarginsplot con_educ nom_educ, <span class="co">///</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    labels(<span class="st">"Continuous"</span> <span class="st">"Nominal"</span>) <span class="co">///</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    xlab(1 <span class="st">"&lt; High School"</span> 2 <span class="st">"High School"</span> 3 <span class="st">"Some College"</span> 4 <span class="st">"College Degree"</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a> 5 <span class="st">"Grad+"</span>) <span class="co">///</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[2.7.b] Trump feeling thermometer by educational attainment"</span>, <span class="kw">size</span>(</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>medlarge)) <span class="co">///</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>    <span class="bn">subtitle</span>(<span class="st">"Nominal vs continuous specification of {it:education}"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>  Variables that uniquely identify margins: educ _filenumber</code></pre>
 </div>
 <p><img src="fig/cda-02_07_b-ordinal_IVs-02-educ.png" class="img-fluid" style="width:80.0%" alt="Predicted Trump feeling thermometer by educational attainment from the continuous and nominal specifications; the nominal predictions depart from the straight line."></p>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>conmod2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(feel_trump <span class="sc">~</span> <span class="fu">as.numeric</span>(educ) <span class="sc">+</span> <span class="fu">as_factor</span>(relimport) <span class="sc">+</span> age <span class="sc">+</span> hhincome <span class="sc">+</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  woman <span class="sc">+</span> lgb <span class="sc">+</span> race4 <span class="sc">+</span> wrongtrack, <span class="at">data =</span> anes)</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>con_educ <span class="ot">&lt;-</span> <span class="fu">avg_predictions</span>(conmod2, <span class="at">by =</span> <span class="st">"educ"</span>,</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">newdata =</span> <span class="fu">datagrid</span>(<span class="at">educ =</span> unique, <span class="at">grid_type =</span> <span class="st">"counterfactual"</span>))</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>con_educ</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+ educ Estimate Std. Error     z Pr(&gt;|z|)   S 2.5 % 97.5 %
+    1     49.5      0.887  55.8   &lt;0.001 Inf  47.7   51.2
+    2     45.4      0.588  77.2   &lt;0.001 Inf  44.2   46.5
+    3     41.3      0.370 111.6   &lt;0.001 Inf  40.5   42.0
+    4     37.2      0.401  92.6   &lt;0.001 Inf  36.4   38.0
+    5     33.1      0.647  51.1   &lt;0.001 Inf  31.8   34.3
+
+Type: response</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>nommod2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(feel_trump <span class="sc">~</span> <span class="fu">as_factor</span>(educ) <span class="sc">+</span> <span class="fu">as_factor</span>(relimport) <span class="sc">+</span> age <span class="sc">+</span> hhincome <span class="sc">+</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  woman <span class="sc">+</span> lgb <span class="sc">+</span> race4 <span class="sc">+</span> wrongtrack, <span class="at">data =</span> anes)</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>nom_educ <span class="ot">&lt;-</span> <span class="fu">avg_predictions</span>(nommod2, <span class="at">by =</span> <span class="st">"educ"</span>,</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">newdata =</span> <span class="fu">datagrid</span>(<span class="at">educ =</span> unique, <span class="at">grid_type =</span> <span class="st">"counterfactual"</span>))</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>nom_educ</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+ educ Estimate Std. Error    z Pr(&gt;|z|)     S 2.5 % 97.5 %
+    1     43.2      1.658 26.0   &lt;0.001 493.9  39.9   46.4
+    2     45.2      0.877 51.6   &lt;0.001   Inf  43.5   46.9
+    3     43.3      0.592 73.2   &lt;0.001   Inf  42.2   44.5
+    4     36.5      0.685 53.3   &lt;0.001   Inf  35.2   37.9
+    5     31.8      0.817 39.0   &lt;0.001   Inf  30.2   33.4
+
+Type: response</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>educ_prs <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(<span class="at">Continuous =</span> con_educ, <span class="at">Nominal =</span> nom_educ, <span class="at">.id =</span> <span class="st">"spec"</span>)</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(educ_prs, <span class="fu">aes</span>(<span class="at">x =</span> educ, <span class="at">y =</span> estimate, <span class="at">ymin =</span> conf.low, <span class="at">ymax =</span> conf.high,</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> spec)) <span class="sc">+</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_pointrange</span>(<span class="at">position =</span> <span class="fu">position_dodge</span>(<span class="at">width =</span> <span class="fl">0.2</span>)) <span class="sc">+</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">position =</span> <span class="fu">position_dodge</span>(<span class="at">width =</span> <span class="fl">0.2</span>)) <span class="sc">+</span></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>, <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"&lt; High School"</span>, <span class="st">"High School"</span>,</span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Some College"</span>, <span class="st">"College Degree"</span>, <span class="st">"Grad+"</span>)) <span class="sc">+</span></span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"[2.7.b] Trump feeling thermometer by educational attainment"</span>,</span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Nominal vs continuous specification of education"</span>,</span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Educational attainment"</span>, <span class="at">y =</span> <span class="st">"Trump feeling thermometer"</span>, <span class="at">color =</span> <span class="cn">NULL</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2-7-categorical-ivs_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" style="width:80.0%" alt="Predicted Trump feeling thermometer by educational attainment from the continuous and nominal specifications; the nominal predictions depart from the straight line."></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 <p>*These look quite different to me. I would <em>not</em> feel comfortable using the continuous specification and would instead use the nominal specification of educational attainment</p>
 </section>
 </section>
@@ -917,9 +1059,13 @@ Expression: Linear prediction, predict()
 </div>
 </div>
 </div>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">regress</span> feel_trump c.relimport i.educ age hhincome i.woman <span class="co">///</span></span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    i.lgb i.race4 i.wrongtrack</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">regress</span> feel_trump c.relimport i.educ age hhincome i.woman <span class="co">///</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    i.lgb i.race4 i.wrongtrack</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>      Source |       SS           df       MS      Number of obs   =     7,155
 -------------+----------------------------------   F(13, 7141)     =    506.04
        Model |   5562481.5        13  427883.192   Prob &gt; F        =    0.0000
@@ -956,8 +1102,8 @@ Expression: Linear prediction, predict()
  Wrong track  |    -49.332      0.832  -59.312   0.000      -50.963     -47.702
         _cons |    107.667      2.319   46.433   0.000      103.121     112.212
 -------------------------------------------------------------------------------</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> ftmod</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>margins race4</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> ftmod</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>margins race4</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Predictive margins                                       Number of obs = 7,155
 Model VCE: OLS
 
@@ -973,20 +1119,46 @@ Expression: Linear prediction, predict()
    Hispanic  |     32.167      1.150   27.979   0.000       29.913      34.421
       Other  |     38.521      1.161   33.171   0.000       36.244      40.797
 ------------------------------------------------------------------------------</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>marginsplot, <span class="kw">recast</span>(<span class="kw">scatter</span>) <span class="co">///</span></span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    ylab(0(10)70) <span class="bn">ytitle</span>(<span class="st">"Trump feeling thermometer"</span>) <span class="co">///</span></span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[2.7.c] Feelings toward Trump based on race-ethnicity"</span>, <span class="kw">size</span>(medlar</span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>ge))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>marginsplot, <span class="kw">recast</span>(<span class="kw">scatter</span>) <span class="co">///</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>    ylab(0(10)70) <span class="bn">ytitle</span>(<span class="st">"Trump feeling thermometer"</span>) <span class="co">///</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[2.7.c] Feelings toward Trump based on race-ethnicity"</span>, <span class="kw">size</span>(medlar</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>ge))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Variables that uniquely identify margins: race4</code></pre>
 </div>
 <p><img src="fig/cda-02_07_c-nominal_IVs-01-race.png" class="img-fluid" style="width:80.0%" alt="Dot plot of predicted Trump feeling thermometer for White, Black, Hispanic, and Other respondents, with confidence intervals."></p>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>ftmod <span class="ot">&lt;-</span> <span class="fu">lm</span>(feel_trump <span class="sc">~</span> <span class="fu">as.numeric</span>(relimport) <span class="sc">+</span> <span class="fu">as_factor</span>(educ) <span class="sc">+</span> age <span class="sc">+</span> hhincome <span class="sc">+</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  woman <span class="sc">+</span> lgb <span class="sc">+</span> race4 <span class="sc">+</span> wrongtrack, <span class="at">data =</span> anes)</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_predictions</span>(ftmod, <span class="at">by =</span> <span class="st">"race4"</span>,</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">newdata =</span> <span class="fu">datagrid</span>(<span class="at">race4 =</span> unique, <span class="at">grid_type =</span> <span class="st">"counterfactual"</span>)) <span class="sc">+</span></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">70</span>, <span class="dv">10</span>), <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">70</span>)) <span class="sc">+</span></span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"[2.7.c] Feelings toward Trump based on race-ethnicity"</span>,</span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="st">"Trump feeling thermometer"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2-7-categorical-ivs_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" style="width:80.0%" alt="Dot plot of predicted Trump feeling thermometer for White, Black, Hispanic, and Other respondents, with confidence intervals."></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 <section id="examining-all-pairwise-comparisons" class="level3">
 <h3 class="anchored" data-anchor-id="examining-all-pairwise-comparisons">Examining all pairwise comparisons</h3>
 <ul>
 <li>To obtain a significance test for all contrasts between all categories, you can conduct pairwise comparisons</li>
 </ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>mecompare race4, models(ftmod) pwcompare</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb42"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>mecompare race4, models(ftmod) pwcompare</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Predicting: Linear prediction
 Marginal effects (N_ftmod=7155)
 
@@ -1005,6 +1177,27 @@ race4                            |
                            ftmod |     5     19.494      1.664      0.000
             Other - Hispanic     |                                       
                            ftmod |     6      6.354      1.627      0.000</code></pre>
+</div>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(ftmod, <span class="at">variables =</span> <span class="fu">list</span>(<span class="at">race4 =</span> <span class="st">"pairwise"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+         Contrast Estimate Std. Error      z Pr(&gt;|z|)     S  2.5 % 97.5 %
+ Black - White      -24.26       1.27 -19.04   &lt;0.001 266.0 -26.75 -21.76
+ Hispanic - Black    13.14       1.63   8.05   &lt;0.001  50.1   9.94  16.34
+ Hispanic - White   -11.12       1.23  -9.04   &lt;0.001  62.4 -13.53  -8.71
+ Other - Black       19.49       1.66  11.71   &lt;0.001 102.9  16.23  22.75
+ Other - Hispanic     6.35       1.63   3.90   &lt;0.001  13.4   3.16   9.54
+ Other - White       -4.76       1.23  -3.86   &lt;0.001  13.1  -7.18  -2.35
+
+Term: race4
+Type: response</code></pre>
+</div>
+</div>
+</div>
+</div>
 </div>
 <ul>
 <li><em>Black adults feel less warmly toward Trump than do White adults</em></li>
@@ -1097,14 +1290,35 @@ race4                            |
 <li>In Stata, use the <a href="../../../software/meinequality/index.html"><strong>meinequality</strong></a> command or the <strong>meinequality</strong> option on <strong>mecompare</strong></li>
 <li>In R, use the <a href="../../../software/meinequality_r/index.html"><strong>meinq()</strong> function with <strong>avg_comparisons</strong></a></li>
 </ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>meinequality race4, models(ftmod)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>meinequality race4, models(ftmod)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>ME Inequality Estimates (N = 7155)
 
                          |   Estimate   Std. err.           z       P&gt;|z| 
 -------------------------+-----------------------------------------------
 ME Inequality            |                                               
                    race4 |     13.303       0.699      19.026       0.000 </code></pre>
+</div>
+</div>
+<div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(ftmod, <span class="at">variables =</span> <span class="fu">list</span>(<span class="at">race4 =</span> <span class="st">"pairwise"</span>),</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">hypothesis =</span> <span class="fu">meineq</span>(ftmod))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+ Estimate Std. Error  z Pr(&gt;|z|)     S 2.5 % 97.5 %
+     13.3      0.699 19   &lt;0.001 265.7  11.9   14.7
+
+Term: race4
+Type: response</code></pre>
+</div>
+</div>
+</div>
+</div>
 </div>
 <blockquote class="blockquote">
 <p><em>On average, members of different racial-ethnic groups differ by about 13 points in their feelings towards Trump</em></p>

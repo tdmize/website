@@ -22,12 +22,17 @@
 *! and are overwritten on every build.  New sections are drafted from the Word
 *! slides with  python tools/slides2qmd.py <course> <section> <slides.docx>.
 *!
+*! R tabs.  Pages with Stata and R tabs also hold R code chunks, which quarto
+*! render runs.  The results are saved in _freeze/, so a page's R code reruns
+*! only when that page changes.  Commit _freeze/ along with docs/.
+*!
 *! Restricted data.  Pages that use data that cannot be shared switch to its
-*! folder in hidden code with fastcd (e.g., c rxa), then return to the folder
-*! the page started in.
+*! folder in hidden code: fastcd (e.g., c rarc) for Stata, the full path for R.
+*! Each then returns to the folder the page started in.
 *!
 *! Requirements: Stata 16+; the commands the pages use (listed below, with the
-*! version of each that produced the output); Quarto on the PATH.
+*! version of each that produced the output); Quarto on the PATH; for the R
+*! tabs, R with the packages listed in README.md.
 *!
 *! (Comment lines in this file must not contain the two characters slash-star.)
 

@@ -12,6 +12,9 @@ title: "2.4 Nonlinear Interaction Effects"
 
 ## The limits of coefficients
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 use "https://tdmize.github.io/data/data/cda_gss", clear
@@ -25,6 +28,34 @@ est table opintnlmod, ///
 <</dd_do>>
 ```
 
+## R
+
+```{r}
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(ggplot2)         # graphs
+library(modelsummary)    # regression tables
+library(marginaleffects) # predictions and marginal effects
+library(cleanplots)      # graph scheme
+cleanplots_defaults()
+
+gss <- read_dta("https://tdmize.github.io/data/data/cda_gss.dta")
+
+# Keep only model vars and drop any missing data on them
+gss <- gss[c("occprest", "age", "woman", "college")]
+gss <- gss[complete.cases(gss), ]
+
+# Treat binary variables as factors using their value labels
+gss <- gss |> mutate(woman = as_factor(woman), college = as_factor(college))
+
+int2mod <- lm(occprest ~ poly(age, 2, raw = TRUE) * woman + college, data = gss)
+
+modelsummary(int2mod, stars = c("*" = .05, "**" = .01, "***" = .001),
+  title = "[2.4.a] Occupational prestige linear regression model: Nonlinear interaction effects")
+```
+
+:::
+
 ::: {.callout-note icon="false" appearance="simple"}
 I find the coefficients more or less useless in nonlinear interactive models.
 
@@ -32,6 +63,9 @@ Here, I would go straight to a plot of predictions (include CIs!). Based on what
 :::
 
 *¯\\\_(ツ)\_/¯*
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 <<dd_do>>
@@ -49,6 +83,21 @@ graph export "fig/cda-02_04_b-interaction-2.png", replace width(1400)
 
 ![](fig/cda-02_04_b-interaction-2.png){width=80% fig-alt="Predicted occupational prestige by age for men and women: two curved lines; men rise more steeply and peak higher, and the lines cross twice."}
 
+## R
+
+```{r}
+#| fig-alt: "Predicted occupational prestige by age for men and women: two curved lines; men rise more steeply and peak higher, and the lines cross twice."
+plot_predictions(int2mod, by = c("age", "woman"),
+  newdata = datagrid(age = seq(20, 80, 5), woman = unique,
+    grid_type = "counterfactual")) +
+  scale_y_continuous(breaks = seq(38, 46, 2), limits = c(38, 46)) +
+  labs(title = "[2.4.b] Predicted Occupational Prestige Based on Person's Age and Gender",
+    subtitle = "Interactive and Nonlinear Effect",
+    x = "Age", y = "Occupational Prestige")
+```
+
+:::
+
 *Now, the effect of age depends both on the value of age considered and based on whether the prediction is for a man or a woman*
 
 ### Interpreting nonlinear interaction effects with MEs
@@ -57,12 +106,24 @@ graph export "fig/cda-02_04_b-interaction-2.png", replace width(1400)
   - Let's say we are writing an article on the transition into early adulthood, thus we are mainly interested in the effect of age for those in their twenties
     - Remember the effect will be different for men and women, so need to calculate an ME for men and an ME for women
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 mecompare age, start(age=20) covariates(woman=0) amount(10) models(opintnlmod)
 mecompare age, start(age=20) covariates(woman=1) amount(10) models(opintnlmod)
 <</dd_do>>
 ```
+
+## R
+
+```{r}
+# Effect of aging from 20 to 30, separately for men and women
+avg_comparisons(int2mod, variables = list(age = c(20, 30)), by = "woman")
+```
+
+:::
 
 > *A 10-year increase in age for 20-year-old men leads to about 2 points higher job prestige on average. For women, the same increase in age leads to about 1.26 points higher job prestige.*
 >
@@ -78,6 +139,9 @@ mecompare age, start(age=20) covariates(woman=1) amount(10) models(opintnlmod)
   - *Does aging, on average, have a different effect for men and women?*
     - The test of the equality of MEs (sometimes called 1^st^ differences) is called a 2^nd^ difference
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 est restore opintnlmod
@@ -85,6 +149,17 @@ mecompare age, by(woman) amount(sd)
 metest 2 - 1
 <</dd_do>>
 ```
+
+## R
+
+```{r}
+avg_comparisons(int2mod, variables = list(age = "sd"), by = "woman")
+
+avg_comparisons(int2mod, variables = list(age = "sd"), by = "woman",
+  hypothesis = ~ pairwise)
+```
+
+:::
 
 > *On average, a standard deviation increase in age for men is associated with a 1.50 point increase in occupational prestige. For women, aging shows a smaller, but still significant increase in job prestige (ME~+SD\ |\ woman\ =\ 1~ = 0.59; 2^nd^ difference p \< .001).*
 
@@ -104,6 +179,9 @@ metest 2 - 1
   - Go back to the last graph. What is the ME of gender? It is simply the gap between the red and blue lines. That shows you the difference between men and women at each age
 - Compare the last graph to the one below
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 est restore opintnlmod
@@ -121,6 +199,21 @@ graph export "fig/cda-02_04_c-interaction-3.png", replace width(1400)
 
 ![](fig/cda-02_04_c-interaction-3.png){width=80% fig-alt="Marginal effect of gender (women minus men) across age with confidence intervals: positive at young ages, crossing zero around age 40, and negative at older ages."}
 
+## R
+
+```{r}
+#| fig-alt: "Marginal effect of gender (women minus men) across age with confidence intervals: positive at young ages, crossing zero around age 40, and negative at older ages."
+plot_comparisons(int2mod, variables = "woman", by = "age",
+  newdata = datagrid(age = seq(20, 80, 5), grid_type = "counterfactual")) +
+  geom_hline(yintercept = 0) +
+  scale_y_continuous(breaks = seq(-2, 2, 1)) +
+  labs(title = "[2.4.c] Marginal Effect of Gender across Range of Age",
+    subtitle = "Effects above zero indicate women have higher job prestige",
+    x = "Age", y = "Effect of Gender: Women - Men")
+```
+
+:::
+
 *\*This is a direct test of the effect of gender: whenever the confidence interval overlaps zero = no significant group difference (see interpretation below)*
 
 #### Example interpretation of the plot above
@@ -129,11 +222,24 @@ graph export "fig/cda-02_04_c-interaction-3.png", replace width(1400)
 
 To see at exactly what ages the group difference is or is not significant:
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 mtable, dydx(woman) at(age=(20(1)80)) stat(est se p)
 <</dd_do>>
 ```
+
+## R
+
+```{r}
+avg_comparisons(int2mod, variables = "woman", by = "age",
+  newdata = datagrid(age = 20:80, grid_type = "counterfactual")) |>
+  print(nrows = 61)
+```
+
+:::
 
 ### Presenting nonlinear interaction effects
 
@@ -155,12 +261,23 @@ mtable, dydx(woman) at(age=(20(1)80)) stat(est se p)
 
 ### Example write-up of occupational prestige findings
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 est restore opintnlmod
 mecompare age woman, amount(sd) models(opintnlmod)
 <</dd_do>>
 ```
+
+## R
+
+```{r}
+avg_comparisons(int2mod, variables = list(age = "sd", woman = "reference"))
+```
+
+:::
 
 ::: {.callout-note icon="false" appearance="simple"}
 overall average effects of age and gender

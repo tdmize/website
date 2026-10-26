@@ -34,6 +34,9 @@ $${age}_{\geq 60} = \#\ of\ years\ since\ last\ knot\ (age\ 60)$$
 
 - For example, age 65 is coded as 5 on ${age}_{\geq 60}$; age 80 is coded as 20 on ${age}_{\geq 60}$
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 . use "https://tdmize.github.io/data/data/cda_gss", clear
 (cda_gss.dta |  GSS 1972-2021 CDA - Categorical Data Analysis | date created 202
@@ -51,6 +54,37 @@ $${age}_{\geq 60} = \#\ of\ years\ since\ last\ knot\ (age\ 60)$$
 
 ![](fig/cda-02_07_a-splines-01.png){width=80% fig-alt="Local polynomial smooth of support for same-gender relationships by survey year: flat until about 1990, then rising, with changes in slope around 1996 and 2006."}
 
+## R
+
+```{r}
+#| fig-alt: "Local polynomial smooth of support for same-gender relationships by survey year: flat until about 1990, then rising, with changes in slope around 1996 and 2006."
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(ggplot2)         # graphs
+library(modelsummary)    # regression tables
+library(marginaleffects) # predictions and marginal effects
+library(lspline)         # linear splines
+library(cleanplots)      # graph scheme
+cleanplots_defaults()
+
+gss <- read_dta("https://tdmize.github.io/data/data/cda_gss.dta")
+
+# Keep only the variables used and drop any missing data on them
+gss <- gss[c("samesexop", "year")]
+gss <- gss[complete.cases(gss), ]
+gss <- gss |> mutate(samesexop = as.numeric(samesexop))
+
+ggplot(gss, aes(x = year, y = samesexop)) +
+  geom_smooth() +
+  scale_x_continuous(breaks = seq(1974, 2018, 4)) +
+  scale_y_continuous(breaks = 1:4, limits = c(1, 4)) +
+  labs(title = "[2.7.a] Change in supportive attitudes toward same-gender relationships",
+    subtitle = "Local polynomial smoothing",
+    x = "Year of survey", y = "Support for same-gender relationships")
+```
+
+:::
+
 \*Where would you place the "knots" to model this with splines?
 
 ### Interpreting linear splines
@@ -58,6 +92,9 @@ $${age}_{\geq 60} = \#\ of\ years\ since\ last\ knot\ (age\ 60)$$
 - Linear splines specify linear relationships between each "knot"
   - I chose knots at 1990, 1996, and 2006 based on graph above
   - Here are the variables we need:
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 . mkspline year_lt90 1990 year_90_96 1996 year_96_06 2006 year_06_18 = year
@@ -75,6 +112,18 @@ year_06_18  68846      8  2.348662     0    15  year: (2006,.)
 --------------------------------------------------------------------------------
 
 ```
+
+## R
+
+```{r}
+# lspline() makes one variable for each piece of the spline
+summary(lspline(gss$year, knots = c(1990, 1996, 2006)))
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 . reg samesexop year_lt90 year_90_96 year_96_06 year_06_18
@@ -118,6 +167,17 @@ Legend: * p<.05; ** p<.01; *** p<.001
 
 ```
 
+## R
+
+```{r}
+splinemod <- lm(samesexop ~ lspline(year, knots = c(1990, 1996, 2006)), data = gss)
+
+modelsummary(splinemod, stars = c("*" = .05, "**" = .01, "***" = .001),
+  title = "[2.7.b] Spline regression model for opinion of same-gender relationships")
+```
+
+:::
+
 - What do the coefficients mean?\*
 
 $$\beta_{year\_lt90} = slope\ if\ year < 1990$$
@@ -129,6 +189,9 @@ $$\beta_{year\_96-06} = slope\ if\ year \geq 1996\ \&\ year < 2006$$
 $$\beta_{year\_06-18} = slope\ if\ year > 2006$$
 
 \*We will learn how to test the equality of these coefficients in the 05 Testing section
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 . margins, over(year)
@@ -187,3 +250,17 @@ Variables that uniquely identify margins: year
 ```
 
 ![](fig/cda-02_07_c-splines-02.png){width=80% fig-alt="Predicted support for same-gender relationships from the spline model: four straight segments joined at 1990, 1996, and 2006."}
+
+## R
+
+```{r}
+#| fig-alt: "Predicted support for same-gender relationships from the spline model: four straight segments joined at 1990, 1996, and 2006."
+plot_predictions(splinemod, by = "year") +
+  scale_x_continuous(breaks = seq(1974, 2018, 4)) +
+  scale_y_continuous(breaks = 1:4, limits = c(1, 4)) +
+  labs(title = "[2.7.c] Support for same-gender relationships - GSS 1973 - 2018",
+    subtitle = "Regression splines with knots at 1990, 1996, and 2006",
+    x = "Year of survey", y = "Support for same-gender relationships")
+```
+
+:::

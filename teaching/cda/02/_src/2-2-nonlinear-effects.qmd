@@ -34,6 +34,9 @@ $$\begin{aligned} y &= \beta_{0} + \beta_{1}x_{1} + \beta_{2}\sqrt{w_{2}} + \var
 
 $${occupational\ prestige}_{i} = \beta_{0} + \beta_{age}{age}_{i} + \beta_{{age}^{2}}{{age}^{2}}_{i} \ldots$$
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 use "https://tdmize.github.io/data/data/cda_gss", clear
@@ -45,6 +48,34 @@ est table, title("[2.2.a] Occupational prestige linear regression model") ///
     b(%5.3f) star(.05 .01 .001)
 <</dd_do>>
 ```
+
+## R
+
+```{r}
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(ggplot2)         # graphs
+library(modelsummary)    # regression tables
+library(marginaleffects) # predictions and marginal effects
+library(cleanplots)      # graph scheme
+cleanplots_defaults()
+
+gss <- read_dta("https://tdmize.github.io/data/data/cda_gss.dta")
+
+# Keep only model vars and drop any missing data on them
+gss <- gss[c("occprest", "age", "woman", "college")]
+gss <- gss[complete.cases(gss), ]
+
+# Treat binary variables as factors using their value labels
+gss <- gss |> mutate(woman = as_factor(woman), college = as_factor(college))
+
+age2mod <- lm(occprest ~ poly(age, 2, raw = TRUE) + woman + college, data = gss)
+
+modelsummary(age2mod, stars = c("*" = .05, "**" = .01, "***" = .001),
+  title = "[2.2.a] Occupational prestige linear regression model")
+```
+
+:::
 
 ::: {.callout-note icon="false" appearance="simple"}
 **Stata**: Use [factor syntax](https://www.stata.com/links/stata-basics/factor-variable-notation/) (**c.** for continuous IVs) and **\##** to specify polynomials.
@@ -67,6 +98,9 @@ est table, title("[2.2.a] Occupational prestige linear regression model") ///
 **R**: Use [**plot_predictions**](https://marginaleffects.com/bonus/plot.html) function.
 :::
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 qui margins, at(age=(20(5)80))
@@ -82,6 +116,20 @@ graph export "fig/cda-02_02_b-me_nonlinear-1.png", replace width(1400)
 ```
 
 ![](fig/cda-02_02_b-me_nonlinear-1.png){width=80% fig-alt="Predicted occupational prestige by age with a quadratic term: rising from age 20, peaking near 60, then falling slightly."}
+
+## R
+
+```{r}
+#| fig-alt: "Predicted occupational prestige by age with a quadratic term: rising from age 20, peaking near 60, then falling slightly."
+plot_predictions(age2mod, by = "age",
+  newdata = datagrid(age = seq(20, 80, 5), grid_type = "counterfactual")) +
+  scale_y_continuous(breaks = seq(38, 46, 2), limits = c(38, 46)) +
+  labs(title = "[2.2.b] Predicted Occupational Prestige Based on Person's Age",
+    subtitle = "Quadratic Term for Age",
+    x = "Age", y = "Occupational Prestige")
+```
+
+:::
 
 The marginal effect of age is now different depending on what starting and ending values are used to calculate ME~age~
 
@@ -107,6 +155,9 @@ $\widehat{occprest} = 31.36 + 0.28*80 - 0.002*6400 - 0.165*0 + 16.25*0$ = 40.96
 
 40.96 -- 41.16 = -0.20
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 di 31.36 + 0.28*40 - 0.002*1600 - 0.165*0 + 16.25*0
@@ -118,6 +169,20 @@ di 31.36 + 0.28*80 - 0.002*6400 - 0.165*0 + 16.25*0
 di 40.96 - 41.16
 <</dd_do>>
 ```
+
+## R
+
+```{r}
+31.36 + 0.28*40 - 0.002*1600 - 0.165*0 + 16.25*0
+31.36 + 0.28*50 - 0.002*2500 - 0.165*0 + 16.25*0
+40.36 - 39.36
+
+31.36 + 0.28*70 - 0.002*4900 - 0.165*0 + 16.25*0
+31.36 + 0.28*80 - 0.002*6400 - 0.165*0 + 16.25*0
+40.96 - 41.16
+```
+
+:::
 
 ### Interpreting marginal effects for nonlinear effects
 
@@ -168,6 +233,9 @@ $${MEM}_{continuous} = \eta\left( x_{k} = {\overline{x}}_{k} + 1,\ \mathbf{x}_{-
 - Stata will hold all variables, including binary/nominal variables, at their mean with the **atmeans** option. This is best practice and the way to get a true average effect
   - R's **marginaleffects** sets binary/nominal variables to their modes, which I do not like and does not produce an average effect
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 qui margins, at(age=(20(5)80))
@@ -186,6 +254,22 @@ graph export "fig/cda-02_02_c-me_nonlinear-2.png", replace width(1400)
 
 ![](fig/cda-02_02_c-me_nonlinear-2.png){width=80% fig-alt="The quadratic prediction line for age with vertical lines at the mean of age and one standard deviation above the mean."}
 
+## R
+
+```{r}
+#| fig-alt: "The quadratic prediction line for age with vertical lines at the mean of age and one standard deviation above the mean."
+plot_predictions(age2mod, by = "age",
+  newdata = datagrid(age = seq(20, 80, 5), grid_type = "counterfactual")) +
+  geom_vline(xintercept = c(46, 63.50)) +
+  annotate("text", x = c(41, 58), y = 44, label = c("mean of x", "mean + SD")) +
+  scale_y_continuous(breaks = seq(38, 46, 2), limits = c(38, 46)) +
+  labs(title = "[2.2.c] Predicted Occupational Prestige Based on Person's Age",
+    subtitle = "Quadratic Term for Age",
+    x = "Age", y = "Occupational Prestige")
+```
+
+:::
+
 Vertical lines on plot represent ${\overline{x}}_{age}$ and ${\overline{x}}_{age} + SD$
 
 ### Calculating MEMs
@@ -200,6 +284,9 @@ $$\widehat{occprest} = 31.36 + 0.28*63.32 - 0.002*4009.42 - 0.165*0.54 + 16.25*0
 
 MEM~age+SD~ = 43.14 -- 42.85 ≈ 0.293
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 est restore opmod
@@ -212,6 +299,20 @@ mlincom 2 - 1
 sum age woman college if e(sample)
 <</dd_do>>
 ```
+
+## R
+
+```{r}
+mean(gss$age)
+sd(gss$age)
+46.165 + 17.15691
+
+# MEM: newdata = "mean" holds the other variables at their means (modes for factors)
+comparisons(age2mod, variables = list(age = c(46.165, 63.32191)),
+  newdata = "mean")
+```
+
+:::
 
 > *For the average person in the data, a standard deviation increase in age (about 17.2 years) is associated with a 0.293 increase in occupational prestige points*
 >
@@ -235,6 +336,9 @@ $${ME}_{centered} = \eta\left( x_{k} = start + \frac{\delta}{2},\ \mathbf{x}_{- 
 **R**: [**avg_comparisons**](https://marginaleffects.com/man/r/comparisons.html) centers **sd** and **2sd** changes by default, but not \# changes (but, can request centered)
 :::
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 est restore opmod
@@ -253,6 +357,23 @@ graph export "fig/cda-02_02_d-hist_age-uncenter.png", replace width(1400)
 
 ![](fig/cda-02_02_d-hist_age-uncenter.png){width=80% fig-alt="Histogram of age with vertical lines at the mean and one standard deviation above the mean."}
 
+## R
+
+```{r}
+#| fig-alt: "Histogram of age with vertical lines at the mean and one standard deviation above the mean."
+ggplot(gss, aes(age)) +
+  geom_histogram(binwidth = 1, fill = NA, color = "gray60") +
+  geom_vline(xintercept = c(46.165, 63.32), color = "red") +
+  annotate("text", x = c(50, 70), y = 1600, label = c("mean", "mean + SD")) +
+  labs(title = "[2.2.d] Distribution of age for workers in the GSS",
+    subtitle = "Uncentered + SD change", x = "Age")
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 di 46.165 - (17.15691 / 2)
@@ -270,6 +391,24 @@ graph export "fig/cda-02_02_e-hist_age-centered.png", replace width(1400)
 ```
 
 ![](fig/cda-02_02_e-hist_age-centered.png){width=80% fig-alt="Histogram of age with vertical lines half a standard deviation below and above the mean."}
+
+## R
+
+```{r}
+#| fig-alt: "Histogram of age with vertical lines half a standard deviation below and above the mean."
+46.165 - (17.15691 / 2)
+46.165 + (17.15691 / 2)
+
+ggplot(gss, aes(age)) +
+  geom_histogram(binwidth = 1, fill = NA, color = "gray60") +
+  geom_vline(xintercept = 46.165, color = "pink") +
+  geom_vline(xintercept = c(37.59, 54.74), color = "red") +
+  annotate("text", x = c(30, 62), y = 1600, label = c("mean - SD/2", "mean + SD/2")) +
+  labs(title = "[2.2.e] Distribution of age for workers in the GSS",
+    subtitle = "Centered + SD change", x = "Age")
+```
+
+:::
 
 ### Average marginal effects (AMEs)
 
@@ -301,6 +440,9 @@ $$AME = \frac{1}{N}\sum_{i = 1}^{N}\left\{ \eta\left( x_{k} = {end}_{i},\ \mathb
 [FYI if you don't get the reference](https://www.youtube.com/watch?v=pviYWzu0dzk)
 :::
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 est restore opmod
@@ -308,6 +450,17 @@ mtable, at(age=(46.165 63.32191)) post
 mlincom 2 - 1
 <</dd_do>>
 ```
+
+## R
+
+```{r}
+avg_comparisons(age2mod, variables = list(age = c(46.165, 63.32191)))
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 <<dd_do>>
@@ -329,9 +482,29 @@ graph export "fig/cda-02_02_f-me_nonlinear-2.png", replace width(1400)
 
 ![](fig/cda-02_02_f-me_nonlinear-2.png){width=80% fig-alt="The quadratic prediction line for age with a histogram of age along the bottom of the plot."}
 
+## R
+
+```{r}
+#| fig-alt: "The quadratic prediction line for age with a histogram of age along the bottom of the plot."
+plot_predictions(age2mod, by = "age",
+  newdata = datagrid(age = seq(20, 80, 5), grid_type = "counterfactual")) +
+  # histogram of age, scaled to sit along the bottom of the graph
+  stat_bin(data = subset(gss, age < 80), aes(x = age, y = after_stat(38 + 1.5 * density / max(density))),
+    geom = "step", binwidth = 1, color = "gray60", inherit.aes = FALSE) +
+  scale_y_continuous(breaks = seq(38, 46, 2), limits = c(38, 46)) +
+  labs(title = "[2.2.f] Predicted Occupational Prestige Based on Person's Age",
+    subtitle = "Quadratic Term for Age",
+    x = "Age", y = "Occupational Prestige")
+```
+
+:::
+
 \*Because we are calculating MEs for each observation, the AME is effectively weighted by where the data is; thus, it reflects both the effect (slope of line) and distribution of IV (where most of the data is)
 
-### Estimating marginal effects in Stata
+### Estimating marginal effects
+
+::: {.panel-tabset group="language"}
+## Stata
 
 - In Stata, **margins**, **mchange**, and **mecompare** can all calculate marginal effects. [**mecompare**](/software/mecompare/index.qmd) has the most flexibility and capability
   - Default for all is AMEs; use option **atmeans** or **covariates(atmeans)** for MEMs
@@ -344,9 +517,37 @@ mecompare age college
 <</dd_do>>
 ```
 
+## R
+
+- The [**marginaleffects**](https://marginaleffects.com/) package in R is extremely powerful, flexible, and works with [most any model](https://marginaleffects.com/bonus/supported_models.html) you can estimate in R\*
+- The **slopes** (MEM) and **avg_slopes** (AME) functions estimate instantaneous rates of change for continuous IVs
+- The **comparisons** (MEM) and **avg_comparisons** (AME) functions estimate effects for nominal/binary IVs, and can be used to estimate discrete changes for continuous IVs
+- For a MEM, specify that control variables be held at their mean/modes with:
+  - **newdata = "mean"**
+- No special options needed for an AME as these are the default for the **avg\_** functions
+
+\*For more on MEs generally see [Mize and Han (2026)](/research/mize_han_hdma_2025.qmd); for more R examples see [marginaleffects.com](https://marginaleffects.com/)
+
+- Binary and nominal predictors work seamlessly with **avg_comparisons**
+
+```{r}
+avg_comparisons(age2mod, variables = "college")
+```
+
+- **avg_slopes** reports the average instantaneous rate of change
+
+```{r}
+avg_slopes(age2mod, variables = "age")
+```
+
+:::
+
 > *On average, a one-year increase in age is predicted to increase occupational prestige by 0.059 points*
 >
 > *Workers with college degrees have jobs that are about 16 points more prestigious than workers without college degrees*
+
+::: {.panel-tabset group="language"}
+## Stata
 
 #### Custom changes with the mecompare command
 
@@ -358,6 +559,30 @@ mecompare age college
 mecompare age, amount(sd)
 <</dd_do>>
 ```
+
+## R
+
+#### Customizing amounts of change with marginaleffects
+
+- [**avg_comparisons**](https://marginaleffects.com/man/r/comparisons.html) has some built-in amounts you can specify for an average marginal effect with continuous IVs
+  - E.g., Specify **sd** for one standard deviation or **2sd** for two standard deviations, or specify any custom $\delta$ amount by listing the number
+
+```{r}
+avg_comparisons(age2mod, variables = list(age = "sd"))
+
+avg_comparisons(age2mod, variables = list(age = 5))
+```
+
+- A quirk is that **sd** and **2sd** are centered by default, but a custom $\delta$ amount is not
+  - Set centered changes as the default for all changes with
+
+```{r}
+options(marginaleffects_contrast_direction = "center")
+
+avg_comparisons(age2mod, variables = list(age = 5))
+```
+
+:::
 
 > *On average, a standard deviation increase in age (about 17.2 years) is predicted to increase occupational prestige by about 1 point*
 

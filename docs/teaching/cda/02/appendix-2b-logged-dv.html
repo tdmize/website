@@ -82,7 +82,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../site_libs/bootstrap/bootstrap-6af6771539d6c5b03cf43084788a8ce4.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-d1074f4552fd9e64773fe67262ebb1c3.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -597,6 +597,10 @@ window.Quarto = {
 </ul></li>
 </ul>
 <p>*Poisson models are a possible alternative (<a href="https://blog.stata.com/2011/08/22/use-poisson-rather-than-regress-tell-a-friend/">Gould 2011</a>). More on these in the Count section of the class</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
 <div class="stata-run">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>usetdm smi_gss, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Loading dataset...
@@ -612,14 +616,82 @@ window.Quarto = {
 <pre class="stata-output"><code>(bin=41, start=1, width=3.5150627)</code></pre>
 </div>
 <p><img src="fig/cda-02_08_a-loglinear-1.png" class="img-fluid" style="width:80.0%" alt="Histogram of hourly wages with a normal curve and a red line at the mean of 18.81 dollars; the distribution is strongly right-skewed."></p>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(haven)           <span class="co"># import Stata data and labels</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)           <span class="co"># data manipulation</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)         <span class="co"># graphs</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(modelsummary)    <span class="co"># regression tables</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(marginaleffects) <span class="co"># predictions and marginal effects</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(survey)          <span class="co"># survey data</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(cleanplots)      <span class="co"># graph scheme</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="fu">cleanplots_defaults</span>()</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>smi <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">"https://tdmize.github.io/data/data/smi_gss.dta"</span>)</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(smi[<span class="fu">c</span>(<span class="st">"wages"</span>, <span class="st">"logwages"</span>)])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>     wages            logwages    
+ Min.   :   1.00   Min.   :0.000  
+ 1st Qu.:   8.27   1st Qu.:2.113  
+ Median :  13.50   Median :2.603  
+ Mean   :  18.81   Mean   :2.542  
+ 3rd Qu.:  21.12   3rd Qu.:3.050  
+ Max.   :1773.60   Max.   :7.481  </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>wages150 <span class="ot">&lt;-</span> <span class="fu">filter</span>(smi, wages <span class="sc">&lt;=</span> <span class="dv">150</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(wages150, <span class="fu">aes</span>(wages)) <span class="sc">+</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="fu">aes</span>(<span class="at">y =</span> <span class="fu">after_stat</span>(density)), <span class="at">fill =</span> <span class="cn">NA</span>, <span class="at">color =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_function</span>(<span class="at">fun =</span> dnorm,</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">args =</span> <span class="fu">list</span>(<span class="at">mean =</span> <span class="fu">mean</span>(wages150<span class="sc">$</span>wages), <span class="at">sd =</span> <span class="fu">sd</span>(wages150<span class="sc">$</span>wages))) <span class="sc">+</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fl">18.81</span>, <span class="at">color =</span> <span class="st">"red"</span>, <span class="at">linewidth =</span> <span class="fl">1.5</span>) <span class="sc">+</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">annotate</span>(<span class="st">"text"</span>, <span class="at">x =</span> <span class="dv">40</span>, <span class="at">y =</span> .<span class="dv">05</span>, <span class="at">label =</span> <span class="st">"mean = $18.81"</span>) <span class="sc">+</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"[2.8.a] Distribution of Wages"</span>, <span class="at">x =</span> <span class="st">"Hourly wages"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="appendix-2b-logged-dv_files/figure-html/unnamed-chunk-1-1.png" class="img-fluid figure-img" style="width:80.0%" alt="Histogram of hourly wages with a normal curve and a red line at the mean of 18.81 dollars; the distribution is strongly right-skewed."></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 <p>Is the mean a good summary of this distribution?</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">hist</span> logwages, <span class="kw">percent</span> <span class="bn">title</span>(<span class="st">"[2.8.b] Distribution of Logged Wages"</span>) <span class="co">///</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    fc(<span class="kw">none</span>) <span class="bn">xline</span>(2.54, lcolor(<span class="kw">red</span>) lstyle(solid) lwidth(thick)) <span class="co">///</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">normal</span> <span class="bn">text</span>(9 4 <span class="st">"mean = 2.54"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">hist</span> logwages, <span class="kw">percent</span> <span class="bn">title</span>(<span class="st">"[2.8.b] Distribution of Logged Wages"</span>) <span class="co">///</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    fc(<span class="kw">none</span>) <span class="bn">xline</span>(2.54, lcolor(<span class="kw">red</span>) lstyle(solid) lwidth(thick)) <span class="co">///</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">normal</span> <span class="bn">text</span>(9 4 <span class="st">"mean = 2.54"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>(bin=41, start=0, width=.18245773)</code></pre>
 </div>
 <p><img src="fig/cda-02_08_b-loglinear-2.png" class="img-fluid" style="width:80.0%" alt="Histogram of logged hourly wages with a normal curve and a red line at the mean of 2.54; close to symmetric."></p>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(smi, <span class="fu">aes</span>(logwages)) <span class="sc">+</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="fu">aes</span>(<span class="at">y =</span> <span class="fu">after_stat</span>(density)), <span class="at">fill =</span> <span class="cn">NA</span>, <span class="at">color =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_function</span>(<span class="at">fun =</span> dnorm,</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">args =</span> <span class="fu">list</span>(<span class="at">mean =</span> <span class="fu">mean</span>(smi<span class="sc">$</span>logwages), <span class="at">sd =</span> <span class="fu">sd</span>(smi<span class="sc">$</span>logwages))) <span class="sc">+</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fl">2.54</span>, <span class="at">color =</span> <span class="st">"red"</span>, <span class="at">linewidth =</span> <span class="fl">1.5</span>) <span class="sc">+</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">annotate</span>(<span class="st">"text"</span>, <span class="at">x =</span> <span class="dv">4</span>, <span class="at">y =</span> .<span class="dv">6</span>, <span class="at">label =</span> <span class="st">"mean = 2.54"</span>) <span class="sc">+</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"[2.8.b] Distribution of Logged Wages"</span>, <span class="at">x =</span> <span class="st">"Log of hourly wages"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="appendix-2b-logged-dv_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" style="width:80.0%" alt="Histogram of logged hourly wages with a normal curve and a red line at the mean of 2.54; close to symmetric."></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 <p>Logging positively skewed variables helps normalize the distribution/pull in outliers</p>
 </section>
 <section id="logged-dv-regression-models-1" class="level2">
@@ -710,13 +782,17 @@ window.Quarto = {
 </ul></li>
 <li>For example, consider a model for the unconditional gender wage gap in 2018:</li>
 </ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="st">"https://tdmize.github.io/data/data/cda_gss"</span>, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="st">"https://tdmize.github.io/data/data/cda_gss"</span>, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>(cda_gss.dta |  GSS 1972-2021 CDA - Categorical Data Analysis | date created 202
 &gt; 3)</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">gen</span> logwages = <span class="fu">ln</span>(wages)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">gen</span> logwages = <span class="fu">ln</span>(wages)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>(35,686 missing values generated)</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">reg</span> logwages i.woman <span class="kw">if</span> <span class="fu">year</span> == 2018</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">reg</span> logwages i.woman <span class="kw">if</span> <span class="fu">year</span> == 2018</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>      Source |       SS           df       MS      Number of obs   =     1,176
 -------------+----------------------------------   F(1, 1174)      =     23.13
        Model |  23.8153521         1  23.8153521   Prob &gt; F        =    0.0000
@@ -731,8 +807,47 @@ window.Quarto = {
       Women  |     -0.285      0.059   -4.810   0.000       -0.401      -0.169
        _cons |      2.646      0.042   62.312   0.000        2.562       2.729
 ------------------------------------------------------------------------------</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">di</span> <span class="fu">exp</span>(-0.285)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">di</span> <span class="fu">exp</span>(-0.285)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>.75201425</code></pre>
+</div>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>gss <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">"https://tdmize.github.io/data/data/cda_gss.dta"</span>)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>gss <span class="ot">&lt;-</span> gss <span class="sc">|&gt;</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(year <span class="sc">==</span> <span class="dv">2018</span>) <span class="sc">|&gt;</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">logwages =</span> <span class="fu">log</span>(wages), <span class="at">woman =</span> <span class="fu">as_factor</span>(woman))</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">lm</span>(logwages <span class="sc">~</span> woman, <span class="at">data =</span> gss))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+Call:
+lm(formula = logwages ~ woman, data = gss)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-4.7058 -0.4477  0.1125  0.6079  1.8875 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)  2.64577    0.04246   62.31  &lt; 2e-16 ***
+womanWomen  -0.28473    0.05920   -4.81 1.71e-06 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 1.015 on 1174 degrees of freedom
+  (1172 observations deleted due to missingness)
+Multiple R-squared:  0.01932,   Adjusted R-squared:  0.01849 
+F-statistic: 23.13 on 1 and 1174 DF,  p-value: 1.707e-06</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">exp</span>(<span class="sc">-</span><span class="fl">0.285</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>[1] 0.7520143</code></pre>
+</div>
+</div>
+</div>
+</div>
 </div>
 <ul>
 <li>The factor change (<span class="math inline">\(\exp\left( \beta_{woman} \right) = 0.75\)</span>) can be interpreted as either*:</li>
@@ -802,14 +917,18 @@ window.Quarto = {
 <blockquote class="blockquote">
 <p><em>Table 2 shows results of regression models of log wages for women… bisexual women earn 11 percent less than heterosexual women at baseline (e<sup>b</sup> = .89, p &lt; .05). After accounting for all other factors, bisexual women still earn 7 percent less than comparable heterosexual women, providing support for Hypothesis 6 (e<sup>b</sup> = .93, p &lt; .10)… Lesbian women earn more than heterosexual women at baseline (e<sup>b</sup> = 1.16, p &lt; .05). This difference remains significant and substantively similar in size after accounting for all factors (e<sup>b</sup> = 1.15, p &lt; .01).</em></p>
 </blockquote>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>* Model from Table 2 <span class="kw">of</span> Mize (2016) ASR</span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>usetdm smi_gss, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>* Model from Table 2 <span class="kw">of</span> Mize (2016) ASR</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>usetdm smi_gss, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Loading dataset...
 (SMI | Mize 2016 ASR | GSS Data on Sexual Behavior and Wages)</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">svy</span>: <span class="kw">reg</span> logwages i.partners75 age i.educcat i.race <span class="fu">year</span> <span class="co">///</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    numchild married i.region4 i.metro parttime i.isco88cat <span class="co">///</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> male==0, <span class="kw">eform</span>(Factor)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">svy</span>: <span class="kw">reg</span> logwages i.partners75 age i.educcat i.race <span class="fu">year</span> <span class="co">///</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    numchild married i.region4 i.metro parttime i.isco88cat <span class="co">///</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> male==0, <span class="kw">eform</span>(Factor)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>(running regress on estimation sample)
 
 Survey: Linear regression
@@ -864,15 +983,357 @@ semi-unski..  |      0.611      0.025  -12.130   0.000        0.564       0.662
   farm labor  |      0.572      0.078   -4.071   0.000        0.437       0.749
 selfempl f..  |      0.645      0.216   -1.310   0.191        0.334       1.246
               |
-        _cons |  25685.979  86067.823    3.030   0.003       35.251    1.87e+07
+        _cons |  25685.979  86067.824    3.030   0.003       35.251    1.87e+07
 -------------------------------------------------------------------------------</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="fu">at</span>(age=(20(5)80))</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>marginsplot, recastci(rline) ciopts(lpat(<span class="kw">dash</span>) col(gs14)) <span class="co">///</span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[2.8.c] Predicted Log Wages by Age (Women Workers Only)"</span>) <span class="co">///</span></span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="bn">ytitle</span>(<span class="st">"Log Wages"</span>) ylab(1(0.5)3.5)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="fu">at</span>(age=(20(5)80))</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>marginsplot, recastci(rline) ciopts(lpat(<span class="kw">dash</span>) col(gs14)) <span class="co">///</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[2.8.c] Predicted Log Wages by Age (Women Workers Only)"</span>) <span class="co">///</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>    <span class="bn">ytitle</span>(<span class="st">"Log Wages"</span>) ylab(1(0.5)3.5)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Variables that uniquely identify margins: age</code></pre>
 </div>
 <p><img src="fig/cda-02_08_c-loglinear-3.png" class="img-fluid" style="width:80.0%" alt="Predicted log wages by age for women: a straight rising line."></p>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Model from Table 2 of Mize (2016) ASR: women workers only</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>women <span class="ot">&lt;-</span> smi <span class="sc">|&gt;</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(male <span class="sc">==</span> <span class="dv">0</span>) <span class="sc">|&gt;</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">c</span>(partners75, educcat, race, region4, isco88cat), as_factor)) <span class="sc">|&gt;</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">droplevels</span>()</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>womendesign <span class="ot">&lt;-</span> <span class="fu">svydesign</span>(<span class="at">ids =</span> <span class="sc">~</span>sampcode, <span class="at">weights =</span> <span class="sc">~</span>wtssnr, <span class="at">data =</span> women)</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>womenmod <span class="ot">&lt;-</span> <span class="fu">svyglm</span>(logwages <span class="sc">~</span> partners75 <span class="sc">+</span> age <span class="sc">+</span> educcat <span class="sc">+</span> race <span class="sc">+</span> year <span class="sc">+</span></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>    numchild <span class="sc">+</span> married <span class="sc">+</span> region4 <span class="sc">+</span> metro <span class="sc">+</span> parttime <span class="sc">+</span> isco88cat,</span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">design =</span> womendesign)</span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a><span class="co"># exponentiate = TRUE for factor change coefficients</span></span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a><span class="fu">modelsummary</span>(womenmod, <span class="at">exponentiate =</span> <span class="cn">TRUE</span>, <span class="at">stars =</span> <span class="fu">c</span>(<span class="st">"*"</span> <span class="ot">=</span> .<span class="dv">05</span>, <span class="st">"**"</span> <span class="ot">=</span> .<span class="dv">01</span>, <span class="st">"***"</span> <span class="ot">=</span> .<span class="dv">001</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<!-- preamble start -->
+
+    <script src="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.js"></script>
+
+    <script>
+      // Create table-specific functions using external factory
+      const tableFns_dcq50u9afcb73tbtcvc3 = TinyTable.createTableFunctions("tinytable_dcq50u9afcb73tbtcvc3");
+      // tinytable span after
+      window.addEventListener('load', function () {
+          var cellsToStyle = [
+            // tinytable style arrays after
+          { positions: [ { i: '62', j: 2 } ], css_id: 'tinytable_css_y8khmssopiw3dhy1zat3',}, 
+          { positions: [ { i: '54', j: 2 } ], css_id: 'tinytable_css_y0hudp95fei3odyedpyg',}, 
+          { positions: [ { i: '1', j: 2 }, { i: '2', j: 2 }, { i: '3', j: 2 }, { i: '4', j: 2 }, { i: '5', j: 2 }, { i: '6', j: 2 }, { i: '7', j: 2 }, { i: '8', j: 2 }, { i: '9', j: 2 }, { i: '10', j: 2 }, { i: '11', j: 2 }, { i: '12', j: 2 }, { i: '13', j: 2 }, { i: '14', j: 2 }, { i: '15', j: 2 }, { i: '16', j: 2 }, { i: '17', j: 2 }, { i: '18', j: 2 }, { i: '19', j: 2 }, { i: '20', j: 2 }, { i: '21', j: 2 }, { i: '22', j: 2 }, { i: '23', j: 2 }, { i: '24', j: 2 }, { i: '25', j: 2 }, { i: '26', j: 2 }, { i: '27', j: 2 }, { i: '28', j: 2 }, { i: '29', j: 2 }, { i: '30', j: 2 }, { i: '31', j: 2 }, { i: '32', j: 2 }, { i: '33', j: 2 }, { i: '34', j: 2 }, { i: '35', j: 2 }, { i: '36', j: 2 }, { i: '37', j: 2 }, { i: '38', j: 2 }, { i: '39', j: 2 }, { i: '40', j: 2 }, { i: '41', j: 2 }, { i: '42', j: 2 }, { i: '43', j: 2 }, { i: '44', j: 2 }, { i: '45', j: 2 }, { i: '46', j: 2 }, { i: '47', j: 2 }, { i: '48', j: 2 }, { i: '49', j: 2 }, { i: '50', j: 2 }, { i: '51', j: 2 }, { i: '52', j: 2 }, { i: '53', j: 2 }, { i: '55', j: 2 }, { i: '56', j: 2 }, { i: '57', j: 2 }, { i: '58', j: 2 }, { i: '59', j: 2 }, { i: '60', j: 2 }, { i: '61', j: 2 } ], css_id: 'tinytable_css_vanacxefrl8nqf4jj7rj',}, 
+          { positions: [ { i: '0', j: 2 } ], css_id: 'tinytable_css_mc0gpf2fan4s88h3kg2m',}, 
+          { positions: [ { i: '62', j: 1 } ], css_id: 'tinytable_css_dwydvizy7j96f4p4xtmx',}, 
+          { positions: [ { i: '54', j: 1 } ], css_id: 'tinytable_css_y12vy6q6hc1wrwp1kek4',}, 
+          { positions: [ { i: '1', j: 1 }, { i: '2', j: 1 }, { i: '3', j: 1 }, { i: '4', j: 1 }, { i: '5', j: 1 }, { i: '6', j: 1 }, { i: '7', j: 1 }, { i: '8', j: 1 }, { i: '9', j: 1 }, { i: '10', j: 1 }, { i: '11', j: 1 }, { i: '12', j: 1 }, { i: '13', j: 1 }, { i: '14', j: 1 }, { i: '15', j: 1 }, { i: '16', j: 1 }, { i: '17', j: 1 }, { i: '18', j: 1 }, { i: '19', j: 1 }, { i: '20', j: 1 }, { i: '21', j: 1 }, { i: '22', j: 1 }, { i: '23', j: 1 }, { i: '24', j: 1 }, { i: '25', j: 1 }, { i: '26', j: 1 }, { i: '27', j: 1 }, { i: '28', j: 1 }, { i: '29', j: 1 }, { i: '30', j: 1 }, { i: '31', j: 1 }, { i: '32', j: 1 }, { i: '33', j: 1 }, { i: '34', j: 1 }, { i: '35', j: 1 }, { i: '36', j: 1 }, { i: '37', j: 1 }, { i: '38', j: 1 }, { i: '39', j: 1 }, { i: '40', j: 1 }, { i: '41', j: 1 }, { i: '42', j: 1 }, { i: '43', j: 1 }, { i: '44', j: 1 }, { i: '45', j: 1 }, { i: '46', j: 1 }, { i: '47', j: 1 }, { i: '48', j: 1 }, { i: '49', j: 1 }, { i: '50', j: 1 }, { i: '51', j: 1 }, { i: '52', j: 1 }, { i: '53', j: 1 }, { i: '55', j: 1 }, { i: '56', j: 1 }, { i: '57', j: 1 }, { i: '58', j: 1 }, { i: '59', j: 1 }, { i: '60', j: 1 }, { i: '61', j: 1 } ], css_id: 'tinytable_css_avlvh382xbswrbopq771',}, 
+          { positions: [ { i: '0', j: 1 } ], css_id: 'tinytable_css_ymqt7m06nr1p4kh7i4h2',}, 
+          ];
+
+          // Loop over the arrays to style the cells
+          cellsToStyle.forEach(function (group) {
+              group.positions.forEach(function (cell) {
+                  tableFns_dcq50u9afcb73tbtcvc3.styleCell(cell.i, cell.j, group.css_id);
+              });
+          });
+      });
+    </script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.css">
+    <style>
+    /* tinytable css entries after */
+    #tinytable_dcq50u9afcb73tbtcvc3 td.tinytable_css_y8khmssopiw3dhy1zat3, #tinytable_dcq50u9afcb73tbtcvc3 th.tinytable_css_y8khmssopiw3dhy1zat3 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_dcq50u9afcb73tbtcvc3 td.tinytable_css_y0hudp95fei3odyedpyg, #tinytable_dcq50u9afcb73tbtcvc3 th.tinytable_css_y0hudp95fei3odyedpyg {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_dcq50u9afcb73tbtcvc3 td.tinytable_css_vanacxefrl8nqf4jj7rj, #tinytable_dcq50u9afcb73tbtcvc3 th.tinytable_css_vanacxefrl8nqf4jj7rj { text-align: center }
+    #tinytable_dcq50u9afcb73tbtcvc3 td.tinytable_css_mc0gpf2fan4s88h3kg2m, #tinytable_dcq50u9afcb73tbtcvc3 th.tinytable_css_mc0gpf2fan4s88h3kg2m {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_dcq50u9afcb73tbtcvc3 td.tinytable_css_dwydvizy7j96f4p4xtmx, #tinytable_dcq50u9afcb73tbtcvc3 th.tinytable_css_dwydvizy7j96f4p4xtmx {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_dcq50u9afcb73tbtcvc3 td.tinytable_css_y12vy6q6hc1wrwp1kek4, #tinytable_dcq50u9afcb73tbtcvc3 th.tinytable_css_y12vy6q6hc1wrwp1kek4 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_dcq50u9afcb73tbtcvc3 td.tinytable_css_avlvh382xbswrbopq771, #tinytable_dcq50u9afcb73tbtcvc3 th.tinytable_css_avlvh382xbswrbopq771 { text-align: left }
+    #tinytable_dcq50u9afcb73tbtcvc3 td.tinytable_css_ymqt7m06nr1p4kh7i4h2, #tinytable_dcq50u9afcb73tbtcvc3 th.tinytable_css_ymqt7m06nr1p4kh7i4h2 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    </style>
+    <div class="container">
+      <table class="tinytable" id="tinytable_dcq50u9afcb73tbtcvc3" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
+        
+        <thead>
+              <tr>
+                <th scope="col" data-row="0" data-col="1"> </th>
+                <th scope="col" data-row="0" data-col="2">(1)</th>
+              </tr>
+        </thead>
+        <tfoot><tr><td colspan="2">* p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001</td></tr></tfoot>
+        <tbody>
+                <tr>
+                  <td data-row="1" data-col="1">(Intercept)</td>
+                  <td data-row="1" data-col="2">25685.979**</td>
+                </tr>
+                <tr>
+                  <td data-row="2" data-col="1"></td>
+                  <td data-row="2" data-col="2">(86067.824)</td>
+                </tr>
+                <tr>
+                  <td data-row="3" data-col="1">partners75Bisexual</td>
+                  <td data-row="3" data-col="2">0.931</td>
+                </tr>
+                <tr>
+                  <td data-row="4" data-col="1"></td>
+                  <td data-row="4" data-col="2">(0.040)</td>
+                </tr>
+                <tr>
+                  <td data-row="5" data-col="1">partners75Gay</td>
+                  <td data-row="5" data-col="2">1.153**</td>
+                </tr>
+                <tr>
+                  <td data-row="6" data-col="1"></td>
+                  <td data-row="6" data-col="2">(0.062)</td>
+                </tr>
+                <tr>
+                  <td data-row="7" data-col="1">age</td>
+                  <td data-row="7" data-col="2">1.016***</td>
+                </tr>
+                <tr>
+                  <td data-row="8" data-col="1"></td>
+                  <td data-row="8" data-col="2">(0.001)</td>
+                </tr>
+                <tr>
+                  <td data-row="9" data-col="1">educcathigh school</td>
+                  <td data-row="9" data-col="2">1.389***</td>
+                </tr>
+                <tr>
+                  <td data-row="10" data-col="1"></td>
+                  <td data-row="10" data-col="2">(0.070)</td>
+                </tr>
+                <tr>
+                  <td data-row="11" data-col="1">educcatjunior college</td>
+                  <td data-row="11" data-col="2">1.730***</td>
+                </tr>
+                <tr>
+                  <td data-row="12" data-col="1"></td>
+                  <td data-row="12" data-col="2">(0.094)</td>
+                </tr>
+                <tr>
+                  <td data-row="13" data-col="1">educcatbachelor</td>
+                  <td data-row="13" data-col="2">1.899***</td>
+                </tr>
+                <tr>
+                  <td data-row="14" data-col="1"></td>
+                  <td data-row="14" data-col="2">(0.109)</td>
+                </tr>
+                <tr>
+                  <td data-row="15" data-col="1">educcatgraduate</td>
+                  <td data-row="15" data-col="2">2.445***</td>
+                </tr>
+                <tr>
+                  <td data-row="16" data-col="1"></td>
+                  <td data-row="16" data-col="2">(0.153)</td>
+                </tr>
+                <tr>
+                  <td data-row="17" data-col="1">raceblack</td>
+                  <td data-row="17" data-col="2">1.034</td>
+                </tr>
+                <tr>
+                  <td data-row="18" data-col="1"></td>
+                  <td data-row="18" data-col="2">(0.032)</td>
+                </tr>
+                <tr>
+                  <td data-row="19" data-col="1">raceother</td>
+                  <td data-row="19" data-col="2">0.999</td>
+                </tr>
+                <tr>
+                  <td data-row="20" data-col="1"></td>
+                  <td data-row="20" data-col="2">(0.054)</td>
+                </tr>
+                <tr>
+                  <td data-row="21" data-col="1">year</td>
+                  <td data-row="21" data-col="2">0.996*</td>
+                </tr>
+                <tr>
+                  <td data-row="22" data-col="1"></td>
+                  <td data-row="22" data-col="2">(0.002)</td>
+                </tr>
+                <tr>
+                  <td data-row="23" data-col="1">numchild</td>
+                  <td data-row="23" data-col="2">0.965***</td>
+                </tr>
+                <tr>
+                  <td data-row="24" data-col="1"></td>
+                  <td data-row="24" data-col="2">(0.008)</td>
+                </tr>
+                <tr>
+                  <td data-row="25" data-col="1">married</td>
+                  <td data-row="25" data-col="2">1.087***</td>
+                </tr>
+                <tr>
+                  <td data-row="26" data-col="1"></td>
+                  <td data-row="26" data-col="2">(0.024)</td>
+                </tr>
+                <tr>
+                  <td data-row="27" data-col="1">region4Midwest</td>
+                  <td data-row="27" data-col="2">0.889**</td>
+                </tr>
+                <tr>
+                  <td data-row="28" data-col="1"></td>
+                  <td data-row="28" data-col="2">(0.039)</td>
+                </tr>
+                <tr>
+                  <td data-row="29" data-col="1">region4South</td>
+                  <td data-row="29" data-col="2">0.856***</td>
+                </tr>
+                <tr>
+                  <td data-row="30" data-col="1"></td>
+                  <td data-row="30" data-col="2">(0.038)</td>
+                </tr>
+                <tr>
+                  <td data-row="31" data-col="1">region4West</td>
+                  <td data-row="31" data-col="2">0.979</td>
+                </tr>
+                <tr>
+                  <td data-row="32" data-col="1"></td>
+                  <td data-row="32" data-col="2">(0.047)</td>
+                </tr>
+                <tr>
+                  <td data-row="33" data-col="1">metro</td>
+                  <td data-row="33" data-col="2">1.050</td>
+                </tr>
+                <tr>
+                  <td data-row="34" data-col="1"></td>
+                  <td data-row="34" data-col="2">(0.033)</td>
+                </tr>
+                <tr>
+                  <td data-row="35" data-col="1">parttime</td>
+                  <td data-row="35" data-col="2">0.842***</td>
+                </tr>
+                <tr>
+                  <td data-row="36" data-col="1"></td>
+                  <td data-row="36" data-col="2">(0.024)</td>
+                </tr>
+                <tr>
+                  <td data-row="37" data-col="1">isco88catlo controllers</td>
+                  <td data-row="37" data-col="2">0.844***</td>
+                </tr>
+                <tr>
+                  <td data-row="38" data-col="1"></td>
+                  <td data-row="38" data-col="2">(0.025)</td>
+                </tr>
+                <tr>
+                  <td data-row="39" data-col="1">isco88catroutine nonmanual</td>
+                  <td data-row="39" data-col="2">0.659***</td>
+                </tr>
+                <tr>
+                  <td data-row="40" data-col="1"></td>
+                  <td data-row="40" data-col="2">(0.023)</td>
+                </tr>
+                <tr>
+                  <td data-row="41" data-col="1">isco88catsempl with emp</td>
+                  <td data-row="41" data-col="2">0.717***</td>
+                </tr>
+                <tr>
+                  <td data-row="42" data-col="1"></td>
+                  <td data-row="42" data-col="2">(0.056)</td>
+                </tr>
+                <tr>
+                  <td data-row="43" data-col="1">isco88catsempl without empl</td>
+                  <td data-row="43" data-col="2">0.557***</td>
+                </tr>
+                <tr>
+                  <td data-row="44" data-col="1"></td>
+                  <td data-row="44" data-col="2">(0.042)</td>
+                </tr>
+                <tr>
+                  <td data-row="45" data-col="1">isco88catmanual supervisor</td>
+                  <td data-row="45" data-col="2">0.916</td>
+                </tr>
+                <tr>
+                  <td data-row="46" data-col="1"></td>
+                  <td data-row="46" data-col="2">(0.083)</td>
+                </tr>
+                <tr>
+                  <td data-row="47" data-col="1">isco88catskilled manual</td>
+                  <td data-row="47" data-col="2">0.742***</td>
+                </tr>
+                <tr>
+                  <td data-row="48" data-col="1"></td>
+                  <td data-row="48" data-col="2">(0.042)</td>
+                </tr>
+                <tr>
+                  <td data-row="49" data-col="1">isco88catsemi-unskilld manual</td>
+                  <td data-row="49" data-col="2">0.611***</td>
+                </tr>
+                <tr>
+                  <td data-row="50" data-col="1"></td>
+                  <td data-row="50" data-col="2">(0.025)</td>
+                </tr>
+                <tr>
+                  <td data-row="51" data-col="1">isco88catfarm labor</td>
+                  <td data-row="51" data-col="2">0.572***</td>
+                </tr>
+                <tr>
+                  <td data-row="52" data-col="1"></td>
+                  <td data-row="52" data-col="2">(0.078)</td>
+                </tr>
+                <tr>
+                  <td data-row="53" data-col="1">isco88catselfempl farm</td>
+                  <td data-row="53" data-col="2">0.645</td>
+                </tr>
+                <tr>
+                  <td data-row="54" data-col="1"></td>
+                  <td data-row="54" data-col="2">(0.216)</td>
+                </tr>
+                <tr>
+                  <td data-row="55" data-col="1">Num.Obs.</td>
+                  <td data-row="55" data-col="2">6550</td>
+                </tr>
+                <tr>
+                  <td data-row="56" data-col="1">R2</td>
+                  <td data-row="56" data-col="2">0.256</td>
+                </tr>
+                <tr>
+                  <td data-row="57" data-col="1">R2 Adj.</td>
+                  <td data-row="57" data-col="2">-14.768</td>
+                </tr>
+                <tr>
+                  <td data-row="58" data-col="1">AIC</td>
+                  <td data-row="58" data-col="2">14586.8</td>
+                </tr>
+                <tr>
+                  <td data-row="59" data-col="1">BIC</td>
+                  <td data-row="59" data-col="2">290771.5</td>
+                </tr>
+                <tr>
+                  <td data-row="60" data-col="1">Log.Lik.</td>
+                  <td data-row="60" data-col="2">-145262.719</td>
+                </tr>
+                <tr>
+                  <td data-row="61" data-col="1">F</td>
+                  <td data-row="61" data-col="2">73.379</td>
+                </tr>
+                <tr>
+                  <td data-row="62" data-col="1">RMSE</td>
+                  <td data-row="62" data-col="2">0.73</td>
+                </tr>
+        </tbody>
+      </table>
+    </div>
+<!-- hack to avoid NA insertion in last line -->
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Everyone at each age, keeping the survey weights for averaging</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>agegrid <span class="ot">&lt;-</span> <span class="fu">datagrid</span>(<span class="at">newdata =</span> women, <span class="at">age =</span> <span class="fu">seq</span>(<span class="dv">20</span>, <span class="dv">80</span>, <span class="dv">5</span>), <span class="at">grid_type =</span> <span class="st">"counterfactual"</span>)</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_predictions</span>(womenmod, <span class="at">by =</span> <span class="st">"age"</span>, <span class="at">newdata =</span> agegrid, <span class="at">wts =</span> <span class="st">"wtssnr"</span>) <span class="sc">+</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">1</span>, <span class="fl">3.5</span>, .<span class="dv">5</span>), <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">3.5</span>)) <span class="sc">+</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"[2.8.c] Predicted Log Wages by Age (Women Workers Only)"</span>,</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Age"</span>, <span class="at">y =</span> <span class="st">"Log Wages"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="appendix-2b-logged-dv_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" style="width:80.0%" alt="Predicted log wages by age for women: a straight rising line."></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 <p>The effect on the <em>log of wages</em> is linear (but how would you interpret log wages?)</p>
 </section>
 </section>
@@ -908,29 +1369,83 @@ selfempl f..  |      0.645      0.216   -1.310   0.191        0.334       1.246
 </ul></li>
 </ul>
 <p>*But <a href="https://www.stata.com/stata-news/news34-2/spotlight/">note some important complications</a> if you had values &lt;1 in the original metric of the variable</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="fu">at</span>(age=(20(5)80)) expression(<span class="fu">exp</span>(<span class="kw">predict</span>(<span class="kw">xb</span>)))</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>marginsplot, recastci(rline) ciopts(lpat(<span class="kw">dash</span>) col(gs14)) <span class="co">///</span></span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[2.8.d] Predicted Hourly Wages by Age (Women Workers Only)"</span>) <span class="co">///</span></span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    <span class="bn">ytitle</span>(<span class="st">"Hourly Wages"</span>) ylab(5(5)30)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="fu">at</span>(age=(20(5)80)) expression(<span class="fu">exp</span>(<span class="kw">predict</span>(<span class="kw">xb</span>)))</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>marginsplot, recastci(rline) ciopts(lpat(<span class="kw">dash</span>) col(gs14)) <span class="co">///</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[2.8.d] Predicted Hourly Wages by Age (Women Workers Only)"</span>) <span class="co">///</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    <span class="bn">ytitle</span>(<span class="st">"Hourly Wages"</span>) ylab(5(5)30)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Variables that uniquely identify margins: age</code></pre>
 </div>
 <p><img src="fig/cda-02_08_d-loglinear-4.png" class="img-fluid" style="width:80.0%" alt="Predicted hourly wages by age for women, curving upward."></p>
+</div>
+<div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># transform = exp puts the predictions in the wage metric</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_predictions</span>(womenmod, <span class="at">by =</span> <span class="st">"age"</span>, <span class="at">newdata =</span> agegrid, <span class="at">wts =</span> <span class="st">"wtssnr"</span>,</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">transform =</span> exp) <span class="sc">+</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">5</span>, <span class="dv">30</span>, <span class="dv">5</span>), <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">30</span>)) <span class="sc">+</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"[2.8.d] Predicted Hourly Wages by Age (Women Workers Only)"</span>,</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Age"</span>, <span class="at">y =</span> <span class="st">"Hourly Wages"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="appendix-2b-logged-dv_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" style="width:80.0%" alt="Predicted hourly wages by age for women, curving upward."></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 <p>Note the nonlinearities. This is despite no <em>age<sup>2</sup></em> coefficient in the model. The model is inherently nonlinear in the wages metric due to ln(wages) used as the DV</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-6-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-1" role="tab" aria-controls="tabset-6-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-6-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-2" role="tab" aria-controls="tabset-6-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="fu">at</span>(age=(20(5)80) partners75=(1 2 3)) expression(<span class="fu">exp</span>(<span class="kw">predict</span>(<span class="kw">xb</span>)))</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>marginsplot, noci <span class="bn">title</span>(<span class="st">"[2.8.e] Predicted Hourly Wages by Age (Women Workers </span></span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="st">Only)"</span>) <span class="co">///</span></span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="bn">ytitle</span>(<span class="st">"Hourly Wages"</span>) ylab(5(5)30)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="fu">at</span>(age=(20(5)80) partners75=(1 2 3)) expression(<span class="fu">exp</span>(<span class="kw">predict</span>(<span class="kw">xb</span>)))</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>marginsplot, noci <span class="bn">title</span>(<span class="st">"[2.8.e] Predicted Hourly Wages by Age (Women Workers </span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="st">Only)"</span>) <span class="co">///</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>    <span class="bn">ytitle</span>(<span class="st">"Hourly Wages"</span>) ylab(5(5)30)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Variables that uniquely identify margins: age partners75</code></pre>
 </div>
 <p><img src="fig/cda-02_08_e-loglinear-5.png" class="img-fluid" style="width:80.0%" alt="Predicted hourly wages by age for heterosexual, bisexual, and lesbian women: three upward curves that spread apart with age."></p>
+</div>
+<div id="tabset-6-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>agesexgrid <span class="ot">&lt;-</span> <span class="fu">datagrid</span>(<span class="at">newdata =</span> women, <span class="at">age =</span> <span class="fu">seq</span>(<span class="dv">20</span>, <span class="dv">80</span>, <span class="dv">5</span>), <span class="at">partners75 =</span> unique,</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">grid_type =</span> <span class="st">"counterfactual"</span>)</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_predictions</span>(womenmod, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"age"</span>, <span class="st">"partners75"</span>), <span class="at">newdata =</span> agesexgrid,</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">wts =</span> <span class="st">"wtssnr"</span>, <span class="at">transform =</span> exp) <span class="sc">+</span></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">5</span>, <span class="dv">30</span>, <span class="dv">5</span>)) <span class="sc">+</span></span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"[2.8.e] Predicted Hourly Wages by Age (Women Workers Only)"</span>,</span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Age"</span>, <span class="at">y =</span> <span class="st">"Hourly Wages"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="appendix-2b-logged-dv_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" style="width:80.0%" alt="Predicted hourly wages by age for heterosexual, bisexual, and lesbian women: three upward curves that spread apart with age."></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 <p><strong>*Note</strong> the interaction effect (e.g.&nbsp;size of sexuality gaps vary at different ages) despite no interaction terms in model. Nonlinearities produce interaction effect</p>
 <p><em>What happens when we add age<sup>2</sup> to the model? Even more nonlinearities and interaction effects. Just as in linear regression, in loglinear regression the polynomial allows for the slope of the prediction line to change at some point. Here the effect reverses at higher ages.</em></p>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-7-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-1" role="tab" aria-controls="tabset-7-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-7-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-2" role="tab" aria-controls="tabset-7-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-7-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-7-1-tab">
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">svy</span>: <span class="kw">reg</span> logwages i.partners75##c.age##c.age i.educcat i.race <span class="fu">year</span> <span class="co">///</span></span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    numchild married i.region4 i.metro parttime i.isco88cat <span class="co">///</span></span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> male==0, <span class="kw">eform</span>(Factor)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">svy</span>: <span class="kw">reg</span> logwages i.partners75##c.age##c.age i.educcat i.race <span class="fu">year</span> <span class="co">///</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>    numchild married i.region4 i.metro parttime i.isco88cat <span class="co">///</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> male==0, <span class="kw">eform</span>(Factor)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>(running regress on estimation sample)
 
 Survey: Linear regression
@@ -999,14 +1514,38 @@ selfempl f..  |      0.644      0.221   -1.281   0.201        0.328       1.266
               |
         _cons |    671.048   2236.546    1.953   0.052        0.954    4.72e+05
 -------------------------------------------------------------------------------</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> smimod</span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="fu">at</span>(age=(20(5)80) partners75=(1 2 3)) expression(<span class="fu">exp</span>(<span class="kw">predict</span>(<span class="kw">xb</span>)))</span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>marginsplot, noci <span class="bn">title</span>(<span class="st">"[2.8.f] Predicted Hourly Wages by Age (Women Workers </span></span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="st">Only)"</span>) <span class="co">///</span></span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>    <span class="bn">ytitle</span>(<span class="st">"Hourly Wages"</span>) ylab(0(5)25)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> smimod</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="fu">at</span>(age=(20(5)80) partners75=(1 2 3)) expression(<span class="fu">exp</span>(<span class="kw">predict</span>(<span class="kw">xb</span>)))</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>marginsplot, noci <span class="bn">title</span>(<span class="st">"[2.8.f] Predicted Hourly Wages by Age (Women Workers </span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="st">Only)"</span>) <span class="co">///</span></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>    <span class="bn">ytitle</span>(<span class="st">"Hourly Wages"</span>) ylab(0(5)25)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Variables that uniquely identify margins: age partners75</code></pre>
 </div>
 <p><img src="fig/cda-02_08_f-loglinear-6.png" class="img-fluid" style="width:80.0%" alt="Predicted hourly wages by age for heterosexual, bisexual, and lesbian women: curves that rise, peak in midlife, and fall, at different levels."></p>
+</div>
+<div id="tabset-7-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-7-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>smimod <span class="ot">&lt;-</span> <span class="fu">svyglm</span>(logwages <span class="sc">~</span> partners75 <span class="sc">*</span> <span class="fu">poly</span>(age, <span class="dv">2</span>, <span class="at">raw =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>    educcat <span class="sc">+</span> race <span class="sc">+</span> year <span class="sc">+</span> numchild <span class="sc">+</span> married <span class="sc">+</span> region4 <span class="sc">+</span> metro <span class="sc">+</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>    parttime <span class="sc">+</span> isco88cat,</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">design =</span> womendesign)</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_predictions</span>(smimod, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"age"</span>, <span class="st">"partners75"</span>), <span class="at">newdata =</span> agesexgrid,</span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">wts =</span> <span class="st">"wtssnr"</span>, <span class="at">transform =</span> exp) <span class="sc">+</span></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">25</span>, <span class="dv">5</span>)) <span class="sc">+</span></span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"[2.8.f] Predicted Hourly Wages by Age (Women Workers Only)"</span>,</span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Age"</span>, <span class="at">y =</span> <span class="st">"Hourly Wages"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="appendix-2b-logged-dv_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" style="width:80.0%" alt="Predicted hourly wages by age for heterosexual, bisexual, and lesbian women: curves that rise, peak in midlife, and fall, at different levels."></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 </section>
 <section id="logged-dv-regression-modelsmarginal-effects" class="level3">
 <h3 class="anchored" data-anchor-id="logged-dv-regression-modelsmarginal-effects">Logged DV regression models—marginal effects</h3>
@@ -1017,10 +1556,14 @@ selfempl f..  |      0.644      0.221   -1.281   0.201        0.328       1.266
 <li>Remember to exponentiate the predictions when you calculate the MEs so you are in the wage metric instead of the ln(wage) metric [which will be the default]</li>
 </ul></li>
 </ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-8-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-1" role="tab" aria-controls="tabset-8-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-8-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-2" role="tab" aria-controls="tabset-8-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-8-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-8-1-tab">
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">restore</span> smimod</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">restore</span> smimod</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>(results smimod are active now)</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>mchange partners75, expression(<span class="fu">exp</span>(<span class="kw">predict</span>(<span class="kw">xb</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>mchange partners75, expression(<span class="fu">exp</span>(<span class="kw">predict</span>(<span class="kw">xb</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>svy regress: Changes in Margin | Number of obs = 6550
 
 Expression: , exp(predict(xb))
@@ -1035,6 +1578,27 @@ partners75                |
 Average prediction
 
    11.998 </code></pre>
+</div>
+</div>
+<div id="tabset-8-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-8-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Exponentiate the predictions before taking their difference (wage metric)</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(smimod, <span class="at">variables =</span> <span class="fu">list</span>(<span class="at">partners75 =</span> <span class="st">"pairwise"</span>),</span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">comparison =</span> <span class="cf">function</span>(hi, lo) <span class="fu">exp</span>(hi) <span class="sc">-</span> <span class="fu">exp</span>(lo),</span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">newdata =</span> women, <span class="at">wts =</span> <span class="st">"wtssnr"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+               Contrast Estimate Std. Error     z Pr(&gt;|z|)    S  2.5 % 97.5 %
+ Bisexual, Heterosexual    -1.19      0.497 -2.39   0.0166  5.9 -2.166 -0.216
+ Gay, Bisexual              2.87      0.870  3.30   &lt;0.001 10.0  1.162  4.573
+ Gay, Heterosexual          1.68      0.709  2.36   0.0181  5.8  0.286  3.066
+
+Term: partners75
+Type: response</code></pre>
+</div>
+</div>
+</div>
+</div>
 </div>
 <blockquote class="blockquote">
 <p><em>Bisexual women earn about $1.19 less an hour than heterosexual women</em></p>

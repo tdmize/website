@@ -27,6 +27,9 @@ title: "2.8 Comparing Effects Across IVs"
 
 The example is adapted from [Mize and Han (2025)](/research/mize_han_socsci_2025.qmd):
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 use "https://tdmize.github.io/data/data/cda_gss", clear
@@ -41,6 +44,44 @@ mecompare age woman race4 class, amount(trimrange) meinequality model(mod42b)
 <</dd_do>>
 ```
 
+## R
+
+```{r}
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(marginaleffects) # predictions and marginal effects
+
+source("https://raw.githubusercontent.com/tdmize/Rfunctions/main/ME_helper_functions.R")
+
+gss <- read_dta("https://tdmize.github.io/data/data/cda_gss.dta")
+gss <- gss |> filter(year == 2021)
+
+# Keep only model vars and drop any missing data on them
+gss <- gss[c("polviews", "age", "woman", "race4", "class")]
+gss <- gss[complete.cases(gss), ]
+
+# Treat binary/nominal variables as factors; drop categories with no cases
+gss <- gss |> mutate(conpolviews = as.numeric(polviews), woman = as_factor(woman),
+  race4 = as_factor(race4), class = as_factor(class)) |>
+  droplevels()
+
+mod42b <- lm(conpolviews ~ poly(age, 2, raw = TRUE) + woman + race4 + class, data = gss)
+
+# Trimmed range of age: 5th to 95th percentile
+quantile(gss$age, c(.05, .95))
+
+avg_comparisons(mod42b,
+  variables = list(age = quantile(gss$age, c(.05, .95)), woman = "reference"))
+
+avg_comparisons(mod42b, variables = list(race4 = "pairwise", class = "pairwise"),
+  hypothesis = meineq(mod42b))
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 metest, clear
@@ -53,6 +94,29 @@ metest 7 - abs(2), add rowname("class - woman")
 metest, title("Effect size comparison of predictors of political views")
 <</dd_do>>
 ```
+
+## R
+
+```{r}
+# Effect sizes: ME of age, absolute ME of woman, ME inequality of race4 and class
+effect_sizes <- function(x) {
+  ineq <- meineq(mod42b)(x[x$term %in% c("race4", "class"), ])
+  data.frame(term = c("age", "woman", ineq$term),
+    estimate = c(x$estimate[x$term == "age"], abs(x$estimate[x$term == "woman"]),
+      ineq$estimate))
+}
+
+sizes <- avg_comparisons(mod42b,
+  variables = list(age = quantile(gss$age, c(.05, .95)), woman = "reference",
+    race4 = "pairwise", class = "pairwise"),
+  hypothesis = effect_sizes)
+sizes
+
+# Test the equality of each pair of effect sizes
+hypotheses(sizes, hypothesis = ~ revpairwise)
+```
+
+:::
 
 > *Age has a larger effect on political views than does gender, race-ethnicity, or social class*
 >

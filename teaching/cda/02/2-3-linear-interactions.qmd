@@ -11,6 +11,9 @@ title: "2.3 Linear Interaction Effects"
 
 ## Interaction effect example and interpretation
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 . use "https://tdmize.github.io/data/data/cda_gss", clear
 (cda_gss.dta |  GSS 1972-2021 CDA - Categorical Data Analysis | date created 202
@@ -71,6 +74,34 @@ Legend: * p<.05; ** p<.01; *** p<.001
 
 ```
 
+## R
+
+```{r}
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(ggplot2)         # graphs
+library(modelsummary)    # regression tables
+library(marginaleffects) # predictions and marginal effects
+library(cleanplots)      # graph scheme
+cleanplots_defaults()
+
+gss <- read_dta("https://tdmize.github.io/data/data/cda_gss.dta")
+
+# Keep only model vars and drop any missing data on them
+gss <- gss[c("occprest", "age", "woman", "college")]
+gss <- gss[complete.cases(gss), ]
+
+# Treat binary variables as factors using their value labels
+gss <- gss |> mutate(woman = as_factor(woman), college = as_factor(college))
+
+intmod <- lm(occprest ~ age * woman + college, data = gss)
+
+modelsummary(intmod, stars = c("*" = .05, "**" = .01, "***" = .001),
+  title = "[2.3.a] Occupational prestige linear regression model: Interaction between age & gender")
+```
+
+:::
+
 ::: {.callout-note icon="false" appearance="simple"}
 For linear additive effects, the coefficient on the product term tests whether there is an interactive relationship between the two IVs (i.e., whether the effect of one variable *depends on* the level of another variable). **This is only the case for linear additive effects**
 
@@ -78,6 +109,9 @@ For linear additive effects, the coefficient on the product term tests whether t
 
 What is the effect of age for men? For women? Because "woman" is coded as 1, *β~age~* tells us the effect of age for men (when *woman* = 0). The effect of age for women = *β~age~* + *β~woman\ X\ age~* which is 0.072 -- 0.055 = 0.017. **Again, this is only the case for linear additive effects.** I generally go straight to plotting predictions with interactions
 :::
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 . qui margins, at(age=(20(5)80) woman=(0 1))
@@ -95,11 +129,29 @@ Variables that uniquely identify margins: age woman
 
 ![](fig/cda-02_03_b-interaction-1.png){width=80% fig-alt="Predicted occupational prestige by age for men and women: two straight lines that cross, with a steeper slope for men."}
 
+## R
+
+```{r}
+#| fig-alt: "Predicted occupational prestige by age for men and women: two straight lines that cross, with a steeper slope for men."
+plot_predictions(intmod, by = c("age", "woman"),
+  newdata = datagrid(age = seq(20, 80, 5), woman = unique,
+    grid_type = "counterfactual")) +
+  scale_y_continuous(breaks = seq(38, 46, 2), limits = c(38, 46)) +
+  labs(title = "[2.3.b] Predicted Occupational Prestige Based on Person's Age and Gender",
+    subtitle = "Interaction Term: Gender X Age",
+    x = "Age", y = "Occupational Prestige")
+```
+
+:::
+
 ### Marginal effects by levels of another variable
 
 - With linear effects, we can calculate the slope for each level of the nominal variable (here, *woman*) by adding the coefficients
   - But, the coefficients don't provide a significance test for the effect of *age* for woman=1
 - Marginal effects straightforwardly provide this, without the need for mental math
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 . est restore opintmod
@@ -118,7 +170,18 @@ age + 1 (centered)               |
 
 ```
 
+## R
+
+```{r}
+avg_comparisons(intmod, variables = list(age = 1), by = "woman")
+```
+
+:::
+
 - Easy to test the equality of the marginal effects; in the case of linear effects, will provide equivalent answer to interaction coefficients (but only in this case!)
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 . metest 2 - 1
@@ -128,6 +191,15 @@ age + 1 (centered)               |
        age_woman_1 - age_woman_0 |    -0.055      0.006      0.000 
 
 ```
+
+## R
+
+```{r}
+avg_comparisons(intmod, variables = list(age = 1), by = "woman",
+  hypothesis = ~ pairwise)
+```
+
+:::
 
 ::: {.callout-note icon="false" appearance="simple"}
 **R**: Use **hypothesis** option of **avg_comparisons**

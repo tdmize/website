@@ -82,7 +82,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../site_libs/bootstrap/bootstrap-6af6771539d6c5b03cf43084788a8ce4.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-d1074f4552fd9e64773fe67262ebb1c3.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -603,6 +603,10 @@ window.Quarto = {
 <ul>
 <li>For example, age 65 is coded as 5 on <span class="math inline">\({age}_{\geq 60}\)</span>; age 80 is coded as 20 on <span class="math inline">\({age}_{\geq 60}\)</span></li>
 </ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
 <div class="stata-run">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="st">"https://tdmize.github.io/data/data/cda_gss"</span>, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>(cda_gss.dta |  GSS 1972-2021 CDA - Categorical Data Analysis | date created 202
@@ -615,6 +619,43 @@ window.Quarto = {
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="st">hips from 1972 to 2020"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p><img src="fig/cda-02_07_a-splines-01.png" class="img-fluid" style="width:80.0%" alt="Local polynomial smooth of support for same-gender relationships by survey year: flat until about 1990, then rising, with changes in slope around 1996 and 2006."></p>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(haven)           <span class="co"># import Stata data and labels</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)           <span class="co"># data manipulation</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)         <span class="co"># graphs</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(modelsummary)    <span class="co"># regression tables</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(marginaleffects) <span class="co"># predictions and marginal effects</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lspline)         <span class="co"># linear splines</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(cleanplots)      <span class="co"># graph scheme</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">cleanplots_defaults</span>()</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>gss <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">"https://tdmize.github.io/data/data/cda_gss.dta"</span>)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep only the variables used and drop any missing data on them</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>gss <span class="ot">&lt;-</span> gss[<span class="fu">c</span>(<span class="st">"samesexop"</span>, <span class="st">"year"</span>)]</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>gss <span class="ot">&lt;-</span> gss[<span class="fu">complete.cases</span>(gss), ]</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>gss <span class="ot">&lt;-</span> gss <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">samesexop =</span> <span class="fu">as.numeric</span>(samesexop))</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(gss, <span class="fu">aes</span>(<span class="at">x =</span> year, <span class="at">y =</span> samesexop)) <span class="sc">+</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>() <span class="sc">+</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">1974</span>, <span class="dv">2018</span>, <span class="dv">4</span>)) <span class="sc">+</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>, <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">4</span>)) <span class="sc">+</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"[2.7.a] Change in supportive attitudes toward same-gender relationships"</span>,</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Local polynomial smoothing"</span>,</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Year of survey"</span>, <span class="at">y =</span> <span class="st">"Support for same-gender relationships"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="appendix-2c-splines_files/figure-html/unnamed-chunk-1-1.png" class="img-fluid figure-img" style="width:80.0%" alt="Local polynomial smooth of support for same-gender relationships by survey year: flat until about 1990, then rising, with changes in slope around 1996 and 2006."></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 <p>*Where would you place the “knots” to model this with splines?</p>
 <section id="interpreting-linear-splines" class="level3">
 <h3 class="anchored" data-anchor-id="interpreting-linear-splines">Interpreting linear splines</h3>
@@ -625,9 +666,13 @@ window.Quarto = {
 <li>Here are the variables we need:</li>
 </ul></li>
 </ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">mkspline</span> year_lt90 1990 year_90_96 1996 year_96_06 2006 year_06_18 = <span class="fu">year</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">codebook</span> <span class="fu">year</span>*, c</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">mkspline</span> year_lt90 1990 year_90_96 1996 year_96_06 2006 year_06_18 = <span class="fu">year</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">codebook</span> <span class="fu">year</span>*, c</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Variable      Obs Unique      Mean   Min   Max  Label
 --------------------------------------------------------------------------------
 year        68846     33  1996.465  1972  2021  gss year for this respondent
@@ -638,8 +683,30 @@ year_96_06  68846      6  4.058014     0    10  year: (1996,2006)
 year_06_18  68846      8  2.348662     0    15  year: (2006,.)
 --------------------------------------------------------------------------------</code></pre>
 </div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># lspline() makes one variable for each piece of the spline</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">lspline</span>(gss<span class="sc">$</span>year, <span class="at">knots =</span> <span class="fu">c</span>(<span class="dv">1990</span>, <span class="dv">1996</span>, <span class="dv">2006</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>       1              2               3                4         
+ Min.   :1973   Min.   :0.000   Min.   : 0.000   Min.   : 0.000  
+ 1st Qu.:1984   1st Qu.:0.000   1st Qu.: 0.000   1st Qu.: 0.000  
+ Median :1990   Median :6.000   Median : 0.000   Median : 0.000  
+ Mean   :1987   Mean   :3.293   Mean   : 3.838   Mean   : 2.564  
+ 3rd Qu.:1990   3rd Qu.:6.000   3rd Qu.:10.000   3rd Qu.: 2.000  
+ Max.   :1990   Max.   :6.000   Max.   :10.000   Max.   :15.000  </code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">reg</span> samesexop year_lt90 year_90_96 year_96_06 year_06_18</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">reg</span> samesexop year_lt90 year_90_96 year_96_06 year_06_18</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>      Source |       SS           df       MS      Number of obs   =    40,270
 -------------+----------------------------------   F(4, 40265)     =   1442.27
        Model |  9128.86223         4  2282.21556   Prob &gt; F        =    0.0000
@@ -656,11 +723,11 @@ year_06_18  68846      8  2.348662     0    15  year: (2006,.)
   year_06_18 |      0.056      0.002   28.645   0.000        0.053       0.060
        _cons |     10.155      3.340    3.040   0.002        3.609      16.702
 ------------------------------------------------------------------------------</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> splinemod</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">table</span> splinemod, <span class="co">///</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[2.7.b] Spline regression model for opinion of same-gender relation</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="st">ships"</span>) <span class="co">///</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    b(%5.3f) <span class="kw">star</span>(.05 .01 .001)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> splinemod</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">table</span> splinemod, <span class="co">///</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[2.7.b] Spline regression model for opinion of same-gender relation</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="st">ships"</span>) <span class="co">///</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    b(%5.3f) <span class="kw">star</span>(.05 .01 .001)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>[2.7.b] Spline regression model for opinion of same-gender relationships
 
 ---------------------------
@@ -674,6 +741,148 @@ year_06_18  68846      8  2.348662     0    15  year: (2006,.)
 ---------------------------
 Legend: * p&lt;.05; ** p&lt;.01; *** p&lt;.001</code></pre>
 </div>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>splinemod <span class="ot">&lt;-</span> <span class="fu">lm</span>(samesexop <span class="sc">~</span> <span class="fu">lspline</span>(year, <span class="at">knots =</span> <span class="fu">c</span>(<span class="dv">1990</span>, <span class="dv">1996</span>, <span class="dv">2006</span>)), <span class="at">data =</span> gss)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">modelsummary</span>(splinemod, <span class="at">stars =</span> <span class="fu">c</span>(<span class="st">"*"</span> <span class="ot">=</span> .<span class="dv">05</span>, <span class="st">"**"</span> <span class="ot">=</span> .<span class="dv">01</span>, <span class="st">"***"</span> <span class="ot">=</span> .<span class="dv">001</span>),</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">title =</span> <span class="st">"[2.7.b] Spline regression model for opinion of same-gender relationships"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<!-- preamble start -->
+
+    <script src="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.js"></script>
+
+    <script>
+      // Create table-specific functions using external factory
+      const tableFns_r8vaqc6gdqy0g5lq64xk = TinyTable.createTableFunctions("tinytable_r8vaqc6gdqy0g5lq64xk");
+      // tinytable span after
+      window.addEventListener('load', function () {
+          var cellsToStyle = [
+            // tinytable style arrays after
+          { positions: [ { i: '18', j: 2 } ], css_id: 'tinytable_css_ch36ktixzp3kfe72ciq4',}, 
+          { positions: [ { i: '10', j: 2 } ], css_id: 'tinytable_css_nz65828adavwjlcvyjkg',}, 
+          { positions: [ { i: '1', j: 2 }, { i: '2', j: 2 }, { i: '3', j: 2 }, { i: '4', j: 2 }, { i: '5', j: 2 }, { i: '6', j: 2 }, { i: '7', j: 2 }, { i: '8', j: 2 }, { i: '9', j: 2 }, { i: '11', j: 2 }, { i: '12', j: 2 }, { i: '13', j: 2 }, { i: '14', j: 2 }, { i: '15', j: 2 }, { i: '16', j: 2 }, { i: '17', j: 2 } ], css_id: 'tinytable_css_i8l5opz3993ugpw8qwac',}, 
+          { positions: [ { i: '0', j: 2 } ], css_id: 'tinytable_css_tlbxnh6tfp26bwme5wrv',}, 
+          { positions: [ { i: '18', j: 1 } ], css_id: 'tinytable_css_94qw1d2n7frkizkai2ah',}, 
+          { positions: [ { i: '10', j: 1 } ], css_id: 'tinytable_css_ke1w07wt4nu34k2iozj4',}, 
+          { positions: [ { i: '1', j: 1 }, { i: '2', j: 1 }, { i: '3', j: 1 }, { i: '4', j: 1 }, { i: '5', j: 1 }, { i: '6', j: 1 }, { i: '7', j: 1 }, { i: '8', j: 1 }, { i: '9', j: 1 }, { i: '11', j: 1 }, { i: '12', j: 1 }, { i: '13', j: 1 }, { i: '14', j: 1 }, { i: '15', j: 1 }, { i: '16', j: 1 }, { i: '17', j: 1 } ], css_id: 'tinytable_css_7b0ro67ulbn2vwlmdm9x',}, 
+          { positions: [ { i: '0', j: 1 } ], css_id: 'tinytable_css_mamc9dejtttfoambrh0o',}, 
+          ];
+
+          // Loop over the arrays to style the cells
+          cellsToStyle.forEach(function (group) {
+              group.positions.forEach(function (cell) {
+                  tableFns_r8vaqc6gdqy0g5lq64xk.styleCell(cell.i, cell.j, group.css_id);
+              });
+          });
+      });
+    </script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.css">
+    <style>
+    /* tinytable css entries after */
+    #tinytable_r8vaqc6gdqy0g5lq64xk td.tinytable_css_ch36ktixzp3kfe72ciq4, #tinytable_r8vaqc6gdqy0g5lq64xk th.tinytable_css_ch36ktixzp3kfe72ciq4 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_r8vaqc6gdqy0g5lq64xk td.tinytable_css_nz65828adavwjlcvyjkg, #tinytable_r8vaqc6gdqy0g5lq64xk th.tinytable_css_nz65828adavwjlcvyjkg {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_r8vaqc6gdqy0g5lq64xk td.tinytable_css_i8l5opz3993ugpw8qwac, #tinytable_r8vaqc6gdqy0g5lq64xk th.tinytable_css_i8l5opz3993ugpw8qwac { text-align: center }
+    #tinytable_r8vaqc6gdqy0g5lq64xk td.tinytable_css_tlbxnh6tfp26bwme5wrv, #tinytable_r8vaqc6gdqy0g5lq64xk th.tinytable_css_tlbxnh6tfp26bwme5wrv {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_r8vaqc6gdqy0g5lq64xk td.tinytable_css_94qw1d2n7frkizkai2ah, #tinytable_r8vaqc6gdqy0g5lq64xk th.tinytable_css_94qw1d2n7frkizkai2ah {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_r8vaqc6gdqy0g5lq64xk td.tinytable_css_ke1w07wt4nu34k2iozj4, #tinytable_r8vaqc6gdqy0g5lq64xk th.tinytable_css_ke1w07wt4nu34k2iozj4 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_r8vaqc6gdqy0g5lq64xk td.tinytable_css_7b0ro67ulbn2vwlmdm9x, #tinytable_r8vaqc6gdqy0g5lq64xk th.tinytable_css_7b0ro67ulbn2vwlmdm9x { text-align: left }
+    #tinytable_r8vaqc6gdqy0g5lq64xk td.tinytable_css_mamc9dejtttfoambrh0o, #tinytable_r8vaqc6gdqy0g5lq64xk th.tinytable_css_mamc9dejtttfoambrh0o {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    </style>
+    <div class="container">
+      <table class="tinytable" id="tinytable_r8vaqc6gdqy0g5lq64xk" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
+        <caption>[2.7.b] Spline regression model for opinion of same-gender relationships</caption>
+        <thead>
+              <tr>
+                <th scope="col" data-row="0" data-col="1"> </th>
+                <th scope="col" data-row="0" data-col="2">(1)</th>
+              </tr>
+        </thead>
+        <tfoot><tr><td colspan="2">* p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001</td></tr></tfoot>
+        <tbody>
+                <tr>
+                  <td data-row="1" data-col="1">(Intercept)</td>
+                  <td data-row="1" data-col="2">10.155**</td>
+                </tr>
+                <tr>
+                  <td data-row="2" data-col="1"></td>
+                  <td data-row="2" data-col="2">(3.340)</td>
+                </tr>
+                <tr>
+                  <td data-row="3" data-col="1">lspline(year, knots = c(1990, 1996, 2006))1</td>
+                  <td data-row="3" data-col="2">-0.004*</td>
+                </tr>
+                <tr>
+                  <td data-row="4" data-col="1"></td>
+                  <td data-row="4" data-col="2">(0.002)</td>
+                </tr>
+                <tr>
+                  <td data-row="5" data-col="1">lspline(year, knots = c(1990, 1996, 2006))2</td>
+                  <td data-row="5" data-col="2">0.078***</td>
+                </tr>
+                <tr>
+                  <td data-row="6" data-col="1"></td>
+                  <td data-row="6" data-col="2">(0.004)</td>
+                </tr>
+                <tr>
+                  <td data-row="7" data-col="1">lspline(year, knots = c(1990, 1996, 2006))3</td>
+                  <td data-row="7" data-col="2">0.016***</td>
+                </tr>
+                <tr>
+                  <td data-row="8" data-col="1"></td>
+                  <td data-row="8" data-col="2">(0.003)</td>
+                </tr>
+                <tr>
+                  <td data-row="9" data-col="1">lspline(year, knots = c(1990, 1996, 2006))4</td>
+                  <td data-row="9" data-col="2">0.056***</td>
+                </tr>
+                <tr>
+                  <td data-row="10" data-col="1"></td>
+                  <td data-row="10" data-col="2">(0.002)</td>
+                </tr>
+                <tr>
+                  <td data-row="11" data-col="1">Num.Obs.</td>
+                  <td data-row="11" data-col="2">40270</td>
+                </tr>
+                <tr>
+                  <td data-row="12" data-col="1">R2</td>
+                  <td data-row="12" data-col="2">0.125</td>
+                </tr>
+                <tr>
+                  <td data-row="13" data-col="1">R2 Adj.</td>
+                  <td data-row="13" data-col="2">0.125</td>
+                </tr>
+                <tr>
+                  <td data-row="14" data-col="1">AIC</td>
+                  <td data-row="14" data-col="2">132769.2</td>
+                </tr>
+                <tr>
+                  <td data-row="15" data-col="1">BIC</td>
+                  <td data-row="15" data-col="2">132820.8</td>
+                </tr>
+                <tr>
+                  <td data-row="16" data-col="1">Log.Lik.</td>
+                  <td data-row="16" data-col="2">-66378.614</td>
+                </tr>
+                <tr>
+                  <td data-row="17" data-col="1">F</td>
+                  <td data-row="17" data-col="2">1442.275</td>
+                </tr>
+                <tr>
+                  <td data-row="18" data-col="1">RMSE</td>
+                  <td data-row="18" data-col="2">1.26</td>
+                </tr>
+        </tbody>
+      </table>
+    </div>
+<!-- hack to avoid NA insertion in last line -->
+</div>
+</div>
+</div>
+</div>
+</div>
 <ul>
 <li>What do the coefficients mean?*</li>
 </ul>
@@ -682,8 +891,12 @@ Legend: * p&lt;.05; ** p&lt;.01; *** p&lt;.001</code></pre>
 <p><span class="math display">\[\beta_{year\_96-06} = slope\ if\ year \geq 1996\ \&amp;\ year &lt; 2006\]</span></p>
 <p><span class="math display">\[\beta_{year\_06-18} = slope\ if\ year &gt; 2006\]</span></p>
 <p>*We will learn how to test the equality of these coefficients in the 05 Testing section</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="bn">over</span>(<span class="fu">year</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="bn">over</span>(<span class="fu">year</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Predictive margins                                      Number of obs = 40,270
 Model VCE: OLS
 
@@ -724,16 +937,36 @@ Over:       year
        2018  |      2.864      0.014  203.429   0.000        2.837       2.892
        2021  |      3.034      0.019  163.711   0.000        2.997       3.070
 ------------------------------------------------------------------------------</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>marginsplot, recastci(rarea) ciopts(col(gs13)) plotopts(<span class="bn">msymbol</span>(<span class="kw">none</span>)) <span class="co">///</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    xlab(1974(4)2018) ylab(1(1)4) <span class="co">///</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="bn">ytitle</span>(<span class="st">"Support for same-gender relationships"</span>) <span class="bn">xtitle</span>(<span class="st">"Year of survey"</span>) /</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[2.7.c] Support for same-gender relationships - GSS 1973 - 2018"</span>, <span class="fu">s</span></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>ize(medlarge)) <span class="co">///</span></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="bn">subtitle</span>(<span class="st">"Regression splines with knots at 1990, 1996, and 2006"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>marginsplot, recastci(rarea) ciopts(col(gs13)) plotopts(<span class="bn">msymbol</span>(<span class="kw">none</span>)) <span class="co">///</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    xlab(1974(4)2018) ylab(1(1)4) <span class="co">///</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="bn">ytitle</span>(<span class="st">"Support for same-gender relationships"</span>) <span class="bn">xtitle</span>(<span class="st">"Year of survey"</span>) /</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[2.7.c] Support for same-gender relationships - GSS 1973 - 2018"</span>, <span class="fu">s</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>ize(medlarge)) <span class="co">///</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="bn">subtitle</span>(<span class="st">"Regression splines with knots at 1990, 1996, and 2006"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Variables that uniquely identify margins: year</code></pre>
 </div>
 <p><img src="fig/cda-02_07_c-splines-02.png" class="img-fluid" style="width:80.0%" alt="Predicted support for same-gender relationships from the spline model: four straight segments joined at 1990, 1996, and 2006."></p>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_predictions</span>(splinemod, <span class="at">by =</span> <span class="st">"year"</span>) <span class="sc">+</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">1974</span>, <span class="dv">2018</span>, <span class="dv">4</span>)) <span class="sc">+</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>, <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">4</span>)) <span class="sc">+</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"[2.7.c] Support for same-gender relationships - GSS 1973 - 2018"</span>,</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Regression splines with knots at 1990, 1996, and 2006"</span>,</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Year of survey"</span>, <span class="at">y =</span> <span class="st">"Support for same-gender relationships"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="appendix-2c-splines_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" style="width:80.0%" alt="Predicted support for same-gender relationships from the spline model: four straight segments joined at 1990, 1996, and 2006."></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 
 
 </section>

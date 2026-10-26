@@ -30,6 +30,9 @@ title: "2.7 Categorical Independent Variables"
 
 The examples use the 2020 American National Election Studies (ANES):
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 . use "https://tdmize.github.io/data/data/cda_anes", clear
 (American National Election Study 2020 - Pre-election | CDA | 2021-09-26)
@@ -189,7 +192,61 @@ Expression: Linear prediction, predict()
 
 ![](fig/cda-02_07_a-ordinal_IVs-01-relimport.png){width=80% fig-alt="Predicted Trump feeling thermometer by importance of religion from the continuous and nominal specifications; the two sets of predictions are close."}
 
+## R
+
+```{r}
+#| fig-alt: "Predicted Trump feeling thermometer by importance of religion from the continuous and nominal specifications; the two sets of predictions are close."
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(ggplot2)         # graphs
+library(marginaleffects) # predictions and marginal effects
+library(cleanplots)      # graph scheme
+cleanplots_defaults()
+
+source("https://raw.githubusercontent.com/tdmize/Rfunctions/main/ME_helper_functions.R")
+
+anes <- read_dta("https://tdmize.github.io/data/data/cda_anes.dta")
+
+# Keep only model vars and drop any missing data on them
+anes <- anes[c("feel_trump", "age", "hhincome", "woman", "lgb", "race4",
+  "educ", "relimport", "wrongtrack")]
+anes <- anes[complete.cases(anes), ]
+
+# Treat binary/nominal variables as factors using their value labels
+anes <- anes |> mutate(woman = as_factor(woman), lgb = as_factor(lgb),
+  race4 = as_factor(race4), wrongtrack = as_factor(wrongtrack))
+
+conmod <- lm(feel_trump ~ as.numeric(relimport) + as_factor(educ) + age + hhincome +
+  woman + lgb + race4 + wrongtrack, data = anes)
+con_reli <- avg_predictions(conmod, by = "relimport",
+  newdata = datagrid(relimport = unique, grid_type = "counterfactual"))
+con_reli
+
+nommod <- lm(feel_trump ~ as_factor(relimport) + as_factor(educ) + age + hhincome +
+  woman + lgb + race4 + wrongtrack, data = anes)
+nom_reli <- avg_predictions(nommod, by = "relimport",
+  newdata = datagrid(relimport = unique, grid_type = "counterfactual"))
+nom_reli
+
+reli_prs <- bind_rows(Continuous = con_reli, Nominal = nom_reli, .id = "spec")
+
+ggplot(reli_prs, aes(x = relimport, y = estimate, ymin = conf.low, ymax = conf.high,
+    color = spec)) +
+  geom_pointrange(position = position_dodge(width = 0.2)) +
+  geom_line(position = position_dodge(width = 0.2)) +
+  scale_x_continuous(breaks = 1:5,
+    labels = c("Extremely", "Very", "Moderately", "A little", "Not at all")) +
+  labs(title = "[2.7.a] Trump feeling thermometer by importance of religion",
+    subtitle = "Nominal vs continuous specification of relimport",
+    x = "Importance of religion", y = "Trump feeling thermometer", color = NULL)
+```
+
+:::
+
 \*These look similar enough to probably choose the continuous specification. But I would also do some statistical tests to decide (more in the Testing section of the class)
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 . regress feel_trump c.educ i.relimport age hhincome i.woman ///
@@ -342,6 +399,37 @@ Expression: Linear prediction, predict()
 
 ![](fig/cda-02_07_b-ordinal_IVs-02-educ.png){width=80% fig-alt="Predicted Trump feeling thermometer by educational attainment from the continuous and nominal specifications; the nominal predictions depart from the straight line."}
 
+## R
+
+```{r}
+#| fig-alt: "Predicted Trump feeling thermometer by educational attainment from the continuous and nominal specifications; the nominal predictions depart from the straight line."
+conmod2 <- lm(feel_trump ~ as.numeric(educ) + as_factor(relimport) + age + hhincome +
+  woman + lgb + race4 + wrongtrack, data = anes)
+con_educ <- avg_predictions(conmod2, by = "educ",
+  newdata = datagrid(educ = unique, grid_type = "counterfactual"))
+con_educ
+
+nommod2 <- lm(feel_trump ~ as_factor(educ) + as_factor(relimport) + age + hhincome +
+  woman + lgb + race4 + wrongtrack, data = anes)
+nom_educ <- avg_predictions(nommod2, by = "educ",
+  newdata = datagrid(educ = unique, grid_type = "counterfactual"))
+nom_educ
+
+educ_prs <- bind_rows(Continuous = con_educ, Nominal = nom_educ, .id = "spec")
+
+ggplot(educ_prs, aes(x = educ, y = estimate, ymin = conf.low, ymax = conf.high,
+    color = spec)) +
+  geom_pointrange(position = position_dodge(width = 0.2)) +
+  geom_line(position = position_dodge(width = 0.2)) +
+  scale_x_continuous(breaks = 1:5, labels = c("< High School", "High School",
+    "Some College", "College Degree", "Grad+")) +
+  labs(title = "[2.7.b] Trump feeling thermometer by educational attainment",
+    subtitle = "Nominal vs continuous specification of education",
+    x = "Educational attainment", y = "Trump feeling thermometer", color = NULL)
+```
+
+:::
+
 \*These look quite different to me. I would *not* feel comfortable using the continuous specification and would instead use the nominal specification of educational attainment
 
 ## Nominal independent variables
@@ -358,6 +446,9 @@ Expression: Linear prediction, predict()
 
 **R**: Use [**plot_predictions**](https://marginaleffects.com/bonus/plot.html) which is a dot plot by default
 :::
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 . regress feel_trump c.relimport i.educ age hhincome i.woman ///
@@ -432,9 +523,28 @@ Variables that uniquely identify margins: race4
 
 ![](fig/cda-02_07_c-nominal_IVs-01-race.png){width=80% fig-alt="Dot plot of predicted Trump feeling thermometer for White, Black, Hispanic, and Other respondents, with confidence intervals."}
 
+## R
+
+```{r}
+#| fig-alt: "Dot plot of predicted Trump feeling thermometer for White, Black, Hispanic, and Other respondents, with confidence intervals."
+ftmod <- lm(feel_trump ~ as.numeric(relimport) + as_factor(educ) + age + hhincome +
+  woman + lgb + race4 + wrongtrack, data = anes)
+
+plot_predictions(ftmod, by = "race4",
+  newdata = datagrid(race4 = unique, grid_type = "counterfactual")) +
+  scale_y_continuous(breaks = seq(0, 70, 10), limits = c(0, 70)) +
+  labs(title = "[2.7.c] Feelings toward Trump based on race-ethnicity",
+    x = NULL, y = "Trump feeling thermometer")
+```
+
+:::
+
 ### Examining all pairwise comparisons
 
 - To obtain a significance test for all contrasts between all categories, you can conduct pairwise comparisons
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 . mecompare race4, models(ftmod) pwcompare
@@ -459,6 +569,14 @@ race4                            |
                            ftmod |     6      6.354      1.627      0.000
 
 ```
+
+## R
+
+```{r}
+avg_comparisons(ftmod, variables = list(race4 = "pairwise"))
+```
+
+:::
 
 - *Black adults feel less warmly toward Trump than do White adults*
 - *...*
@@ -525,6 +643,9 @@ $$= \sum_{a = 1}^{L}\sum_{b = 2;\ b > a}^{L}\frac{w_{a,b}}{L - 1}*\left| \eta\le
 - In Stata, use the [**meinequality**](/software/meinequality/index.qmd) command or the **meinequality** option on **mecompare**
 - In R, use the [**meinq()** function with **avg_comparisons**](/software/meinequality_r/index.qmd)
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 . meinequality race4, models(ftmod)
 
@@ -536,5 +657,14 @@ ME Inequality            |
                    race4 |     13.303       0.699      19.026       0.000 
 
 ```
+
+## R
+
+```{r}
+avg_comparisons(ftmod, variables = list(race4 = "pairwise"),
+  hypothesis = meineq(ftmod))
+```
+
+:::
 
 > *On average, members of different racial-ethnic groups differ by about 13 points in their feelings towards Trump*

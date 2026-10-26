@@ -16,6 +16,9 @@ title: "2.6 Assessing and Modeling Complex Nonlinearities for Independent Variab
 
 - For bivariate relationships, scatterplots can be helpful
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 use "https://tdmize.github.io/data/data/regjob3", clear
@@ -31,6 +34,31 @@ graph export "fig/cda-02_06_a-scatter.png", replace width(1400)
 
 ![](fig/cda-02_06_a-scatter.png){width=80% fig-alt="Jittered scatterplot of first-job prestige against the prestige of the PhD program."}
 
+## R
+
+```{r}
+#| fig-alt: "Jittered scatterplot of first-job prestige against the prestige of the PhD program."
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(sjmisc)          # frequency tables
+library(ggplot2)         # graphs
+library(marginaleffects) # predictions and marginal effects
+library(lme4)            # random effects models
+library(cleanplots)      # graph scheme
+cleanplots_defaults()
+
+regjob <- read_dta("https://tdmize.github.io/data/data/regjob3.dta")
+
+ggplot(regjob, aes(x = phd, y = job)) +
+  geom_jitter() +
+  labs(title = "[2.6.a] Job Prestige and Prestige of PhD Program")
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 twoway scatter job phd if fem == 0, jitter(3) || ///
@@ -45,6 +73,17 @@ graph export "fig/cda-02_06_b-scatter.png", replace width(1400)
 
 ![](fig/cda-02_06_b-scatter.png){width=80% fig-alt="The same jittered scatterplot with separate markers for men and women."}
 
+## R
+
+```{r}
+#| fig-alt: "The same jittered scatterplot with separate markers for men and women."
+ggplot(regjob, aes(x = phd, y = job, color = factor(fem, labels = c("Men", "Women")))) +
+  geom_jitter() +
+  labs(title = "[2.6.b] Job Prestige and Prestige of PhD Program", color = NULL)
+```
+
+:::
+
 ## LOWESS: locally weighted scatterplot smoothing
 
 - Lowess performs "local" regressions sequentially across subsets of your data, showing how one continuous IV relates to a DV across the range of your data
@@ -54,6 +93,9 @@ graph export "fig/cda-02_06_b-scatter.png", replace width(1400)
 - A bandwidth can be specified to determine just how **local** you want the lowess to calculate the regression estimate
   - A bandwidth of 0.4 means you want the 40% of the data closest to a given point used to calculate the regression line for that point (data points closer to the middle of the bandwidth are given more weight)
   - Smaller bandwidths will let you find more nonlinearities but are more susceptible to outliers and other quirks of your data
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 <<dd_do>>
@@ -79,9 +121,33 @@ graph export "fig/cda-02_06_lowess-bw02.png", replace width(1400)
 :::
 ::::
 
+## R
+
+```{r}
+#| layout-ncol: 2
+#| out-width: 100%
+#| fig-alt:
+#|   - "Lowess smoother with bandwidth 0.8: a nearly straight line."
+#|   - "Lowess smoother with bandwidth 0.2: a jagged line with sharp jumps."
+ggplot(regjob, aes(x = phd, y = job)) +
+  geom_point() +
+  geom_smooth(method = "loess", span = 0.8) +
+  labs(title = "Lowess smoother", subtitle = "bandwidth = 0.8")
+
+ggplot(regjob, aes(x = phd, y = job)) +
+  geom_point() +
+  geom_smooth(method = "loess", span = 0.2) +
+  labs(title = "Lowess smoother", subtitle = "bandwidth = 0.2")
+```
+
+:::
+
 - Bandwidth of 0.8 too wide to be informative (left panel above); mostly same as a linear fit
 - Bandwidth of 0.2 is too small: it picks up on too many quirks of the data that we don't want to model (right panel above)
   - Sharp jumps in the line often suggest a too-small bandwidth
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 <<dd_do>>
@@ -100,6 +166,30 @@ graph export "fig/cda-02_06_g-hist_freespch.png", replace width(1400)
 
 ![](fig/cda-02_06_g-hist_freespch.png){width=80% fig-alt="Histogram of the support for free speech scale, with a large spike at 100 percent."}
 
+## R
+
+```{r}
+#| fig-alt: "Histogram of the support for free speech scale, with a large spike at 100 percent."
+gss <- read_dta("https://tdmize.github.io/data/data/cda_gss.dta")
+
+# Keep only the variables used and drop any missing data on them
+gss <- gss[c("freespchSS", "edyrs")]
+gss <- gss[complete.cases(gss), ]
+
+gss <- gss |> mutate(freespchSS = freespchSS * 100)
+
+ggplot(gss, aes(freespchSS)) +
+  geom_histogram(fill = NA, color = "black") +
+  labs(title = "[2.6.g] Distribution of support for free speech scale",
+    subtitle = "0% = restrict free speech in all cases; 100% = support free speech in all cases",
+    x = "Support for free speech")
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 lowess freespchSS edyrs, bwidth(.4) jitter(3) xlab(0(2)20) gen(lowpr) ///
@@ -113,13 +203,43 @@ graph export "fig/cda-02_06_h-lowess_freespch.png", replace width(1400)
 
 ![](fig/cda-02_06_h-lowess_freespch.png){width=80% fig-alt="Jittered scatterplot of support for free speech by years of education with a lowess line that dips at low education and rises steadily after."}
 
+## R
+
+```{r}
+#| fig-alt: "Jittered scatterplot of support for free speech by years of education with a lowess line that dips at low education and rises steadily after."
+ggplot(gss, aes(x = edyrs, y = freespchSS)) +
+  geom_jitter(alpha = .1) +
+  geom_smooth(method = "loess", span = 0.4, se = FALSE) +
+  scale_x_continuous(breaks = seq(0, 20, 2)) +
+  labs(title = "[2.6.h] Relationship between support for free speech and education",
+    subtitle = "With lowess smoothed trend line",
+    x = "Years of education", y = "Support for free speech")
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 reg freespchSS c.edyrs##c.edyrs##c.edyrs
 <</dd_do>>
 ```
 
+## R
+
+```{r}
+freemod <- lm(freespchSS ~ poly(edyrs, 3, raw = TRUE), data = gss)
+summary(freemod)
+```
+
+:::
+
 > All three *edyrs* coefficients are highly significant, suggesting that including them improves model fit (but note this is a very large sample)
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 <<dd_do>>
@@ -136,6 +256,22 @@ graph export "fig/cda-02_06_i-prs_freespch.png", replace width(1400)
 ```
 
 ![](fig/cda-02_06_i-prs_freespch.png){width=80% fig-alt="Predictions from the cubic model of education closely following the lowess line."}
+
+## R
+
+```{r}
+#| fig-alt: "Predictions from the cubic model of education closely following the lowess line."
+plot_predictions(freemod, by = "edyrs",
+  newdata = datagrid(edyrs = 0:20, grid_type = "counterfactual")) +
+  geom_smooth(data = gss, aes(x = edyrs, y = freespchSS), method = "loess", span = 0.4,
+    se = FALSE, color = cleanplots_colors("ltblue"), inherit.aes = FALSE) +
+  scale_y_continuous(breaks = seq(0, 100, 10), limits = c(0, 100)) +
+  labs(title = "[2.6.i] Predicted support for free speech by education in years",
+    subtitle = "Cubic model of education (with CI) and lowess (light blue)",
+    x = "Years of education", y = "Free speech support")
+```
+
+:::
 
 ## Splines
 
@@ -164,6 +300,9 @@ graph export "fig/cda-02_06_i-prs_freespch.png", replace width(1400)
 
 *The rest of this page uses restricted-access data (the HILDA survey), so the data file is not available to download.*
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do: quietly>>
 global cda02_dir "`c(pwd)'"
@@ -190,6 +329,36 @@ graph export "fig/cda-02_06_j-binscatter.png", replace width(1400)
 
 ![](fig/cda-02_06_j-binscatter.png){width=80% fig-alt="Scatterplot of physical health by age with so many points that it is a solid mass."}
 
+## R
+
+```{r}
+#| include: false
+knitr::opts_knit$set(root.dir = "C:/Users/trent/Dropbox/Research Projects/RaRc - Role Accumulation and Combinations/Work/Analysis/- Data")
+```
+
+```{r}
+hilda <- read_dta("RaRc-03-analysis.dta")
+```
+
+```{r}
+#| include: false
+knitr::opts_knit$set(root.dir = NULL)
+```
+
+```{r}
+#| fig-alt: "Scatterplot of physical health by age with so many points that it is a solid mass."
+hilda$roles <- hilda$oroles + hilda$vroles
+
+ggplot(hilda, aes(x = age, y = PHscale)) +
+  geom_jitter() +
+  labs(title = "[2.6.j] HILDA data: N = 242,933")
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 binscatter PHscale age, ///
@@ -202,6 +371,21 @@ graph export "fig/cda-02_06_k-binscatter.png", replace width(1400)
 ```
 
 ![](fig/cda-02_06_k-binscatter.png){width=80% fig-alt="Binned scatterplot: mean physical health in 20 age bins, declining with age."}
+
+## R
+
+```{r}
+#| fig-alt: "Binned scatterplot: mean physical health in 20 age bins, declining with age."
+ggplot(hilda, aes(x = age, y = PHscale)) +
+  stat_summary_bin(fun = mean, bins = 20, geom = "point") +
+  labs(title = "[2.6.k] Binned scatterplot for physical health by age",
+    y = "Physical health scale")
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 <<dd_do>>
@@ -217,6 +401,20 @@ graph export "fig/cda-02_06_l-binscatter.png", replace width(1400)
 
 ![](fig/cda-02_06_l-binscatter.png){width=80% fig-alt="Binned scatterplot of physical health by age with a quadratic fit line."}
 
+## R
+
+```{r}
+#| fig-alt: "Binned scatterplot of physical health by age with a quadratic fit line."
+ggplot(hilda, aes(x = age, y = PHscale)) +
+  stat_summary_bin(fun = mean, bins = 20, geom = "point") +
+  geom_smooth(method = "lm", formula = y ~ poly(x, 2), se = FALSE) +
+  labs(title = "[2.6.l] Binned scatterplot for physical health by age",
+    subtitle = "Including a quadratic line fit",
+    y = "Physical health scale")
+```
+
+:::
+
 ## Treating a continuous or ordinal IV as nominal
 
 - A limitation of the methods covered above is they only examine bivariate relationships\*; often, we want to know conditional relationships after controlling for other variables
@@ -229,6 +427,9 @@ graph export "fig/cda-02_06_l-binscatter.png", replace width(1400)
 - For this technique, you want to go straight to graphs rather than worrying about the coefficient estimates
 
 \*Can use lowess with control variables with the [**mlowess**](http://fmwww.bc.edu/RePEc/bocode/m/mlowess.html) command but it is limited
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 <<dd_do>>
@@ -247,9 +448,33 @@ graph export "fig/cda-02_06_m-indicators.png", replace width(1400)
 
 ![](fig/cda-02_06_m-indicators.png){width=80% fig-alt="Predicted mental health for each number of social roles, rising steeply at first and then leveling off."}
 
+## R
+
+```{r}
+#| fig-alt: "Predicted mental health for each number of social roles, rising steeply at first and then leveling off."
+# Treat binary/nominal variables as factors
+hilda <- hilda |>
+  mutate(male = as_factor(male), educ = as_factor(educ), wave = factor(wave))
+
+rolesmod <- lm(MHscale ~ as_factor(roles) +
+  male + hhincome + age + educ + wave, data = hilda)
+
+# Predictions with the other variables at their means (modes for factors);
+# vcov = ~ID for standard errors clustered by person
+plot_predictions(rolesmod, by = "roles", newdata = datagrid(roles = 0:8),
+    vcov = ~ID) +
+  labs(title = "[2.6.m] Predictions from Categorical Form of Social Roles",
+    x = "Number of Social Roles", y = "Mental Health Scale")
+```
+
+:::
+
 Note, despite this pattern, there is no monotonic restriction on the functional form
 
 - Can we model this relationship parametrically?
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 <<dd_do>>
@@ -269,7 +494,25 @@ graph export "fig/cda-02_06_n-indicators.png", replace width(1400)
 
 ![](fig/cda-02_06_n-indicators.png){width=80% fig-alt="Predicted mental health from the quadratic specification of social roles: a smooth curve that rises and levels off."}
 
+## R
+
+```{r}
+#| fig-alt: "Predicted mental health from the quadratic specification of social roles: a smooth curve that rises and levels off."
+roles2mod <- lm(MHscale ~ poly(roles, 2, raw = TRUE) +
+  male + hhincome + age + educ + wave, data = hilda)
+
+plot_predictions(roles2mod, by = "roles", newdata = datagrid(roles = seq(0, 8, .25)),
+    vcov = ~ID) +
+  labs(title = "[2.6.n] Predictions from Quadratic Form of Social Roles",
+    x = "Number of Social Roles", y = "Mental Health Scale")
+```
+
+:::
+
 \*Note: The addition of the polynomial *roles^2^* allows for a change in the slope
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 <<dd_do>>
@@ -294,7 +537,38 @@ graph export "fig/cda-02_06_o-indicators.png", replace width(1400)
 :::
 ::::
 
+## R
+
+:::: {.columns}
+::: {.column width="25%"}
+![](images/chefs-kiss.png){fig-alt="Chef's kiss emoji."}
+:::
+::: {.column width="75%"}
+```{r}
+#| fig-alt: "Predictions from the categorical and quadratic specifications of social roles, nearly identical."
+#| out-width: 100%
+cat_prs <- predictions(rolesmod, newdata = datagrid(roles = 0:8), vcov = ~ID)
+sq_prs <- predictions(roles2mod, newdata = datagrid(roles = 0:8), vcov = ~ID)
+
+roles_prs <- bind_rows("Categorical Model" = cat_prs, "Quadratic Model" = sq_prs,
+  .id = "model")
+
+ggplot(roles_prs, aes(x = roles, y = estimate, ymin = conf.low, ymax = conf.high,
+    color = model)) +
+  geom_pointrange(position = position_dodge(width = 0.3)) +
+  geom_line(position = position_dodge(width = 0.3)) +
+  labs(title = "[2.6.o] Comparison of Predictions for Various Functional Forms of Roles",
+    x = "Number of Social Roles", y = "Mental Health Scale", color = NULL)
+```
+:::
+::::
+
+:::
+
 The simple addition of *roles^2^* does a remarkably good job here
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 <<dd_do>>
@@ -329,7 +603,46 @@ graph export "fig/cda-02_06_p-indicators.png", replace width(1400)
 
 ![](fig/cda-02_06_p-indicators.png){width=80% fig-alt="Predicted mental health for 5-year age bins: dipping slightly through the 30s, rising through the 60s, and declining slightly at the oldest ages."}
 
+## R
+
+```{r}
+#| fig-alt: "Predicted mental health for 5-year age bins: dipping slightly through the 30s, rising through the 60s, and declining slightly at the oldest ages."
+summary(hilda$age)
+
+# 5-year age bins, labeled by the youngest age in the bin
+hilda$ageC <- 18 + 5 * floor((hilda$age - 18) / 5)
+frq(hilda, ageC)
+hilda$ageC[hilda$ageC > 93] <- 93
+
+# Person means of the role counts and their squares
+hilda <- hilda |>
+  group_by(ID) |>
+  mutate(orolesM = mean(oroles), oroles2M = mean(oroles^2),
+    vrolesM = mean(vroles), vroles2M = mean(vroles^2)) |>
+  ungroup()
+
+agebinmod <- lmer(MHscale ~ as_factor(ageC) +
+    poly(oroles, 2, raw = TRUE) + poly(vroles, 2, raw = TRUE) +
+    orolesM + oroles2M + vrolesM + vroles2M +
+    physfunc + relevel(educ, ref = 3) + hhincome + wave + (1 | ID),
+  data = hilda)
+
+# Predictions from the fixed part of the model (re.form = NA)
+agebin_prs <- predictions(agebinmod, newdata = datagrid(ageC = unique), re.form = NA)
+
+ggplot(agebin_prs, aes(x = ageC, y = estimate, ymin = conf.low, ymax = conf.high)) +
+  geom_pointrange() +
+  labs(title = "[2.6.p] Psychological well-being across ages (binned)",
+    subtitle = "Fixed effects model with controls",
+    x = "Age bins in 5 year increments", y = "Mental health")
+```
+
+:::
+
 \*Note: Two clear "turns" in the slope so need to add both *age^2^* and *age^3^* to model
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 <<dd_do>>
@@ -352,6 +665,29 @@ graph export "fig/cda-02_06_q-indicators.png", replace width(1400)
 ```
 
 ![](fig/cda-02_06_q-indicators.png){width=80% fig-alt="Predicted mental health from the cubic specification of age: a smooth S-shaped curve."}
+
+## R
+
+```{r}
+#| fig-alt: "Predicted mental health from the cubic specification of age: a smooth S-shaped curve."
+age3mod <- lmer(MHscale ~ poly(age, 3, raw = TRUE) +
+    poly(oroles, 2, raw = TRUE) + poly(vroles, 2, raw = TRUE) +
+    orolesM + oroles2M + vrolesM + vroles2M +
+    physfunc + relevel(educ, ref = 3) + hhincome + wave + (1 | ID),
+  data = hilda)
+
+plot_predictions(age3mod, by = "age", newdata = datagrid(age = seq(18, 90, 2)),
+    re.form = NA) +
+  scale_x_continuous(breaks = seq(20, 90, 10)) +
+  labs(title = "[2.6.q] Psychological well-being across ages (cubic specification)",
+    subtitle = "Fixed effects model with controls",
+    x = "Age at current wave", y = "Mental health")
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 <<dd_do>>
@@ -382,5 +718,27 @@ graph export "fig/cda-02_06_r-indicators.png", replace width(1400)
 ```
 
 ![](fig/cda-02_06_r-indicators.png){width=80% fig-alt="Predictions from the binned and cubic specifications of age, closely matching each other."}
+
+## R
+
+```{r}
+#| fig-alt: "Predictions from the binned and cubic specifications of age, closely matching each other."
+age3_prs <- predictions(age3mod, newdata = datagrid(age = seq(18, 93, 5)), re.form = NA)
+
+age_prs <- bind_rows(
+  "Categorical Model" = select(agebin_prs, age = ageC, estimate, conf.low, conf.high),
+  "Cubic Model" = select(age3_prs, age, estimate, conf.low, conf.high),
+  .id = "model")
+
+ggplot(age_prs, aes(x = age, y = estimate, ymin = conf.low, ymax = conf.high,
+    color = model)) +
+  geom_pointrange(position = position_dodge(width = 1.5)) +
+  geom_line(position = position_dodge(width = 1.5)) +
+  labs(title = "[2.6.r] Comparison of Predictions for Various Functional Forms of Age",
+    y = "Mental Health Scale", color = NULL) +
+  theme(legend.position = "bottom")
+```
+
+:::
 
 ![](images/xkcd-curve-fitting.png){width=50% fig-alt="xkcd comic 'Curve-fitting methods and the messages they send'."}

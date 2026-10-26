@@ -71,6 +71,9 @@ $${ME}_{binary} = \eta\left( x_{k} = 1,\ \mathbf{x}_{- k} = \mathbf{x}^{\mathbf{
 
 Data is from pooled General Social Survey (GSS) data from 1972 -- 2016
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 use "https://tdmize.github.io/data/data/cda_gss", clear
@@ -83,6 +86,34 @@ graph export "fig/cda-02_01_a-me_linear-0.png", replace width(1400)
 ```
 
 ![](fig/cda-02_01_a-me_linear-0.png){width=80% fig-alt="Histogram of occupational prestige scores."}
+
+## R
+
+```{r}
+#| fig-alt: "Histogram of occupational prestige scores."
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(ggplot2)         # graphs
+library(modelsummary)    # regression tables
+library(marginaleffects) # predictions and marginal effects
+library(cleanplots)      # graph scheme
+cleanplots_defaults()
+
+gss <- read_dta("https://tdmize.github.io/data/data/cda_gss.dta")
+
+# Keep only model vars and drop any missing data on them
+gss <- gss[c("occprest", "age", "woman", "college")]
+gss <- gss[complete.cases(gss), ]
+
+# Treat binary variables as factors using their value labels
+gss <- gss |> mutate(woman = as_factor(woman), college = as_factor(college))
+
+ggplot(gss, aes(occprest)) +
+  geom_histogram(fill = NA, color = "black") +
+  labs(x = "Occupational prestige")
+```
+
+:::
 
 ### Example occupational prestige scores
 
@@ -105,6 +136,9 @@ graph export "fig/cda-02_01_a-me_linear-0.png", replace width(1400)
 
 ### Regression results for occupational prestige (DV)
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 regress occprest c.age i.woman i.college
@@ -114,11 +148,26 @@ esttab, b(2) se(2) nobase label ///
 <</dd_do>>
 ```
 
+## R
+
+```{r}
+linmod <- lm(occprest ~ age + woman + college, data = gss)
+summary(linmod)
+
+modelsummary(linmod, stars = c("*" = .05, "**" = .01, "***" = .001),
+  title = "[2.1.b] Occupational Prestige Based on Age, Gender, and Education")
+```
+
+:::
+
 ::: {.callout-note icon="false" appearance="simple"}
 **Side note**: to make publication quality regression tables in Stata, I recommend [**esttab**](https://repec.sowi.unibe.ch/stata/estout/esttab.html). To visualize regression coefficients, I recommend [**coefplot**](https://repec.sowi.unibe.ch/stata/coefplot/getting-started.html).
 
 In R, I recommend [modelsummary](https://modelsummary.com/) for both.
 :::
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 <<dd_do>>
@@ -134,6 +183,20 @@ graph export "fig/cda-02_01_c-me_linear-1.png", replace width(1400)
 ```
 
 ![](fig/cda-02_01_c-me_linear-1.png){width=80% fig-alt="Predicted occupational prestige by age for men and women: two nearly overlapping straight lines rising slowly with age."}
+
+## R
+
+```{r}
+#| fig-alt: "Predicted occupational prestige by age for men and women: two nearly overlapping straight lines rising slowly with age."
+plot_predictions(linmod, by = c("age", "woman"),
+  newdata = datagrid(age = seq(20, 80, 5), woman = unique,
+    grid_type = "counterfactual")) +
+  scale_y_continuous(breaks = seq(38, 46, 2), limits = c(38, 46)) +
+  labs(title = "[2.1.c] Predicted Occupational Prestige Based on Person's Age",
+    x = "Age", y = "Occupational Prestige")
+```
+
+:::
 
 ### Calculating marginal effects
 
@@ -157,6 +220,9 @@ $\widehat{occprest} = 36.63 + 0.04*50 - 0.183*1 + 16.43*1$ = 54.877
 
 54.877 -- 54.477 = 0.400
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 di 36.63 + 0.04*40 - 0.183*1 + 16.43*0
@@ -168,6 +234,20 @@ di 36.63 + 0.04*50 - 0.183*1 + 16.43*1
 di 54.877 - 54.477
 <</dd_do>>
 ```
+
+## R
+
+```{r}
+36.63 + 0.04*40 - 0.183*1 + 16.43*0
+36.63 + 0.04*50 - 0.183*1 + 16.43*0
+38.447 - 38.047
+
+36.63 + 0.04*40 - 0.183*1 + 16.43*1
+36.63 + 0.04*50 - 0.183*1 + 16.43*1
+54.877 - 54.477
+```
+
+:::
 
 ### Simple interpretation due to linearity
 
@@ -184,6 +264,9 @@ di 54.877 - 54.477
 
 Plot the effects for women, separately for those who went to college or not:
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 qui margins, at(age=(20(5)90) woman=(1) college=(0 1))
@@ -199,6 +282,21 @@ graph export "fig/cda-02_01_d-me_linear-3.png", replace width(1400)
 ```
 
 ![](fig/cda-02_01_d-me_linear-3.png){width=80% fig-alt="Predicted occupational prestige by age for women with and without a college degree: two parallel straight lines about 16 points apart."}
+
+## R
+
+```{r}
+#| fig-alt: "Predicted occupational prestige by age for women with and without a college degree: two parallel straight lines about 16 points apart."
+plot_predictions(linmod, by = c("age", "college"),
+  newdata = datagrid(age = seq(20, 90, 5), woman = "Women", college = unique,
+    grid_type = "counterfactual")) +
+  scale_y_continuous(breaks = seq(35, 60, 5), limits = c(35, 60)) +
+  labs(title = "[2.1.d] Predicted Occupational Prestige Based on Person's Age",
+    subtitle = "Women Respondents Only",
+    x = "Age", y = "Occupational Prestige")
+```
+
+:::
 
 ### Calculating marginal effects for a binary variable
 
@@ -220,6 +318,9 @@ $\widehat{occprest} = 36.63 + 0.04*40 - 0.183*0 + 16.43*1$ = 54.66
 
 54.66 -- 38.23 = 16.43
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 di 36.63 + 0.04*40 - 0.183*1 + 16.43*0
@@ -231,6 +332,20 @@ di 36.63 + 0.04*40 - 0.183*0 + 16.43*1
 di 54.66 - 38.23
 <</dd_do>>
 ```
+
+## R
+
+```{r}
+36.63 + 0.04*40 - 0.183*1 + 16.43*0
+36.63 + 0.04*40 - 0.183*1 + 16.43*1
+54.477 - 38.047
+
+36.63 + 0.04*40 - 0.183*0 + 16.43*0
+36.63 + 0.04*40 - 0.183*0 + 16.43*1
+54.66 - 38.23
+```
+
+:::
 
 ### Interpreting binary variables coded as 0 and 1
 

@@ -23,6 +23,9 @@ $$\log_{e}x = \ln(x) \qquad c = \ln(x) \qquad e^{c} = x \qquad \ln(e) = 1 \qquad
 
 \*Poisson models are a possible alternative ([Gould 2011](https://blog.stata.com/2011/08/22/use-poisson-rather-than-regress-tell-a-friend/)). More on these in the Count section of the class
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 usetdm smi_gss, clear
@@ -39,7 +42,39 @@ graph export "fig/cda-02_08_a-loglinear-1.png", replace width(1400)
 
 ![](fig/cda-02_08_a-loglinear-1.png){width=80% fig-alt="Histogram of hourly wages with a normal curve and a red line at the mean of 18.81 dollars; the distribution is strongly right-skewed."}
 
+## R
+
+```{r}
+#| fig-alt: "Histogram of hourly wages with a normal curve and a red line at the mean of 18.81 dollars; the distribution is strongly right-skewed."
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(ggplot2)         # graphs
+library(modelsummary)    # regression tables
+library(marginaleffects) # predictions and marginal effects
+library(survey)          # survey data
+library(cleanplots)      # graph scheme
+cleanplots_defaults()
+
+smi <- read_dta("https://tdmize.github.io/data/data/smi_gss.dta")
+summary(smi[c("wages", "logwages")])
+
+wages150 <- filter(smi, wages <= 150)
+
+ggplot(wages150, aes(wages)) +
+  geom_histogram(aes(y = after_stat(density)), fill = NA, color = "black") +
+  stat_function(fun = dnorm,
+    args = list(mean = mean(wages150$wages), sd = sd(wages150$wages))) +
+  geom_vline(xintercept = 18.81, color = "red", linewidth = 1.5) +
+  annotate("text", x = 40, y = .05, label = "mean = $18.81") +
+  labs(title = "[2.8.a] Distribution of Wages", x = "Hourly wages")
+```
+
+:::
+
 Is the mean a good summary of this distribution?
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 <<dd_do>>
@@ -53,6 +88,21 @@ graph export "fig/cda-02_08_b-loglinear-2.png", replace width(1400)
 ```
 
 ![](fig/cda-02_08_b-loglinear-2.png){width=80% fig-alt="Histogram of logged hourly wages with a normal curve and a red line at the mean of 2.54; close to symmetric."}
+
+## R
+
+```{r}
+#| fig-alt: "Histogram of logged hourly wages with a normal curve and a red line at the mean of 2.54; close to symmetric."
+ggplot(smi, aes(logwages)) +
+  geom_histogram(aes(y = after_stat(density)), fill = NA, color = "black") +
+  stat_function(fun = dnorm,
+    args = list(mean = mean(smi$logwages), sd = sd(smi$logwages))) +
+  geom_vline(xintercept = 2.54, color = "red", linewidth = 1.5) +
+  annotate("text", x = 4, y = .6, label = "mean = 2.54") +
+  labs(title = "[2.8.b] Distribution of Logged Wages", x = "Log of hourly wages")
+```
+
+:::
 
 Logging positively skewed variables helps normalize the distribution/pull in outliers
 
@@ -135,6 +185,9 @@ Factor changes between 0 and 1 indicate a negative effect; there is a floor at 0
   - For **multiplicative** effects: Take the starting value and multiply it by exp(β~k~) to determine the ending value
 - For example, consider a model for the unconditional gender wage gap in 2018:
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 use "https://tdmize.github.io/data/data/cda_gss", clear
@@ -144,6 +197,21 @@ reg logwages i.woman if year == 2018
 di exp(-0.285)
 <</dd_do>>
 ```
+
+## R
+
+```{r}
+gss <- read_dta("https://tdmize.github.io/data/data/cda_gss.dta")
+
+gss <- gss |>
+  filter(year == 2018) |>
+  mutate(logwages = log(wages), woman = as_factor(woman))
+
+summary(lm(logwages ~ woman, data = gss))
+exp(-0.285)
+```
+
+:::
 
 - The factor change ($\exp\left( \beta_{woman} \right) = 0.75$) can be interpreted as either\*:
 
@@ -196,6 +264,9 @@ Example is from [Mize (2016) *ASR*](https://scholar.google.com/scholar?hl=en&as_
 
 > *Table 2 shows results of regression models of log wages for women... bisexual women earn 11 percent less than heterosexual women at baseline (e^b^ = .89, p \< .05). After accounting for all other factors, bisexual women still earn 7 percent less than comparable heterosexual women, providing support for Hypothesis 6 (e^b^ = .93, p \< .10)... Lesbian women earn more than heterosexual women at baseline (e^b^ = 1.16, p \< .05). This difference remains significant and substantively similar in size after accounting for all factors (e^b^ = 1.15, p \< .01).*
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 * Model from Table 2 of Mize (2016) ASR
@@ -216,6 +287,36 @@ graph export "fig/cda-02_08_c-loglinear-3.png", replace width(1400)
 ```
 
 ![](fig/cda-02_08_c-loglinear-3.png){width=80% fig-alt="Predicted log wages by age for women: a straight rising line."}
+
+## R
+
+```{r}
+#| fig-alt: "Predicted log wages by age for women: a straight rising line."
+# Model from Table 2 of Mize (2016) ASR: women workers only
+women <- smi |>
+  filter(male == 0) |>
+  mutate(across(c(partners75, educcat, race, region4, isco88cat), as_factor)) |>
+  droplevels()
+
+womendesign <- svydesign(ids = ~sampcode, weights = ~wtssnr, data = women)
+
+womenmod <- svyglm(logwages ~ partners75 + age + educcat + race + year +
+    numchild + married + region4 + metro + parttime + isco88cat,
+  design = womendesign)
+
+# exponentiate = TRUE for factor change coefficients
+modelsummary(womenmod, exponentiate = TRUE, stars = c("*" = .05, "**" = .01, "***" = .001))
+
+# Everyone at each age, keeping the survey weights for averaging
+agegrid <- datagrid(newdata = women, age = seq(20, 80, 5), grid_type = "counterfactual")
+
+plot_predictions(womenmod, by = "age", newdata = agegrid, wts = "wtssnr") +
+  scale_y_continuous(breaks = seq(1, 3.5, .5), limits = c(1, 3.5)) +
+  labs(title = "[2.8.c] Predicted Log Wages by Age (Women Workers Only)",
+    x = "Age", y = "Log Wages")
+```
+
+:::
 
 The effect on the *log of wages* is linear (but how would you interpret log wages?)
 
@@ -245,6 +346,9 @@ $$\eta = \widehat{wages} = \exp(\mathbf{x\beta})$$
 
 \*But [note some important complications](https://www.stata.com/stata-news/news34-2/spotlight/) if you had values \<1 in the original metric of the variable
 
+::: {.panel-tabset group="language"}
+## Stata
+
 ```{.stata-run}
 <<dd_do>>
 qui margins, at(age=(20(5)80)) expression(exp(predict(xb)))
@@ -259,7 +363,24 @@ graph export "fig/cda-02_08_d-loglinear-4.png", replace width(1400)
 
 ![](fig/cda-02_08_d-loglinear-4.png){width=80% fig-alt="Predicted hourly wages by age for women, curving upward."}
 
+## R
+
+```{r}
+#| fig-alt: "Predicted hourly wages by age for women, curving upward."
+# transform = exp puts the predictions in the wage metric
+plot_predictions(womenmod, by = "age", newdata = agegrid, wts = "wtssnr",
+    transform = exp) +
+  scale_y_continuous(breaks = seq(5, 30, 5), limits = c(5, 30)) +
+  labs(title = "[2.8.d] Predicted Hourly Wages by Age (Women Workers Only)",
+    x = "Age", y = "Hourly Wages")
+```
+
+:::
+
 Note the nonlinearities. This is despite no *age^2^* coefficient in the model. The model is inherently nonlinear in the wages metric due to ln(wages) used as the DV
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 <<dd_do>>
@@ -274,9 +395,28 @@ graph export "fig/cda-02_08_e-loglinear-5.png", replace width(1400)
 
 ![](fig/cda-02_08_e-loglinear-5.png){width=80% fig-alt="Predicted hourly wages by age for heterosexual, bisexual, and lesbian women: three upward curves that spread apart with age."}
 
+## R
+
+```{r}
+#| fig-alt: "Predicted hourly wages by age for heterosexual, bisexual, and lesbian women: three upward curves that spread apart with age."
+agesexgrid <- datagrid(newdata = women, age = seq(20, 80, 5), partners75 = unique,
+  grid_type = "counterfactual")
+
+plot_predictions(womenmod, by = c("age", "partners75"), newdata = agesexgrid,
+    wts = "wtssnr", transform = exp) +
+  scale_y_continuous(breaks = seq(5, 30, 5)) +
+  labs(title = "[2.8.e] Predicted Hourly Wages by Age (Women Workers Only)",
+    x = "Age", y = "Hourly Wages")
+```
+
+:::
+
 **\*Note** the interaction effect (e.g. size of sexuality gaps vary at different ages) despite no interaction terms in model. Nonlinearities produce interaction effect
 
 *What happens when we add age^2^ to the model? Even more nonlinearities and interaction effects. Just as in linear regression, in loglinear regression the polynomial allows for the slope of the prediction line to change at some point. Here the effect reverses at higher ages.*
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 <<dd_do>>
@@ -296,11 +436,32 @@ graph export "fig/cda-02_08_f-loglinear-6.png", replace width(1400)
 
 ![](fig/cda-02_08_f-loglinear-6.png){width=80% fig-alt="Predicted hourly wages by age for heterosexual, bisexual, and lesbian women: curves that rise, peak in midlife, and fall, at different levels."}
 
+## R
+
+```{r}
+#| fig-alt: "Predicted hourly wages by age for heterosexual, bisexual, and lesbian women: curves that rise, peak in midlife, and fall, at different levels."
+smimod <- svyglm(logwages ~ partners75 * poly(age, 2, raw = TRUE) +
+    educcat + race + year + numchild + married + region4 + metro +
+    parttime + isco88cat,
+  design = womendesign)
+
+plot_predictions(smimod, by = c("age", "partners75"), newdata = agesexgrid,
+    wts = "wtssnr", transform = exp) +
+  scale_y_continuous(breaks = seq(0, 25, 5)) +
+  labs(title = "[2.8.f] Predicted Hourly Wages by Age (Women Workers Only)",
+    x = "Age", y = "Hourly Wages")
+```
+
+:::
+
 ### Logged DV regression models---marginal effects
 
 - The coefficients are no longer directly interpretable when we have quadratic and/or interaction terms as we do for the model presented in the plot above
 - Marginal effects can still provide an overall summary for the effects of interest---for this example, the effect of sexual identity for women
   - Remember to exponentiate the predictions when you calculate the MEs so you are in the wage metric instead of the ln(wage) metric \[which will be the default\]
+
+::: {.panel-tabset group="language"}
+## Stata
 
 ```{.stata-run}
 <<dd_do>>
@@ -308,6 +469,17 @@ est restore smimod
 mchange partners75, expression(exp(predict(xb)))
 <</dd_do>>
 ```
+
+## R
+
+```{r}
+# Exponentiate the predictions before taking their difference (wage metric)
+avg_comparisons(smimod, variables = list(partners75 = "pairwise"),
+  comparison = function(hi, lo) exp(hi) - exp(lo),
+  newdata = women, wts = "wtssnr")
+```
+
+:::
 
 > *Bisexual women earn about \$1.19 less an hour than heterosexual women*
 >
