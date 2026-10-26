@@ -1,0 +1,2161 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>1.2 Linear Regression (sans math) – Trenton D. Mize</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../teaching/cda/01/1-3-linear-regression-math.html" rel="next">
+<link href="../../../teaching/cda/01/1-0-categorical-data.html" rel="prev">
+<script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-d1074f4552fd9e64773fe67262ebb1c3.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">Trenton D. Mize</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../cv.html"> 
+<span class="menu-text">CV</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../research.html"> 
+<span class="menu-text">Research</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../software.html"> 
+<span class="menu-text">Software</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="../../../teaching.html" aria-current="page"> 
+<span class="menu-text">Teaching</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../resources.html"> 
+<span class="menu-text">Links</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../help.html"> 
+<span class="menu-text">Asking for Help</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/tdmize"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../teaching/cda/index.html">Categorical Data Analysis (Soc 681)</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/01/index.html">01 Introduction &amp; Linear Regression</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/01/1-2-linear-regression.html">1.2 Linear Regression (sans math)</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Teaching</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Categorical Data Analysis (Soc 681)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/01/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">01 Introduction &amp; Linear Regression</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/1-0-categorical-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1.0 Categorical Data is Everywhere</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/1-2-linear-regression.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">1.2 Linear Regression (sans math)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/1-3-linear-regression-math.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1.3 Linear Regression (with math)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/appendix-a1-datasets.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix A1: Datasets for Assignments</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/appendix-a2-stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix A2: Stata Appendix</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/02/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">02 Nonlinearities &amp; Categorical IVs</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-1-marginal-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.1 Interpretation with Marginal Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-2-nonlinear-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.2 Marginal Effects with Nonlinearities</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-3-linear-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.3 Linear Interaction Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-4-nonlinear-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.4 Nonlinear Interaction Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-5-distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.5 Examining Distributions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-6-assessing-nonlinearities.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.6 Assessing and Modeling Complex Nonlinearities for Independent Variables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-7-categorical-ivs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.7 Categorical Independent Variables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-8-comparing-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.8 Comparing Effects Across IVs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-10-conclusion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.10 Conclusion</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/02/appendix-2a/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 2A: Stata Code and Tips</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-1-factor-syntax.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.1 Stata factor syntax</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-2-polynomials.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.2 Polynomial IVs with factor syntax</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-3-calculating-mes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.3 Calculating marginal effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-4-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.4 Interaction effect with factor syntax</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-5-nonlinear-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.5 Nonlinear interaction effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-6-distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.6 Tools for examining distributions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-7-assessing-nonlinearities.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.7 Assessing nonlinearities</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-8-splines.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.8 Splines</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-9-loglinear.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.9 Loglinear regression models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-10-transforming.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.10 Transforming variables</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2b-logged-dv.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 2B: Logged DV Regression Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2c-splines.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 2C: Splines</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cdash.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Categorical Data Analysis (Statistical Horizons)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cdaws.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Categorical Data Analysis Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/workflow.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Management / Workflow Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/dataviz.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Visualization</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/dvs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Visualization Using Stata and LLMs</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/dmv.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data &amp; Model Visualization Workshop</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/dmv/r-output.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">R Output</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/em.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Experimental Methods: Design &amp; Analysis</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/int.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Interaction Effects Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/irt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Item Response Theory</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/lvm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Latent Variable Modeling</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/mcapsi.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Longitudinal Data Analysis</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/miss.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Missing Data Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/spgrad.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Social Psychology (Graduate)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/spug.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Social Psychology (Undergrad)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Stata Programming Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/surveys.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Survey Design Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/sew.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Survey Experiments Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/twm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Teaching Workshops &amp; Methods</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#regression-modeling-and-the-language-of-expectations" id="toc-regression-modeling-and-the-language-of-expectations" class="nav-link active" data-scroll-target="#regression-modeling-and-the-language-of-expectations">Regression modeling and the language of expectations</a>
+  <ul class="collapse">
+  <li><a href="#conditional-expectations" id="toc-conditional-expectations" class="nav-link" data-scroll-target="#conditional-expectations">Conditional expectations</a></li>
+  <li><a href="#relationship-between-conditional-expectations-and-regression" id="toc-relationship-between-conditional-expectations-and-regression" class="nav-link" data-scroll-target="#relationship-between-conditional-expectations-and-regression">Relationship between conditional expectations and regression</a></li>
+  <li><a href="#interpreting-the-intercept" id="toc-interpreting-the-intercept" class="nav-link" data-scroll-target="#interpreting-the-intercept">Interpreting the intercept</a></li>
+  <li><a href="#regression-with-a-nominal-iv" id="toc-regression-with-a-nominal-iv" class="nav-link" data-scroll-target="#regression-with-a-nominal-iv">Regression with a nominal IV</a></li>
+  <li><a href="#regression-with-a-continuous-iv" id="toc-regression-with-a-continuous-iv" class="nav-link" data-scroll-target="#regression-with-a-continuous-iv">Regression with a continuous IV</a></li>
+  <li><a href="#advice-for-more-naturally-worded-interpretations" id="toc-advice-for-more-naturally-worded-interpretations" class="nav-link" data-scroll-target="#advice-for-more-naturally-worded-interpretations">Advice for more naturally worded interpretations</a></li>
+  </ul></li>
+  <li><a href="#regression-with-multiple-ivs" id="toc-regression-with-multiple-ivs" class="nav-link" data-scroll-target="#regression-with-multiple-ivs">Regression with multiple IVs</a>
+  <ul class="collapse">
+  <li><a href="#multiple-regression" id="toc-multiple-regression" class="nav-link" data-scroll-target="#multiple-regression">Multiple regression</a></li>
+  </ul></li>
+  <li><a href="#control-variables-and-causality" id="toc-control-variables-and-causality" class="nav-link" data-scroll-target="#control-variables-and-causality">Control variables and causality</a>
+  <ul class="collapse">
+  <li><a href="#mediation" id="toc-mediation" class="nav-link" data-scroll-target="#mediation">Mediation</a></li>
+  <li><a href="#confounding" id="toc-confounding" class="nav-link" data-scroll-target="#confounding">Confounding</a></li>
+  <li><a href="#collider-variables" id="toc-collider-variables" class="nav-link" data-scroll-target="#collider-variables">Collider variables</a></li>
+  <li><a href="#suppressor-variables" id="toc-suppressor-variables" class="nav-link" data-scroll-target="#suppressor-variables">Suppressor variables</a></li>
+  <li><a href="#to-control-or-not-to-controlthat-is-the-question" id="toc-to-control-or-not-to-controlthat-is-the-question" class="nav-link" data-scroll-target="#to-control-or-not-to-controlthat-is-the-question">To control or not to control—that is the question</a></li>
+  </ul></li>
+  <li><a href="#causality" id="toc-causality" class="nav-link" data-scroll-target="#causality">Causality</a></li>
+  <li><a href="#regression-modeling-overview" id="toc-regression-modeling-overview" class="nav-link" data-scroll-target="#regression-modeling-overview">Regression modeling overview</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../teaching/cda/index.html">Categorical Data Analysis (Soc 681)</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/01/index.html">01 Introduction &amp; Linear Regression</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/01/1-2-linear-regression.html">1.2 Linear Regression (sans math)</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">1.2 Linear Regression (sans math)</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="regression-modeling-and-the-language-of-expectations" class="level2">
+<h2 class="anchored" data-anchor-id="regression-modeling-and-the-language-of-expectations">Regression modeling and the language of expectations</h2>
+<ul>
+<li>Regression modeling at its simplest is a way to model conditional expectations
+<ul>
+<li>Expectations are means (and conditional means)</li>
+</ul></li>
+<li>E(income) = mean of income
+<ul>
+<li>With no conditions—i.e., the overall sample mean</li>
+</ul></li>
+</ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="st">"https://tdmize.github.io/data/data/cda_gss"</span>, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(cda_gss.dta |  GSS 1972-2021 CDA - Categorical Data Analysis | date created 202
+&gt; 3)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">tabstat</span> income, stat(<span class="kw">mean</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>    Variable |      Mean
+-------------+----------
+      income |  32185.98
+------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">regress</span> income</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>      Source |       SS           df       MS      Number of obs   =    39,163
+-------------+----------------------------------   F(0, 39162)     =      0.00
+       Model |           0         0           .   Prob &gt; F        =         .
+    Residual |  3.3178e+13    39,162   847199501   R-squared       =    0.0000
+-------------+----------------------------------   Adj R-squared   =    0.0000
+       Total |  3.3178e+13    39,162   847199501   Root MSE        =     29107
+
+------------------------------------------------------------------------------
+      income | Coefficient  Std. err.      t    P&gt;|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+       _cons |  32185.975    147.080  218.832   0.000    31897.694   32474.257
+------------------------------------------------------------------------------</code></pre>
+</div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(haven)           <span class="co"># import Stata data and labels</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)           <span class="co"># data manipulation</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sjmisc)          <span class="co"># frequency tables</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)         <span class="co"># graphs</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(marginaleffects) <span class="co"># predictions and marginal effects</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(cleanplots)      <span class="co"># graph scheme</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="fu">cleanplots_defaults</span>()</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>gss <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">"https://tdmize.github.io/data/data/cda_gss.dta"</span>)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(gss<span class="sc">$</span>income, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>[1] 32185.98</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">lm</span>(income <span class="sc">~</span> <span class="dv">1</span>, <span class="at">data =</span> gss))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+Call:
+lm(formula = income ~ 1, data = gss)
+
+Residuals:
+   Min     1Q Median     3Q    Max 
+-31850 -19586  -7248   9897 127814 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)  32186.0      147.1   218.8   &lt;2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 29110 on 39162 degrees of freedom
+  (29683 observations deleted due to missingness)</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note no-icon">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>E(income) ≈ 32,186</p>
+</div>
+</div>
+</div>
+<section id="conditional-expectations" class="level3">
+<h3 class="anchored" data-anchor-id="conditional-expectations">Conditional expectations</h3>
+<ul>
+<li>Conditional expectations set further conditions (which are specified to the right of a vertical bar):</li>
+</ul>
+<blockquote class="blockquote">
+<p>E(income | woman = 0) = mean of income for men*</p>
+<p>E(income | woman = 1) = mean of income for women*</p>
+<p>E(income | woman = 0) ≈ 40,097</p>
+<p>E(income | woman = 1) ≈ 24,153</p>
+</blockquote>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">tabstat</span> income, stat(<span class="kw">mean</span>) <span class="kw">by</span>(woman)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Summary for variables: income
+Group variable: woman (Woman R)
+
+ woman |      Mean
+-------+----------
+   Men |  40096.77
+ Women |  24153.19
+-------+----------
+ Total |   32187.9
+------------------</code></pre>
+</div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>gss <span class="sc">|&gt;</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(woman)) <span class="sc">|&gt;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(woman) <span class="sc">|&gt;</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">mean =</span> <span class="fu">mean</span>(income, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code># A tibble: 2 × 2
+  woman       mean
+  &lt;dbl+lbl&gt;  &lt;dbl&gt;
+1 0 [Men]   40097.
+2 1 [Women] 24153.</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<p>*Not limited to binary variables. If your dataset measures gender with 3+ categories, can still apply same approach</p>
+</section>
+<section id="relationship-between-conditional-expectations-and-regression" class="level3">
+<h3 class="anchored" data-anchor-id="relationship-between-conditional-expectations-and-regression">Relationship between conditional expectations and regression</h3>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">regress</span> income i.woman</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>      Source |       SS           df       MS      Number of obs   =    39,153
+-------------+----------------------------------   F(1, 39151)     =   3174.90
+       Model |  2.4880e+12         1  2.4880e+12   Prob &gt; F        =    0.0000
+    Residual |  3.0681e+13    39,151   783646066   R-squared       =    0.0750
+-------------+----------------------------------   Adj R-squared   =    0.0750
+       Total |  3.3169e+13    39,152   847173151   Root MSE        =     27994
+
+------------------------------------------------------------------------------
+      income | Coefficient  Std. err.      t    P&gt;|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+       woman |
+      Women  |  -1.59e+04    282.957  -56.346   0.000    -1.65e+04   -1.54e+04
+       _cons |  40096.773    199.290  201.198   0.000    39706.159   40487.386
+------------------------------------------------------------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">di</span> 24153.19 - 40096.77</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>-15943.58</code></pre>
+</div>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">lm</span>(income <span class="sc">~</span> woman, <span class="at">data =</span> gss))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+Call:
+lm(formula = income ~ woman, data = gss)
+
+Residuals:
+   Min     1Q Median     3Q    Max 
+-39761 -17819  -5698   9364 135847 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)  40096.8      199.3  201.20   &lt;2e-16 ***
+woman       -15943.6      283.0  -56.35   &lt;2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 27990 on 39151 degrees of freedom
+  (29693 observations deleted due to missingness)
+Multiple R-squared:  0.07501,   Adjusted R-squared:  0.07499 
+F-statistic:  3175 on 1 and 39151 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fl">24153.19</span> <span class="sc">-</span> <span class="fl">40096.77</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>[1] -15943.58</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<ul>
+<li>With a binary independent variable (IV), the regression coefficient represents the group difference; the difference in means between the category coded 1 and the category coded 0</li>
+<li>The gender variable <em>woman</em> is coded as woman = 1; man = 0
+<ul>
+<li>Therefore, the regression coefficient tells us how much more (or less) women earn than men</li>
+</ul></li>
+</ul>
+<blockquote class="blockquote">
+<p><em>On average, women earn about $15,900 less than men</em></p>
+</blockquote>
+</section>
+<section id="interpreting-the-intercept" class="level3">
+<h3 class="anchored" data-anchor-id="interpreting-the-intercept">Interpreting the intercept</h3>
+<ul>
+<li>What does the constant (AKA intercept) term tell us in this model?
+<ul>
+<li>It is the <strong>expected value when all IVs are 0</strong>
+<ul>
+<li>In this case, when the variable woman = 0 this refers to men
+<ul>
+<li>So, it is the mean of income for men in the sample</li>
+</ul></li>
+</ul></li>
+</ul></li>
+<li>I rarely ever interpret the intercept
+<ul>
+<li>Usually, you have some variables in the model where 0 is not a meaningful value (e.g., if age is in the model and data is all adults)</li>
+</ul></li>
+<li>You can do things to make the intercept interpretable (e.g., mean-center all variables) but I find this unnecessary
+<ul>
+<li>I find it more straightforward to interpret predictions (more later)</li>
+<li>A theme of the class is to <strong>go beyond the coefficient estimates for interpretation</strong></li>
+</ul></li>
+</ul>
+</section>
+<section id="regression-with-a-nominal-iv" class="level3">
+<h3 class="anchored" data-anchor-id="regression-with-a-nominal-iv">Regression with a nominal IV</h3>
+<ul>
+<li>Nominal variables have 3+ unordered categories*
+<ul>
+<li>E.g., Race-ethnicity, religious affiliation, political party, etc.</li>
+</ul></li>
+<li>Can estimate conditional expectations in the same way as binary—just with additional categories</li>
+</ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">tabstat</span> income, stat(<span class="kw">mean</span>) <span class="kw">by</span>(race4)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Summary for variables: income
+Group variable: race4 (Race-ethnicity)
+
+   race4 |      Mean
+---------+----------
+   White |  33693.02
+   Black |  24724.65
+   Other |  36037.94
+Hispanic |  26005.54
+---------+----------
+   Total |  32182.69
+--------------------</code></pre>
+</div>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>gss <span class="sc">|&gt;</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(race4)) <span class="sc">|&gt;</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(race4) <span class="sc">|&gt;</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">mean =</span> <span class="fu">mean</span>(income, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code># A tibble: 4 × 2
+  race4          mean
+  &lt;dbl+lbl&gt;     &lt;dbl&gt;
+1 1 [White]    33693.
+2 2 [Black]    24725.
+3 3 [Other]    36038.
+4 4 [Hispanic] 26006.</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note no-icon">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>E(income | race = 1 [White]) ≈ 33,693</p>
+<p>E(income | race = 2 [Black]) ≈ 24,725</p>
+<p>E(income | race = 3 [Other]) ≈ 36,038</p>
+<p>E(income | race = 4 [Hispanic]) ≈ 26,006</p>
+</div>
+</div>
+</div>
+<p>*A binary IV (2 categories) is technically a nominal variable but we often give it a special designation of “binary”</p>
+<ul>
+<li>In regression with a nominal IV we choose an omitted/reference group and then include indicator variables for all remaining groups
+<ul>
+<li>By default, both Stata and R omit the first category as the reference (1 = White)</li>
+</ul></li>
+</ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">regress</span> income i.race4</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>      Source |       SS           df       MS      Number of obs   =    39,140
+-------------+----------------------------------   F(3, 39136)     =    183.48
+       Model |  4.5987e+11         3  1.5329e+11   Prob &gt; F        =    0.0000
+    Residual |  3.2697e+13    39,136   835462911   R-squared       =    0.0139
+-------------+----------------------------------   Adj R-squared   =    0.0138
+       Total |  3.3157e+13    39,139   847148559   Root MSE        =     28904
+
+------------------------------------------------------------------------------
+      income | Coefficient  Std. err.      t    P&gt;|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+       race4 |
+      Black  |  -8968.368    433.349  -20.696   0.000    -9817.742   -8118.994
+      Other  |   2344.922    769.166    3.049   0.002      837.338    3852.505
+   Hispanic  |  -7687.479    657.923  -11.684   0.000    -8977.024   -6397.933
+             |
+       _cons |  33693.016    165.816  203.195   0.000    33368.012   34018.020
+------------------------------------------------------------------------------</code></pre>
+</div>
+</div>
+<div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">lm</span>(income <span class="sc">~</span> <span class="fu">as_factor</span>(race4), <span class="at">data =</span> gss))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+Call:
+lm(formula = income ~ as_factor(race4), data = gss)
+
+Residuals:
+   Min     1Q Median     3Q    Max 
+-35702 -19322  -6511   9919 135275 
+
+Coefficients:
+                         Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)               33693.0      165.8 203.195   &lt;2e-16 ***
+as_factor(race4)Black     -8968.4      433.3 -20.696   &lt;2e-16 ***
+as_factor(race4)Other      2344.9      769.2   3.049   0.0023 ** 
+as_factor(race4)Hispanic  -7687.5      657.9 -11.684   &lt;2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 28900 on 39136 degrees of freedom
+  (29706 observations deleted due to missingness)
+Multiple R-squared:  0.01387,   Adjusted R-squared:  0.01379 
+F-statistic: 183.5 on 3 and 39136 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<ul>
+<li>The coefficients thus represent the difference in income of each racial-ethnic group compared to the omitted group (White)</li>
+</ul>
+<blockquote class="blockquote">
+<p><em>Black adults earn about $8,968 a year less than White adults</em></p>
+<p><em>Adults from other racial-ethnic groups earn about $2,345 a year more than White adults*</em></p>
+<p><em>Hispanic adults earn about $7,687 less a year than White adults</em></p>
+</blockquote>
+<ul>
+<li>The interpretation of the coefficients is limited to a comparison to the omitted/reference group
+<ul>
+<li>E.g., How do Black and Hispanic adults compare?</li>
+<li>We will learn interpretation techniques that do not have this limitation</li>
+</ul></li>
+</ul>
+<p>*This is U.S. data so the “other” category is mostly Asian/Asian-American adults (though not exclusively)</p>
+</section>
+<section id="regression-with-a-continuous-iv" class="level3">
+<h3 class="anchored" data-anchor-id="regression-with-a-continuous-iv">Regression with a continuous IV</h3>
+<ul>
+<li>Regression is only slightly more difficult with a continuous IV</li>
+</ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-6-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-1" role="tab" aria-controls="tabset-6-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-6-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-2" role="tab" aria-controls="tabset-6-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">reg</span> income c.age</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>      Source |       SS           df       MS      Number of obs   =    38,993
+-------------+----------------------------------   F(1, 38991)     =   1608.71
+       Model |  1.3028e+12         1  1.3028e+12   Prob &gt; F        =    0.0000
+    Residual |  3.1577e+13    38,991   809852626   R-squared       =    0.0396
+-------------+----------------------------------   Adj R-squared   =    0.0396
+       Total |  3.2880e+13    38,992   843244332   Root MSE        =     28458
+
+------------------------------------------------------------------------------
+      income | Coefficient  Std. err.      t    P&gt;|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         age |    423.166     10.550   40.109   0.000      402.487     443.845
+       _cons |  14656.849    458.928   31.937   0.000    13757.338   15556.360
+------------------------------------------------------------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">di</span> 14656.849 + 423.166*30</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>27351.829</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">di</span> 14656.849 + 423.166*50</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>35815.149</code></pre>
+</div>
+</div>
+<div id="tabset-6-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>agemod <span class="ot">&lt;-</span> <span class="fu">lm</span>(income <span class="sc">~</span> age, <span class="at">data =</span> gss)</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(agemod)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+Call:
+lm(formula = income ~ age, data = gss)
+
+Residuals:
+   Min     1Q Median     3Q    Max 
+-51454 -18291  -5884   9940 137303 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) 14656.85     458.93   31.94   &lt;2e-16 ***
+age           423.17      10.55   40.11   &lt;2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 28460 on 38991 degrees of freedom
+  (29853 observations deleted due to missingness)
+Multiple R-squared:  0.03962,   Adjusted R-squared:  0.0396 
+F-statistic:  1609 on 1 and 38991 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fl">14656.849</span> <span class="sc">+</span> <span class="fl">423.166</span><span class="sc">*</span><span class="dv">30</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>[1] 27351.83</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fl">14656.849</span> <span class="sc">+</span> <span class="fl">423.166</span><span class="sc">*</span><span class="dv">50</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>[1] 35815.15</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<ul>
+<li>What about conditional expectations here? Unlike with a binary/nominal variable, there are many possible values to choose
+<ul>
+<li>Let’s arbitrarily choose ages 30 and 50. Easy to calculate the conditional expectations (predictions) by plugging in values to the equation:</li>
+</ul></li>
+</ul>
+<p><span class="math display">\[E(income\ |\ age = 30) = \beta_{0} + \beta_{age}{age}_{i} = 14657 + 423*30 \approx 27,352\]</span></p>
+<p><span class="math display">\[E(income\ |\ age = 50) = \beta_{0} + \beta_{age}{age}_{i} = 14657 + 423*50 \approx 35,815\]</span></p>
+<blockquote class="blockquote">
+<p><em>Our model predicts that the average 30-year-old earns about $27,000; the average 50-year-old earns about $36,000</em></p>
+</blockquote>
+<ul>
+<li>With a continuous IV, plots of predictions are especially useful</li>
+</ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-7-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-1" role="tab" aria-controls="tabset-7-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-7-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-2" role="tab" aria-controls="tabset-7-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-7-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-7-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="fu">at</span>(age=(20(5)80))</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>marginsplot, noci ylab(0(10000)50000) <span class="co">///</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[1.2.a] Predictions for income across range of age"</span>) <span class="co">///</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>    <span class="bn">ytitle</span>(<span class="st">"Income"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Variables that uniquely identify margins: age</code></pre>
+</div>
+<p><img src="fig/cda-01_02_a-linear_cont_IV.png" class="img-fluid" style="width:80.0%" alt="Predicted income by age: a straight line rising from about 23,000 dollars at age 20 to about 48,000 dollars at age 80."></p>
+</div>
+<div id="tabset-7-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-7-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_predictions</span>(agemod, <span class="at">condition =</span> <span class="fu">list</span>(<span class="at">age =</span> <span class="fu">seq</span>(<span class="dv">20</span>, <span class="dv">80</span>, <span class="dv">5</span>)), <span class="at">vcov =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">50000</span>, <span class="dv">10000</span>), <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">50000</span>)) <span class="sc">+</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"[1.2.a] Predictions for income across range of age"</span>,</span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Age"</span>, <span class="at">y =</span> <span class="st">"Income"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="1-2-linear-regression_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" style="width:80.0%" alt="Predicted income by age: a straight line rising from about 23,000 dollars at age 20 to about 48,000 dollars at age 80."></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<ul>
+<li>I arbitrarily chose to calculate a 20-year increase in age above
+<ul>
+<li>A regression coefficient always quantifies a one-unit increase</li>
+</ul></li>
+</ul>
+<p><span class="math display">\[E(income\ |\ age = 30) = \beta_{0} + \beta_{age}{age}_{i} = 14657 + 423*30 \approx 27,352\]</span></p>
+<p><span class="math display">\[E(income\ |\ age = 31) = \beta_{0} + \beta_{age}{age}_{i} = 14657 + 423*31 \approx 27,775\]</span></p>
+<p><span class="math display">\[27,775 - 27,352 = 423\]</span></p>
+<p><span class="math display">\[E(income\ |\ age = 50) = \beta_{0} + \beta_{age}{age}_{i} = 14657 + 423*50 \approx 35,815\]</span></p>
+<p><span class="math display">\[E(income\ |\ age = 51) = \beta_{0} + \beta_{age}{age}_{i} = 14657 + 423*51 \approx 36,238\]</span></p>
+<p><span class="math display">\[36,238 - 35,815 = 423\]</span></p>
+<ul>
+<li>The regression coefficient on age is about 423
+<ul>
+<li>This represents the effect of a one-unit increase in the IV (age) on the DV (income)
+<ul>
+<li>In <a href="https://doi.org/10.4135/9781483396774">Lewis-Beck and Lewis-Beck’s (2016)</a> terms:
+<ul>
+<li><em>“The slope estimate indicates the average change in y associated with a unit change in x”</em></li>
+</ul></li>
+<li>Put more formally:
+<ul>
+<li><strong>A one unit increase in <em>x</em> is associated with a β increase/decrease in <em>y</em></strong></li>
+</ul></li>
+<li>Plugging in our variables:</li>
+</ul></li>
+</ul></li>
+</ul>
+<blockquote class="blockquote">
+<p><em>A one unit increase in age is associated with a $423 increase in income</em></p>
+</blockquote>
+</section>
+<section id="advice-for-more-naturally-worded-interpretations" class="level3">
+<h3 class="anchored" data-anchor-id="advice-for-more-naturally-worded-interpretations">Advice for more naturally worded interpretations</h3>
+<ul>
+<li>The interpretation above is correct but not very satisfying; it sounds like a robot wrote it; it does not pass the “grandma test”
+<ul>
+<li>“A one unit increase in age” is weird phrasing; instead, substitute “an additional year of age” or “getting one year older”
+<ul>
+<li>Always think about the metric of your variables and interpret them in ways that reflect how you would naturally talk about that metric</li>
+</ul></li>
+</ul></li>
+</ul>
+<blockquote class="blockquote">
+<p><em>Each additional year of age is associated with a $423 increase in income</em></p>
+</blockquote>
+<ul>
+<li>With a binary (or nominal) IV, the regression coefficient represents <strong>a group difference</strong>; I recommend interpreting it as such. E.g., Which of these interpretations is easiest to understand and most natural?</li>
+</ul>
+<div class="columns">
+<div class="column" style="width:15%;">
+<p><img src="images/no.jpeg" class="img-fluid" alt="No!"></p>
+</div><div class="column" style="width:85%;">
+<blockquote class="blockquote">
+<p><em>A one unit increase in gender is associated with a $15,900 decrease in income</em></p>
+</blockquote>
+</div>
+</div>
+<div class="columns">
+<div class="column" style="width:15%;">
+<p><img src="images/no.jpeg" class="img-fluid" alt="No!"></p>
+</div><div class="column" style="width:85%;">
+<blockquote class="blockquote">
+<p><em>A one unit increase in identifying as a woman is associated with a $15,900 decrease in income</em></p>
+</blockquote>
+</div>
+</div>
+<div class="columns">
+<div class="column" style="width:15%;">
+<p><img src="images/bingo.jpeg" class="img-fluid" alt="Bingo!"></p>
+</div><div class="column" style="width:85%;">
+<blockquote class="blockquote">
+<p><em>On average, women earn about $15,900 less than men</em></p>
+</blockquote>
+</div>
+</div>
+</section>
+</section>
+<section id="regression-with-multiple-ivs" class="level2">
+<h2 class="anchored" data-anchor-id="regression-with-multiple-ivs">Regression with multiple IVs</h2>
+<ul>
+<li>Most regression analyses in the health and social sciences include multiple IVs; e.g., within sociology 10 to 15 IVs is common</li>
+</ul>
+<p><img src="images/mize-2016-asr-tableB.png" class="img-fluid" style="width:70.0%" alt="Appendix Table B of Mize (2016): linear regressions of log wages by sexual orientation for women, with many control variables."></p>
+<div class="callout callout-style-simple callout-note no-icon">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Appendix table from <a href="https://doi.org/10.1177%2F0003122416674025">Mize 2016 <em>ASR</em></a></p>
+</div>
+</div>
+</div>
+<section id="multiple-regression" class="level3">
+<h3 class="anchored" data-anchor-id="multiple-regression">Multiple regression</h3>
+<ul>
+<li>Regression with a single IV is sometimes referred to as <strong>simple regression</strong>; regression with multiple IVs as <strong>multiple regression</strong> (n.b.&nbsp;<em>not</em> “multivariate”)</li>
+<li>Sometimes an analysis will have multiple <strong>focal IVs</strong>: independent variables that are integral to the theoretical questions and hypotheses being tested
+<ul>
+<li>E.g., For the <a href="https://doi.org/10.1177%2F0003122416674025">2016 article</a> referenced above, I only put the focal IVs into the tables in the main text. These were variables I had specific hypotheses about</li>
+</ul></li>
+</ul>
+<p><img src="images/mize-2016-asr-table2.png" class="img-fluid" style="width:80.0%" alt="Table 2 of Mize (2016): linear regressions for log hourly wages by sexual orientation for women, showing only the focal variables."></p>
+<ul>
+<li>Often, there will be many control variables: IVs that are not of specific interest but that are important to account for in the analysis
+<ul>
+<li>We control for IVs because we suspect they have shared variation with the IVs and DV; controlling or “accounting for” the additional IVs helps isolate the effect of the focal IV(s)</li>
+</ul></li>
+</ul>
+</section>
+</section>
+<section id="control-variables-and-causality" class="level2">
+<h2 class="anchored" data-anchor-id="control-variables-and-causality">Control variables and causality</h2>
+<ul>
+<li>A motivation to include multiple IVs in the same model is <strong>because</strong> they are correlated (collinear)
+<ul>
+<li>There are two main motivations for adding control variables to a regression model: mediation and confounding</li>
+</ul></li>
+<li>Sticking with the gender (IV) and wages (DV) example, it would be reasonable to hypothesize that <em>women tend to earn less than men:</em></li>
+</ul>
+<p><img src="images/dag-woman-wages.png" class="img-fluid" style="width:50.0%" alt="Path diagram: an arrow from woman to wages with a negative sign."></p>
+<ul>
+<li>However, other factors are associated with both gender and wages. The simple model represented above suffers from omitted variable bias
+<ul>
+<li>From a causality framework, we would not expect this simple model to uncover the causal effect of gender as other factors may explain some or all of the gender wage gap</li>
+</ul></li>
+</ul>
+<p><strong>*Note</strong> the direction of the arrow in the diagram above. The IV (<em>woman</em>) is the presumed cause of the DV (<em>wages</em>)</p>
+<section id="mediation" class="level3">
+<h3 class="anchored" data-anchor-id="mediation">Mediation</h3>
+<ul>
+<li><strong>Mediation</strong> occurs when the effect of your IV on the DV operates partially through a third (mediating) variable</li>
+</ul>
+<p><img src="images/venn-mediation.png" class="img-fluid" alt="Mediation: the exposure X affects the mediator M, which affects the outcome Y, alongside a direct path from X to Y; overlapping circles show the shared variation."></p>
+<ul>
+<li>For example, differences in the occupations men and women work in may explain some of the gender wage gap
+<ul>
+<li>For simplicity, consider a binary variable indicating whether the person works in a leadership role (= 1) or not (= 0)</li>
+</ul></li>
+</ul>
+<p><img src="images/dag-mediation-leader.png" class="img-fluid" style="width:50.0%" alt="Path diagram: woman has a negative arrow to leader, leader has a positive arrow to wages, and woman has a negative arrow to wages."></p>
+<ul>
+<li>Women may be less likely to work in leadership roles. Leadership roles are associated with higher wages
+<ul>
+<li>Controlling for <em>leader</em> should lessen the effect of <em>woman</em> in the model as some of the variation in wages associated with gender has now been explained by <em>leader</em></li>
+</ul></li>
+</ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-8-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-1" role="tab" aria-controls="tabset-8-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-8-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-2" role="tab" aria-controls="tabset-8-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-8-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-8-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="st">"https://tdmize.github.io/data/data/cda_ah4"</span>, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(cda_ah4.dta | Add Health Wave 4 - | )</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="kw">drop</span> <span class="kw">if</span> employed == 0</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(4,093 observations deleted)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb50"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="kw">sum</span> wages woman supervis</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+       wages |        900    9.035334     12.6879       2.13        150
+       woman |      1,021    .6199804    .4856292          0          1
+    supervis |        933    .2583065    .4379382          0          1</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb52"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="kw">clonevar</span> leader = supervis</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(88 missing values generated)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb54"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>lab def leadlab 0<span class="st">"Not a Leader"</span> 1<span class="st">"Leader"</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>lab val leader leadlab</span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>fre woman leader</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>woman -- Woman R
+-------------------------------------------------------------
+                |      Freq.    Percent      Valid       Cum.
+----------------+--------------------------------------------
+Valid   0 Man   |        388      38.00      38.00      38.00
+        1 Woman |        633      62.00      62.00     100.00
+        Total   |       1021     100.00     100.00           
+-------------------------------------------------------------
+
+leader -- Supervisor at Work
+--------------------------------------------------------------------
+                       |      Freq.    Percent      Valid       Cum.
+-----------------------+--------------------------------------------
+Valid   0 Not a Leader |        692      67.78      74.17      74.17
+        1 Leader       |        241      23.60      25.83     100.00
+        Total          |        933      91.38     100.00           
+Missing .              |         88       8.62                      
+Total                  |       1021     100.00                      
+--------------------------------------------------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb56"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="kw">reg</span> wages i.woman</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>      Source |       SS           df       MS      Number of obs   =       900
+-------------+----------------------------------   F(1, 898)       =     26.88
+       Model |  4205.87862         1  4205.87862   Prob &gt; F        =    0.0000
+    Residual |  140517.664       898  156.478468   R-squared       =    0.0291
+-------------+----------------------------------   Adj R-squared   =    0.0280
+       Total |  144723.543       899  160.982806   Root MSE        =    12.509
+
+------------------------------------------------------------------------------
+       wages | Coefficient  Std. err.      t    P&gt;|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+       woman |
+      Woman  |     -4.467      0.862   -5.184   0.000       -6.158      -2.776
+       _cons |     11.829      0.681   17.360   0.000       10.492      13.167
+------------------------------------------------------------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb58"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="kw">reg</span> wages i.woman i.leader</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>      Source |       SS           df       MS      Number of obs   =       900
+-------------+----------------------------------   F(2, 897)       =     16.22
+       Model |  5049.82473         2  2524.91236   Prob &gt; F        =    0.0000
+    Residual |  139673.718       897   155.71206   R-squared       =    0.0349
+-------------+----------------------------------   Adj R-squared   =    0.0327
+       Total |  144723.543       899  160.982806   Root MSE        =    12.478
+
+------------------------------------------------------------------------------
+       wages | Coefficient  Std. err.      t    P&gt;|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+       woman |
+      Woman  |     -4.350      0.861   -5.052   0.000       -6.039      -2.660
+             |
+      leader |
+     Leader  |      2.218      0.953    2.328   0.020        0.348       4.087
+       _cons |     11.185      0.734   15.237   0.000        9.744      12.625
+------------------------------------------------------------------------------</code></pre>
+</div>
+</div>
+<div id="tabset-8-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-8-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>ah4 <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">"https://tdmize.github.io/data/data/cda_ah4.dta"</span>)</span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>ah4 <span class="ot">&lt;-</span> ah4 <span class="sc">|&gt;</span> <span class="fu">filter</span>(employed <span class="sc">==</span> <span class="dv">1</span>)</span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(ah4[<span class="fu">c</span>(<span class="st">"wages"</span>, <span class="st">"woman"</span>, <span class="st">"supervis"</span>)])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>     wages             woman         supervis     
+ Min.   :  2.130   Min.   :0.00   Min.   :0.0000  
+ 1st Qu.:  2.130   1st Qu.:0.00   1st Qu.:0.0000  
+ Median :  4.444   Median :1.00   Median :0.0000  
+ Mean   :  9.035   Mean   :0.62   Mean   :0.2583  
+ 3rd Qu.: 12.000   3rd Qu.:1.00   3rd Qu.:1.0000  
+ Max.   :150.000   Max.   :1.00   Max.   :1.0000  
+ NAs    :121                      NAs    :88      </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="co"># leader: supervis with labels for leadership</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>ah4 <span class="ot">&lt;-</span> ah4 <span class="sc">|&gt;</span></span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">leader =</span> <span class="fu">factor</span>(supervis, <span class="at">levels =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">1</span>, <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Not a Leader"</span>, <span class="st">"Leader"</span>)),</span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">woman =</span> <span class="fu">as_factor</span>(woman))</span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a><span class="fu">frq</span>(ah4, woman, leader)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>Woman R (woman) &lt;categorical&gt; 
+# total N=1021 valid N=1021 mean=1.62 sd=0.49
+
+Value |   N | Raw % | Valid % | Cum. %
+--------------------------------------
+Man   | 388 |    38 |      38 |     38
+Woman | 633 |    62 |      62 |    100
+&lt;NA&gt;  |   0 |     0 |    &lt;NA&gt; |   &lt;NA&gt;
+
+leader &lt;categorical&gt; 
+# total N=1021 valid N=933 mean=1.26 sd=0.44
+
+Value        |   N | Raw % | Valid % | Cum. %
+---------------------------------------------
+Not a Leader | 692 | 67.78 |   74.17 |  74.17
+Leader       | 241 | 23.60 |   25.83 | 100.00
+&lt;NA&gt;         |  88 |  8.62 |    &lt;NA&gt; |   &lt;NA&gt;</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">lm</span>(wages <span class="sc">~</span> woman, <span class="at">data =</span> ah4))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+Call:
+lm(formula = wages ~ woman, data = ah4)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+ -9.699  -5.233  -4.506   2.637 142.637 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)  11.8295     0.6814  17.360  &lt; 2e-16 ***
+womanWoman   -4.4666     0.8615  -5.184 2.68e-07 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 12.51 on 898 degrees of freedom
+  (121 observations deleted due to missingness)
+Multiple R-squared:  0.02906,   Adjusted R-squared:  0.02798 
+F-statistic: 26.88 on 1 and 898 DF,  p-value: 2.678e-07</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">lm</span>(wages <span class="sc">~</span> woman <span class="sc">+</span> leader, <span class="at">data =</span> ah4))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+Call:
+lm(formula = wages ~ woman + leader, data = ah4)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-11.272  -5.053  -4.518   2.620 140.947 
+
+Coefficients:
+             Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)   11.1846     0.7340  15.237  &lt; 2e-16 ***
+womanWoman    -4.3496     0.8609  -5.052 5.29e-07 ***
+leaderLeader   2.2176     0.9526   2.328   0.0201 *  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 12.48 on 897 degrees of freedom
+  (121 observations deleted due to missingness)
+Multiple R-squared:  0.03489,   Adjusted R-squared:  0.03274 
+F-statistic: 16.22 on 2 and 897 DF,  p-value: 1.208e-07</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<ul>
+<li>As expected, the effect of gender is reduced after controlling for whether the worker holds a leadership position (more on how to provide a statistical significance test of this difference later in the course)</li>
+</ul>
+<blockquote class="blockquote">
+<p><em>Women earn about $4.35 less an hour than men, after accounting for whether the worker holds a leadership position</em></p>
+</blockquote>
+</section>
+<section id="confounding" class="level3">
+<h3 class="anchored" data-anchor-id="confounding">Confounding</h3>
+<ul>
+<li>A confounding variable is one that influences both the IV and the DV. This can cause a spurious relationship between the IV and DV (i.e., a correlation between them that is not causal)</li>
+</ul>
+<p><img src="images/venn-confounding.png" class="img-fluid" alt="Confounding: Z affects both the exposure X and the outcome Y; the three-way overlap of circles is a spurious X-Y association carried by Z."></p>
+<ul>
+<li>E.g., consider the relationship between income (IV) and happiness (DV)</li>
+</ul>
+<p><img src="images/dag-confounding-college.png" class="img-fluid" style="width:50.0%" alt="Path diagram: college has positive arrows to both income and happiness, and income has a positive arrow to happiness."></p>
+<ul>
+<li>More income is associated with more self-reported happiness. However, a third variable—education (measured as college degree or not)—is a cause of both income and happiness
+<ul>
+<li>Without including <em>college</em> in the model our estimate for <em>income</em> would be spuriously large—indicating a larger effect of income on happiness than its true causal effect</li>
+</ul></li>
+</ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-9-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-1" role="tab" aria-controls="tabset-9-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-9-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-2" role="tab" aria-controls="tabset-9-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-9-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-9-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb68"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="st">"https://tdmize.github.io/data/data/cda_gss"</span>, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(cda_gss.dta |  GSS 1972-2021 CDA - Categorical Data Analysis | date created 202
+&gt; 3)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb70"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="kw">sum</span> vhappy income edyrs</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+      vhappy |     64,068    .3060186    .4608411          0          1
+      income |     39,163    32185.98    29106.69        336     160000
+       edyrs |     68,603    12.97949    3.186762          0         20</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb72"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="kw">replace</span> income = income / 1000</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(68,846 real changes made, 29,683 to missing)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb74"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a>lab <span class="kw">var</span> income <span class="st">"Income in 1000s"</span></span>
+<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>* Create a continuous <span class="kw">version</span> <span class="kw">of</span> happiness just <span class="kw">for</span> example</span>
+<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> <span class="kw">logit</span> vhappy i.race3 c.age##c.age i.woman <span class="co">///</span></span>
+<span id="cb74-4"><a href="#cb74-4" aria-hidden="true" tabindex="-1"></a>    i.married i.parent i.relig i.employed</span>
+<span id="cb74-5"><a href="#cb74-5" aria-hidden="true" tabindex="-1"></a><span class="kw">predict</span> prhappy</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(option pr assumed; Pr(vhappy))
+(1,124 missing values generated)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb76"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="kw">replace</span> prhappy = prhappy*100</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(67,722 real changes made)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb78"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="kw">reg</span> prhappy income</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>      Source |       SS           df       MS      Number of obs   =    38,764
+-------------+----------------------------------   F(1, 38762)     =    490.95
+       Model |  51768.1069         1  51768.1069   Prob &gt; F        =    0.0000
+    Residual |   4087231.6    38,762  105.444291   R-squared       =    0.0125
+-------------+----------------------------------   Adj R-squared   =    0.0125
+       Total |  4138999.71    38,763  106.777074   Root MSE        =    10.269
+
+------------------------------------------------------------------------------
+     prhappy | Coefficient  Std. err.      t    P&gt;|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      income |      0.040      0.002   22.157   0.000        0.036       0.043
+       _cons |     29.017      0.078  372.906   0.000       28.864      29.169
+------------------------------------------------------------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb80"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="kw">reg</span> prhappy income college</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>      Source |       SS           df       MS      Number of obs   =    38,723
+-------------+----------------------------------   F(2, 38720)     =    248.64
+       Model |  52425.8242         2  26212.9121   Prob &gt; F        =    0.0000
+    Residual |  4082099.01    38,720  105.426111   R-squared       =    0.0127
+-------------+----------------------------------   Adj R-squared   =    0.0126
+       Total |  4134524.83    38,722  106.774568   Root MSE        =    10.268
+
+------------------------------------------------------------------------------
+     prhappy | Coefficient  Std. err.      t    P&gt;|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      income |      0.038      0.002   19.637   0.000        0.034       0.042
+     college |      0.353      0.124    2.835   0.005        0.109       0.597
+       _cons |     28.987      0.079  367.470   0.000       28.832      29.141
+------------------------------------------------------------------------------</code></pre>
+</div>
+</div>
+<div id="tabset-9-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-9-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb82"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(gss[<span class="fu">c</span>(<span class="st">"vhappy"</span>, <span class="st">"income"</span>, <span class="st">"edyrs"</span>)])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>     vhappy          income           edyrs      
+ Min.   :0.000   Min.   :   336   Min.   : 0.00  
+ 1st Qu.:0.000   1st Qu.: 12600   1st Qu.:12.00  
+ Median :0.000   Median : 24938   Median :12.00  
+ Mean   :0.306   Mean   : 32186   Mean   :12.98  
+ 3rd Qu.:1.000   3rd Qu.: 42083   3rd Qu.:15.00  
+ Max.   :1.000   Max.   :160000   Max.   :20.00  
+ NAs    :4778    NAs    :29683    NAs    :243    </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb84"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a>gss <span class="ot">&lt;-</span> gss <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">income =</span> income <span class="sc">/</span> <span class="dv">1000</span>)</span>
+<span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb84-3"><a href="#cb84-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a continuous version of happiness just for example</span></span>
+<span id="cb84-4"><a href="#cb84-4" aria-hidden="true" tabindex="-1"></a>happymod <span class="ot">&lt;-</span> <span class="fu">glm</span>(vhappy <span class="sc">~</span> <span class="fu">as_factor</span>(race3) <span class="sc">+</span> age <span class="sc">+</span> <span class="fu">I</span>(age<span class="sc">^</span><span class="dv">2</span>) <span class="sc">+</span> woman <span class="sc">+</span> married <span class="sc">+</span></span>
+<span id="cb84-5"><a href="#cb84-5" aria-hidden="true" tabindex="-1"></a>    parent <span class="sc">+</span> <span class="fu">as_factor</span>(relig) <span class="sc">+</span> employed, <span class="at">family =</span> binomial, <span class="at">data =</span> gss)</span>
+<span id="cb84-6"><a href="#cb84-6" aria-hidden="true" tabindex="-1"></a>gss<span class="sc">$</span>prhappy <span class="ot">&lt;-</span> <span class="fu">predict</span>(happymod, <span class="at">newdata =</span> gss, <span class="at">type =</span> <span class="st">"response"</span>) <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb84-7"><a href="#cb84-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb84-8"><a href="#cb84-8" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">lm</span>(prhappy <span class="sc">~</span> income, <span class="at">data =</span> gss))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+Call:
+lm(formula = prhappy ~ income, data = gss)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-24.130  -9.742   1.706   9.334  28.589 
+
+Coefficients:
+             Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) 29.016725   0.077812  372.91   &lt;2e-16 ***
+income       0.039797   0.001796   22.16   &lt;2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 10.27 on 38762 degrees of freedom
+  (30082 observations deleted due to missingness)
+Multiple R-squared:  0.01251,   Adjusted R-squared:  0.01248 
+F-statistic:   491 on 1 and 38762 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb86"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">lm</span>(prhappy <span class="sc">~</span> income <span class="sc">+</span> college, <span class="at">data =</span> gss))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+Call:
+lm(formula = prhappy ~ income + college, data = gss)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-24.134  -9.745   1.730   9.349  28.641 
+
+Coefficients:
+             Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) 28.986535   0.078881 367.470  &lt; 2e-16 ***
+income       0.037786   0.001924  19.637  &lt; 2e-16 ***
+college      0.352856   0.124446   2.835  0.00458 ** 
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 10.27 on 38720 degrees of freedom
+  (30123 observations deleted due to missingness)
+Multiple R-squared:  0.01268,   Adjusted R-squared:  0.01263 
+F-statistic: 248.6 on 2 and 38720 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<blockquote class="blockquote">
+<p><em>After controlling for college completion, a $1,000 increase in income is associated with a 0.038 increase in happiness (on a 100-point happiness scale)</em></p>
+</blockquote>
+<p>*NOTE: Income is measured in $1,000 units; so, a one-unit increase is $1,000—not $1</p>
+</section>
+<section id="collider-variables" class="level3">
+<h3 class="anchored" data-anchor-id="collider-variables">Collider variables</h3>
+<ul>
+<li>A <strong>collider</strong> is a variable that is caused by <em>both</em> the IV and the DV
+<ul>
+<li>The causal arrows “collide” into it—the mirror image of a confounder, where the assumed causality runs to the IV and DV</li>
+</ul></li>
+<li>Controlling for a collider does not remove bias—it creates it
+<ul>
+<li>Induces a spurious (non-causal) correlation between the IV and DV</li>
+</ul></li>
+</ul>
+<p><img src="images/venn-collider.png" class="img-fluid" alt="Collider: both the exposure X and the outcome Y affect C; X and Y share no variance until conditioning on C induces an association."></p>
+<ul>
+<li>Consider the effect of <em>physical health</em> (IV) on <em>depressive symptoms</em> (DV)
+<ul>
+<li>You would probably want to control for socio-economic status (SES) somehow right?
+<ul>
+<li>What about a measure of <em>employment status</em>?</li>
+</ul></li>
+</ul></li>
+</ul>
+<p><img src="images/dag-collider-employed.png" class="img-fluid" style="width:60.0%" alt="Path diagram: physical health has an arrow to depressive symptoms, and both physical health and depressive symptoms have arrows to employed."></p>
+<ul>
+<li>Both physical health and depression are causes of employment status—making employment status a collider
+<ul>
+<li>Controlling for <em>employment</em> distorts the estimate of the true causal effect of <em>physical health</em>—it can shrink it, or even flip its sign</li>
+</ul></li>
+</ul>
+</section>
+<section id="suppressor-variables" class="level3">
+<h3 class="anchored" data-anchor-id="suppressor-variables">Suppressor variables</h3>
+<ul>
+<li>A suppressor variable shares variation with the IV (x) but is not directly associated with the outcome (y)
+<ul>
+<li>Controlling for the suppressor variable will increase the estimate of the effect of the IV (x)
+<ul>
+<li>I.e., the relationship was being “suppressed” and the true relationship only revealed after accounting for suppressor</li>
+</ul></li>
+</ul></li>
+</ul>
+<p><img src="images/venn-suppressor.png" class="img-fluid" alt="Suppressor: S is correlated with the exposure X but has no path to the outcome Y; adjusting for S removes noise, so the estimate for X grows."></p>
+<ul>
+<li>E.g., Consider how well a domain-specific test score will predict success in that domain
+<ul>
+<li>E.g., Mechanical, numerical, and spatial ability skills necessary to be a successful pilot
+<ul>
+<li>Assessed with a written test</li>
+</ul></li>
+<li>Outcome: demonstrated success at flying</li>
+</ul></li>
+</ul>
+<p><img src="images/dag-suppressor-verbal.png" class="img-fluid" style="width:60.0%" alt="Path diagram: verbal ability has an arrow to the domain test score, and the domain test score has an arrow to success in the domain."></p>
+<ul>
+<li>Verbal ability suppressed the predictive power of the test scores, which were very predictive of success, once accounting for it</li>
+</ul>
+</section>
+<section id="to-control-or-not-to-controlthat-is-the-question" class="level3">
+<h3 class="anchored" data-anchor-id="to-control-or-not-to-controlthat-is-the-question">To control or not to control—that is the question</h3>
+<ul>
+<li>Decisions about what variables to include as control variables should be guided by a theoretical consideration as to how those possible control variables are related to your focal IV and DV</li>
+<li>In general, always want to control for confounders
+<ul>
+<li>Often, the convincingness of your case for causality hinges on your ability to include likely confounds in the model</li>
+</ul></li>
+<li>Usually want to control for a suppressor, though they are much more rare</li>
+<li>Never want to control for a collider—will induce a spurious correlation</li>
+<li>For mediation, <strong><em>sometimes</em></strong> include a mediating variable as a control variable
+<ul>
+<li>E.g., As an acknowledgment that there are other pathways through which your focal IV might cause the DV
+<ul>
+<li>E.g., We know that <em>education</em> matters partially through <em>income</em> advantages; want to examine what else might matter</li>
+</ul></li>
+</ul></li>
+<li>However, usually <strong>do not want to</strong> control for a mediator
+<ul>
+<li>Doing so will explain away some of the effect of your IV
+<ul>
+<li>Just because an IV’s effect goes through another variable does not diminish its fundamental causal importance (i.e., its total effect)</li>
+</ul></li>
+</ul></li>
+<li>Sometimes, a mediating relationship will be of primary theoretical interest
+<ul>
+<li>In this case, best to provide a statistical test of mediation
+<ul>
+<li>And quantify the total, direct, and indirect effect*</li>
+</ul></li>
+</ul></li>
+<li>Note that <em>“Mediation and confounding are identical statistically and can be distinguished only on conceptual grounds.”</em> <em>(<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2819361/pdf/nihms-173346.pdf">MacKinnon et al.&nbsp;2000</a>)</em>
+<ul>
+<li>Thus, no statistical test will determine this for you. The distinction is made through theory and knowledge of past research</li>
+</ul></li>
+</ul>
+<p>*And/or others, if in the causal mediation framework</p>
+<p><em>“Which variables shall I include in this run? Shall I run X against Y or Y against X? Should I control for this? And if I control for this, must I also control for that? No statistics text or user’s guide will tell you the answers.” (<a href="https://us.sagepub.com/en-us/nam/book/logic-causal-order">Davis 1985</a>)</em></p>
+<ul>
+<li>Often, we control for a host of things because everyone else in our field does (e.g., gender, race, income, education, age, etc.)
+<ul>
+<li>That is, there are normative in addition to theoretical reasons for conditioning on certain factors</li>
+</ul></li>
+<li>For many fields, past studies may have established important control variables to include in your model</li>
+<li>In the absence of experimental data with random assignment, your IV of interest will not be truly independent of other important factors, so control variables are often necessary</li>
+</ul>
+</section>
+</section>
+<section id="causality" class="level2">
+<h2 class="anchored" data-anchor-id="causality">Causality</h2>
+<ul>
+<li>Most regression models based on <strong>observational data</strong> will not be able to determine causality
+<ul>
+<li>Health and social scientists tend to be very cautious about causal statements based on the results of regression models fit to observational data</li>
+</ul></li>
+<li>Best to think seriously about the process you are studying and ensure your model reflects the likely causal logic
+<ul>
+<li>Make sure the DV is logically the outcome of an IV cause</li>
+<li>Add control variables for likely confounding variables
+<ul>
+<li>I find drawing a diagram with arrows extremely useful
+<ul>
+<li>Can formalize this as a directed acyclic graph (DAG; see <a href="https://doi.org/10.1177/2515245917745629">Rohrer 2018</a>)</li>
+<li>But useful even informally, and as an aid for your model specification decisions</li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul>
+<blockquote class="blockquote">
+<p><em>“The correct causal ordering of the variables is determined outside the estimation procedure. In practice, it is based on theoretical considerations, research design, good judgment, and past research.” (<a href="https://us.sagepub.com/en-us/nam/book/applied-regression-0">Lewis-Beck and Lewis-Beck 2015</a>)</em></p>
+</blockquote>
+<blockquote class="blockquote">
+<p><em>“…data are profoundly dumb… you are smarter than your data” (<a href="http://bayes.cs.ucla.edu/WHY/">Pearl and Mackenzie 2018</a>)</em></p>
+</blockquote>
+</section>
+<section id="regression-modeling-overview" class="level2">
+<h2 class="anchored" data-anchor-id="regression-modeling-overview">Regression modeling overview</h2>
+<ul>
+<li>Regression modeling gives us a tool for modeling expectations while conditioning on lots of other factors
+<ul>
+<li>E.g., There are lots of reasons why those with higher incomes report happier lives
+<ul>
+<li>Sometimes, interested in studying these mechanisms (mediation)</li>
+<li>Other times, need to control for confounders to better isolate focal IV’s effect</li>
+</ul></li>
+</ul></li>
+<li>Multiple regression is a tool for accounting for (conditioning on) other factors you think are important to the relationship between your focal IV(s) and DV</li>
+<li>Do not lose track of the fact that we are modeling conditional expectations
+<ul>
+<li>This becomes especially important when we move to binary and nominal dependent variables</li>
+<li>If you focus on conditional expectations, the most intuitive way to interpret these models is clear
+<ul>
+<li>However, it is easy to get lost in the complications of the models and interpret something that is not intuitive or of substantive interest</li>
+</ul></li>
+</ul></li>
+</ul>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/www\.trentonmize\.com");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../../../teaching/cda/01/1-0-categorical-data.html" class="pagination-link" aria-label="1.0 Categorical Data is Everywhere">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">1.0 Categorical Data is Everywhere</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../../teaching/cda/01/1-3-linear-regression-math.html" class="pagination-link" aria-label="1.3 Linear Regression (with math)">
+        <span class="nav-page-text">1.3 Linear Regression (with math)</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Trenton D. Mize, Purdue University</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org">Quarto</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

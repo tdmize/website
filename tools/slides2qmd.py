@@ -212,10 +212,17 @@ def main():
         return pandoc(["-f", "json", "-t", fmt, "--wrap=none"], json.dumps(doc))
 
     md = "markdown-simple_tables-multiline_tables-grid_tables+pipe_tables"
-    for p in parts:
+    used = set()
+    for i, p in enumerate(parts, 1):
         title = as_text([{"t": "Plain", "c": p["title"]}], "plain").strip()
-        m = re.match(r"(Appendix\s+)?(\d+[A-Z]?(?:\.\d+)?)", title)
-        name = ("appendix-" if m and m.group(1) else "") + (m.group(2) if m else "part").replace(".", "-").lower()
+        m = re.match(r"(Appendix\s+)?([A-Z]?\d+[A-Z]?(?:\.\d+)?)\b", title)
+        if m:
+            name = ("appendix-" if m.group(1) else "") + m.group(2).replace(".", "-").lower()
+        else:  # unnumbered part: its position and title
+            name = "%02d-" % i + re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")[:40]
+        while name in used:
+            name += "-b"
+        used.add(name)
         with open(os.path.join(out, name + ".qmd"), "w", encoding="utf-8") as fh:
             fh.write('---\ntitle: "%s"\n---\n\n' % title.replace('"', '\\"'))
             fh.write(as_text(p["blocks"], md))

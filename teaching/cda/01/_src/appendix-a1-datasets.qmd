@@ -1,0 +1,121 @@
+---
+title: "Appendix A1: Datasets for Assignments"
+---
+<<dd_version: 2>>
+
+- If you already have a dataset you are familiar with and have cleaned, you can use it for your assignments
+  - Only two rules: (1) Must have \> 500 observations, and (2) must already have it cleaned (i.e., variables have clear names, variables are labeled, values are labeled, you know how much missing data there is)
+- If not, I provide some semi-cleaned datasets you can use for your assignments
+  - Look at the descriptive statistics tables of these datasets in the Datasets for Assignments folder on Brightspace (under 00-Misc)
+
+![](images/data-cartoon.jpeg){width=30% fig-alt="Cartoon of a person cleaning a large 3D word 'Data'."}
+
+## General Social Survey 1972 -- 2021 (GSS)
+
+- General Social Survey (GSS) 1972 to 2021
+  - Cross-sectional survey fielded every two years in the U.S.
+  - Mainly tracks social and political attitudes and opinions
+    - Special modules in some years with questions about specific topics (e.g., environmental attitudes, mental health, etc)
+  - 6,108 variables in full dataset; 193 semi-cleaned in the course dataset
+    - [Search for additional variables of interest here](https://gssdataexplorer.norc.org/variables/vfilter); let me know if there is a variable you want me to add to the course dataset---I can do this quickly and easily
+- You might choose to focus on a single year; or examine change over time and use *year* as a continuous IV
+
+![](images/gss-logo.png){width=25% fig-alt="General Social Survey logo."}
+
+## Add Health Waves IV & V (AH4 & AH5)
+
+- National Longitudinal Study of Adolescent to Adult Health (Add Health)
+  - Panel survey tracking a U.S. cohort from middle/high school (Wave 1) into their late 30s/early 40s (Wave 5)
+- I have both Wave 4 and Wave 5 saved as separate datasets
+  - Mean age = 28 in Wave 4; mean age = 37 in Wave 5
+- Survey focuses mostly on health and health behaviors---but also has many other variables, including labor market outcomes
+  - 922 variables in full dataset; 128 (Wave 4) and 168 (Wave 5) semi-cleaned in course dataset
+- [See the full questionnaire here](https://drive.google.com/file/d/1EPn2m7AVAaKaVcqC-weE4ybtPnIxOdQd/view?usp=sharing); let me know if there is a variable you want me to add to the course dataset---I can do this quickly and easily
+
+![](images/add-health-logo.png){width=50% fig-alt="Add Health logo: The National Longitudinal Study of Adolescent to Adult Health."}
+
+## American National Election Study 2020
+
+- Political opinion survey taken both before and shortly after the 2020 U.S. presidential election (Biden vs Trump)
+- Includes a range of political opinions, behaviors, and voting intentions
+- 1,771 variables in raw data; 46 variables in semi-cleaned dataset
+  - See the [full questionnaire here](https://electionstudies.org/anes_timeseries_2020_questionnaire_20210719/); I am happy to add more variables to the cleaned dataset if you send me the variable names
+
+![](images/anes-logo.png){width=35% fig-alt="American National Election Studies logo."}
+
+## Health and Retirement Study 2020 (HRS)
+
+- Longitudinal survey of older adults
+  - Longitudinal (panel) survey but course dataset only has year 2020
+  - Read more [about the study here](https://hrs.isr.umich.edu/about)
+- Primarily focused on aging and health but with other miscellaneous measures as well
+  - Excellent representation of older adults; allows for examination into much older ages than most surveys
+- 179 variables in course dataset
+
+![](images/hrs-logo.png){width=35% fig-alt="Health and Retirement Study logo."}
+
+## World Values Survey 7 (WVS)
+
+- Cross-sectional survey conducted simultaneously across 79 countries (1,000+ respondents per country)
+  - Very diverse representation of countries
+  - [WVS 7](https://www.worldvaluessurvey.org/WVSDocumentationWV7.jsp) conducted in 2017--2020
+- Mostly attitudinal questions about social, political, religious, and economic issues
+  - 96 variables in semi-cleaned dataset; see [full questionnaire here](https://www.worldvaluessurvey.org/WVSDocumentationWV7.jsp)
+- My advice: keep only two countries of interest for class assignments
+  - Use the country indicator as your binary IV for assignments
+
+![](images/wvs-logo.png){width=25% fig-alt="World Values Survey logo."}
+
+## Creating scales for continuous variables
+
+- It can be challenging to find continuous variables in health and social science datasets (that is one reason you need this class!)
+  - [Scales and indexes](http://janda.org/workshop/scale%20construction/Talk/talk03.htm) are some of the most common forms of continuous variables
+  - Find a few binary or ordinal variables that you think are measuring a single underlying construct and propose in Assignment 2 to combine them into a scale or index
+    - I will help guide you as to whether this will work or not
+- There are lots of sophisticated ways to create scales; for the purpose of this class, you can just add the variables\* together into a "summated scale"
+  - To learn the more sophisticated approaches, take a class on [Latent Variable Modeling](/teaching/lvm.qmd)
+  - In the course datasets I provide, many scales have already been created for you. These variable names usually end in SS ("summated scale")
+
+\*If all items are measured in the same way, often useful to divide by total \# of items to retain interpretation
+
+### Interpreting scales
+
+- A difficulty with scales is they often have no natural metric so can be awkward to interpret
+- I suggest interpreting the mean value as "average" on that scale, ± 1 SD "somewhat" more or less on that construct, and ± 2 SDs as "very" indicative of that construct (or lack of it)
+  - It can be very useful to label these values on graphs, to use them as places to make predictions, to aid your interpretations, etc.
+- E.g., For a depression scale:
+
+**Depression Scale**
+
+| -2 SDs | -1 SD | Mean | +1 SD | +2 SDs |
+|:-----:|:-----:|:-----:|:-----:|:-----:|
+| "very low depressive symptoms" | "somewhat less depressed than average" | "average" | "somewhat more depressed than average" | "very high depressive symptoms" |
+
+### Recoding variables into a natural metric
+
+- Another strategy for making continuous variables is to recode ordinal variables where the response options have a natural metric (but were not coded that way)
+  - E.g., Recode religious attendance variable into days per month (e.g., assign "2-3 times per month" a value of 2.5. Assign "every week" a value of 4. Etc.)
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_gss", clear
+
+fre attend
+<</dd_do>>
+```
+
+## R
+
+```{r}
+library(haven)           # import Stata data and labels
+library(sjmisc)          # frequency tables
+
+gss <- read_dta("https://tdmize.github.io/data/data/cda_gss.dta")
+
+frq(gss, attend)
+```
+
+:::
