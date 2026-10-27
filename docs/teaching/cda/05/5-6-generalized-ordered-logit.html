@@ -1,0 +1,1827 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>5.6 Generalized Ordered Logit Model – Trenton D. Mize</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../teaching/cda/05/5-7-overview.html" rel="next">
+<link href="../../../teaching/cda/05/5-4-parallel-regression.html" rel="prev">
+<script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-d1074f4552fd9e64773fe67262ebb1c3.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">Trenton D. Mize</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../cv.html"> 
+<span class="menu-text">CV</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../research.html"> 
+<span class="menu-text">Research</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../software.html"> 
+<span class="menu-text">Software</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="../../../teaching.html" aria-current="page"> 
+<span class="menu-text">Teaching</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../resources.html"> 
+<span class="menu-text">Links</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../help.html"> 
+<span class="menu-text">Asking for Help</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/tdmize"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../teaching/cda/index.html">Categorical Data Analysis (Soc 681)</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/05/index.html">05 Ordinal Models</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/05/5-6-generalized-ordered-logit.html">5.6 Generalized Ordered Logit Model</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Teaching</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Categorical Data Analysis (Soc 681)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/01/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">01 Introduction &amp; Linear Regression</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/1-0-categorical-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1.0 Categorical Data is Everywhere</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/1-2-linear-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1.2 Linear Regression (sans math)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/1-3-linear-regression-math.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1.3 Linear Regression (with math)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/appendix-a1-datasets.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix A1: Datasets for Assignments</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/appendix-a2-stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix A2: Stata Appendix</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/02/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">02 Nonlinearities &amp; Categorical IVs</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-1-marginal-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.1 Interpretation with Marginal Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-2-nonlinear-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.2 Marginal Effects with Nonlinearities</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-3-linear-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.3 Linear Interaction Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-4-nonlinear-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.4 Nonlinear Interaction Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-5-distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.5 Examining Distributions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-6-assessing-nonlinearities.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.6 Assessing and Modeling Complex Nonlinearities for Independent Variables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-7-categorical-ivs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.7 Categorical Independent Variables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-8-comparing-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.8 Comparing Effects Across IVs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-10-conclusion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.10 Conclusion</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/02/appendix-2a/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 2A: Stata Code and Tips</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-1-factor-syntax.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.1 Stata factor syntax</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-2-polynomials.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.2 Polynomial IVs with factor syntax</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-3-calculating-mes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.3 Calculating marginal effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-4-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.4 Interaction effect with factor syntax</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-5-nonlinear-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.5 Nonlinear interaction effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-6-distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.6 Tools for examining distributions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-7-assessing-nonlinearities.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.7 Assessing nonlinearities</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-8-splines.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.8 Splines</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-9-loglinear.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.9 Loglinear regression models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-10-transforming.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.10 Transforming variables</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2b-logged-dv.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 2B: Logged DV Regression Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2c-splines.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 2C: Splines</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/03/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">03 Binary Regression Models</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-0-linear-probability-model.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.0 Binary DVs and the Linear Probability Model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-1-binary-model-derivations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.1 Binary Model Derivations</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-2-scaling-identification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.2 Scaling and Identification</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-3-maximum-likelihood.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.3 Maximum Likelihood Estimation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-4-coefficient-interpretations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.4 Coefficient Interpretations</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-5-predictions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.5 Interpreting Predictions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-6-marginal-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.6 Marginal Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-7-effect-summary-comparison.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.7 Effect Summary Comparison</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-8-ideal-types.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.8 Predictions for Ideal Types</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-9-risk-ratios.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.9 Risk Ratios/Relative Risk (RR)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-10-tables-plots.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.10 Bonus: Tables &amp; Plots of Results</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-11-conclusion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.11 Miscellaneous &amp; Conclusion</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3a-stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3A: Stata Code and Tips</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3b-maximum-likelihood.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3B: Maximum Likelihood</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3c-or-mem.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3C: OR and MEM Comparison</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3d-me-distribution.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3D: Distribution of Marginal Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3e-functional-forms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3E: Flexible Functional Forms</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3f-ystar.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3F: Interpretation in y* Metric</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3g-marginal-odds-ratios.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3G: Marginal Odds Ratios</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/04/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">04 Nominal Models</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-0-nominal-dvs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.0 Nominal DVs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-1-multinomial-logit.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.1 Multinomial Logit Model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-2-predicted-probabilities.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.2 Predicted Probabilities</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-3-marginal-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.3 Marginal Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-4-four-category-example.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.4 Example with 4 DV Categories</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-5-conditional-odds-ratios.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.5 Conditional Odds Ratios (ORs)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-6-iia.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.6 Independence of Irrelevant Alternatives (IIA)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-7-review.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.7 Review of Nominal DVs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/appendix-4a-combining-outcomes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 4A: Combining Outcomes and Functional Forms</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/appendix-4b-stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 4B: Stata Code and Tips</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/05/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">05 Ordinal Models</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/05/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/05/5-0-ordinal-outcomes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5.0 Ordinal Outcomes</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/05/5-1-latent-variable-model.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5.1 Latent Variable Model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/05/5-2-interpretation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5.2 Interpretation in Ordinal Logit</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/05/5-3-coefficients.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5.3 Coefficients in the Ordinal Model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/05/5-4-parallel-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5.4 Parallel Regression Assumption</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/05/5-6-generalized-ordered-logit.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">5.6 Generalized Ordered Logit Model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/05/5-7-overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5.7 Overview of Ordinal DVs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/05/appendix-a5-stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix A5: Stata Code and Tips</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cdash.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Categorical Data Analysis (Statistical Horizons)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cdaws.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Categorical Data Analysis Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/workflow.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Management / Workflow Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/dataviz.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Visualization</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/dvs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Visualization Using Stata and LLMs</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/dmv.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data &amp; Model Visualization Workshop</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/dmv/r-output.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">R Output</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/em.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Experimental Methods: Design &amp; Analysis</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/int.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Interaction Effects Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/irt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Item Response Theory</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/lvm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Latent Variable Modeling</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/mcapsi.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Longitudinal Data Analysis</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/miss.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Missing Data Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/spgrad.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Social Psychology (Graduate)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/spug.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Social Psychology (Undergrad)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Stata Programming Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/surveys.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Survey Design Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/sew.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Survey Experiments Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/twm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Teaching Workshops &amp; Methods</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#the-generalized-ordered-logit-model" id="toc-the-generalized-ordered-logit-model" class="nav-link active" data-scroll-target="#the-generalized-ordered-logit-model">The generalized ordered logit model</a>
+  <ul class="collapse">
+  <li><a href="#predicted-probabilities-in-the-generalized-ordered-model" id="toc-predicted-probabilities-in-the-generalized-ordered-model" class="nav-link" data-scroll-target="#predicted-probabilities-in-the-generalized-ordered-model">Predicted probabilities in the generalized ordered model</a></li>
+  <li><a href="#predictions-outside-of-0-and-1" id="toc-predictions-outside-of-0-and-1" class="nav-link" data-scroll-target="#predictions-outside-of-0-and-1">Predictions outside of 0 and 1</a></li>
+  <li><a href="#overall-thoughts-on-the-generalized-ordered-model" id="toc-overall-thoughts-on-the-generalized-ordered-model" class="nav-link" data-scroll-target="#overall-thoughts-on-the-generalized-ordered-model">Overall thoughts on the generalized ordered model</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../teaching/cda/index.html">Categorical Data Analysis (Soc 681)</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/05/index.html">05 Ordinal Models</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/05/5-6-generalized-ordered-logit.html">5.6 Generalized Ordered Logit Model</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">5.6 Generalized Ordered Logit Model</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<ul>
+<li>Recall that ordinal logit simultaneously fits the equations:</li>
+</ul>
+<p><span class="math display">\[\begin{aligned} \Pr(y \leq 1) &amp;= F(\alpha_{1} + \beta_{1}x_{1} + \beta_{2}x_{2}) \\ \Pr(y \leq 2) &amp;= F(\alpha_{2} + \beta_{1}x_{1} + \beta_{2}x_{2}) \\ \Pr(y \leq 3) &amp;= F(\alpha_{3} + \beta_{1}x_{1} + \beta_{2}x_{2}) \end{aligned}\]</span></p>
+<ul>
+<li>The β’s are constrained to be <strong>identical</strong> in all equations</li>
+<li>The intercepts (α) vary by outcome (which become <span class="math inline">\(\tau\)</span>)</li>
+<li>The generalized ordered logit model relaxes the assumption of equal <strong>β</strong>’s over outcome categories unless there is evidence to suggest this should be the case
+<ul>
+<li>Thus, despite the name, it is often no longer an ordinal model; or, most often, partially an ordered model and partially a nominal model</li>
+</ul></li>
+</ul>
+<p><strong>NOTE:</strong> I present only a brief introduction here; see Williams (<a href="https://www.stata-journal.com/article.html?article=st0097">2010</a>; <a href="https://www.tandfonline.com/doi/full/10.1080/0022250X.2015.1112384">2016</a>) for the full details on the generalized ordered model</p>
+<section id="the-generalized-ordered-logit-model" class="level2">
+<h2 class="anchored" data-anchor-id="the-generalized-ordered-logit-model">The generalized ordered logit model</h2>
+<ul>
+<li>The generalized ordered logit model allows none, some, or all of the β’s to be constrained to be identical across all cumulative outcome equations</li>
+<li>For example, could find statistical evidence that effect of <span class="math inline">\(x_{1}\)</span> is the same across the three cumulative probability equations so can constrain <span class="math inline">\(\beta_{1}\)</span> to be identical across equations; but, in same model, allow the effect for <span class="math inline">\(x_{2}\)</span> to differ across equations so we estimate three β’s for <span class="math inline">\(x_{2}\)</span>: <span class="math inline">\(\beta_{2,1}\)</span>, <span class="math inline">\(\beta_{2,2}\)</span>, and <span class="math inline">\(\beta_{2,3}\)</span>. E.g.,</li>
+</ul>
+<p><span class="math display">\[\begin{aligned} \Pr(y \leq 1) &amp;= F(\alpha_{1} + \beta_{1}x_{1} + \beta_{2,1}x_{2}) \\ \Pr(y \leq 2) &amp;= F(\alpha_{2} + \beta_{1}x_{1} + \beta_{2,2}x_{2}) \\ \Pr(y \leq 3) &amp;= F(\alpha_{3} + \beta_{1}x_{1} + \beta_{2,3}x_{2}) \end{aligned}\]</span></p>
+<section id="predicted-probabilities-in-the-generalized-ordered-model" class="level3">
+<h3 class="anchored" data-anchor-id="predicted-probabilities-in-the-generalized-ordered-model">Predicted probabilities in the generalized ordered model</h3>
+<ul>
+<li>Define the odds in terms of cumulative probabilities:</li>
+</ul>
+<p><span class="math display">\[\Omega_{y \leq j}(\mathbf{x}) = \frac{\Pr(y \leq j\,|\,\mathbf{x})}{\Pr(y &gt; j\,|\,\mathbf{x})}\]</span></p>
+<ul>
+<li>The parallel regression assumption in the ordinal model assumes:</li>
+</ul>
+<p><span class="math display">\[\ln\left[\Omega_{y \leq j}(\mathbf{x})\right] = \tau_{j} - \mathbf{x}\boldsymbol{\beta}\]</span></p>
+<ul>
+<li>The generalized ordered model removes the necessary restriction of equal βs (now β has a subscript <em>j</em> to denote it can vary across outcome category)</li>
+</ul>
+<p><span class="math display">\[\ln\left[\Omega_{y \leq j}(\mathbf{x})\right] = \tau_{j} - \mathbf{x}\boldsymbol{\beta}_{j}\]</span></p>
+<ul>
+<li>In ordinal logit, we calculate predicted probabilities:</li>
+</ul>
+<p><span class="math display">\[\eta = \Pr(y = j\,|\,\mathbf{x}) = \frac{\exp(\mathbf{x}_{i}\boldsymbol{\beta} - \tau_{j-1})}{1 + \exp(\mathbf{x}_{i}\boldsymbol{\beta} - \tau_{j-1})} - \frac{\exp(\mathbf{x}_{i}\boldsymbol{\beta} - \tau_{j})}{1 + \exp(\mathbf{x}_{i}\boldsymbol{\beta} - \tau_{j})}\]</span></p>
+<ul>
+<li>To ensure probabilities fall between 0 and 1 in ordinal logit:</li>
+</ul>
+<p><span class="math display">\[(\tau_{j} - \mathbf{x}\boldsymbol{\beta}) \geq (\tau_{j-1} - \mathbf{x}\boldsymbol{\beta})\]</span></p>
+<ul>
+<li>This is <strong><em>not</em></strong> enforced by the generalized ordered logit model (<strong>gologit2</strong> in Stata) so predictions above 1 and below 0 are possible</li>
+<li>In Stata, <a href="https://www3.nd.edu/~rwilliam/gologit2/"><strong>gologit2</strong></a> with the option <strong>autofit</strong> will decide for you which coefficient estimates to constrain to be equal across equations
+<ul>
+<li>In R, fit model with <a href="https://www.rdocumentation.org/packages/ordinal/versions/2023.12-4/topics/clm">clm</a> (<strong>ordinal</strong> package) but need to <a href="https://towardsdatascience.com/partial-proportional-odd-model-in-r-dc5face36e40/">specify which IVs to constrain</a></li>
+</ul></li>
+<li>Example below: the same political party affiliation (GSS 2010 – 2021) model we used before</li>
+</ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>*2010 - 2021 GSS</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="st">"https://tdmize.github.io/data/data/cda_gss"</span>, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(cda_gss.dta |  GSS 1972-2021 CDA - Categorical Data Analysis | date created 202
+&gt; 3)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">drop</span> <span class="kw">if</span> <span class="fu">year</span> &lt; 2010</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(53,043 observations deleted)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">drop</span> <span class="kw">if</span> <span class="fu">missing</span>(partyid5, woman, edyrs, age, parent, married, <span class="co">///</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    faminc, employed, region4, <span class="fu">year</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(2,373 observations deleted)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>*GOLM</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>gologit2 partyid5 c.age i.woman c.edyrs i.parent i.married <span class="co">///</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    c.faminc i.employed i.region4 i.<span class="fu">year</span>, <span class="kw">or</span> autofit</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>------------------------------------------------------------------------------
+Testing parallel lines assumption using the .05 level of significance...
+
+Step  1:  Constraints for parallel lines imposed for 1.employed (P Value = 0.981
+&gt; 7)
+Step  2:  Constraints for parallel lines imposed for 4.region4 (P Value = 0.8420
+&gt; )
+Step  3:  Constraints for parallel lines imposed for 2018.year (P Value = 0.6093
+&gt; )
+Step  4:  Constraints for parallel lines imposed for 2012.year (P Value = 0.3828
+&gt; )
+Step  5:  Constraints for parallel lines imposed for 2014.year (P Value = 0.1393
+&gt; )
+Step  6:  Constraints for parallel lines are not imposed for 
+          age (P Value = 0.00000)
+          1.woman (P Value = 0.00667)
+          edyrs (P Value = 0.00000)
+          1.parent (P Value = 0.00000)
+          1.married (P Value = 0.02552)
+          faminc (P Value = 0.00000)
+          2.region4 (P Value = 0.00089)
+          3.region4 (P Value = 0.00000)
+          2016.year (P Value = 0.03434)
+          2021.year (P Value = 0.00000)
+
+Wald test of parallel lines assumption for the final model:
+
+ ( 1)  [Strong_Dem]1.employed - [Democrat]1.employed = 0
+ ( 2)  [Strong_Dem]4.region4 - [Democrat]4.region4 = 0
+ ( 3)  [Strong_Dem]2012.year - [Democrat]2012.year = 0
+ ( 4)  [Strong_Dem]2014.year - [Democrat]2014.year = 0
+ ( 5)  [Strong_Dem]2018.year - [Democrat]2018.year = 0
+ ( 6)  [Strong_Dem]1.employed - [Independent]1.employed = 0
+ ( 7)  [Strong_Dem]4.region4 - [Independent]4.region4 = 0
+ ( 8)  [Strong_Dem]2012.year - [Independent]2012.year = 0
+ ( 9)  [Strong_Dem]2014.year - [Independent]2014.year = 0
+ (10)  [Strong_Dem]2018.year - [Independent]2018.year = 0
+ (11)  [Strong_Dem]1.employed - [Republican]1.employed = 0
+ (12)  [Strong_Dem]4.region4 - [Republican]4.region4 = 0
+ (13)  [Strong_Dem]2012.year - [Republican]2012.year = 0
+ (14)  [Strong_Dem]2014.year - [Republican]2014.year = 0
+ (15)  [Strong_Dem]2018.year - [Republican]2018.year = 0
+
+           chi2( 15) =   11.78
+         Prob &gt; chi2 =    0.6958
+
+An insignificant test statistic indicates that the final model
+does not violate the proportional odds/ parallel lines assumption
+
+If you re-estimate this exact same model with gologit2, instead 
+of autofit you can save time by using the parameter
+
+pl(0b.employed 1.employed 0b.woman 0b.parent 0b.married 1b.region4 4.region4 201
+&gt; 0b.year 2012.year 2014.year 2018.year)
+
+------------------------------------------------------------------------------
+
+Generalized Ordered Logit Estimates                    Number of obs =  13,430
+                                                       LR chi2(45)   = 1483.07
+                                                       Prob &gt; chi2   =  0.0000
+Log likelihood = -20181.3                              Pseudo R2     =  0.0354
+
+ ( 1)  [Strong_Dem]1.employed - [Democrat]1.employed = 0
+ ( 2)  [Strong_Dem]4.region4 - [Democrat]4.region4 = 0
+ ( 3)  [Strong_Dem]2012.year - [Democrat]2012.year = 0
+ ( 4)  [Strong_Dem]2014.year - [Democrat]2014.year = 0
+ ( 5)  [Strong_Dem]2018.year - [Democrat]2018.year = 0
+ ( 6)  [Democrat]1.employed - [Independent]1.employed = 0
+ ( 7)  [Democrat]4.region4 - [Independent]4.region4 = 0
+ ( 8)  [Democrat]2012.year - [Independent]2012.year = 0
+ ( 9)  [Democrat]2014.year - [Independent]2014.year = 0
+ (10)  [Democrat]2018.year - [Independent]2018.year = 0
+ (11)  [Independent]1.employed - [Republican]1.employed = 0
+ (12)  [Independent]4.region4 - [Republican]4.region4 = 0
+ (13)  [Independent]2012.year - [Republican]2012.year = 0
+ (14)  [Independent]2014.year - [Republican]2014.year = 0
+ (15)  [Independent]2018.year - [Republican]2018.year = 0
+------------------------------------------------------------------------------
+    partyid5 | Odds ratio   Std. err.      z    P&gt;|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Strong_Dem   |
+         age |      0.984      0.001  -11.686   0.000        0.981       0.987
+             |
+       woman |
+      Women  |      0.730      0.034   -6.795   0.000        0.667       0.800
+             |
+       edyrs |      0.931      0.008   -8.557   0.000        0.916       0.947
+             |
+      parent |
+     Parent  |      1.112      0.062    1.917   0.055        0.998       1.240
+             |
+     married |
+    Married  |      1.452      0.074    7.335   0.000        1.314       1.604
+             |
+      faminc |      1.002      0.001    2.159   0.031        1.000       1.003
+             |
+    employed |
+        Yes  |      1.098      0.038    2.699   0.007        1.026       1.175
+             |
+     region4 |
+    Midwest  |      1.170      0.076    2.414   0.016        1.030       1.329
+      South  |      1.129      0.067    2.058   0.040        1.006       1.267
+       West  |      1.156      0.059    2.840   0.005        1.046       1.277
+             |
+        year |
+       2012  |      0.940      0.058   -1.014   0.311        0.833       1.060
+       2014  |      1.020      0.058    0.345   0.730        0.912       1.141
+       2016  |      1.114      0.080    1.495   0.135        0.967       1.282
+       2018  |      1.103      0.065    1.676   0.094        0.984       1.237
+       2021  |      0.889      0.058   -1.782   0.075        0.782       1.012
+             |
+       _cons |     20.826      3.161   20.007   0.000       15.468      28.041
+-------------+----------------------------------------------------------------
+Democrat     |
+         age |      0.998      0.001   -1.447   0.148        0.996       1.001
+             |
+       woman |
+      Women  |      0.779      0.027   -7.083   0.000        0.727       0.835
+             |
+       edyrs |      0.936      0.006  -10.340   0.000        0.924       0.948
+             |
+      parent |
+     Parent  |      1.235      0.053    4.888   0.000        1.135       1.344
+             |
+     married |
+    Married  |      1.384      0.054    8.367   0.000        1.282       1.493
+             |
+      faminc |      1.002      0.001    4.353   0.000        1.001       1.004
+             |
+    employed |
+        Yes  |      1.098      0.038    2.699   0.007        1.026       1.175
+             |
+     region4 |
+    Midwest  |      1.296      0.070    4.787   0.000        1.165       1.441
+      South  |      1.382      0.069    6.479   0.000        1.253       1.524
+       West  |      1.156      0.059    2.840   0.005        1.046       1.277
+             |
+        year |
+       2012  |      0.940      0.058   -1.014   0.311        0.833       1.060
+       2014  |      1.020      0.058    0.345   0.730        0.912       1.141
+       2016  |      0.993      0.059   -0.124   0.901        0.883       1.115
+       2018  |      1.103      0.065    1.676   0.094        0.984       1.237
+       2021  |      1.042      0.060    0.719   0.472        0.931       1.166
+             |
+       _cons |      1.671      0.198    4.337   0.000        1.325       2.107
+-------------+----------------------------------------------------------------
+Independent  |
+         age |      1.010      0.001    8.393   0.000        1.008       1.012
+             |
+       woman |
+      Women  |      0.759      0.028   -7.499   0.000        0.706       0.816
+             |
+       edyrs |      0.985      0.007   -2.172   0.030        0.972       0.999
+             |
+      parent |
+     Parent  |      1.079      0.049    1.666   0.096        0.987       1.180
+             |
+     married |
+    Married  |      1.489      0.061    9.776   0.000        1.375       1.613
+             |
+      faminc |      1.004      0.001    7.513   0.000        1.003       1.005
+             |
+    employed |
+        Yes  |      1.098      0.038    2.699   0.007        1.026       1.175
+             |
+     region4 |
+    Midwest  |      1.398      0.079    5.971   0.000        1.253       1.561
+      South  |      1.519      0.079    8.060   0.000        1.372       1.682
+       West  |      1.156      0.059    2.840   0.005        1.046       1.277
+             |
+        year |
+       2012  |      0.940      0.058   -1.014   0.311        0.833       1.060
+       2014  |      1.020      0.058    0.345   0.730        0.912       1.141
+       2016  |      1.055      0.064    0.882   0.378        0.936       1.189
+       2018  |      1.103      0.065    1.676   0.094        0.984       1.237
+       2021  |      0.908      0.054   -1.629   0.103        0.809       1.020
+             |
+       _cons |      0.207      0.026  -12.705   0.000        0.163       0.264
+-------------+----------------------------------------------------------------
+Republican   |
+         age |      1.022      0.002   12.489   0.000        1.019       1.026
+             |
+       woman |
+      Women  |      0.883      0.050   -2.204   0.028        0.791       0.986
+             |
+       edyrs |      0.972      0.011   -2.657   0.008        0.951       0.992
+             |
+      parent |
+     Parent  |      0.970      0.073   -0.402   0.688        0.838       1.124
+             |
+     married |
+    Married  |      1.610      0.101    7.621   0.000        1.424       1.819
+             |
+      faminc |      1.004      0.001    5.139   0.000        1.003       1.006
+             |
+    employed |
+        Yes  |      1.098      0.038    2.699   0.007        1.026       1.175
+             |
+     region4 |
+    Midwest  |      1.612      0.129    5.951   0.000        1.377       1.886
+      South  |      1.733      0.126    7.563   0.000        1.503       1.998
+       West  |      1.156      0.059    2.840   0.005        1.046       1.277
+             |
+        year |
+       2012  |      0.940      0.058   -1.014   0.311        0.833       1.060
+       2014  |      1.020      0.058    0.345   0.730        0.912       1.141
+       2016  |      0.969      0.084   -0.362   0.718        0.818       1.148
+       2018  |      1.103      0.065    1.676   0.094        0.984       1.237
+       2021  |      1.246      0.094    2.903   0.004        1.074       1.445
+             |
+       _cons |      0.026      0.005  -19.021   0.000        0.018       0.037
+------------------------------------------------------------------------------
+Note: _cons estimates baseline odds.
+
+WARNING! 22 in-sample cases have an outcome with a predicted probability that is
+less than 0. See the gologit2 help section on Warning Messages for more informat
+&gt; ion.</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> goparty</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(haven)           <span class="co"># import Stata data and labels</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)           <span class="co"># data manipulation</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ordinal)         <span class="co"># generalized ordered logit: clm()</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(nnet)            <span class="co"># multinomial logit: multinom()</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(marginaleffects) <span class="co"># marginal effects</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>party <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">"https://tdmize.github.io/data/data/cda_gss.dta"</span>)</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>party <span class="ot">&lt;-</span> party <span class="sc">|&gt;</span> <span class="fu">filter</span>(year <span class="sc">&gt;=</span> <span class="dv">2010</span>)</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep model variables; drop any missing data</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>party <span class="ot">&lt;-</span> party[<span class="fu">c</span>(<span class="st">"partyid5"</span>, <span class="st">"woman"</span>, <span class="st">"edyrs"</span>, <span class="st">"age"</span>, <span class="st">"parent"</span>, <span class="st">"married"</span>, <span class="st">"faminc"</span>,</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="st">"employed"</span>, <span class="st">"region4"</span>, <span class="st">"year"</span>)]</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>party <span class="ot">&lt;-</span> party[<span class="fu">complete.cases</span>(party), ]</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Ordered outcome; 0/1 indicators for region and year so single categories</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="co"># can be constrained (as gologit2 does)</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>party <span class="ot">&lt;-</span> party <span class="sc">|&gt;</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">party_ord =</span> <span class="fu">ordered</span>(<span class="fu">as_factor</span>(partyid5)),</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">midwest =</span> <span class="fu">as.numeric</span>(region4 <span class="sc">==</span> <span class="dv">2</span>), <span class="at">south =</span> <span class="fu">as.numeric</span>(region4 <span class="sc">==</span> <span class="dv">3</span>),</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">west =</span> <span class="fu">as.numeric</span>(region4 <span class="sc">==</span> <span class="dv">4</span>),</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">y2012 =</span> <span class="fu">as.numeric</span>(year <span class="sc">==</span> <span class="dv">2012</span>), <span class="at">y2014 =</span> <span class="fu">as.numeric</span>(year <span class="sc">==</span> <span class="dv">2014</span>),</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">y2016 =</span> <span class="fu">as.numeric</span>(year <span class="sc">==</span> <span class="dv">2016</span>), <span class="at">y2018 =</span> <span class="fu">as.numeric</span>(year <span class="sc">==</span> <span class="dv">2018</span>),</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">y2021 =</span> <span class="fu">as.numeric</span>(year <span class="sc">==</span> <span class="dv">2021</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">zap_labels</span>() <span class="sc">|&gt;</span></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>()</span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Generalized ordered logit: the IVs that gologit2's autofit constrains to have</span></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a><span class="co"># equal coefficients across equations go in the main formula; the IVs whose</span></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a><span class="co"># coefficients vary across equations go in nominal = ~ ...</span></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a><span class="co"># (clm warns the model is "nearly unidentifiable" because the IVs are on very</span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a><span class="co"># different scales, e.g., family income vs 0/1 indicators; the estimates are fine)</span></span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>gomod <span class="ot">&lt;-</span> <span class="fu">clm</span>(party_ord <span class="sc">~</span> employed <span class="sc">+</span> west <span class="sc">+</span> y2012 <span class="sc">+</span> y2014 <span class="sc">+</span> y2018,</span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>  <span class="at">nominal =</span> <span class="sc">~</span> age <span class="sc">+</span> woman <span class="sc">+</span> edyrs <span class="sc">+</span> parent <span class="sc">+</span> married <span class="sc">+</span> faminc <span class="sc">+</span> midwest <span class="sc">+</span> south <span class="sc">+</span></span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>    y2016 <span class="sc">+</span> y2021,</span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> party)</span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a><span class="co"># Odds ratios in the gologit2 form: one column per equation (Strong Dem is</span></span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a><span class="co"># y &gt; 1, Democrat is y &gt; 2, ...). clm models Pr(y &lt;= j), so the signs of the</span></span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a><span class="co"># varying (nominal) coefficients are flipped</span></span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a>or_vary <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">exp</span>(<span class="sc">-</span>gomod<span class="sc">$</span>alpha), <span class="at">ncol =</span> <span class="dv">4</span>, <span class="at">byrow =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a>  <span class="at">dimnames =</span> <span class="fu">list</span>(<span class="fu">unique</span>(<span class="fu">sub</span>(<span class="st">"^[^.]*[.]"</span>, <span class="st">""</span>, <span class="fu">names</span>(gomod<span class="sc">$</span>alpha))),</span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a>    <span class="fu">levels</span>(party<span class="sc">$</span>party_ord)[<span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>]))</span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a>or_equal <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">exp</span>(gomod<span class="sc">$</span>beta), <span class="at">nrow =</span> <span class="fu">length</span>(gomod<span class="sc">$</span>beta), <span class="at">ncol =</span> <span class="dv">4</span>,</span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a>  <span class="at">dimnames =</span> <span class="fu">list</span>(<span class="fu">names</span>(gomod<span class="sc">$</span>beta), <span class="cn">NULL</span>))</span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">rbind</span>(or_vary, or_equal), <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>            Strong Dem Democrat Independent Republican
+(Intercept)     20.826    1.671       0.207      0.026
+age              0.984    0.998       1.010      1.022
+woman            0.730    0.779       0.759      0.883
+edyrs            0.931    0.936       0.985      0.972
+parent           1.112    1.235       1.079      0.970
+married          1.452    1.384       1.489      1.610
+faminc           1.002    1.002       1.004      1.004
+midwest          1.170    1.296       1.398      1.612
+south            1.129    1.382       1.519      1.733
+y2016            1.114    0.993       1.055      0.969
+y2021            0.889    1.042       0.908      1.246
+employed         1.098    1.098       1.098      1.098
+west             1.156    1.156       1.156      1.156
+y2012            0.940    0.940       0.940      0.940
+y2014            1.020    1.020       1.020      1.020
+y2018            1.103    1.103       1.103      1.103</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<ul>
+<li>Recall back to the Brant test earlier; notice similarities in which IVs are constrained to have equal coefficients across equations?</li>
+<li>In other words, we are OK to constrain employment status, one of the region indicators, and three of the year indicators (2012, 2014, and 2018) to have equal coefficients across equations; we cannot constrain the other IVs to have equal coefficients</li>
+<li>Note that the coefficients vary across equations for age and gender; but are equal for employment status</li>
+</ul>
+</section>
+<section id="predictions-outside-of-0-and-1" class="level3">
+<h3 class="anchored" data-anchor-id="predictions-outside-of-0-and-1">Predictions outside of 0 and 1</h3>
+<p>As mentioned above, predictions outside the observed range are possible (see the warning at the end of the <strong>gologit2</strong> output above)</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>*AMEs from gologit2</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>mchange age woman, amount(<span class="fu">sd</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>gologit2: Changes in Pr(y) | Number of obs = 13430
+
+Expression: Pr(partyid5), predict(outcome())
+
+              | Strong ~m   Democrat  Indepen~t  Republi~n  Strong ~b 
+--------------+------------------------------------------------------
+age           |                                                      
+          +SD |     0.045     -0.038     -0.044     -0.003      0.041 
+      p-value |     0.000      0.000      0.000      0.395      0.000 
+woman         |                                                      
+ Women vs Men |     0.046      0.015     -0.002     -0.048     -0.012 
+      p-value |     0.000      0.055      0.772      0.000      0.028 
+
+Average predictions
+
+             | Strong ~m   Democrat  Indepen~t  Republi~n  Strong ~b 
+-------------+------------------------------------------------------
+  Pr(y|base) |     0.186      0.304      0.180      0.223      0.108 </code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>*AMEs from <span class="kw">mlogit</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> <span class="kw">mlogit</span> partyid5 c.age i.woman c.edyrs i.parent i.married <span class="co">///</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    c.faminc i.employed i.region4 i.<span class="fu">year</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> mparty</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>mchange age woman, amount(<span class="fu">sd</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>mlogit: Changes in Pr(y) | Number of obs = 13430
+
+Expression: Pr(partyid5), predict(outcome())
+
+              | Strong ~m   Democrat  Indepen~t  Republi~n  Strong ~b 
+--------------+------------------------------------------------------
+age           |                                                      
+          +SD |     0.041     -0.038     -0.047     -0.000      0.043 
+      p-value |     0.000      0.000      0.000      0.941      0.000 
+woman         |                                                      
+ Women vs Men |     0.047      0.013      0.001     -0.049     -0.012 
+      p-value |     0.000      0.115      0.869      0.000      0.030 
+
+Average predictions
+
+             | Strong ~m   Democrat  Indepen~t  Republi~n  Strong ~b 
+-------------+------------------------------------------------------
+  Pr(y|base) |     0.186      0.304      0.179      0.223      0.108 </code></pre>
+</div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># AMEs from the generalized ordered logit</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="co"># (mchange's +SD change starts at each observation's value)</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(gomod, <span class="at">variables =</span> <span class="fu">list</span>(<span class="at">age =</span> <span class="fu">sd</span>(party<span class="sc">$</span>age)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+        Group Estimate Std. Error       z Pr(&gt;|z|)     S   2.5 %   97.5 %
+ Strong Dem    0.04483    0.00407  11.015   &lt;0.001  91.3  0.0369  0.05280
+ Democrat     -0.03803    0.00417  -9.123   &lt;0.001  63.6 -0.0462 -0.02986
+ Independent  -0.04406    0.00306 -14.390   &lt;0.001 153.5 -0.0501 -0.03806
+ Republican   -0.00341    0.00401  -0.851    0.395   1.3 -0.0113  0.00445
+ Strong Repub  0.04067    0.00367  11.068   &lt;0.001  92.2  0.0335  0.04788
+
+Term: age
+Type: prob
+Comparison: +17.2933969697999</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(gomod, <span class="at">variables =</span> <span class="st">"woman"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+        Group Estimate Std. Error     z Pr(&gt;|z|)    S     2.5 %   97.5 %
+ Strong Dem    0.04561    0.00662  6.89   &lt;0.001 37.3  0.032632  0.05860
+ Democrat      0.01518    0.00791  1.92   0.0551  4.2 -0.000331  0.03068
+ Independent  -0.00163    0.00562 -0.29   0.7721  0.4 -0.012642  0.00939
+ Republican   -0.04760    0.00714 -6.67   &lt;0.001 35.2 -0.061590 -0.03360
+ Strong Repub -0.01157    0.00527 -2.20   0.0281  5.2 -0.021889 -0.00124
+
+Term: woman
+Type: prob
+Comparison: 1 - 0</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># AMEs from multinomial logit</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>mparty <span class="ot">&lt;-</span> <span class="fu">multinom</span>(party_ord <span class="sc">~</span> age <span class="sc">+</span> woman <span class="sc">+</span> edyrs <span class="sc">+</span> parent <span class="sc">+</span> married <span class="sc">+</span> faminc <span class="sc">+</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    employed <span class="sc">+</span> midwest <span class="sc">+</span> south <span class="sc">+</span> west <span class="sc">+</span> y2012 <span class="sc">+</span> y2014 <span class="sc">+</span> y2016 <span class="sc">+</span> y2018 <span class="sc">+</span> y2021,</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> party, <span class="at">Hess =</span> <span class="cn">TRUE</span>, <span class="at">trace =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(mparty, <span class="at">variables =</span> <span class="fu">list</span>(<span class="at">age =</span> <span class="fu">sd</span>(party<span class="sc">$</span>age)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+        Group  Estimate Std. Error        z Pr(&gt;|z|)     S    2.5 %   97.5 %
+ Strong Dem    0.041237    0.00427   9.6572   &lt;0.001  70.9  0.03287  0.04961
+ Democrat     -0.037511    0.00410  -9.1400   &lt;0.001  63.8 -0.04556 -0.02947
+ Independent  -0.046613    0.00291 -15.9934   &lt;0.001 188.8 -0.05233 -0.04090
+ Republican   -0.000304    0.00412  -0.0737    0.941   0.1 -0.00838  0.00777
+ Strong Repub  0.043191    0.00414  10.4291   &lt;0.001  82.2  0.03507  0.05131
+
+Term: age
+Type: probs
+Comparison: +17.2933969697999</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(mparty, <span class="at">variables =</span> <span class="st">"woman"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+        Group Estimate Std. Error      z Pr(&gt;|z|)    S   2.5 %   97.5 %
+ Strong Dem     0.0467    0.00671  6.955   &lt;0.001 38.0  0.0335  0.05981
+ Democrat       0.0127    0.00806  1.576   0.1150  3.1 -0.0031  0.02852
+ Independent    0.0011    0.00667  0.165   0.8686  0.2 -0.0120  0.01418
+ Republican    -0.0487    0.00735 -6.629   &lt;0.001 34.8 -0.0632 -0.03433
+ Strong Repub  -0.0117    0.00540 -2.172   0.0298  5.1 -0.0223 -0.00115
+
+Term: woman
+Type: probs
+Comparison: 1 - 0</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note no-icon">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Standard errors are somewhat smaller in the generalized ordered logit model; conclusions do not differ</p>
+</div>
+</div>
+</div>
+</section>
+<section id="overall-thoughts-on-the-generalized-ordered-model" class="level3">
+<h3 class="anchored" data-anchor-id="overall-thoughts-on-the-generalized-ordered-model">Overall thoughts on the generalized ordered model</h3>
+<ul>
+<li>If your interest is in MEs for particular categories, it is unlikely that the generalized ordered logit model will provide different conclusions than multinomial logit
+<ul>
+<li>However, the generalized ordered logit model can be more efficient and use fewer degrees of freedom. In smaller samples, this could make a difference for significance testing</li>
+</ul></li>
+<li>If your focal IV cannot be constrained to have equal β’s you can no longer interpret the model in terms of the latent <em>y*</em> (for the focal IV) so there is little benefit to the generalized ordered logit model in this case besides efficiency (if some control variable’s β’s can be constrained)</li>
+<li>When is the generalized ordered logit model particularly useful? When it is only one or two of your control variables that causes the violation of the parallel regression assumption
+<ul>
+<li>In this case, you retain the ability to interpret both MEs and effects in terms of <em>y*</em> <strong>for your focal IV</strong>, while relaxing an (incorrect) ordinality assumption for variables you are not focused on interpreting</li>
+</ul></li>
+</ul>
+
+
+</section>
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/www\.trentonmize\.com");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../../../teaching/cda/05/5-4-parallel-regression.html" class="pagination-link" aria-label="5.4 Parallel Regression Assumption">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">5.4 Parallel Regression Assumption</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../../teaching/cda/05/5-7-overview.html" class="pagination-link" aria-label="5.7 Overview of Ordinal DVs">
+        <span class="nav-page-text">5.7 Overview of Ordinal DVs</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Trenton D. Mize, Purdue University</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org">Quarto</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

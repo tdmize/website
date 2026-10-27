@@ -1,0 +1,440 @@
+---
+title: "5.6 Generalized Ordered Logit Model"
+---
+
+- Recall that ordinal logit simultaneously fits the equations:
+
+$$\begin{aligned} \Pr(y \leq 1) &= F(\alpha_{1} + \beta_{1}x_{1} + \beta_{2}x_{2}) \\ \Pr(y \leq 2) &= F(\alpha_{2} + \beta_{1}x_{1} + \beta_{2}x_{2}) \\ \Pr(y \leq 3) &= F(\alpha_{3} + \beta_{1}x_{1} + \beta_{2}x_{2}) \end{aligned}$$
+
+  - The β's are constrained to be **identical** in all equations
+  - The intercepts (α) vary by outcome (which become $\tau$)
+- The generalized ordered logit model relaxes the assumption of equal **β**'s over outcome categories unless there is evidence to suggest this should be the case
+  - Thus, despite the name, it is often no longer an ordinal model; or, most often, partially an ordered model and partially a nominal model
+
+**NOTE:** I present only a brief introduction here; see Williams ([2010](https://www.stata-journal.com/article.html?article=st0097); [2016](https://www.tandfonline.com/doi/full/10.1080/0022250X.2015.1112384)) for the full details on the generalized ordered model
+
+## The generalized ordered logit model
+
+- The generalized ordered logit model allows none, some, or all of the β's to be constrained to be identical across all cumulative outcome equations
+- For example, could find statistical evidence that effect of $x_{1}$ is the same across the three cumulative probability equations so can constrain $\beta_{1}$ to be identical across equations; but, in same model, allow the effect for $x_{2}$ to differ across equations so we estimate three β's for $x_{2}$: $\beta_{2,1}$, $\beta_{2,2}$, and $\beta_{2,3}$. E.g.,
+
+$$\begin{aligned} \Pr(y \leq 1) &= F(\alpha_{1} + \beta_{1}x_{1} + \beta_{2,1}x_{2}) \\ \Pr(y \leq 2) &= F(\alpha_{2} + \beta_{1}x_{1} + \beta_{2,2}x_{2}) \\ \Pr(y \leq 3) &= F(\alpha_{3} + \beta_{1}x_{1} + \beta_{2,3}x_{2}) \end{aligned}$$
+
+### Predicted probabilities in the generalized ordered model
+
+- Define the odds in terms of cumulative probabilities:
+
+$$\Omega_{y \leq j}(\mathbf{x}) = \frac{\Pr(y \leq j\,|\,\mathbf{x})}{\Pr(y > j\,|\,\mathbf{x})}$$
+
+- The parallel regression assumption in the ordinal model assumes:
+
+$$\ln\left[\Omega_{y \leq j}(\mathbf{x})\right] = \tau_{j} - \mathbf{x}\boldsymbol{\beta}$$
+
+- The generalized ordered model removes the necessary restriction of equal βs (now β has a subscript *j* to denote it can vary across outcome category)
+
+$$\ln\left[\Omega_{y \leq j}(\mathbf{x})\right] = \tau_{j} - \mathbf{x}\boldsymbol{\beta}_{j}$$
+
+- In ordinal logit, we calculate predicted probabilities:
+
+$$\eta = \Pr(y = j\,|\,\mathbf{x}) = \frac{\exp(\mathbf{x}_{i}\boldsymbol{\beta} - \tau_{j-1})}{1 + \exp(\mathbf{x}_{i}\boldsymbol{\beta} - \tau_{j-1})} - \frac{\exp(\mathbf{x}_{i}\boldsymbol{\beta} - \tau_{j})}{1 + \exp(\mathbf{x}_{i}\boldsymbol{\beta} - \tau_{j})}$$
+
+- To ensure probabilities fall between 0 and 1 in ordinal logit:
+
+$$(\tau_{j} - \mathbf{x}\boldsymbol{\beta}) \geq (\tau_{j-1} - \mathbf{x}\boldsymbol{\beta})$$
+
+- This is ***not*** enforced by the generalized ordered logit model (**gologit2** in Stata) so predictions above 1 and below 0 are possible
+- In Stata, [**gologit2**](https://www3.nd.edu/~rwilliam/gologit2/) with the option **autofit** will decide for you which coefficient estimates to constrain to be equal across equations
+  - In R, fit model with [clm](https://www.rdocumentation.org/packages/ordinal/versions/2023.12-4/topics/clm) (**ordinal** package) but need to [specify which IVs to constrain](https://towardsdatascience.com/partial-proportional-odd-model-in-r-dc5face36e40/)
+- Example below: the same political party affiliation (GSS 2010 -- 2021) model we used before
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. *2010 - 2021 GSS
+. use "https://tdmize.github.io/data/data/cda_gss", clear
+(cda_gss.dta |  GSS 1972-2021 CDA - Categorical Data Analysis | date created 202
+> 3)
+
+. drop if year < 2010
+(53,043 observations deleted)
+
+. 
+. drop if missing(partyid5, woman, edyrs, age, parent, married, ///
+>     faminc, employed, region4, year)
+(2,373 observations deleted)
+
+. 
+. *GOLM
+. gologit2 partyid5 c.age i.woman c.edyrs i.parent i.married ///
+>     c.faminc i.employed i.region4 i.year, or autofit
+
+------------------------------------------------------------------------------
+Testing parallel lines assumption using the .05 level of significance...
+
+Step  1:  Constraints for parallel lines imposed for 1.employed (P Value = 0.981
+> 7)
+Step  2:  Constraints for parallel lines imposed for 4.region4 (P Value = 0.8420
+> )
+Step  3:  Constraints for parallel lines imposed for 2018.year (P Value = 0.6093
+> )
+Step  4:  Constraints for parallel lines imposed for 2012.year (P Value = 0.3828
+> )
+Step  5:  Constraints for parallel lines imposed for 2014.year (P Value = 0.1393
+> )
+Step  6:  Constraints for parallel lines are not imposed for 
+          age (P Value = 0.00000)
+          1.woman (P Value = 0.00667)
+          edyrs (P Value = 0.00000)
+          1.parent (P Value = 0.00000)
+          1.married (P Value = 0.02552)
+          faminc (P Value = 0.00000)
+          2.region4 (P Value = 0.00089)
+          3.region4 (P Value = 0.00000)
+          2016.year (P Value = 0.03434)
+          2021.year (P Value = 0.00000)
+
+Wald test of parallel lines assumption for the final model:
+
+ ( 1)  [Strong_Dem]1.employed - [Democrat]1.employed = 0
+ ( 2)  [Strong_Dem]4.region4 - [Democrat]4.region4 = 0
+ ( 3)  [Strong_Dem]2012.year - [Democrat]2012.year = 0
+ ( 4)  [Strong_Dem]2014.year - [Democrat]2014.year = 0
+ ( 5)  [Strong_Dem]2018.year - [Democrat]2018.year = 0
+ ( 6)  [Strong_Dem]1.employed - [Independent]1.employed = 0
+ ( 7)  [Strong_Dem]4.region4 - [Independent]4.region4 = 0
+ ( 8)  [Strong_Dem]2012.year - [Independent]2012.year = 0
+ ( 9)  [Strong_Dem]2014.year - [Independent]2014.year = 0
+ (10)  [Strong_Dem]2018.year - [Independent]2018.year = 0
+ (11)  [Strong_Dem]1.employed - [Republican]1.employed = 0
+ (12)  [Strong_Dem]4.region4 - [Republican]4.region4 = 0
+ (13)  [Strong_Dem]2012.year - [Republican]2012.year = 0
+ (14)  [Strong_Dem]2014.year - [Republican]2014.year = 0
+ (15)  [Strong_Dem]2018.year - [Republican]2018.year = 0
+
+           chi2( 15) =   11.78
+         Prob > chi2 =    0.6958
+
+An insignificant test statistic indicates that the final model
+does not violate the proportional odds/ parallel lines assumption
+
+If you re-estimate this exact same model with gologit2, instead 
+of autofit you can save time by using the parameter
+
+pl(0b.employed 1.employed 0b.woman 0b.parent 0b.married 1b.region4 4.region4 201
+> 0b.year 2012.year 2014.year 2018.year)
+
+------------------------------------------------------------------------------
+
+Generalized Ordered Logit Estimates                    Number of obs =  13,430
+                                                       LR chi2(45)   = 1483.07
+                                                       Prob > chi2   =  0.0000
+Log likelihood = -20181.3                              Pseudo R2     =  0.0354
+
+ ( 1)  [Strong_Dem]1.employed - [Democrat]1.employed = 0
+ ( 2)  [Strong_Dem]4.region4 - [Democrat]4.region4 = 0
+ ( 3)  [Strong_Dem]2012.year - [Democrat]2012.year = 0
+ ( 4)  [Strong_Dem]2014.year - [Democrat]2014.year = 0
+ ( 5)  [Strong_Dem]2018.year - [Democrat]2018.year = 0
+ ( 6)  [Democrat]1.employed - [Independent]1.employed = 0
+ ( 7)  [Democrat]4.region4 - [Independent]4.region4 = 0
+ ( 8)  [Democrat]2012.year - [Independent]2012.year = 0
+ ( 9)  [Democrat]2014.year - [Independent]2014.year = 0
+ (10)  [Democrat]2018.year - [Independent]2018.year = 0
+ (11)  [Independent]1.employed - [Republican]1.employed = 0
+ (12)  [Independent]4.region4 - [Republican]4.region4 = 0
+ (13)  [Independent]2012.year - [Republican]2012.year = 0
+ (14)  [Independent]2014.year - [Republican]2014.year = 0
+ (15)  [Independent]2018.year - [Republican]2018.year = 0
+------------------------------------------------------------------------------
+    partyid5 | Odds ratio   Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Strong_Dem   |
+         age |      0.984      0.001  -11.686   0.000        0.981       0.987
+             |
+       woman |
+      Women  |      0.730      0.034   -6.795   0.000        0.667       0.800
+             |
+       edyrs |      0.931      0.008   -8.557   0.000        0.916       0.947
+             |
+      parent |
+     Parent  |      1.112      0.062    1.917   0.055        0.998       1.240
+             |
+     married |
+    Married  |      1.452      0.074    7.335   0.000        1.314       1.604
+             |
+      faminc |      1.002      0.001    2.159   0.031        1.000       1.003
+             |
+    employed |
+        Yes  |      1.098      0.038    2.699   0.007        1.026       1.175
+             |
+     region4 |
+    Midwest  |      1.170      0.076    2.414   0.016        1.030       1.329
+      South  |      1.129      0.067    2.058   0.040        1.006       1.267
+       West  |      1.156      0.059    2.840   0.005        1.046       1.277
+             |
+        year |
+       2012  |      0.940      0.058   -1.014   0.311        0.833       1.060
+       2014  |      1.020      0.058    0.345   0.730        0.912       1.141
+       2016  |      1.114      0.080    1.495   0.135        0.967       1.282
+       2018  |      1.103      0.065    1.676   0.094        0.984       1.237
+       2021  |      0.889      0.058   -1.782   0.075        0.782       1.012
+             |
+       _cons |     20.826      3.161   20.007   0.000       15.468      28.041
+-------------+----------------------------------------------------------------
+Democrat     |
+         age |      0.998      0.001   -1.447   0.148        0.996       1.001
+             |
+       woman |
+      Women  |      0.779      0.027   -7.083   0.000        0.727       0.835
+             |
+       edyrs |      0.936      0.006  -10.340   0.000        0.924       0.948
+             |
+      parent |
+     Parent  |      1.235      0.053    4.888   0.000        1.135       1.344
+             |
+     married |
+    Married  |      1.384      0.054    8.367   0.000        1.282       1.493
+             |
+      faminc |      1.002      0.001    4.353   0.000        1.001       1.004
+             |
+    employed |
+        Yes  |      1.098      0.038    2.699   0.007        1.026       1.175
+             |
+     region4 |
+    Midwest  |      1.296      0.070    4.787   0.000        1.165       1.441
+      South  |      1.382      0.069    6.479   0.000        1.253       1.524
+       West  |      1.156      0.059    2.840   0.005        1.046       1.277
+             |
+        year |
+       2012  |      0.940      0.058   -1.014   0.311        0.833       1.060
+       2014  |      1.020      0.058    0.345   0.730        0.912       1.141
+       2016  |      0.993      0.059   -0.124   0.901        0.883       1.115
+       2018  |      1.103      0.065    1.676   0.094        0.984       1.237
+       2021  |      1.042      0.060    0.719   0.472        0.931       1.166
+             |
+       _cons |      1.671      0.198    4.337   0.000        1.325       2.107
+-------------+----------------------------------------------------------------
+Independent  |
+         age |      1.010      0.001    8.393   0.000        1.008       1.012
+             |
+       woman |
+      Women  |      0.759      0.028   -7.499   0.000        0.706       0.816
+             |
+       edyrs |      0.985      0.007   -2.172   0.030        0.972       0.999
+             |
+      parent |
+     Parent  |      1.079      0.049    1.666   0.096        0.987       1.180
+             |
+     married |
+    Married  |      1.489      0.061    9.776   0.000        1.375       1.613
+             |
+      faminc |      1.004      0.001    7.513   0.000        1.003       1.005
+             |
+    employed |
+        Yes  |      1.098      0.038    2.699   0.007        1.026       1.175
+             |
+     region4 |
+    Midwest  |      1.398      0.079    5.971   0.000        1.253       1.561
+      South  |      1.519      0.079    8.060   0.000        1.372       1.682
+       West  |      1.156      0.059    2.840   0.005        1.046       1.277
+             |
+        year |
+       2012  |      0.940      0.058   -1.014   0.311        0.833       1.060
+       2014  |      1.020      0.058    0.345   0.730        0.912       1.141
+       2016  |      1.055      0.064    0.882   0.378        0.936       1.189
+       2018  |      1.103      0.065    1.676   0.094        0.984       1.237
+       2021  |      0.908      0.054   -1.629   0.103        0.809       1.020
+             |
+       _cons |      0.207      0.026  -12.705   0.000        0.163       0.264
+-------------+----------------------------------------------------------------
+Republican   |
+         age |      1.022      0.002   12.489   0.000        1.019       1.026
+             |
+       woman |
+      Women  |      0.883      0.050   -2.204   0.028        0.791       0.986
+             |
+       edyrs |      0.972      0.011   -2.657   0.008        0.951       0.992
+             |
+      parent |
+     Parent  |      0.970      0.073   -0.402   0.688        0.838       1.124
+             |
+     married |
+    Married  |      1.610      0.101    7.621   0.000        1.424       1.819
+             |
+      faminc |      1.004      0.001    5.139   0.000        1.003       1.006
+             |
+    employed |
+        Yes  |      1.098      0.038    2.699   0.007        1.026       1.175
+             |
+     region4 |
+    Midwest  |      1.612      0.129    5.951   0.000        1.377       1.886
+      South  |      1.733      0.126    7.563   0.000        1.503       1.998
+       West  |      1.156      0.059    2.840   0.005        1.046       1.277
+             |
+        year |
+       2012  |      0.940      0.058   -1.014   0.311        0.833       1.060
+       2014  |      1.020      0.058    0.345   0.730        0.912       1.141
+       2016  |      0.969      0.084   -0.362   0.718        0.818       1.148
+       2018  |      1.103      0.065    1.676   0.094        0.984       1.237
+       2021  |      1.246      0.094    2.903   0.004        1.074       1.445
+             |
+       _cons |      0.026      0.005  -19.021   0.000        0.018       0.037
+------------------------------------------------------------------------------
+Note: _cons estimates baseline odds.
+
+WARNING! 22 in-sample cases have an outcome with a predicted probability that is
+less than 0. See the gologit2 help section on Warning Messages for more informat
+> ion.
+
+. est store goparty
+
+```
+
+## R
+
+```{r}
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(ordinal)         # generalized ordered logit: clm()
+library(nnet)            # multinomial logit: multinom()
+library(marginaleffects) # marginal effects
+
+party <- read_dta("https://tdmize.github.io/data/data/cda_gss.dta")
+party <- party |> filter(year >= 2010)
+
+# Keep model variables; drop any missing data
+party <- party[c("partyid5", "woman", "edyrs", "age", "parent", "married", "faminc",
+  "employed", "region4", "year")]
+party <- party[complete.cases(party), ]
+
+# Ordered outcome; 0/1 indicators for region and year so single categories
+# can be constrained (as gologit2 does)
+party <- party |>
+  mutate(party_ord = ordered(as_factor(partyid5)),
+    midwest = as.numeric(region4 == 2), south = as.numeric(region4 == 3),
+    west = as.numeric(region4 == 4),
+    y2012 = as.numeric(year == 2012), y2014 = as.numeric(year == 2014),
+    y2016 = as.numeric(year == 2016), y2018 = as.numeric(year == 2018),
+    y2021 = as.numeric(year == 2021)) |>
+  zap_labels() |>
+  as.data.frame()
+
+# Generalized ordered logit: the IVs that gologit2's autofit constrains to have
+# equal coefficients across equations go in the main formula; the IVs whose
+# coefficients vary across equations go in nominal = ~ ...
+# (clm warns the model is "nearly unidentifiable" because the IVs are on very
+# different scales, e.g., family income vs 0/1 indicators; the estimates are fine)
+gomod <- clm(party_ord ~ employed + west + y2012 + y2014 + y2018,
+  nominal = ~ age + woman + edyrs + parent + married + faminc + midwest + south +
+    y2016 + y2021,
+  data = party)
+
+# Odds ratios in the gologit2 form: one column per equation (Strong Dem is
+# y > 1, Democrat is y > 2, ...). clm models Pr(y <= j), so the signs of the
+# varying (nominal) coefficients are flipped
+or_vary <- matrix(exp(-gomod$alpha), ncol = 4, byrow = TRUE,
+  dimnames = list(unique(sub("^[^.]*[.]", "", names(gomod$alpha))),
+    levels(party$party_ord)[1:4]))
+or_equal <- matrix(exp(gomod$beta), nrow = length(gomod$beta), ncol = 4,
+  dimnames = list(names(gomod$beta), NULL))
+round(rbind(or_vary, or_equal), 3)
+```
+
+:::
+
+- Recall back to the Brant test earlier; notice similarities in which IVs are constrained to have equal coefficients across equations?
+- In other words, we are OK to constrain employment status, one of the region indicators, and three of the year indicators (2012, 2014, and 2018) to have equal coefficients across equations; we cannot constrain the other IVs to have equal coefficients
+- Note that the coefficients vary across equations for age and gender; but are equal for employment status
+
+### Predictions outside of 0 and 1
+
+As mentioned above, predictions outside the observed range are possible (see the warning at the end of the **gologit2** output above)
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. *AMEs from gologit2
+. mchange age woman, amount(sd)
+
+gologit2: Changes in Pr(y) | Number of obs = 13430
+
+Expression: Pr(partyid5), predict(outcome())
+
+              | Strong ~m   Democrat  Indepen~t  Republi~n  Strong ~b 
+--------------+------------------------------------------------------
+age           |                                                      
+          +SD |     0.045     -0.038     -0.044     -0.003      0.041 
+      p-value |     0.000      0.000      0.000      0.395      0.000 
+woman         |                                                      
+ Women vs Men |     0.046      0.015     -0.002     -0.048     -0.012 
+      p-value |     0.000      0.055      0.772      0.000      0.028 
+
+Average predictions
+
+             | Strong ~m   Democrat  Indepen~t  Republi~n  Strong ~b 
+-------------+------------------------------------------------------
+  Pr(y|base) |     0.186      0.304      0.180      0.223      0.108 
+
+
+. 
+. *AMEs from mlogit
+. qui mlogit partyid5 c.age i.woman c.edyrs i.parent i.married ///
+>     c.faminc i.employed i.region4 i.year
+
+. est store mparty
+
+. mchange age woman, amount(sd)
+
+mlogit: Changes in Pr(y) | Number of obs = 13430
+
+Expression: Pr(partyid5), predict(outcome())
+
+              | Strong ~m   Democrat  Indepen~t  Republi~n  Strong ~b 
+--------------+------------------------------------------------------
+age           |                                                      
+          +SD |     0.041     -0.038     -0.047     -0.000      0.043 
+      p-value |     0.000      0.000      0.000      0.941      0.000 
+woman         |                                                      
+ Women vs Men |     0.047      0.013      0.001     -0.049     -0.012 
+      p-value |     0.000      0.115      0.869      0.000      0.030 
+
+Average predictions
+
+             | Strong ~m   Democrat  Indepen~t  Republi~n  Strong ~b 
+-------------+------------------------------------------------------
+  Pr(y|base) |     0.186      0.304      0.179      0.223      0.108 
+
+
+```
+
+## R
+
+```{r}
+# AMEs from the generalized ordered logit
+# (mchange's +SD change starts at each observation's value)
+avg_comparisons(gomod, variables = list(age = sd(party$age)))
+avg_comparisons(gomod, variables = "woman")
+
+# AMEs from multinomial logit
+mparty <- multinom(party_ord ~ age + woman + edyrs + parent + married + faminc +
+    employed + midwest + south + west + y2012 + y2014 + y2016 + y2018 + y2021,
+  data = party, Hess = TRUE, trace = FALSE)
+avg_comparisons(mparty, variables = list(age = sd(party$age)))
+avg_comparisons(mparty, variables = "woman")
+```
+
+:::
+
+::: {.callout-note icon="false" appearance="simple"}
+Standard errors are somewhat smaller in the generalized ordered logit model; conclusions do not differ
+:::
+
+### Overall thoughts on the generalized ordered model
+
+- If your interest is in MEs for particular categories, it is unlikely that the generalized ordered logit model will provide different conclusions than multinomial logit
+  - However, the generalized ordered logit model can be more efficient and use fewer degrees of freedom. In smaller samples, this could make a difference for significance testing
+- If your focal IV cannot be constrained to have equal β's you can no longer interpret the model in terms of the latent *y\** (for the focal IV) so there is little benefit to the generalized ordered logit model in this case besides efficiency (if some control variable's β's can be constrained)
+- When is the generalized ordered logit model particularly useful? When it is only one or two of your control variables that causes the violation of the parallel regression assumption
+  - In this case, you retain the ability to interpret both MEs and effects in terms of *y\** **for your focal IV**, while relaxing an (incorrect) ordinality assumption for variables you are not focused on interpreting

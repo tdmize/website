@@ -1,0 +1,174 @@
+---
+title: "5.6 Generalized Ordered Logit Model"
+---
+<<dd_version: 2>>
+
+- Recall that ordinal logit simultaneously fits the equations:
+
+$$\begin{aligned} \Pr(y \leq 1) &= F(\alpha_{1} + \beta_{1}x_{1} + \beta_{2}x_{2}) \\ \Pr(y \leq 2) &= F(\alpha_{2} + \beta_{1}x_{1} + \beta_{2}x_{2}) \\ \Pr(y \leq 3) &= F(\alpha_{3} + \beta_{1}x_{1} + \beta_{2}x_{2}) \end{aligned}$$
+
+  - The β's are constrained to be **identical** in all equations
+  - The intercepts (α) vary by outcome (which become $\tau$)
+- The generalized ordered logit model relaxes the assumption of equal **β**'s over outcome categories unless there is evidence to suggest this should be the case
+  - Thus, despite the name, it is often no longer an ordinal model; or, most often, partially an ordered model and partially a nominal model
+
+**NOTE:** I present only a brief introduction here; see Williams ([2010](https://www.stata-journal.com/article.html?article=st0097); [2016](https://www.tandfonline.com/doi/full/10.1080/0022250X.2015.1112384)) for the full details on the generalized ordered model
+
+## The generalized ordered logit model
+
+- The generalized ordered logit model allows none, some, or all of the β's to be constrained to be identical across all cumulative outcome equations
+- For example, could find statistical evidence that effect of $x_{1}$ is the same across the three cumulative probability equations so can constrain $\beta_{1}$ to be identical across equations; but, in same model, allow the effect for $x_{2}$ to differ across equations so we estimate three β's for $x_{2}$: $\beta_{2,1}$, $\beta_{2,2}$, and $\beta_{2,3}$. E.g.,
+
+$$\begin{aligned} \Pr(y \leq 1) &= F(\alpha_{1} + \beta_{1}x_{1} + \beta_{2,1}x_{2}) \\ \Pr(y \leq 2) &= F(\alpha_{2} + \beta_{1}x_{1} + \beta_{2,2}x_{2}) \\ \Pr(y \leq 3) &= F(\alpha_{3} + \beta_{1}x_{1} + \beta_{2,3}x_{2}) \end{aligned}$$
+
+### Predicted probabilities in the generalized ordered model
+
+- Define the odds in terms of cumulative probabilities:
+
+$$\Omega_{y \leq j}(\mathbf{x}) = \frac{\Pr(y \leq j\,|\,\mathbf{x})}{\Pr(y > j\,|\,\mathbf{x})}$$
+
+- The parallel regression assumption in the ordinal model assumes:
+
+$$\ln\left[\Omega_{y \leq j}(\mathbf{x})\right] = \tau_{j} - \mathbf{x}\boldsymbol{\beta}$$
+
+- The generalized ordered model removes the necessary restriction of equal βs (now β has a subscript *j* to denote it can vary across outcome category)
+
+$$\ln\left[\Omega_{y \leq j}(\mathbf{x})\right] = \tau_{j} - \mathbf{x}\boldsymbol{\beta}_{j}$$
+
+- In ordinal logit, we calculate predicted probabilities:
+
+$$\eta = \Pr(y = j\,|\,\mathbf{x}) = \frac{\exp(\mathbf{x}_{i}\boldsymbol{\beta} - \tau_{j-1})}{1 + \exp(\mathbf{x}_{i}\boldsymbol{\beta} - \tau_{j-1})} - \frac{\exp(\mathbf{x}_{i}\boldsymbol{\beta} - \tau_{j})}{1 + \exp(\mathbf{x}_{i}\boldsymbol{\beta} - \tau_{j})}$$
+
+- To ensure probabilities fall between 0 and 1 in ordinal logit:
+
+$$(\tau_{j} - \mathbf{x}\boldsymbol{\beta}) \geq (\tau_{j-1} - \mathbf{x}\boldsymbol{\beta})$$
+
+- This is ***not*** enforced by the generalized ordered logit model (**gologit2** in Stata) so predictions above 1 and below 0 are possible
+- In Stata, [**gologit2**](https://www3.nd.edu/~rwilliam/gologit2/) with the option **autofit** will decide for you which coefficient estimates to constrain to be equal across equations
+  - In R, fit model with [clm](https://www.rdocumentation.org/packages/ordinal/versions/2023.12-4/topics/clm) (**ordinal** package) but need to [specify which IVs to constrain](https://towardsdatascience.com/partial-proportional-odd-model-in-r-dc5face36e40/)
+- Example below: the same political party affiliation (GSS 2010 -- 2021) model we used before
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*2010 - 2021 GSS
+use "https://tdmize.github.io/data/data/cda_gss", clear
+drop if year < 2010
+
+drop if missing(partyid5, woman, edyrs, age, parent, married, ///
+    faminc, employed, region4, year)
+
+*GOLM
+gologit2 partyid5 c.age i.woman c.edyrs i.parent i.married ///
+    c.faminc i.employed i.region4 i.year, or autofit
+est store goparty
+<</dd_do>>
+```
+
+## R
+
+```{r}
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(ordinal)         # generalized ordered logit: clm()
+library(nnet)            # multinomial logit: multinom()
+library(marginaleffects) # marginal effects
+
+party <- read_dta("https://tdmize.github.io/data/data/cda_gss.dta")
+party <- party |> filter(year >= 2010)
+
+# Keep model variables; drop any missing data
+party <- party[c("partyid5", "woman", "edyrs", "age", "parent", "married", "faminc",
+  "employed", "region4", "year")]
+party <- party[complete.cases(party), ]
+
+# Ordered outcome; 0/1 indicators for region and year so single categories
+# can be constrained (as gologit2 does)
+party <- party |>
+  mutate(party_ord = ordered(as_factor(partyid5)),
+    midwest = as.numeric(region4 == 2), south = as.numeric(region4 == 3),
+    west = as.numeric(region4 == 4),
+    y2012 = as.numeric(year == 2012), y2014 = as.numeric(year == 2014),
+    y2016 = as.numeric(year == 2016), y2018 = as.numeric(year == 2018),
+    y2021 = as.numeric(year == 2021)) |>
+  zap_labels() |>
+  as.data.frame()
+
+# Generalized ordered logit: the IVs that gologit2's autofit constrains to have
+# equal coefficients across equations go in the main formula; the IVs whose
+# coefficients vary across equations go in nominal = ~ ...
+# (clm warns the model is "nearly unidentifiable" because the IVs are on very
+# different scales, e.g., family income vs 0/1 indicators; the estimates are fine)
+gomod <- clm(party_ord ~ employed + west + y2012 + y2014 + y2018,
+  nominal = ~ age + woman + edyrs + parent + married + faminc + midwest + south +
+    y2016 + y2021,
+  data = party)
+
+# Odds ratios in the gologit2 form: one column per equation (Strong Dem is
+# y > 1, Democrat is y > 2, ...). clm models Pr(y <= j), so the signs of the
+# varying (nominal) coefficients are flipped
+or_vary <- matrix(exp(-gomod$alpha), ncol = 4, byrow = TRUE,
+  dimnames = list(unique(sub("^[^.]*[.]", "", names(gomod$alpha))),
+    levels(party$party_ord)[1:4]))
+or_equal <- matrix(exp(gomod$beta), nrow = length(gomod$beta), ncol = 4,
+  dimnames = list(names(gomod$beta), NULL))
+round(rbind(or_vary, or_equal), 3)
+```
+
+:::
+
+- Recall back to the Brant test earlier; notice similarities in which IVs are constrained to have equal coefficients across equations?
+- In other words, we are OK to constrain employment status, one of the region indicators, and three of the year indicators (2012, 2014, and 2018) to have equal coefficients across equations; we cannot constrain the other IVs to have equal coefficients
+- Note that the coefficients vary across equations for age and gender; but are equal for employment status
+
+### Predictions outside of 0 and 1
+
+As mentioned above, predictions outside the observed range are possible (see the warning at the end of the **gologit2** output above)
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*AMEs from gologit2
+mchange age woman, amount(sd)
+
+*AMEs from mlogit
+qui mlogit partyid5 c.age i.woman c.edyrs i.parent i.married ///
+    c.faminc i.employed i.region4 i.year
+est store mparty
+mchange age woman, amount(sd)
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# AMEs from the generalized ordered logit
+# (mchange's +SD change starts at each observation's value)
+avg_comparisons(gomod, variables = list(age = sd(party$age)))
+avg_comparisons(gomod, variables = "woman")
+
+# AMEs from multinomial logit
+mparty <- multinom(party_ord ~ age + woman + edyrs + parent + married + faminc +
+    employed + midwest + south + west + y2012 + y2014 + y2016 + y2018 + y2021,
+  data = party, Hess = TRUE, trace = FALSE)
+avg_comparisons(mparty, variables = list(age = sd(party$age)))
+avg_comparisons(mparty, variables = "woman")
+```
+
+:::
+
+::: {.callout-note icon="false" appearance="simple"}
+Standard errors are somewhat smaller in the generalized ordered logit model; conclusions do not differ
+:::
+
+### Overall thoughts on the generalized ordered model
+
+- If your interest is in MEs for particular categories, it is unlikely that the generalized ordered logit model will provide different conclusions than multinomial logit
+  - However, the generalized ordered logit model can be more efficient and use fewer degrees of freedom. In smaller samples, this could make a difference for significance testing
+- If your focal IV cannot be constrained to have equal β's you can no longer interpret the model in terms of the latent *y\** (for the focal IV) so there is little benefit to the generalized ordered logit model in this case besides efficiency (if some control variable's β's can be constrained)
+- When is the generalized ordered logit model particularly useful? When it is only one or two of your control variables that causes the violation of the parallel regression assumption
+  - In this case, you retain the ability to interpret both MEs and effects in terms of *y\** **for your focal IV**, while relaxing an (incorrect) ordinality assumption for variables you are not focused on interpreting
