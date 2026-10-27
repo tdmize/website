@@ -1,0 +1,238 @@
+---
+title: "3.8 Predictions for Ideal Types"
+---
+<<dd_version: 2>>
+
+- Think about the substantive issue your model is describing. What types of people are you interested in? What are interesting clusters of characteristics about your observations? That is, what combined values of multiple IVs represent interesting/important "types" of people to examine?
+  - These sets of characteristics are called ***ideal types*** or *profiles* ("ideal type" from Max Weber)
+
+:::: {.columns}
+::: {.column width="70%"}
+*"**Ideal type:** a common mental construct in the social sciences derived from observable reality although not conforming to it in detail because of deliberate simplification and exaggeration. It is not ideal in the sense that it is excellent, nor is it an average; it is, rather, a constructed ideal used to approximate reality by selecting and accentuating certain elements."*
+
+*(quote from [Britannica](https://www.britannica.com/topic/ideal-type); ideal type courtesy of [Weber 1921](https://archive.org/stream/MaxWeberEconomyAndSociety/MaxWeberEconomyAndSociety_djvu.txt))*
+:::
+::: {.column width="30%"}
+![](images/weber.jpeg){fig-alt="Sepia portrait photograph of Max Weber."}
+:::
+::::
+
+- Defining ideal types forces you to think about where you want to look in the data
+  - Comparing predictions across ideal types helps you understand your data and the effects of variables individually and jointly
+
+## Defining ideal types
+
+- Let's jump back to our model predicting support for Trump
+  - What ideal types of voters might be interesting or important to look at?
+- One ideal type might be "the average voter"---i.e., someone who is average on all model variables\*
+- What **combination of characteristics** of voters might be particularly important for predicting whether someone supported Trump for president?
+  - That is, what "types" of voters are you interested in?
+
+\*I prefer thinking of MEMs as ideal types for a hypothetical average person in the data, rather than as a summary measure
+
+## Predictions for ideal types
+
+Operational definitions of ideal types:
+
+- "Average Voter" = average of predictions for everyone in sample
+- "MAGA Man" = Man, 70, high school degree, white, 30k income, Midwest
+- "Romney Repub" = Man, 40, college degree, white, 150k income, Northeast
+- "Dem Base" = Woman, 30, college degree, black, 50k income, West
+
+::: {.callout-note icon="false" appearance="simple"}
+See [Appendix 3A](appendix-3a-stata.qmd#a3.15-computing-predictions-for-ideal-types) for how to calculate these in Stata
+
+In R, use [predictions](https://marginaleffects.com/man/r/predictions.html)
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+* 2016 US Election Data
+use "https://tdmize.github.io/data/data/cda_pew", clear
+
+* Recode data for example
+clonevar trump = presvote2
+lab var trump "Voting for Trump"
+
+gen religB = relattend
+lab var religB "Attends Relig Services"
+recode religB 1/3 = 0 4/6 = 1
+lab def relblab 0"Not Religious" 1"Religious"
+lab val religB relblab
+
+logit trump i.woman c.age ib4.educ i.race i.polparty3 ///
+    i.religB c.income ib3.region, or
+est store trumpmod
+
+* Build a table of ideal types
+qui mtable, clear rowname("Average")
+qui mtable, at(woman=0 age=70 educ=2 race=1 income=30 region=2) ///
+    below rowname("MAGA Man")
+local MAGA "`r(atspec)'"
+qui mtable, at(woman=0 age=40 educ=4 race=1 income=150 region=1) ///
+    below rowname("Romney Repub")
+local Romney "`r(atspec)'"
+mtable, at(woman=1 age=30 educ=4 race=2 income=50 region=4) ///
+    below rowname("Dem Base") twidth(15) post ///
+    title("Pr(Trump) for Various Ideal Types of Voters")
+<</dd_do>>
+```
+
+## R
+
+```{r}
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(marginaleffects) # predictions and marginal effects
+
+# 2016 US Election Data
+pew <- read_dta("https://tdmize.github.io/data/data/cda_pew.dta")
+
+# Recode data for example; treat binary/nominal variables as factors
+pew <- pew |>
+  mutate(trump = as.numeric(presvote2),
+    religB = factor(if_else(relattend >= 4, "Religious", "Not Religious")),
+    woman = as_factor(woman), educ = as_factor(educ), race = as_factor(race),
+    polparty3 = as_factor(polparty3), region = as_factor(region),
+    clintongend = as_factor(clintongend), student = as_factor(student),
+    polviews = as_factor(polviews)) |>
+  droplevels()
+
+trumpmod <- glm(trump ~ woman + age + educ + race + polparty3 + religB + income + region,
+  family = binomial(link = "logit"), data = pew)
+summary(trumpmod)
+
+# Ideal types: set each type's values, averaging over the other IVs
+maga <- datagrid(model = trumpmod, woman = "Man", age = 70, educ = "HS Degree",
+  race = "White", income = 30, region = "Midwest", grid_type = "counterfactual")
+romney <- datagrid(model = trumpmod, woman = "Man", age = 40, educ = "Bachelors Degree",
+  race = "White", income = 150, region = "Northeast", grid_type = "counterfactual")
+dembase <- datagrid(model = trumpmod, woman = "Woman", age = 30, educ = "Bachelors Degree",
+  race = "Black", income = 50, region = "West", grid_type = "counterfactual")
+
+avg_predictions(trumpmod)                     # Average
+avg_predictions(trumpmod, newdata = maga)     # MAGA Man
+avg_predictions(trumpmod, newdata = romney)   # Romney Repub
+avg_predictions(trumpmod, newdata = dembase)  # Dem Base
+```
+
+:::
+
+> *The average person in the sample has a .44 predicted probability of voting for Trump*
+>
+> *A Romney republican has a .43 predicted probability of voting for Trump, compared to a .61 predicted probability of supporting Trump for a MAGA man*
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+* Make predictions simultaneously in order to test predictions
+est restore trumpmod
+mtable, at(`MAGA') at(`Romney') post atright
+* Test if they are different
+metest 2 - 1
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# Make predictions simultaneously in order to test predictions
+types <- bind_rows("MAGA Man" = maga, "Romney Repub" = romney, .id = "type")
+# Test if they are different: Romney Repub - MAGA Man
+avg_predictions(trumpmod, newdata = types, by = "type", hypothesis = ~ pairwise)
+```
+
+:::
+
+### Ideal types continued: women's voting intentions
+
+- Consider these ideal types suggested by a CDA student soon after the 2016 election:
+  - Soccer Mom = middle-aged middle-class woman
+  - 2^nd^ Wave Feminist = Older woman who is somewhat liberal and thinks gender is a factor in how political candidates are viewed
+  - Post-feminist Gen Z = Young (college-age) woman who is somewhat liberal and thinks gender no longer matters for how political candidates are viewed
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+// Comparing Liberal Women Across Generations //
+logit trump i.woman c.age##c.age##i.clintongend i.educ i.race ///
+    i.student i.religB c.income ib3.region i.polviews, or
+est store femmod
+
+* Build a table of ideal types
+qui mtable, clear rowname("Average")
+qui mtable, ///
+    at(woman=1 age=50 race=1 income=100 educ=4 polviews=3) ///
+    below rowname("Soccer Mom")
+qui mtable, ///
+    at(woman=1 age=60 race=1 income=75 clintongend=1 polviews=4 educ=4) ///
+    below rowname("2nd Wave Feminist")
+local secondwave "`r(atspec)'"
+mtable, ///
+    at(woman=1 age=20 race=1 income=10 clintongend=0 polviews=4 student=1) ///
+    below rowname("Post-feminist Gen Z") twidth(20) post ///
+    title("Pr(Trump) for Various Ideal Types of Voters")
+local genz "`r(atspec)'"
+
+* Make predictions simultaneously in order to test predictions
+est restore femmod
+mtable, at(`secondwave') at(`genz') post atright
+* Test if they are different
+metest 2 - 1
+<</dd_do>>
+```
+
+## R
+
+```{r}
+femmod <- glm(trump ~ woman + poly(age, 2, raw = TRUE) * clintongend + educ + race +
+  student + religB + income + region + polviews,
+  family = binomial(link = "logit"), data = pew)
+summary(femmod)
+
+# Ideal types
+soccer <- datagrid(model = femmod, woman = "Woman", age = 50, race = "White", income = 100,
+  educ = "Bachelors Degree", polviews = "Moderate", grid_type = "counterfactual")
+secondwave <- datagrid(model = femmod, woman = "Woman", age = 60, race = "White",
+  income = 75, clintongend = "A Factor", polviews = "Liberal", educ = "Bachelors Degree",
+  grid_type = "counterfactual")
+genz <- datagrid(model = femmod, woman = "Woman", age = 20, race = "White", income = 10,
+  clintongend = "Not a Factor", polviews = "Liberal", student = "Student",
+  grid_type = "counterfactual")
+
+avg_predictions(femmod)                         # Average
+avg_predictions(femmod, newdata = soccer)       # Soccer Mom
+avg_predictions(femmod, newdata = secondwave)   # 2nd Wave Feminist
+avg_predictions(femmod, newdata = genz)         # Post-feminist Gen Z
+
+# Make predictions simultaneously in order to test predictions
+femtypes <- bind_rows("2nd Wave Feminist" = secondwave, "Post-feminist Gen Z" = genz,
+  .id = "type")
+# Test if they are different: Post-feminist Gen Z - 2nd Wave Feminist
+avg_predictions(femmod, newdata = femtypes, by = "type", hypothesis = ~ pairwise)
+```
+
+:::
+
+> *As operationalized for our study, those we term "second wave feminists" have a predicted probability of supporting Trump of almost zero (Pr = 0.02). In contrast, a liberal college aged woman who does not think gender affected Clinton's campaign (i.e. a "post-feminist gen Z"), has a predicted probability of supporting Trump of 0.15---a significant gap between these two ideal types (∆ = 0.13, p = 0.01)*
+
+## Published ideal type example
+
+> *Although we find evidence that particular aspects of organizational policy and workplace culture about paid parental leave influence perceptions of worker commitment, it is important to recognize that organizational cultures are not a product of a single policy. Instead, an organizational culture reflects multiple policies and multiple aspects of workers' attitudes and behaviors.*
+>
+> *To illustrate the impact of organizational culture in a holistic way, we estimate predicted values of perceived commitment based on two ideal types of organizational culture: (1) favorable workplace environment and (2) unfavorable workplace environment (Long and Freese, 2014; Mize, 2019).*
+>
+> *We define a **favorable workplace environment** as +1 SD weeks of leave offered and +1 SD wage replacement for mothers, and +1 SD weeks of leave offered, +1 SD wage replacement, a supportive workplace culture, and a "paternity" leave policy for fathers ... In contrast, we define an **unfavorable workplace environment** as...*
+>
+> *(Quote from [Petts, Mize, and Kaufman 2022](https://doi.org/10.1016/j.ssresearch.2021.102651))*
+
+![](images/petts-mize-kaufman-2022.png){width=70% fig-alt="Bar graph of perceived commitment rating by workplace environment for fathers and mothers: commitment is higher in the favorable environment than the unfavorable one for both, with the larger gap for fathers."}
+
+\*From [Petts, Mize, and Kaufman 2022](https://doi.org/10.1016/j.ssresearch.2021.102651)

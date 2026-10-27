@@ -1,0 +1,192 @@
+---
+title: "3.3 Maximum Likelihood Estimation"
+---
+<<dd_version: 2>>
+
+- We cannot use OLS to obtain logit/probit model estimates\*
+  - Instead, we use maximum likelihood estimation (MLE or just ML)
+- ML finds estimates that **maximize the likelihood of what is observed in the data**
+  - No other values of the parameters increase your chance of observing your data
+    - That is, the parameter estimates that do the best job of describing the relationships in the data
+- For linear regression, OLS estimates are the same as ML estimates\*\*
+  - For the rest of the models we cover in this class, we do not have a neat closed-form mathematical solution like OLS and instead rely on MLE to obtain our parameter estimates
+
+\*But see a potential logit/OLS solution proposed by [Allison 2020](https://statisticalhorizons.com/better-predicted-probabilities/)
+
+\*\*For details on hypothesis testing / standard error estimation, see [Appendix 3B](appendix-3b-maximum-likelihood.qmd)
+
+### Graphical view of ML estimation in linear regression
+
+![](images/income-wages-scatter.png){width=70% fig-alt="Scatterplot of personal income in 1000s against hourly wages: income rises with wages."}
+
+- If you had to guess, what value of β would you choose?
+  - I.e., What β would best fit the relationship observed in the data?
+
+### Maximum likelihood estimation (MLE)
+
+![](images/mle-possible-betas.png){width=70% fig-alt="The income and wages scatterplot with candidate regression lines for beta from -0.5 to 4."}
+
+- MLE auditions various parameter estimates (β here) and then compares measures of model fit to determine the β that best fits the patterns in the data
+
+![](images/mle-r2-curve.png){width=70% fig-alt="R-squared for possible estimates of beta: an inverted U that peaks at beta of about 1.85."}
+
+- For linear regression, we can calculate an *R*^2^ from models auditioning various possible β estimates. Top of the curve = β that produces the largest *R*^2^
+
+## MLE: maximize the log-likelihood
+
+- For most models, cannot calculate a straightforward *R*^2^ to measure model fit
+  - Instead, we rely on maximizing the log-likelihood, which represents **overall model fit** on a single dimension---similar to *R*^2^
+  - Goal of MLE: find what value of the parameters (e.g. *β*'s and α) that produce the largest log-likelihood value (i.e., that maximize the model fit)
+
+![](images/mle-loglik-curve.png){width=70% fig-alt="Log-likelihood for possible estimates of beta: an inverted U that peaks at the ML estimate of beta of about 1.85."}
+
+### Comparing OLS and ML estimates
+
+- The example above of income regressed on wages showed that β ≈1.85 was the parameter value that produced the largest *R*^2^ as well as the largest log-likelihood
+  - Compare the linear regression results below from **regress** (OLS) and **gsem** (MLE)
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/gss", clear
+keep if year == 2016
+
+* Check OLS estimate of beta
+reg income wages
+
+* Check MLE estimate of beta
+gsem (income <- wages)
+<</dd_do>>
+```
+
+## R
+
+```{r}
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(sjmisc)          # frequency tables
+
+gss <- read_dta("https://tdmize.github.io/data/data/gss.dta")
+gss <- gss |> filter(year == 2016)
+
+# Check OLS estimate of beta
+summary(lm(income ~ wages, data = gss))
+
+# Check MLE estimate of beta
+mlmod <- glm(income ~ wages, family = gaussian, data = gss)
+summary(mlmod)
+logLik(mlmod)
+```
+
+:::
+
+### When is the N large enough to justify MLE?
+
+- ML estimates are *consistent*, *normal*, and *efficient*... in infinitely large samples
+  - But, also perform well in moderately large samples
+  - [Long (1997)](https://us.sagepub.com/en-us/nam/regression-models-for-categorical-and-limited-dependent-variables/book6071) gives the following general guidance:
+    - It is risky to use MLE for *N* \< 100
+    - *N* \> 500 is generally safe
+- *N*'s should be larger in some cases
+  - With *lots of parameters*, more observations are needed (\> 10 per parameter)
+  - Little variation in an IV can cause difficulties
+  - Little variation in the DV can cause problems
+    - E.g., For binary DVs, "rare events" and "exact" methods are designed for this case
+- Some categorical models usually require more observations (e.g., ordinal and nominal regression models)
+
+## Potential ML issues: perfect prediction
+
+- ***Perfect prediction*** is a pseudo problem
+  - To illustrate, let's predict voting intentions based on political views and party affiliation:
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_anes", clear
+
+drop if missing(age, hhincome, woman, lgb, race4, ///
+    edyrs, relimport, wrongtrack)
+
+logit vote_trump i.polviews7##i.partyid
+<</dd_do>>
+```
+
+## R
+
+```{r}
+#| warning: true
+anes <- read_dta("https://tdmize.github.io/data/data/cda_anes.dta")
+
+# Drop any missing data on the IVs used earlier in the section
+anes <- anes[complete.cases(anes[c("age", "hhincome", "woman", "lgb", "race4",
+  "edyrs", "relimport", "wrongtrack")]), ]
+
+ppmod <- glm(vote_trump ~ as_factor(polviews7) * as_factor(partyid),
+  family = binomial(link = "logit"), data = anes)
+```
+
+:::
+
+- We receive an error message and some observations are excluded from the model
+- What is the issue? Let's examine the 30 observations dropped
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+fre polviews7 partyid
+tab vote_trump if polviews7 == 1 & partyid == 2
+<</dd_do>>
+```
+
+## R
+
+```{r}
+frq(anes, polviews7, partyid)
+
+anes |>
+  filter(polviews7 == 1, partyid == 2) |>
+  frq(vote_trump)
+```
+
+:::
+
+::: {.callout-note icon="false" appearance="simple"}
+- *polviews7* = 1 are "extremely liberal"
+- *partyid* = 2 are "Democrats"
+:::
+
+- Everyone in this category reports they are **not** voting for Trump. I.e., There is no variation in this category
+  - The odds of *not* voting for Trump for *extremely liberal Democrats* are 30/0, which is undefined
+
+### Exact estimation for small samples
+
+:::: {.columns}
+::: {.column width="70%"}
+- Maximum likelihood can be biased in small samples and cannot estimate parameters when there is "perfect prediction"
+- Exact logistic regression ([**exlogistic**](https://www.stata.com/features/overview/exact-logistic-regression/) in Stata; [**elrm**](https://www.rdocumentation.org/packages/elrm/versions/1.2.6/topics/elrm) in R) computes exact estimates in small samples but is computationally intensive
+  - Small samples are not an issue
+  - Perfect prediction is not an issue
+- R.A. Fisher devised exact tests when Muriel Bristol claimed she could detect whether tea or milk was added first to her cup. He asked her to taste 8 cups of tea, 4 with tea added first and 4 with milk first, and decide whether milk or tea was added first. He had to figure out how to perform a test with so few observations. Essentially, he counted every possible outcome
+:::
+::: {.column width="30%"}
+![](images/tea.jpeg){fig-alt="A teapot, a milk jug, and a cup of tea with milk."}
+
+![](images/lady-tasting-tea.jpeg){fig-alt="Cover of David Salsburg's book The Lady Tasting Tea: How Statistics Revolutionized Science in the Twentieth Century."}
+:::
+::::
+
+### Firth's penalized maximum likelihood estimation
+
+- Exact logistic methods work well but are very computationally intensive
+  - In addition, it is difficult to interpret anything other than the coefficients
+    - E.g., Predicted probabilities and marginal effects (MEs) are difficult to obtain with current software
+- An alternative is Firth's penalized maximum likelihood (PML) estimation
+  - [Rainey and McCaskey (2021)](https://doi.org/10.1017/psrm.2021.9) show that in small samples, PML produces better coefficient and SE estimates than normal MLE
+  - [Rainey 2024](https://doi.org/10.1017/pan.2023.28) provides additional details for obtaining unbiased significance tests even in the case of perfect prediction
+- In Stata, the user-written command [**firthlogit**](http://fmwww.bc.edu/RePEc/bocode/f/firthlogit.html) implements the PML estimator; in R, [**logistf**](https://www.rdocumentation.org/packages/logistf/versions/1.26.1/topics/logistf)

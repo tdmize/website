@@ -1,0 +1,351 @@
+---
+title: "Appendix 3D: Distribution of Marginal Effects"
+---
+<<dd_version: 2>>
+
+- Recall that an average marginal effect (AME) is the mean (average) of separate marginal effects calculated for each observation
+  - The difference between two predictions for each observation indicates the effect for that specific observation (ME~i~)
+
+$${ME}_{i} = \eta(x_{k} = {end}_{i}, \mathbf{x}_{-k} = \mathbf{x}_{-k,i}) - \eta(x_{k} = {start}_{i}, \mathbf{x}_{-k} = \mathbf{x}_{-k,i})$$
+
+  - Effects will vary for each observation because start and end values will differ (e.g., ${start}_{i}$ = your current age; ${end}_{i}$ could be your current age + 1) and the models are inherently nonlinear
+  - Effects will also vary because value of control variables ($\mathbf{x}_{-k,i}$) will also differ for each observation and the models are inherently interactive
+- The **average marginal effect** (AME) averages these effects over all observations in the data:
+
+$$AME = \frac{1}{N}\sum_{i = 1}^{N}\left\{\eta(x_{k} = {end}_{i}, \mathbf{x}_{-k} = \mathbf{x}_{-k,i}) - \eta(x_{k} = {start}_{i}, \mathbf{x}_{-k} = \mathbf{x}_{-k,i})\right\}$$
+
+![](images/marginal-effect-meme.jpeg){width=40% fig-alt="Oprah meme: You get a marginal effect! You get a marginal effect! Everybody gets a marginal effect!"}
+
+## Examining distributions of MEs
+
+- Averages do not indicate variation in the sample.
+  - E.g., Racial differences might depend on the levels of other variables
+    - We already know from our **marginsplot** that the effect of BMI is different across the range of BMI---which means it varies for different people as people have different BMIs (due to nonlinearities in the effect of BMI)
+    - Effect of BMI might also depend on other factors accounted for in the model (e.g., for men vs women; for people of different ages; etc.)
+- This suggests the importance of looking at the distribution of marginal effects
+- This is not commonly done, but should be (and is now easy to do in Stata 14+)
+  - See [Appendix 3A](appendix-3a-stata.qmd#a3.14-distribution-of-marginal-effects-for-bmi-and-race-on-prdiabetes) for details
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/hrs06", clear
+
+qui logit diabetes c.age i.black c.bmi i.woman i.ed4cat, or
+est store diabmod
+
+* Distribution of marginal effects (AMEs)
+margins, dydx(black) gen(MEs_black)
+margins, dydx(bmi) gen(MEs_bmi)
+
+hist MEs_bmi, percent fcolor(none) ylabel(0(1)5) ///
+    xline(.015, lcolor(red) lstyle(solid)) ///
+    text(4.4 .012 "AME = 0.015") xtitle("Marginal Effect of BMI") ///
+    title("[3.14.a] Distribution of Marginal Effects of BMI on Pr(Diabetes)")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-03_14_a-prprob-06.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-03_14_a-prprob-06.png){width=80% fig-alt="Histogram of each observation's marginal effect of BMI on the probability of diabetes: effects range from near 0 to about 0.025, with the average marginal effect of 0.015 marked."}
+
+## R
+
+```{r}
+#| fig-alt: "Histogram of each observation's marginal effect of BMI on the probability of diabetes: effects range from near 0 to about 0.025, with the average marginal effect of 0.015 marked."
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(ggplot2)         # graphs
+library(marginaleffects) # predictions and marginal effects
+library(cleanplots)      # graph scheme
+cleanplots_defaults()
+
+hrs <- read_dta("https://tdmize.github.io/data/data/hrs06.dta")
+
+# Treat binary/nominal variables as factors using their value labels
+hrs <- hrs |>
+  mutate(black = as_factor(black), woman = as_factor(woman), ed4cat = as_factor(ed4cat))
+
+diabmod <- glm(diabetes ~ age + black + bmi + woman + ed4cat,
+  family = binomial(link = "logit"), data = hrs)
+
+# Marginal effects for every observation
+MEs_black <- comparisons(diabmod, variables = "black")
+MEs_bmi <- slopes(diabmod, variables = "bmi")
+
+ggplot(MEs_bmi, aes(x = estimate)) +
+  geom_histogram(aes(y = after_stat(100 * count / sum(count))), bins = 50,
+    fill = NA, color = "black") +
+  geom_vline(xintercept = mean(MEs_bmi$estimate), color = "red") +
+  annotate("text", x = .012, y = 4.4, label = "AME = 0.015") +
+  labs(title = "[3.14.a] Distribution of Marginal Effects of BMI on Pr(Diabetes)",
+    x = "Marginal Effect of BMI", y = "Percent")
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+hist MEs_black2, percent xlabel(0(.01).13) fcolor(none) ylabel(0(1)5) ///
+    xline(.08, lcolor(red) lstyle(solid)) ///
+    text(4.4 .065 "AME = 0.08") xtitle("Marginal Effect of Black vs White") ///
+    title("[3.14.b] Distribution of Marginal Effects of Race on Pr(Diabetes)")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-03_14_b-prprob-07.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-03_14_b-prprob-07.png){width=80% fig-alt="Histogram of each observation's marginal effect of being Black versus White on the probability of diabetes: effects range from about 0.01 to 0.13, with the average marginal effect of 0.08 marked."}
+
+## R
+
+```{r}
+#| fig-alt: "Histogram of each observation's marginal effect of being Black versus White on the probability of diabetes: effects range from about 0.01 to 0.13, with the average marginal effect of 0.08 marked."
+ggplot(MEs_black, aes(x = estimate)) +
+  geom_histogram(aes(y = after_stat(100 * count / sum(count))), bins = 50,
+    fill = NA, color = "black") +
+  geom_vline(xintercept = mean(MEs_black$estimate), color = "red") +
+  annotate("text", x = .065, y = 4.4, label = "AME = 0.08") +
+  scale_x_continuous(breaks = seq(0, .13, .01)) +
+  labs(title = "[3.14.b] Distribution of Marginal Effects of Race on Pr(Diabetes)",
+    x = "Marginal Effect of Black vs White", y = "Percent")
+```
+
+:::
+
+### Comparison of distribution of marginal effects in linear and nonlinear models
+
+- What would you expect the distribution of marginal effects to look like if the model was linear and additive?
+- Consider BMI as the dependent variable now with two different specifications:
+  - Continuous BMI (≈ 10 -- 83)
+  - Binary: "low or medium BMI=0" vs. "high BMI=1"
+- Our focal IVs are age and gender (coded as woman=1)
+  - Also controlling for race and education
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+// Comparison of AMEs in OLS and Logit
+drop if missing(bmi, age, black, woman, ed4cat)
+
+gen highbmi = bmicat
+lab var highbmi "High BMI Level"
+recode highbmi 1 2 = 0 3 4 = 1
+lab def bmilab 0"Healthy Weight" 1"High BMI"
+lab val highbmi bmilab
+tab bmicat highbmi, m
+
+qui logit highbmi c.age i.black i.woman i.ed4cat
+qui margins, dydx(age) gen(MEs_age)
+qui margins, dydx(woman) gen(MEs_wom)
+
+qui regress bmi c.age i.black i.woman i.ed4cat
+qui margins, dydx(age) gen(MEs_age_ols)
+qui margins, dydx(woman) gen(MEs_wom_ols)
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# Comparison of AMEs in OLS and Logit
+hrs2 <- hrs[complete.cases(hrs[c("bmi", "age", "black", "woman", "ed4cat")]), ]
+hrs2 <- hrs2 |> mutate(highbmi = if_else(bmicat >= 3, 1, 0))
+table(as_factor(hrs2$bmicat), hrs2$highbmi, useNA = "ifany")
+
+logmod <- glm(highbmi ~ age + black + woman + ed4cat,
+  family = binomial(link = "logit"), data = hrs2)
+MEs_age <- slopes(logmod, variables = "age")
+MEs_wom <- comparisons(logmod, variables = "woman")
+
+olsmod <- lm(bmi ~ age + black + woman + ed4cat, data = hrs2)
+MEs_age_ols <- slopes(olsmod, variables = "age")
+MEs_wom_ols <- comparisons(olsmod, variables = "woman")
+```
+
+:::
+
+#### Distribution of marginal effects of gender (logit)
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+* Largest and Smallest AMEs for Gender from Logit Model
+sort MEs_wom2
+list MEs_wom2 age black woman ed4cat in 1/5
+list MEs_wom2 age black woman ed4cat in -5/l
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# Largest and Smallest AMEs for Gender from Logit Model
+MEs_wom |> arrange(estimate) |> select(estimate, age, black, woman, ed4cat) |> head(5)
+MEs_wom |> arrange(estimate) |> select(estimate, age, black, woman, ed4cat) |> tail(5)
+```
+
+:::
+
+#### Distribution of marginal effects of gender (linear regression)
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+* Largest and Smallest AMEs for Gender from linear regression model
+sort MEs_wom_ols2
+list MEs_wom_ols2 age black woman ed4cat in 1/5
+list MEs_wom_ols2 age black woman ed4cat in -5/l
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# Largest and Smallest AMEs for Gender from linear regression model
+MEs_wom_ols |> arrange(estimate) |> select(estimate, age, black, woman, ed4cat) |> head(5)
+MEs_wom_ols |> arrange(estimate) |> select(estimate, age, black, woman, ed4cat) |> tail(5)
+```
+
+:::
+
+#### Distribution of marginal effects of age (logit)
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+* Largest and Smallest AMEs for Age from Logit Model
+sort MEs_age1
+list MEs_age1 age black woman ed4cat in 1/5
+list MEs_age1 age black woman ed4cat in -5/l
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# Largest and Smallest AMEs for Age from Logit Model
+MEs_age |> arrange(estimate) |> select(estimate, age, black, woman, ed4cat) |> head(5)
+MEs_age |> arrange(estimate) |> select(estimate, age, black, woman, ed4cat) |> tail(5)
+```
+
+:::
+
+#### Distribution of marginal effects of age (linear regression)
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+* Largest and Smallest AMEs for Age from linear regression model
+sort MEs_age_ols1
+list MEs_age_ols1 age black woman ed4cat in 1/5
+list MEs_age_ols1 age black woman ed4cat in -5/l
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# Largest and Smallest AMEs for Age from linear regression model
+MEs_age_ols |> arrange(estimate) |> select(estimate, age, black, woman, ed4cat) |> head(5)
+MEs_age_ols |> arrange(estimate) |> select(estimate, age, black, woman, ed4cat) |> tail(5)
+```
+
+:::
+
+### Distribution of marginal effects for different groups
+
+- Remember that logit/probit models are fully interactive---so it can be informative to examine the distributions for multiple groups
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+* AMEs for BMI, separate by race of R
+twoway (hist MEs_bmi if race == 1, percent fcolor(none) bcolor(red*1.2)) ///
+    (hist MEs_bmi if race == 2, percent fcolor(none) bcolor(eltblue)), ///
+    xline(.015, lpat(dash)) text(7 .012 "AME = 0.015") xtitle("Marginal Effect of BMI") ///
+    title("[3.14.c] Distribution of Marginal Effects of BMI on Pr(Diabetes)") ///
+    subtitle("By Race of Respondent") legend(order(1 "White" 2 "Black"))
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-03_14_c-prprob-08.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-03_14_c-prprob-08.png){width=80% fig-alt="Overlaid histograms of the marginal effect of BMI on the probability of diabetes for White and Black respondents: Black respondents' effects are concentrated at larger values."}
+
+## R
+
+```{r}
+#| fig-alt: "Overlaid histograms of the marginal effect of BMI on the probability of diabetes for White and Black respondents: Black respondents' effects are concentrated at larger values."
+# AMEs for BMI, separate by race of R
+ggplot(MEs_bmi, aes(x = estimate, color = black)) +
+  geom_histogram(aes(y = after_stat(100 * count / tapply(count, group, sum)[group])),
+    bins = 50, fill = NA, position = "identity") +
+  geom_vline(xintercept = mean(MEs_bmi$estimate), linetype = "dashed") +
+  annotate("text", x = .012, y = 7, label = "AME = 0.015") +
+  labs(title = "[3.14.c] Distribution of Marginal Effects of BMI on Pr(Diabetes)",
+    subtitle = "By Race of Respondent",
+    x = "Marginal Effect of BMI", y = "Percent", color = NULL)
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+* AMEs for race, separate by BMI group
+twoway (hist MEs_black2 if bmi >= 30, percent fcolor(none) bcolor(gold*1.3)) ///
+    (hist MEs_black2 if bmi < 30, percent fcolor(none) bcolor(blue)), ///
+    xline(.08, lpat(dash)) text(10 .065 "AME = 0.08") ///
+    xtitle("Marginal Effect of Black vs White") ///
+    title("[3.14.d] Distribution of Marginal Effects of Race on Pr(Diabetes)") ///
+    subtitle("By BMI Category") legend(order(1 "BMI {&ge} 30" 2 "BMI {&lt} 30"))
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-03_14_d-prprob-09.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-03_14_d-prprob-09.png){width=80% fig-alt="Overlaid histograms of the marginal effect of being Black versus White on the probability of diabetes for people with BMI of 30 or more and less than 30: the effects are larger for people with higher BMI."}
+
+## R
+
+```{r}
+#| fig-alt: "Overlaid histograms of the marginal effect of being Black versus White on the probability of diabetes for people with BMI of 30 or more and less than 30: the effects are larger for people with higher BMI."
+# AMEs for race, separate by BMI group
+MEs_black <- MEs_black |> mutate(bmigroup = if_else(bmi >= 30, "BMI ≥ 30", "BMI < 30"))
+
+ggplot(MEs_black, aes(x = estimate, color = bmigroup)) +
+  geom_histogram(aes(y = after_stat(100 * count / tapply(count, group, sum)[group])),
+    bins = 50, fill = NA, position = "identity") +
+  geom_vline(xintercept = mean(MEs_black$estimate), linetype = "dashed") +
+  annotate("text", x = .065, y = 10, label = "AME = 0.08") +
+  scale_color_discrete(limits = c("BMI ≥ 30", "BMI < 30")) +
+  labs(title = "[3.14.d] Distribution of Marginal Effects of Race on Pr(Diabetes)",
+    subtitle = "By BMI Category",
+    x = "Marginal Effect of Black vs White", y = "Percent", color = NULL)
+```
+
+:::

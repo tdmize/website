@@ -1,0 +1,212 @@
+---
+title: "Appendix 3C: OR and MEM Comparison"
+---
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. // Health and Retirement Study 2006 //
+. use "https://tdmize.github.io/data/data/hrs06", clear
+(hrs06_dmv.dta | Health & Retirement Study 2006 | DMV Workshop)
+
+. 
+. logit diabetes c.age i.black c.bmi i.woman i.ed4cat, or cformat(%6.4f)
+
+Iteration 0:  Log likelihood = -8471.9299  
+Iteration 1:  Log likelihood = -7829.5253  
+Iteration 2:  Log likelihood = -7801.8913  
+Iteration 3:  Log likelihood = -7801.8369  
+Iteration 4:  Log likelihood = -7801.8369  
+
+Logistic regression                                    Number of obs =  17,012
+                                                       LR chi2(7)    = 1340.19
+                                                       Prob > chi2   =  0.0000
+Log likelihood = -7801.8369                            Pseudo R2     =  0.0791
+
+------------------------------------------------------------------------------
+    diabetes | Odds ratio   Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         age |     1.0221     0.0020   10.972   0.000       1.0181      1.0261
+             |
+       black |
+      Black  |     1.6465     0.0856    9.593   0.000       1.4870      1.8231
+         bmi |     1.1060     0.0038   29.064   0.000       1.0985      1.1135
+             |
+       woman |
+      Women  |     0.7363     0.0300   -7.508   0.000       0.6797      0.7975
+             |
+      ed4cat |
+   12 years  |     0.7591     0.0390   -5.364   0.000       0.6864      0.8395
+13-15 years  |     0.6194     0.0375   -7.905   0.000       0.5500      0.6975
+  16+ years  |     0.5426     0.0341   -9.715   0.000       0.4796      0.6138
+             |
+       _cons |     0.0045     0.0009  -26.745   0.000       0.0030      0.0067
+------------------------------------------------------------------------------
+Note: _cons estimates baseline odds.
+
+. est store diabmod
+
+```
+
+## R
+
+```{r}
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(marginaleffects) # predictions and marginal effects
+library(questionr)       # odds ratios
+
+# Health and Retirement Study 2006
+hrs <- read_dta("https://tdmize.github.io/data/data/hrs06.dta")
+
+# Treat binary/nominal variables as factors using their value labels
+hrs <- hrs |>
+  mutate(black = as_factor(black), woman = as_factor(woman), ed4cat = as_factor(ed4cat))
+
+diabmod <- glm(diabetes ~ age + black + bmi + woman + ed4cat,
+  family = binomial(link = "logit"), data = hrs)
+odds.ratio(diabmod, level = .95, digits = 4)
+```
+
+:::
+
+Keep the OR for Black (1.6465) and the OR for BMI (1.1060) in mind for the following sections
+
+## Compute MEM and OR for effect of race
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. * Compute OR for effect of race
+. est restore diabmod
+(results diabmod are active now)
+
+. mtable, at(black=(0 1)) decimal(7) atmeans post
+
+Expression: Pr(diabetes), predict()
+
+           |    black     Pr(y)
+ ----------+-------------------
+         1 |        0  0.1668597
+         2 |        1  0.2479810
+
+Specified values of covariates
+
+           |                            1.          2.        3.        4.
+           |      age       bmi     woman      ed4cat    ed4cat    ed4cat
+ ----------+-------------------------------------------------------------
+   Current |   68.798   27.8424   .583059    .3410534    .21185   .217023
+
+. mlincom 2 - 1 // MEM
+
+             |   lincom    pvalue        ll        ul 
+-------------+---------------------------------------
+           1 |    0.081     0.000     0.063     0.099 
+
+. 
+. di 0.2479810 / (1 - 0.2479810) // Odds when black = 1
+.32975364
+
+. di 0.1668597 / (1 - 0.1668597) // Odds when black = 0
+.20027803
+
+. di %6.4f .32975364 / .20027803 // Odds ratio
+1.6465
+
+```
+
+## R
+
+```{r}
+# Compute OR for effect of race: predictions with other variables at means/modes
+prs_black <- predictions(diabmod, newdata = datagrid(black = c("White", "Black")))
+prs_black
+
+comparisons(diabmod, variables = "black", newdata = "mean") # MEM
+
+odds_black <- prs_black$estimate / (1 - prs_black$estimate)
+odds_black                   # Odds when black = 0 and black = 1
+odds_black[2] / odds_black[1] # Odds ratio
+```
+
+:::
+
+::: {.callout-note icon="false" appearance="simple"}
+Reminder---odds (Ω) are just a transformation of a probability (π):
+
+$$\Omega = \frac{\pi}{1 - \pi}$$
+:::
+
+## Compute MEM and OR for effect of BMI
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. * Compute OR for effect of BMI
+. est restore diabmod
+(results diabmod are active now)
+
+. sum bmi
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+         bmi |     17,123    27.83901    5.837704   10.57755    82.6728
+
+. 
+. mtable, at(bmi=(27.83901 28.83901)) decimal(7) atmeans post
+
+Expression: Pr(diabetes), predict()
+
+           |      bmi     Pr(y)
+ ----------+-------------------
+         1 |   27.839  0.1772895
+         2 |   28.839  0.1924603
+
+Specified values of covariates
+
+           |                  1.        1.          2.        3.        4.
+           |      age     black     woman      ed4cat    ed4cat    ed4cat
+ ----------+-------------------------------------------------------------
+   Current |   68.798   .147543   .583059    .3410534    .21185   .217023
+
+. mlincom 2 - 1 // MEM
+
+             |   lincom    pvalue        ll        ul 
+-------------+---------------------------------------
+           1 |    0.015     0.000     0.014     0.016 
+
+. 
+. di 0.1924603 / (1 - 0.1924603) // Odds when bmi = mean + 1
+.23832921
+
+. di 0.1772895 / (1 - 0.1772895) // Odds when bmi = mean
+.21549439
+
+. di %6.4f .23832921 / .21549439 // Odds ratio
+1.1060
+
+```
+
+## R
+
+```{r}
+# Compute OR for effect of BMI: predictions with other variables at means/modes
+summary(hrs$bmi)
+mean_bmi <- mean(hrs$bmi, na.rm = TRUE)
+
+prs_bmi <- predictions(diabmod, newdata = datagrid(bmi = c(mean_bmi, mean_bmi + 1)))
+prs_bmi
+
+comparisons(diabmod, variables = list(bmi = 1), newdata = "mean") # MEM
+
+odds_bmi <- prs_bmi$estimate / (1 - prs_bmi$estimate)
+odds_bmi                 # Odds when bmi = mean and bmi = mean + 1
+odds_bmi[2] / odds_bmi[1] # Odds ratio
+```
+
+:::
+
+Given that the OR is simply a different way to present the same information a MEM summarizes---which would you prefer to interpret? Which is easier to understand?

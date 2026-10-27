@@ -1,0 +1,262 @@
+---
+title: "3.10 Bonus: Tables & Plots of Results"
+---
+<<dd_version: 2>>
+
+- Most every quantitative publication should include a descriptive statistics table and a table and/or plot of model results
+  - Sometimes in the main text, sometimes in the Online Appendix
+- Stata and R can automate these tables and plots of results
+  - [Tables]{.underline}
+    - Stata
+      - [**desctable**](/software/desctable/index.qmd) or [**dtable**](https://www.stata.com/links/stata-basics/create-descriptive-tables-with-dtable/) for descriptive statistics
+      - [**esttab**](https://repec.sowi.unibe.ch/stata/estout/esttab.html) for model results
+    - R
+      - **modelsummary** package
+        - [**datasummary**](https://modelsummary.com/vignettes/datasummary.html) function for descriptive statistics
+        - [**modelsummary**](https://modelsummary.com/vignettes/modelsummary.html) function for model results
+  - [Plots of model results]{.underline}
+    - Stata
+      - [**coefplot**](https://repec.sowi.unibe.ch/stata/coefplot/getting-started.html)
+    - R
+      - **modelsummary** package's [**modelplot**](https://modelsummary.com/vignettes/modelplot.html) function
+
+The examples use the GSS marijuana legalization data from [3.5](3-5-predictions.qmd#gss-example-marijuana-legalization), with three models that add IVs step by step:
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_gss22", clear
+
+drop if missing(grass, age, conserv, faminc, college, woman, race4)
+recode grass 2 = 0
+lab def glab 0"not be legal" 1 "should be legal"
+lab val grass glab
+
+* Create year since 1975 variable
+gen year1975 = year - 1975
+lab var year1975 "years since 1975"
+
+// stepwise binary logit model, storing each time //
+qui logit grass c.age c.year1975##c.year1975, or
+est store mjmod1
+* mecompare without a varlist estimates AMEs for all IVs.
+** Add store() option to save MEs to make a table or plot
+qui mecompare, amount(sd) store(mes1) model(mjmod1)
+
+qui logit grass c.age c.year1975##c.year1975 i.conserv, or
+est store mjmod2
+qui mecompare, amount(sd) store(mes2) model(mjmod2)
+
+qui logit grass c.age c.year1975##c.year1975 i.conserv ///
+    c.faminc i.degree i.woman i.race4, or
+est store mjmod3
+qui mecompare, amount(sd) store(mes3) model(mjmod3)
+<</dd_do>>
+```
+
+## R
+
+```{r}
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(ggplot2)         # graphs
+library(modelsummary)    # tables and plots of results
+library(marginaleffects) # predictions and marginal effects
+library(cleanplots)      # graph scheme
+cleanplots_defaults()
+
+# Center changes in continuous IVs on each observation's value
+options(marginaleffects_contrast_direction = "center")
+
+gss <- read_dta("https://tdmize.github.io/data/data/cda_gss22.dta")
+
+# Drop any missing data on model vars
+gss <- gss[complete.cases(gss[c("grass", "age", "conserv", "faminc", "college",
+  "woman", "race4")]), ]
+
+# Create year since 1975 variable; treat binary/nominal variables as factors
+gss <- gss |>
+  mutate(year1975 = as.numeric(year) - 1975,
+    conserv = as_factor(conserv), degree = as_factor(degree),
+    woman = as_factor(woman), race4 = as_factor(race4)) |>
+  droplevels()
+
+# stepwise binary logit model, storing each time
+mjmod1 <- glm(grass ~ age + poly(year1975, 2, raw = TRUE),
+  data = gss, family = binomial(link = "logit"))
+mjmod2 <- glm(grass ~ age + poly(year1975, 2, raw = TRUE) + conserv,
+  data = gss, family = binomial(link = "logit"))
+mjmod3 <- glm(grass ~ age + poly(year1975, 2, raw = TRUE) + conserv + faminc + degree +
+  woman + race4, data = gss, family = binomial(link = "logit"))
+```
+
+:::
+
+## Tables of odds ratios
+
+- Tables of odds ratios are traditional and should generally be included somewhere
+  - I usually include these in the Online Appendix
+  - With **esttab**, use option **eform** (exponentiate) to get odds ratios
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+* Use esttab to make single table of ORs
+esttab mjmod1 mjmod2 mjmod3, ///
+    eform nobase b(3) se(3) nogaps label varwidth(35)
+<</dd_do>>
+```
+
+## R
+
+```{r}
+modelsummary(list("Model 1" = mjmod1, "Model 2" = mjmod2, "Model 3" = mjmod3),
+  exponentiate = TRUE, fmt = 3,
+  stars = c("*" = .05, "**" = .01, "***" = .001),
+  coef_rename = TRUE, gof_map = "nobs")
+```
+
+:::
+
+- Default is to show table within Stata/R, can export to Word (.rtf or .docx), Excel, LaTeX, etc.
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```stata
+* Use .rtf format to export to Word
+esttab mjmod1 mjmod2 mjmod3 using or_table.rtf, replace ///
+    eform nobase b(3) se(3) nogaps label varwidth(35)
+```
+
+## R
+
+```r
+modelsummary(list("(1)" = mjmod1, "(2)" = mjmod2, "(3)" = mjmod3),
+  exponentiate = TRUE, fmt = 3,
+  stars = c("*" = .05, "**" = .01, "***" = .001),
+  coef_rename = TRUE, gof_map = "nobs",
+  output = "mjmods_or.docx")
+```
+
+:::
+
+## Tables of marginal effects
+
+- In Stata, use [**mecompare** -- see "plotting and tabulating results"](/software/mecompare/index.qmd)
+- **mecompare** without a variable list will calculate AMEs for all IVs in the model
+  - I always add **amount(sd)** so all continuous IVs are a +SD effect
+  - Option **store(*sname*)** will save the MEs; *sname* is your name for what they are called
+  - Also pass the stored **model(*mname*)**
+    - Stored MEs are named *sname_mname*
+  - Use **esttab** to make the table
+- In R, use [**avg_comparisons**](https://marginaleffects.com/man/r/comparisons.html) and list all IVs in a **variables = list()** option
+  - Save each call as an object
+  - Use **modelsummary** to make the table
+    - Note my **shape** option which is needed here
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+* Use esttab to make a single table of MEs.
+** mecompare saves them as the store() name _ model() name
+esttab mes1_mjmod1 mes2_mjmod2 mes3_mjmod3, ///
+    b(3) se(3) nogaps label varwidth(32)
+<</dd_do>>
+```
+
+## R
+
+```{r}
+sd_age <- round(sd(gss$age), 2)
+sd_year <- round(sd(gss$year1975), 2)
+sd_inc <- round(sd(gss$faminc), 2)
+
+mes1 <- avg_comparisons(mjmod1, variables = list(age = sd_age, year1975 = sd_year))
+mes2 <- avg_comparisons(mjmod2,
+  variables = list(age = sd_age, year1975 = sd_year, conserv = "reference"))
+mes3 <- avg_comparisons(mjmod3,
+  variables = list(age = sd_age, year1975 = sd_year, conserv = "reference",
+    faminc = sd_inc, degree = "reference", woman = "reference", race4 = "reference"))
+
+modelsummary(list("Model 1" = mes1, "Model 2" = mes2, "Model 3" = mes3),
+  shape = term : contrast ~ model, fmt = 3,
+  stars = c("*" = .05, "**" = .01, "***" = .001),
+  gof_map = "nobs")
+```
+
+:::
+
+::: {.callout-note icon="false" appearance="simple"}
+[**esttab**](https://repec.sowi.unibe.ch/stata/estout/esttab.html) and [**modelsummary**](https://modelsummary.com/vignettes/modelsummary.html) have tons of customization options to produce publication-ready tables
+:::
+
+## Plots of marginal effects
+
+- You could plot the odds ratios, but I don't find it very informative and it can be problematic
+  - Effect size is hard to understand
+    - ORs rescale across models, so are not comparable / cannot be used to compare effect sizes across models
+  - All continuous IVs are +1 effects, which are not comparable across IVs, and usually don't reflect much of that variable's effect
+- Marginal effects do not have these limitations, can be compared directly across models, and can be put in a meaningful unit of change (my default is to plot the +SD MEs for continuous IVs)
+  - **2sd** or **trimrange** is also reasonable
+- Always include a reference line at 0 which indicates no effect
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+* Use coefplot. Add a xline(0) to show no effect
+coefplot mes1_mjmod1 mes2_mjmod2 mes3_mjmod3, xline(0) ///
+    legend(order(2 "Model 1 " 4 "Model 2" 6 "Model 3")) ///
+    xtitle("ME on Pr(support legal)") graphregion(margin(l=10)) ///
+    title("[3.10.a] Average marginal effects from binary logit: Pr(supports marijuana legalization)", span)
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-03_10_a-coefplot-AMEs.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-03_10_a-coefplot-AMEs.png){width=80% fig-alt="Average marginal effects with confidence intervals from the three models: the effects of age and year change little across models, and conservatives, women, and Black, Other, and Hispanic adults are less supportive while more educated adults are more supportive."}
+
+## R
+
+```{r}
+#| fig-alt: "Average marginal effects with confidence intervals from the three models: the effects of age and year change little across models, and conservatives, women, and Black, Other, and Hispanic adults are less supportive while more educated adults are more supportive."
+#| fig-height: 7
+#| fig-width: 9.5
+modelplot(list("Model 1" = mes1, "Model 2" = mes2, "Model 3" = mes3),
+  shape = term : contrast ~ model) +
+  geom_vline(xintercept = 0) +
+  scale_y_discrete(limits = rev) +
+  labs(title = "[3.10.a] Average marginal effects from binary logit: Pr(supports marijuana legalization)",
+    x = "ME on Pr(support legal)", color = NULL) +
+  theme(plot.title.position = "plot")
+```
+
+:::
+
+- In Stata, can customize **coefplot**, e.g. with headings for nominal IVs
+
+```{.stata-run}
+<<dd_do>>
+* can customize coefplot, e.g. with headings for nominal IVs
+coefplot mes1_mjmod1 mes2_mjmod2 mes3_mjmod3, ///
+    headings("high school - *" = "{bf:Education}" ///
+             "Black - *" = "{bf:Race-Ethnicity}") ///
+    xline(0) legend(order(2 "Model 1 " 4 "Model 2" 6 "Model 3")) ///
+    xtitle("ME on Pr(support legal)") graphregion(margin(l=10)) ///
+    title("[3.10.b] Average marginal effects from binary logit: Pr(supports marijuana legalization)", span)
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-03_10_b-coefplot-AMEs.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-03_10_b-coefplot-AMEs.png){width=80% fig-alt="The same average marginal effects plot with headings that group the education and race-ethnicity contrasts."}

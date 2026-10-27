@@ -1,0 +1,270 @@
+---
+title: "Appendix 3A: Stata Code and Tips"
+---
+<<dd_version: 2>>
+
+![](images/stata-logo.png){width=35% fig-alt="Stata 17 logo."}
+
+- For all sets of lecture notes, there is an accompanying replication Stata do-file ([available here](https://drive.google.com/drive/folders/1E0tqULBiY1WKic3A6pSG0_vFlcP-dhcF?usp=sharing) or on Brightspace)
+  - This includes all of the Stata code necessary to recreate anything in the slides
+- In this Appendix, I include some comments, notes, and examples for things that are new or that might be hard to follow without more detail
+- For more streamlined, less complicated, and more notated do-files showing the basics of the types of analyses covered in this section, see the [Assignment example code](https://drive.google.com/drive/folders/1kcmZsaKoyZ4Y51X9BjmCZMuLGsw4GKNx?usp=sharing) (also available on Brightspace)
+
+## A3.9 listcoef for standardized coefficients
+
+- The SPost13 command **listcoef** will report various useful transformations of coefficients
+  - See **help listcoef** for details
+  - Option **std** on **listcoef** will report standardized coefficients
+
+```stata
+logit trump i.woman c.age ib4.educ i.race i.polparty3 ///
+    i.religB c.income ib3.region
+listcoef, std
+
+probit trump i.woman c.age ib4.educ i.race i.polparty3 ///
+    i.religB c.income ib3.region
+listcoef, std
+```
+
+## A3.10 Odds ratios
+
+- The default for logit is to report log odds coefficients
+  - These are rarely of interest
+- To obtain odds ratios, use the **or** option
+
+```stata
+logit vote_trump age hhincome edyrs i.woman i.lgb i.race ///
+    i.relimport i.wrongtrack, or
+```
+
+- To convert ORs to percent changes, use **listcoef, percent** after estimating the logit model
+
+```stata
+logit vote_trump age hhincome edyrs i.woman i.lgb i.race ///
+    i.relimport i.wrongtrack, or
+listcoef, percent
+```
+
+## A3.11 Commands for predictions
+
+### Official Stata 11+
+
+- **predict**: Predictions for observations in the dataset
+- **margins**: Predictions at specific values or averaged over observed values
+- **marginsplot**: Plot predictions from **margins**
+
+### SPost13 (Long and Freese 2014)
+
+- The same SPost13 commands we used to examine nonlinear effects in the linear regression model work with the same syntax for binary logit/probit. These mostly work off **margins**, but are designed to make predictions/tests of marginal effects easier and more intuitive. The most commonly used commands are:
+  - **mchange**: Marginal effects
+  - **mtable**: Tables of predictions
+  - **mlincom**: Tests of predictions
+- They work with most models and with complex survey sampling and **svy** prefix
+
+### Plots of predictions
+
+- As with linear regression, can use the same tools to plot predictions from binary logit and probit models
+  - Note the default for Stata's prediction commands (e.g. **predict, margins, marginsplot**) as well as SPost commands (e.g. **mchange, mtable**) are for predicted probabilities after logit and probit (i.e. they automatically convert your **xβ** prediction into predicted probabilities using the [formulas above](3-5-predictions.qmd))
+
+```stata
+logit diabetes c.age i.black c.bmi i.woman i.ed4cat, or
+est store diabmod
+
+qui margins, at(bmi=(10(2)84) black=(0 1))
+
+marginsplot, noci xlab(10(10)80) ///
+    title("Predicted Probability of Having Diabetes by BMI and Race")
+```
+
+## A3.12 Marginal effects
+
+### Example: calculating a MEM for a continuous IV
+
+- Recall that calculating MEs requires a prediction at an ending and starting value of interest
+  - For continuous IVs, starting at the mean and ending at the mean + SD is often informative
+
+```{.stata-run}
+<<dd_do>>
+// Health and Retirement Study 2006 //
+use "https://tdmize.github.io/data/data/hrs06", clear
+
+qui logit diabetes c.age i.black c.bmi i.woman i.ed4cat, or
+est store diabmod
+
+* MEM for continuous var (bmi)
+sum bmi
+di 27.83901 + 5.837704
+mtable, at(bmi=(27.83901 33.676714)) atmeans post // MEM
+<</dd_do>>
+```
+
+::: {.callout-note icon="false" appearance="simple"}
+The **atmeans** option specifies that all covariates be held at the sample means.
+:::
+
+```{.stata-run}
+<<dd_do>>
+mlincom 2 - 1
+<</dd_do>>
+```
+
+> *For an average person, a standard deviation increase in BMI (about 6 points) is associated with a .102 increase in the predicted probability of having diabetes*
+
+### Calculating marginal effects for categorical variables using mchange
+
+- The command **mchange** was written to automate calculating marginal effects
+  - For binary and nominal IVs, **mchange** reports group comparisons (e.g. black vs white)
+
+```{.stata-run}
+<<dd_do>>
+est restore diabmod
+mchange black
+<</dd_do>>
+```
+
+::: {.callout-note icon="false" appearance="simple"}
+This is an average marginal effect (AME) because we omitted the **atmeans** option -- i.e. the default is to calculate an AME. Thus, this represents the average of marginal effects calculated for every person in the sample
+:::
+
+### Interpreting marginal effects for continuous variables
+
+- For continuous IVs, **mchange** will automatically produce three MEs: a one unit discrete change, a one standard deviation discrete change, and the instantaneous change (frustratingly labeled "marginal" in the **mchange** output)
+  - Can also request another amount of change requested in the **delta( )** options
+  - E.g.
+
+```stata
+mchange bmi                // AMEs
+mchange bmi, atmeans       // MEMs
+mchange bmi, delta(5)      // AME; delta = 5
+```
+
+### Marginal effects at specific values of interest
+
+- Recall that BMI has explicit categories so it might be most informative to calculate the effects at these values. Use the **at( )** option to specify a starting value and the **delta( )** option to specify how large of a discrete change to compute
+  - E.g. 25 is at the top of the "healthy weight" category while 30 and above is considered "obese"
+
+```{.stata-run}
+<<dd_do>>
+mchange bmi, at(bmi=25) delta(5)
+<</dd_do>>
+```
+
+> *Someone who just meets the minimum BMI criterion of "obese" (BMI = 30) has a .07 higher predicted probability of having diabetes than someone who is at the top of the "healthy weight" category (BMI = 25)*
+
+## A3.14 Distribution of marginal effects for BMI and race on Pr(Diabetes)
+
+- Note that "**dydx**" is margins speak for calculating the effect of a variable. For continuous variables this gives you the instantaneous change (first derivate); for binary variables it calculates 0 vs 1
+- The "**gen( )**" option is the secret sauce as this creates a variable containing the marginal effects for every observation in your data that you can then plot
+
+```stata
+margins, dydx(black) gen(MEs_black)
+margins, dydx(bmi) gen(MEs_bmi)
+
+hist MEs_bmi
+hist MEs_black2
+```
+
+NOTE: The plots in [Appendix 3D](appendix-3d-me-distribution.qmd) have additional options to make them look nicer
+
+### Distribution of Marginal Effects for Different Groups
+
+- Remember that logit/probit models are fully interactive---so it can be informative to examine the distributions for multiple groups (e.g. black and white adults) across the MEs for another variable (e.g. BMI). In Stata, this is (fairly) easily done by overlaying histograms (using **\|\|** to overlay multiple graphs):
+
+```stata
+*AMEs for BMI, separate by race of R
+twoway hist MEs_bmi if race == 1, percent fcolor(none) bcolor(red*1.2) || ///
+    hist MEs_bmi if race == 2, percent fcolor(none) bcolor(eltblue) || ///
+    , legend(order(1 "White" 2 "Black"))
+
+*AMEs for race, separate by BMI group
+twoway hist MEs_black2 if bmi >= 30, percent fcolor(none) bcolor(gold) || ///
+    hist MEs_black2 if bmi < 30, percent fcolor(none) bcolor(blue) || ///
+    , legend(order(1 "Obese" 2 "Healthy Weight"))
+```
+
+NOTE: These are from the binary logit model for Pr(Diabetes). I have additional options for the plots in [Appendix 3D](appendix-3d-me-distribution.qmd) for titles, etc.
+
+## A3.15 Computing predictions for ideal types
+
+Operational definitions of ideal types:
+
+- "Average Voter" = average of predictions for everyone in sample
+- "MAGA Man" = Man, 70, high school degree, white, 30k income, Midwest
+- "Romney Repub" = Man, 40, college degree, white, 150k income, Northeast
+- "Dem Base" = Woman, 30, college degree, black, 50k income, West
+
+```stata
+qui mtable, clear rowname("Average")
+qui mtable, at(woman=0 age=70 educ=2 race=1 income=30 region=2) ///
+    below rowname("MAGA Man")
+qui mtable, at(woman=0 age=40 educ=4 race=1 income=150 region=1) ///
+    below rowname("Romney Repub")
+mtable, at(woman=1 age=30 educ=4 race=2 income=50 region=4) ///
+    below rowname("Dem Base") twidth(15) post ///
+    title("Pr(Trump) for Various Ideal Types of Voters")
+```
+
+### Tests to compare ideal types (advanced)
+
+Testing ideal types (e.g. whether a MAGA Man is significantly more likely to support Trump than a Romney Republican) is not straightforward but can be simplified with some coding tricks. You don't need to know how to do this for the class, but in case it is helpful:
+
+```{.stata-run}
+<<dd_do>>
+* 2016 US Election Data (see 3.8 for the recodes)
+use "https://tdmize.github.io/data/data/cda_pew", clear
+clonevar trump = presvote2
+gen religB = relattend
+recode religB 1/3 = 0 4/6 = 1
+qui logit trump i.woman c.age ib4.educ i.race i.polparty3 ///
+    i.religB c.income ib3.region, or
+est store trumpmod
+
+qui mtable, at(woman=0 age=70 educ=2 race=1 income=30 region=2) ///
+    below rowname("MAGA Man")
+local MAGA "`r(atspec)'"
+
+qui mtable, at(woman=0 age=40 educ=4 race=1 income=150 region=1) ///
+    below rowname("Romney Repub")
+local Romney "`r(atspec)'"
+
+* Make predictions simultaneously in order to test predictions
+est restore trumpmod
+mtable, at(`MAGA') at(`Romney') post atright
+
+mlincom 2 - 1, stat(est se p)
+<</dd_do>>
+```
+
+> *Prototypical Trump supporters (i.e. "MAGA Men") have predicted probabilities of supporting Trump that are .17 higher than support from "Romney Republicans" (p \< 0.001)*
+
+## A3.16 Calculating risk ratios
+
+- The user-written **adjrr** command calculates risk for all observations and then averages it (i.e. similar to an AME)
+  - I find the **adjrr** output a little clunky and it does not allow you to hold control variables at fixed values---so I would recommend calculating RRs yourself as I do below
+- When you use **mtable** and **mlincom** or just **mchange** to calculate MEs the commands are relying on Stata's **lincom** (**lin**ear **com**bination) command behind the scenes to compute standard errors (SEs)
+  - This is not appropriate for risk ratios as the division requires special calculations to get the standard errors (SEs) correct
+  - Instead, you need to use **mnlcom** which is based on Stata's **nlcom** (**n**on**l**inear **com**bination)
+    - The syntax is the exact same as **mlincom**
+- First, make the predictions using **mtable** with the **post** option (**post** option allows you to work with the predictions in subsequent commands)
+  - Calculate the ratio (and the SE) using **mnlcom**
+
+```{.stata-run}
+<<dd_do>>
+// Health and Retirement Study 2006 //
+use "https://tdmize.github.io/data/data/hrs06", clear
+qui logit diabetes c.age i.black c.bmi i.woman i.ed4cat, or
+
+mtable, at(black=(0 1)) atmeans post
+mlincom 2 - 1 // MEM
+<</dd_do>>
+```
+
+> ***MEM**: Holding other variables at the sample means, black adults have a .081 higher probability of having diabetes compared to white adults (p \< 0.001).*
+
+```{.stata-run}
+<<dd_do>>
+mnlcom 2 / 1 // RR
+<</dd_do>>
+```
+
+> ***RR**: Holding other variables at the sample means, black adults' risk of diabetes is 1.486 times higher than the risk for white adults (p \< 0.001).*

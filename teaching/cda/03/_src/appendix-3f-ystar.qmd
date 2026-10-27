@@ -1,0 +1,150 @@
+---
+title: "Appendix 3F: Interpretation in y* Metric"
+---
+<<dd_version: 2>>
+
+- The binary logit model can be interpreted in three ways:
+  - *y\** metric
+  - Odds ratios
+    - Log odds
+  - Predicted probabilities
+- The binary logit or probit model can be interpreted in terms of *y\**
+  - This is uncommon in typical applications of the models
+    - It is not the method I recommend/prefer
+  - But useful to understand and used sometimes (e.g., in structural equation modeling \[SEM\])
+  - Also, useful for ordinal logit/probit models (more later)
+- The coefficients can be directly interpreted in terms of *y\**. Remember the model is linear in the *y\** metric
+
+  **For a unit change in *x~k~*, *y\** is expected to change by *β~k~* units, holding all other variables constant**
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_anes", clear
+
+drop if missing(age, hhincome, woman, lgb, race4, ///
+    edyrs, relimport, wrongtrack)
+
+logit vote_trump hhincome edyrs i.woman i.lgb i.race4 ///
+    i.relimport i.wrongtrack c.age##c.age
+est store logitmod
+<</dd_do>>
+```
+
+## R
+
+```{r}
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+
+anes <- read_dta("https://tdmize.github.io/data/data/cda_anes.dta")
+
+# Drop any missing data on the model IVs
+anes <- anes[complete.cases(anes[c("age", "hhincome", "woman", "lgb", "race4",
+  "edyrs", "relimport", "wrongtrack")]), ]
+
+# Treat binary/nominal variables as factors using their value labels
+anes <- anes |>
+  mutate(woman = as_factor(woman), lgb = as_factor(lgb), race4 = as_factor(race4),
+    relimport = as_factor(relimport), wrongtrack = as_factor(wrongtrack)) |>
+  droplevels()
+
+logitmod <- glm(vote_trump ~ hhincome + edyrs + woman + lgb + race4 + relimport +
+  wrongtrack + age + I(age^2), family = binomial(link = "logit"), data = anes)
+summary(logitmod)
+```
+
+:::
+
+> *Each additional year of education leads to a 0.140 decrease in y\* (propensity to vote for Trump)*
+>
+> *Women are about 0.35 lower on y\* (propensity to vote for Trump) than men*
+
+## Example y\* interpretations
+
+*"The problem with this interpretation is that the variance of y\* is unknown, so the meaning of a change of **β~k~** in y\* is unclear." ([Long 1997](https://us.sagepub.com/en-us/nam/regression-models-for-categorical-and-limited-dependent-variables/book6071) p.70)*
+
+- Results from a binary probit model illustrate Long's point:
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+probit vote_trump hhincome edyrs i.woman i.lgb i.race4 ///
+    i.relimport i.wrongtrack c.age##c.age
+est store probitmod
+<</dd_do>>
+```
+
+## R
+
+```{r}
+probitmod <- glm(vote_trump ~ hhincome + edyrs + woman + lgb + race4 + relimport +
+  wrongtrack + age + I(age^2), family = binomial(link = "probit"), data = anes)
+summary(probitmod)
+```
+
+:::
+
+## y\* standardized interpretations
+
+- One solution is to *y\** standardize the coefficient; i.e. put it in standard deviation of *y\** units
+- First, need to calculate the variance/standard deviation of *y\**
+
+$$\widehat{Var}(y^{*}) = \widehat{\boldsymbol{\beta}}' Var(\mathbf{x}) \widehat{\boldsymbol{\beta}} + Var(\varepsilon)$$
+
+- Where the variance of the error is assumed (1 in probit; π^2^/3 in logit)
+- Then, put coefficient in *y\** standard deviation units:
+
+$$\beta_{k}^{Sy*} = \frac{\beta_{k}}{\sigma_{y*}}$$
+
+**For a unit increase in *x~k~*, *y\** is expected to increase by $\boldsymbol{\beta_{k}^{Sy*}}$ standard deviations, holding all other variables constant**
+
+### y\* standardized coefficients
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+est restore logitmod
+listcoef, std
+
+est restore probitmod
+listcoef, std
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# Latent SD: variance of the linear predictor + variance of the error
+sd_ystar_logit <- sqrt(var(predict(logitmod, type = "link")) + pi^2 / 3)
+sd_ystar_probit <- sqrt(var(predict(probitmod, type = "link")) + 1)
+c(logit = sd_ystar_logit, probit = sd_ystar_probit)
+
+# y* standardized coefficients
+data.frame(b_logit = coef(logitmod), bStdY_logit = coef(logitmod) / sd_ystar_logit,
+  b_probit = coef(probitmod), bStdY_probit = coef(probitmod) / sd_ystar_probit)[-1, ] |>
+  round(4)
+```
+
+:::
+
+::: {.callout-note icon="false" appearance="simple"}
+*y\** coefficients differ noticeably; *y\** standardized coefficients **are virtually identical in both logit and probit model**
+
+- Each additional year of education is associated with a 0.05 standard deviation decrease in the propensity to vote for Trump
+- Compared to men, women are 0.127 standard deviations lower on propensity to vote for Trump
+:::
+
+## Advice on y\* interpretations
+
+- *y\** interpretations only really make sense if you think an underlying latent continuum exists and you can name and talk about it cogently
+- Standardized coefficients are useful to facilitate comparisons across models: all are on the same standard deviation scale
+  - If you are going to use *y\** interpretations, I recommend *y\** standardized coefficients
+- Ultimately, the interpretations are not very satisfying as the substantive magnitude of an effect is unclear---even with *y\** standardized coefficients
+  - I find marginal effects a better default interpretation strategy (see [3.6 Marginal Effects](3-6-marginal-effects.qmd))

@@ -1,0 +1,317 @@
+---
+title: "Appendix 3F: Interpretation in y* Metric"
+---
+
+- The binary logit model can be interpreted in three ways:
+  - *y\** metric
+  - Odds ratios
+    - Log odds
+  - Predicted probabilities
+- The binary logit or probit model can be interpreted in terms of *y\**
+  - This is uncommon in typical applications of the models
+    - It is not the method I recommend/prefer
+  - But useful to understand and used sometimes (e.g., in structural equation modeling \[SEM\])
+  - Also, useful for ordinal logit/probit models (more later)
+- The coefficients can be directly interpreted in terms of *y\**. Remember the model is linear in the *y\** metric
+
+  **For a unit change in *x~k~*, *y\** is expected to change by *β~k~* units, holding all other variables constant**
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/cda_anes", clear
+(American National Election Study 2020 - Pre-election | CDA | 2021-09-26)
+
+. 
+. drop if missing(age, hhincome, woman, lgb, race4, ///
+>     edyrs, relimport, wrongtrack)
+(948 observations deleted)
+
+. 
+. logit vote_trump hhincome edyrs i.woman i.lgb i.race4 ///
+>     i.relimport i.wrongtrack c.age##c.age
+
+Iteration 0:  Log likelihood = -4658.8753  
+Iteration 1:  Log likelihood =  -2888.204  
+Iteration 2:  Log likelihood = -2862.3173  
+Iteration 3:  Log likelihood = -2862.0466  
+Iteration 4:  Log likelihood = -2862.0463  
+
+Logistic regression                                    Number of obs =   6,857
+                                                       LR chi2(14)   = 3593.66
+                                                       Prob > chi2   =  0.0000
+Log likelihood = -2862.0463                            Pseudo R2     =  0.3857
+
+-------------------------------------------------------------------------------
+   vote_trump | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+     hhincome |     -0.000      0.001   -0.897   0.370       -0.002       0.001
+        edyrs |     -0.140      0.015   -9.539   0.000       -0.169      -0.111
+              |
+        woman |
+       Woman  |     -0.355      0.067   -5.289   0.000       -0.486      -0.223
+              |
+          lgb |
+         LGB  |     -1.164      0.176   -6.607   0.000       -1.510      -0.819
+              |
+        race4 |
+       Black  |     -2.928      0.188  -15.543   0.000       -3.297      -2.559
+    Hispanic  |     -1.185      0.126   -9.382   0.000       -1.433      -0.938
+       Other  |     -0.648      0.120   -5.419   0.000       -0.883      -0.414
+              |
+    relimport |
+2. Very im..  |     -0.598      0.097   -6.170   0.000       -0.788      -0.408
+3. Moderat..  |     -0.950      0.097   -9.817   0.000       -1.140      -0.760
+4. A littl..  |     -1.200      0.111  -10.841   0.000       -1.417      -0.983
+5. Not imp..  |     -1.949      0.107  -18.279   0.000       -2.158      -1.740
+              |
+   wrongtrack |
+ Wrong track  |     -3.308      0.098  -33.781   0.000       -3.500      -3.116
+          age |      0.027      0.013    2.129   0.033        0.002       0.053
+              |
+  c.age#c.age |     -0.000      0.000   -2.509   0.012       -0.001      -0.000
+              |
+        _cons |      5.268      0.385   13.692   0.000        4.514       6.023
+-------------------------------------------------------------------------------
+
+. est store logitmod
+
+```
+
+## R
+
+```{r}
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+
+anes <- read_dta("https://tdmize.github.io/data/data/cda_anes.dta")
+
+# Drop any missing data on the model IVs
+anes <- anes[complete.cases(anes[c("age", "hhincome", "woman", "lgb", "race4",
+  "edyrs", "relimport", "wrongtrack")]), ]
+
+# Treat binary/nominal variables as factors using their value labels
+anes <- anes |>
+  mutate(woman = as_factor(woman), lgb = as_factor(lgb), race4 = as_factor(race4),
+    relimport = as_factor(relimport), wrongtrack = as_factor(wrongtrack)) |>
+  droplevels()
+
+logitmod <- glm(vote_trump ~ hhincome + edyrs + woman + lgb + race4 + relimport +
+  wrongtrack + age + I(age^2), family = binomial(link = "logit"), data = anes)
+summary(logitmod)
+```
+
+:::
+
+> *Each additional year of education leads to a 0.140 decrease in y\* (propensity to vote for Trump)*
+>
+> *Women are about 0.35 lower on y\* (propensity to vote for Trump) than men*
+
+## Example y\* interpretations
+
+*"The problem with this interpretation is that the variance of y\* is unknown, so the meaning of a change of **β~k~** in y\* is unclear." ([Long 1997](https://us.sagepub.com/en-us/nam/regression-models-for-categorical-and-limited-dependent-variables/book6071) p.70)*
+
+- Results from a binary probit model illustrate Long's point:
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. probit vote_trump hhincome edyrs i.woman i.lgb i.race4 ///
+>     i.relimport i.wrongtrack c.age##c.age
+
+Iteration 0:  Log likelihood = -4658.8753  
+Iteration 1:  Log likelihood =  -2884.606  
+Iteration 2:  Log likelihood = -2872.7891  
+Iteration 3:  Log likelihood = -2872.7698  
+Iteration 4:  Log likelihood = -2872.7698  
+
+Probit regression                                      Number of obs =   6,857
+                                                       LR chi2(14)   = 3572.21
+                                                       Prob > chi2   =  0.0000
+Log likelihood = -2872.7698                            Pseudo R2     =  0.3834
+
+-------------------------------------------------------------------------------
+   vote_trump | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+     hhincome |     -0.000      0.000   -1.085   0.278       -0.001       0.000
+        edyrs |     -0.078      0.008   -9.444   0.000       -0.095      -0.062
+              |
+        woman |
+       Woman  |     -0.197      0.038   -5.170   0.000       -0.272      -0.122
+              |
+          lgb |
+         LGB  |     -0.623      0.092   -6.798   0.000       -0.802      -0.443
+              |
+        race4 |
+       Black  |     -1.531      0.089  -17.253   0.000       -1.704      -1.357
+    Hispanic  |     -0.642      0.069   -9.285   0.000       -0.778      -0.507
+       Other  |     -0.348      0.067   -5.225   0.000       -0.479      -0.218
+              |
+    relimport |
+2. Very im..  |     -0.346      0.056   -6.152   0.000       -0.456      -0.236
+3. Moderat..  |     -0.543      0.056   -9.713   0.000       -0.653      -0.433
+4. A littl..  |     -0.687      0.063  -10.831   0.000       -0.811      -0.563
+5. Not imp..  |     -1.091      0.059  -18.475   0.000       -1.206      -0.975
+              |
+   wrongtrack |
+ Wrong track  |     -1.897      0.050  -37.652   0.000       -1.995      -1.798
+          age |      0.015      0.007    2.096   0.036        0.001       0.030
+              |
+  c.age#c.age |     -0.000      0.000   -2.399   0.016       -0.000      -0.000
+              |
+        _cons |      2.952      0.213   13.854   0.000        2.534       3.370
+-------------------------------------------------------------------------------
+
+. est store probitmod
+
+```
+
+## R
+
+```{r}
+probitmod <- glm(vote_trump ~ hhincome + edyrs + woman + lgb + race4 + relimport +
+  wrongtrack + age + I(age^2), family = binomial(link = "probit"), data = anes)
+summary(probitmod)
+```
+
+:::
+
+## y\* standardized interpretations
+
+- One solution is to *y\** standardize the coefficient; i.e. put it in standard deviation of *y\** units
+- First, need to calculate the variance/standard deviation of *y\**
+
+$$\widehat{Var}(y^{*}) = \widehat{\boldsymbol{\beta}}' Var(\mathbf{x}) \widehat{\boldsymbol{\beta}} + Var(\varepsilon)$$
+
+- Where the variance of the error is assumed (1 in probit; π^2^/3 in logit)
+- Then, put coefficient in *y\** standard deviation units:
+
+$$\beta_{k}^{Sy*} = \frac{\beta_{k}}{\sigma_{y*}}$$
+
+**For a unit increase in *x~k~*, *y\** is expected to increase by $\boldsymbol{\beta_{k}^{Sy*}}$ standard deviations, holding all other variables constant**
+
+### y\* standardized coefficients
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. est restore logitmod
+(results logitmod are active now)
+
+. listcoef, std
+
+logit (N=6857): Unstandardized and standardized estimates 
+
+  Observed SD:  0.4932
+    Latent SD:  2.7871
+
+-------------------------------------------------------------------------------
+             |         b        z    P>|z|    bStdX    bStdY   bStdXY     SDofX
+-------------+-----------------------------------------------------------------
+    hhincome |   -0.0005   -0.897    0.370   -0.033   -0.000   -0.012    67.851
+       edyrs |   -0.1401   -9.539    0.000   -0.349   -0.050   -0.125     2.493
+             |
+       woman |
+      Woman  |   -0.3548   -5.289    0.000   -0.177   -0.127   -0.063     0.499
+             |
+         lgb |
+        LGB  |   -1.1643   -6.607    0.000   -0.290   -0.418   -0.104     0.249
+             |
+       race4 |
+      Black  |   -2.9277  -15.543    0.000   -0.839   -1.050   -0.301     0.287
+   Hispanic  |   -1.1851   -9.382    0.000   -0.335   -0.425   -0.120     0.283
+      Other  |   -0.6484   -5.419    0.000   -0.182   -0.233   -0.065     0.281
+             |
+   relimport |
+2. Very i..  |   -0.5978   -6.170    0.000   -0.235   -0.214   -0.084     0.393
+3. Modera..  |   -0.9500   -9.817    0.000   -0.375   -0.341   -0.135     0.395
+4. A litt..  |   -1.2001  -10.841    0.000   -0.406   -0.431   -0.146     0.338
+5. Not im..  |   -1.9488  -18.279    0.000   -0.802   -0.699   -0.288     0.412
+             |
+  wrongtrack |
+Wrong track  |   -3.3081  -33.781    0.000   -1.448   -1.187   -0.520     0.438
+         age |    0.0274    2.129    0.033    0.468    0.010    0.168    17.075
+             |
+ c.age#c.age |   -0.0003   -2.509    0.012   -0.548   -0.000   -0.197  1761.316
+             |
+    constant |    5.2685   13.692    0.000        .        .        .         .
+-------------------------------------------------------------------------------
+
+. 
+. est restore probitmod
+(results probitmod are active now)
+
+. listcoef, std
+
+probit (N=6857): Unstandardized and standardized estimates 
+
+  Observed SD:  0.4932
+    Latent SD:  1.5524
+
+-------------------------------------------------------------------------------
+             |         b        z    P>|z|    bStdX    bStdY   bStdXY     SDofX
+-------------+-----------------------------------------------------------------
+    hhincome |   -0.0003   -1.085    0.278   -0.023   -0.000   -0.015    67.851
+       edyrs |   -0.0783   -9.444    0.000   -0.195   -0.050   -0.126     2.493
+             |
+       woman |
+      Woman  |   -0.1971   -5.170    0.000   -0.098   -0.127   -0.063     0.499
+             |
+         lgb |
+        LGB  |   -0.6225   -6.798    0.000   -0.155   -0.401   -0.100     0.249
+             |
+       race4 |
+      Black  |   -1.5305  -17.253    0.000   -0.439   -0.986   -0.283     0.287
+   Hispanic  |   -0.6424   -9.285    0.000   -0.182   -0.414   -0.117     0.283
+      Other  |   -0.3483   -5.225    0.000   -0.098   -0.224   -0.063     0.281
+             |
+   relimport |
+2. Very i..  |   -0.3461   -6.152    0.000   -0.136   -0.223   -0.088     0.393
+3. Modera..  |   -0.5431   -9.713    0.000   -0.214   -0.350   -0.138     0.395
+4. A litt..  |   -0.6869  -10.831    0.000   -0.232   -0.442   -0.150     0.338
+5. Not im..  |   -1.0906  -18.475    0.000   -0.449   -0.702   -0.289     0.412
+             |
+  wrongtrack |
+Wrong track  |   -1.8966  -37.652    0.000   -0.830   -1.222   -0.535     0.438
+         age |    0.0152    2.096    0.036    0.260    0.010    0.168    17.075
+             |
+ c.age#c.age |   -0.0002   -2.399    0.016   -0.297   -0.000   -0.192  1761.316
+             |
+    constant |    2.9520   13.854    0.000        .        .        .         .
+-------------------------------------------------------------------------------
+
+```
+
+## R
+
+```{r}
+# Latent SD: variance of the linear predictor + variance of the error
+sd_ystar_logit <- sqrt(var(predict(logitmod, type = "link")) + pi^2 / 3)
+sd_ystar_probit <- sqrt(var(predict(probitmod, type = "link")) + 1)
+c(logit = sd_ystar_logit, probit = sd_ystar_probit)
+
+# y* standardized coefficients
+data.frame(b_logit = coef(logitmod), bStdY_logit = coef(logitmod) / sd_ystar_logit,
+  b_probit = coef(probitmod), bStdY_probit = coef(probitmod) / sd_ystar_probit)[-1, ] |>
+  round(4)
+```
+
+:::
+
+::: {.callout-note icon="false" appearance="simple"}
+*y\** coefficients differ noticeably; *y\** standardized coefficients **are virtually identical in both logit and probit model**
+
+- Each additional year of education is associated with a 0.05 standard deviation decrease in the propensity to vote for Trump
+- Compared to men, women are 0.127 standard deviations lower on propensity to vote for Trump
+:::
+
+## Advice on y\* interpretations
+
+- *y\** interpretations only really make sense if you think an underlying latent continuum exists and you can name and talk about it cogently
+- Standardized coefficients are useful to facilitate comparisons across models: all are on the same standard deviation scale
+  - If you are going to use *y\** interpretations, I recommend *y\** standardized coefficients
+- Ultimately, the interpretations are not very satisfying as the substantive magnitude of an effect is unclear---even with *y\** standardized coefficients
+  - I find marginal effects a better default interpretation strategy (see [3.6 Marginal Effects](3-6-marginal-effects.qmd))

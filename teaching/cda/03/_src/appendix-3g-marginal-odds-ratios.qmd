@@ -1,0 +1,144 @@
+---
+title: "Appendix 3G: Marginal Odds Ratios"
+---
+<<dd_version: 2>>
+
+- A new method of interpretation is the marginal odds ratio ([Karlson and Jann 2023](https://sociologicalscience.com/articles-v10-10-332/)). The method:
+  - Use the two predictions from an average marginal effect (i.e., predictions averaged over all observation)
+  - Convert each prediction to odds
+  - Divide the two odds obtain the odds ratio
+- A reminder, the AME is:
+
+$$AME = \frac{1}{N}\sum_{i = 1}^{N}\left\{\eta(x_{k} = {end}_{i}, \mathbf{x}_{-k} = \mathbf{x}_{-k,i}) - \eta(x_{k} = {start}_{i}, \mathbf{x}_{-k} = \mathbf{x}_{-k,i})\right\}$$
+
+- A marginal odds ratio (MOR) is:
+
+$$MOR = \frac{odds\left[\frac{1}{N}\sum_{i = 1}^{N}\eta(x_{k} = {end}_{i}, \mathbf{x}_{-k} = \mathbf{x}_{-k,i})\right]}{odds\left[\frac{1}{N}\sum_{i = 1}^{N}\eta(x_{k} = {start}_{i}, \mathbf{x}_{-k} = \mathbf{x}_{-k,i})\right]}$$
+
+The example replicates Karlson and Jann (2023) Table 2 and Figure 1 (GSS); the MORs in the figure are from their Table 2:
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/MORs-gss", clear
+
+fre year
+
+* Logit model (fully interacted with year)
+logit racseg c.year##(i.col c.age i.race i.marital c.polviews i.female)
+est store rsmod
+
+margins, dydx(col) at(year=(1976(5)1996)) post
+
+* Pr() reduction in gap from 76 to 96
+lincom _b[1.col:5._at] - _b[1.col:1bn._at]
+* % reduction in gap from 76 to 96
+nlcom ((_b[1.col:5._at] - _b[1.col:1bn._at])/_b[1.col:1bn._at]) * 100
+<</dd_do>>
+```
+
+## R
+
+```{r}
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(ggplot2)         # graphs
+library(marginaleffects) # predictions and marginal effects
+library(cleanplots)      # graph scheme
+cleanplots_defaults()
+
+gss <- read_dta("https://tdmize.github.io/data/data/MORs-gss.dta")
+
+table(gss$year)
+
+# Treat binary/nominal variables as factors
+gss <- gss |>
+  mutate(year = as.numeric(year), racseg = as.numeric(racseg),
+    col = factor(col, labels = c("No college", "College")), race = as_factor(race),
+    marital = as_factor(marital), female = factor(female)) |>
+  droplevels()
+
+# Logit model (fully interacted with year)
+rsmod <- glm(racseg ~ year * (col + age + race + marital + polviews + female),
+  family = binomial(link = "logit"), data = gss)
+summary(rsmod)
+
+ames <- avg_comparisons(rsmod, variables = "col", by = "year",
+  newdata = datagrid(year = seq(1976, 1996, 5), grid_type = "counterfactual"))
+ames
+
+# Pr() reduction in gap from 76 to 96
+hypotheses(ames, hypothesis = "b5 - b1 = 0")
+# % reduction in gap from 76 to 96
+hypotheses(ames, hypothesis = "(b5 - b1) / b1 * 100 = 0")
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+// Figure 1 replication from Karlson & Jann 2023
+est restore rsmod
+qui margins col, at(year=(1976(2)1996))
+marginsplot, recastci(rline) ciopt(col(*.5) lpat(dash)) ///
+    xtitle("Calendar year") legend(order(3 "No college" 4 "College")) ///
+    ytitle("Pr(segregation is a right)") ///
+    xlabel(1976(5)1996) ylabel(0(.1).55) ///
+    title("[3.17.a] Pr(Thinking segregation is a right) over time, by college completion", size(medlarge)) ///
+    subtitle("Comparing AMEs with marginal ORs") ///
+    text(.52 1978 "AME = -0.21" .48 1978 "MOR = 0.37" ///
+        .45 1981.5 "AME = -.18" .41 1981.5 "MOR = 0.37" ///
+        .38 1986 "AME = -.15" .34 1986 "MOR = 0.38" ///
+        .31 1991 "AME = -.12" .27 1991 "MOR = 0.39" ///
+        .25 1996 "AME = -.09" .21 1996 "MOR = 0.40")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-3_17_a-MOR_vs_AME.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-3_17_a-MOR_vs_AME.png){width=80% fig-alt="Predicted probability of thinking segregation is a right by year for adults with and without college: both decline from 1976 to 1996 and the gap narrows, with the AME shrinking from -0.21 to -0.09 while the MOR stays near 0.37 to 0.40."}
+
+## R
+
+```{r}
+#| fig-alt: "Predicted probability of thinking segregation is a right by year for adults with and without college: both decline from 1976 to 1996 and the gap narrows, with the AME shrinking from -0.21 to -0.09 while the MOR stays near 0.37 to 0.40."
+# Figure 1 replication from Karlson & Jann 2023
+rs_prs <- avg_predictions(rsmod, by = c("year", "col"),
+  newdata = datagrid(year = seq(1976, 1996, 2), col = unique, grid_type = "counterfactual"))
+
+ggplot(rs_prs, aes(x = year, y = estimate, color = col)) +
+  geom_line() +
+  geom_point() +
+  geom_line(aes(y = conf.low), linetype = "dashed", alpha = 0.5) +
+  geom_line(aes(y = conf.high), linetype = "dashed", alpha = 0.5) +
+  annotate("text", x = c(1978, 1978, 1981.5, 1981.5, 1986, 1986, 1991, 1991, 1996, 1996),
+    y = c(.52, .48, .45, .41, .38, .34, .31, .27, .25, .21),
+    label = c("AME = -0.21", "MOR = 0.37", "AME = -.18", "MOR = 0.37", "AME = -.15",
+      "MOR = 0.38", "AME = -.12", "MOR = 0.39", "AME = -.09", "MOR = 0.40")) +
+  scale_x_continuous(breaks = seq(1976, 1996, 5), limits = c(1975, 1998)) +
+  scale_y_continuous(breaks = seq(0, .5, .1), limits = c(0, .55)) +
+  labs(title = "[3.17.a] Pr(Thinking segregation is a right) over time, by college completion",
+    subtitle = "Comparing AMEs with marginal ORs",
+    x = "Calendar year", y = "Pr(segregation is a right)", color = NULL)
+```
+
+:::
+
+\*AME has declined by 58.5% between 1976 and 1996; MOR has barely changed
+
+\*My replication of Figure 1 from [Karlson and Jann 2023](https://sociologicalscience.com/articles-v10-10-332/)
+
+## Thoughts on the marginal odds ratio
+
+- [Karlson and Jann (2023)](https://sociologicalscience.com/articles-v10-10-332/) make a convincing case that the marginal odds ratio has better statistical properties than the odds ratio you obtain by exponentiating the logit coefficients
+  - E.g., Better for comparing effects across models
+- While I agree it has nicer properties than a traditional OR---I do not see any reason to prefer it over a ME as a default interpretation strategy
+- Sometimes, multiplicative/ratio effects are of interest (see [Risk Ratio section](3-9-risk-ratios.qmd); though I think these cases are rare)
+  - However, I can think of no reason to preference a marginal odds ratio interpretation over a risk ratio interpretation in this case
+    - Both are multiplicate/ratio effects, but the risk ratio avoids the unnecessary (and confusing) nonlinear transformation into the odds metric

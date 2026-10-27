@@ -1,0 +1,327 @@
+---
+title: "3.0 Binary DVs and the Linear Probability Model"
+---
+<<dd_version: 2>>
+
+## Expectations for binary DVs
+
+- As with any regression, expectations (means) are being modeled
+
+$$E(y\,|\,\mathbf{x}) = \Pr(y = 1\,|\,\mathbf{x})$$
+
+- With a binary DV coded 0/1, the mean is the proportion of 1's observed
+- If DV is whether someone **voted** in the 2024 presidential election
+  - In 2024, ≈65% of eligible U.S. voters voted. Consider probabilities of observing the binary values 0 (did not vote) and 1 (did vote):
+
+| *y*-value | Proportion Observed | Probability of Response |
+|:---------:|:-------------------:|:-----------------------:|
+| 0 | 0.35 | 0.35 |
+| 1 | 0.65 | 0.65 |
+
+- Usually, interested in expectations conditional on values of other variables
+  - E.g., What if 70% of Republicans voted and only 60% non-Republicans voted?
+
+$$E(y\,|\,x_{Republican} = 0) = \Pr(y = 1\,|\,x_{Republican} = 0) = 0.60$$
+
+$$E(y\,|\,x_{Republican} = 1) = \Pr(y = 1\,|\,x_{Republican} = 1) = 0.70$$
+
+## Why not use a linear model for binary DVs?
+
+- When linear regression (usually estimated via OLS) is used for a binary DV this is referred to as the linear probability model (LPM)
+
+$$E(y_{i}\,|\,\mathbf{x}) = \Pr(y_{i} = 1\,|\,\mathbf{x}) = \beta_{0} + \beta_{1}x_{i1} + \beta_{2}x_{i2} + \beta_{3}x_{i3}$$
+
+- Example
+  - 2020 presidential voting intentions: Trump = 1; Not Trump = 0
+    - NOTE: Including IVs for age, income, gender, sexuality, race-ethnicity, education, religiosity, etc.
+
+$${presvote}_{i} = \beta_{0} + \beta_{woman}{woman}_{i} + \beta_{educ}{educ}_{i} + \beta_{race}{race}_{i} \ldots$$
+
+$$E({presvote}_{i}\,|\,\mathbf{x}) = \Pr({presvote}_{i} = 1\,|\,\mathbf{x}) = \beta_{0} + \beta_{woman}{woman}_{i} + \beta_{educ}{educ}_{i} + \beta_{race}{race}_{i} \ldots$$
+
+- The model is **linear in the probability of *y***
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_anes", clear
+
+drop if missing(age, hhincome, woman, lgb, race4, ///
+    edyrs, relimport, wrongtrack)
+
+regress vote_trump age hhincome i.woman i.lgb i.race4 ///
+    edyrs i.relimport i.wrongtrack
+<</dd_do>>
+```
+
+## R
+
+```{r}
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(ggplot2)         # graphs
+library(marginaleffects) # predictions and marginal effects
+library(cleanplots)      # graph scheme
+cleanplots_defaults()
+
+anes <- read_dta("https://tdmize.github.io/data/data/cda_anes.dta")
+
+# Drop any missing data on the model IVs
+anes <- anes[complete.cases(anes[c("age", "hhincome", "woman", "lgb", "race4",
+  "edyrs", "relimport", "wrongtrack")]), ]
+
+# Treat binary/nominal variables as factors using their value labels
+anes <- anes |>
+  mutate(woman = as_factor(woman), lgb = as_factor(lgb), race4 = as_factor(race4),
+    relimport = as_factor(relimport), wrongtrack = as_factor(wrongtrack)) |>
+  droplevels()
+
+lpm1 <- lm(vote_trump ~ age + hhincome + woman + lgb + race4 + edyrs + relimport +
+  wrongtrack, data = anes)
+summary(lpm1)
+```
+
+:::
+
+### Interpreting the linear probability model (LPM)
+
+- An advantage of the LPM is that the coefficients are in terms of probabilities; they are also additive effects
+  - **For binary IVs:** Group (coded as 1 on *x~k~*) has a β~k~ higher/lower probability of *y* (=1) than group (coded as 0 on *x~k~*)
+  - **For continuous IVs:** A one unit increase in *x~k~* is associated with a β~k~ increase/decrease in the probability of *y* (=1)
+
+> *Black voters are about 34.7 percentage points less likely to vote for Trump than White voters*
+>
+> *Women are about 4.9 percentage points less likely to vote for Trump*
+>
+> *Each additional year of age decreases the probability of voting for Trump by .001*
+>
+> *After controlling for other factors, household income is not related to intentions to vote for Trump*
+
+::: {.callout-note icon="false" appearance="simple"}
+**Interpretation Tip**: Probabilities can be converted to **percentage points** by multiplying by 100. Note [you should **not** say **percent**](https://journalistsresource.org/home/percent-change-math-for-journalists/#:~:text=Keep%20in%20mind%20the%20%E2%80%9Cpercent,relation%20to%20a%20previous%20number.) as this is usually used for a multiplicative effect, not a probability
+:::
+
+### Problems with the linear probability model
+
+- Heteroscedastic errors & non-normal errors
+  - Standard errors, and thus *p*-values and CIs, will be incorrect
+    - Using robust SEs can help
+    - Whether they help **enough** to entirely fix the problem is unclear
+- [King and Roberts (2015)](https://doi.org/10.1093/pan/mpu015) argue convincingly that *"...when misspecification is bad enough to make classical and robust standard errors diverge, assuming that it is nevertheless not so bad as to bias everything else requires considerable optimism. And even if the optimism is warranted, settling for a misspecified model, with or without robust standard errors, will still bias estimators of all but a few quantities of interest."*
+  - In other words, using robust SEs does not "fix" the problem---instead, they are an indicator your model is wrong
+
+![](images/robust-meme.jpeg){width=30% fig-alt="Dr. Evil meme with the caption ROBUST."}
+
+- Nonsensical predictions
+  - Predictions outside the logical range of your DV
+    - Binary DVs only take on the values of 0 or 1
+    - Predicted probabilities can logically only range from 0 to 1
+- Measures of model fit (e.g. *R*^2^) are not interpretable
+  - More on this later
+- Models tailor-made for binary DVs usually produce better model fit
+- Substantively unreasonable functional form
+  - Want a functional form with reasonable nonlinearities built in that constrain predictions to a logical range
+- Unreasonable functional form often produces spurious interaction effects ([Rohrer and Arslan 2021](https://doi.org/10.1177/25152459211007368))
+
+#### Linear probability model---single continuous IV
+
+![](images/lpm-single-iv.png){width=60% fig-alt="A straight LPM regression line through binary observations at y = 0 and y = 1: the line goes below 0 and above 1, and the errors at each x can only take two values."}
+
+### Nonsensical predictions
+
+- According to the linear probability model (LPM)...
+  - A highly-educated black woman has a predicted probability of voting for Trump of **-.301**
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+* Make prediction for highly educated black woman
+mtable, at(woman=1 race4=2 edyrs=20 relimport=5 wrongtrack=1)
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# Make prediction for highly educated black woman
+avg_predictions(lpm1, newdata = datagrid(woman = "Woman", race4 = "Black", edyrs = 20,
+  relimport = "5. Not important at all", wrongtrack = "Wrong track",
+  grid_type = "counterfactual"))
+```
+
+:::
+
+- A unit increase in *x*~k~ results in a ***constant change*** β~k~ in the probability
+  - *Substantively* effects of feelings about Trump are likely to be diminishing
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+* Add Trump feeling thermometer to model
+sum feel_trump, d
+regress vote_trump c.feel_trump age hhincome i.woman i.lgb i.race4 ///
+    edyrs i.relimport i.wrongtrack
+
+mtable, at(feel_trump=(0(10)100))
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# Add Trump feeling thermometer to model
+summary(anes$feel_trump)
+lpm2 <- lm(vote_trump ~ feel_trump + age + hhincome + woman + lgb + race4 + edyrs +
+  relimport + wrongtrack, data = anes)
+summary(lpm2)
+
+avg_predictions(lpm2, by = "feel_trump",
+  newdata = datagrid(feel_trump = seq(0, 100, 10), grid_type = "counterfactual"))
+```
+
+:::
+
+::: {.callout-note icon="false" appearance="simple"}
+Note, observed range in data is 0 to 100 ($\overline{x}$=39.65)
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+margins, at(feel_trump=(0(5)100))
+marginsplot, ///
+    xlab(0(10)100) ytitle("Pr(Voting for Trump)") yline(0 1) ///
+    recastci(rline) ciopt(lpat(dash) color(*.5)) ///
+    plotopt(msym(none) lwid(medthick)) ///
+    title("[3.0.a] Probability of voting for Trump based on feelings toward Trump", size(medium)) ///
+    subtitle("Linear Probability Model (LPM)")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-03_00_a-prprob-LPM.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-03_00_a-prprob-LPM.png){width=80% fig-alt="LPM predicted probability of voting for Trump by the Trump feeling thermometer: a straight line rising from about 0 at 0 to above 1 at 100."}
+
+## R
+
+```{r}
+#| fig-alt: "LPM predicted probability of voting for Trump by the Trump feeling thermometer: a straight line rising from about 0 at 0 to above 1 at 100."
+plot_predictions(lpm2, by = "feel_trump",
+  newdata = datagrid(feel_trump = seq(0, 100, 5), grid_type = "counterfactual")) +
+  geom_hline(yintercept = c(0, 1), linetype = "dashed") +
+  scale_x_continuous(breaks = seq(0, 100, 10)) +
+  labs(title = "[3.0.a] Probability of voting for Trump based on feelings toward Trump",
+    subtitle = "Linear Probability Model (LPM)",
+    x = "Trump - feeling thermometer", y = "Pr(Voting for Trump)")
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+lowess vote_trump feel_trump, gen(lowpr) ///
+    bwidth(0.15) ylab(#3) jitter(3) lineop(lwid(thick)) ///
+    ytitle("Pr(voting for Trump)") xlab(0(10)100) ///
+    title("[3.0.b] Smoothed proportion voting for Trump, by feelings toward Trump (lowess)")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-03_00_b-lowess.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-03_00_b-lowess.png){width=80% fig-alt="Lowess of voting for Trump by the Trump feeling thermometer over jittered observations at 0 and 1: an S-shaped curve that is flat near 0 at low feelings, rises steeply in the middle, and levels off near 1."}
+
+## R
+
+```{r}
+#| fig-alt: "Smoothed proportion voting for Trump by the Trump feeling thermometer over jittered observations at 0 and 1: an S-shaped curve that is flat near 0 at low feelings, rises steeply in the middle, and levels off near 1."
+ggplot(anes, aes(x = feel_trump, y = vote_trump)) +
+  geom_jitter(width = 1, height = 0.02, shape = 1, color = "#C80000") +
+  geom_smooth(color = "#82C0DF", linewidth = 1.2, se = FALSE) +
+  scale_x_continuous(breaks = seq(0, 100, 10)) +
+  labs(title = "[3.0.b] Smoothed proportion voting for Trump, by feelings toward Trump",
+    x = "Trump - feeling thermometer", y = "Pr(voting for Trump)")
+```
+
+:::
+
+\*Observed data: diminishing effects at each end of scale, and no values outside 0 to 1
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+margins, at(feel_trump=(0(5)100))
+marginsplot, ///
+    xlab(0(10)100) ytitle("Pr(Voting for Trump)") yline(0 1) ///
+    recastci(rline) ciopt(lpat(dash) color(*.5)) ///
+    plotopt(msym(none) lwid(medthick)) ///
+    title("[3.0.c] Probability of voting for Trump based on feelings toward Trump", size(medium)) ///
+    subtitle("Linear probability model (LPM) predictions vs lowess") ///
+    addplot(connected lowpr feel_trump, sort msymbol(none) lcol(eltblue)) ///
+    legend(order(2 "LPM" 3 "lowess"))
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-03_00_c-lpm_vs_lowess.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-03_00_c-lpm_vs_lowess.png){width=80% fig-alt="LPM predictions and the lowess curve for voting for Trump by the Trump feeling thermometer: the straight LPM line is above the smoothed curve at low feelings, below it in the middle, and goes above 1 at the top."}
+
+## R
+
+```{r}
+#| fig-alt: "LPM predictions and the smoothed proportions voting for Trump by the Trump feeling thermometer: the straight LPM line is above the lowess at low feelings, below it in the middle, and goes above 1 at the top."
+lpm_prs <- avg_predictions(lpm2, by = "feel_trump",
+  newdata = datagrid(feel_trump = seq(0, 100, 5), grid_type = "counterfactual"))
+
+ggplot(lpm_prs, aes(x = feel_trump, y = estimate)) +
+  geom_line(aes(color = "LPM"), linewidth = 1) +
+  geom_line(aes(y = conf.low), linetype = "dashed", color = "gray60") +
+  geom_line(aes(y = conf.high), linetype = "dashed", color = "gray60") +
+  geom_smooth(data = anes, aes(x = feel_trump, y = vote_trump, color = "smoothed"),
+    linetype = "dashed", se = FALSE) +
+  geom_hline(yintercept = c(0, 1), linetype = "dashed") +
+  scale_x_continuous(breaks = seq(0, 100, 10)) +
+  labs(title = "[3.0.c] Probability of voting for Trump based on feelings toward Trump",
+    subtitle = "Linear probability model (LPM) predictions vs smoothed proportions",
+    x = "Trump - feeling thermometer", y = "Pr(Voting for Trump)", color = NULL)
+```
+
+:::
+
+## When the LPM diverges from binary logit/probit
+
+- Binary logit and probit models can produce (relatively) linear effects
+  - These occur when the predicted probabilities are at middle values in the 0 to 1 continuum
+    - E.g., Pr(voting) across ages is always between 0.4 and 0.6
+- LPM will diverge more drastically from binary logit/probit when the observed proportion of the DV is closer to 0 or 1 and/or when the conditional probabilities (i.e., conditioning on an IV) are sometimes closer to 0 or 1
+  - Nonlinearities are more pronounced here
+- LPM and logit/probit also diverge more when you have skewed IVs
+  - Most variables in real world data are skewed
+  - See this [app by Jeremy Freese](https://jeremyfreese.shinyapps.io/ame_vs_lpm/) for an illustration
+
+### My take on LPM vs binary models
+
+- I have seen no compelling evidence that the LPM will ever be generally better/more accurate than binary logit/probit
+  - The LPM will **sometimes** produce estimates that are *similar* to binary logit/probit
+  - The LPM will **sometimes** produce estimates that are quite *different* from binary logit/probit
+- When the two diverge\*, I would always trust binary logit/probit over the LPM
+- I prefer a model that is **always** reasonable over one that is **sometimes** reasonable
+- Some hesitation for using binary logit/probit is outdated
+  - Lots of software and interpretation tools available now to make binary logit/probit easy and satisfying to interpret
+
+\*Some statistical evidence of how much they diverge for the voting intentions example [later in these notes](3-5-predictions.qmd#on-the-support-of-the-data-logit-vs-lpm)

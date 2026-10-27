@@ -1,0 +1,245 @@
+---
+title: "3.4 Coefficient Interpretations"
+---
+<<dd_version: 2>>
+
+- The binary logit model coefficients can be interpreted in terms of
+  - *y\** metric (not covered here; [see Appendix](appendix-3f-ystar.qmd))
+  - Log odds (rarely useful)
+  - Odds ratios
+    - Odds ratios are a **common** but often **unsatisfactory** method of interpretation
+
+### Model is linear in the log of the odds
+
+- The logit ≡ log of the odds
+
+$$Odds = \Omega = \frac{\Pr(y = 1)}{\Pr(y = 0)}$$
+
+- The logit model is linear in the logit
+
+$$\ln\left[\frac{\Pr(y = 1\,|\,\mathbf{x})}{1 - \Pr(y = 1\,|\,\mathbf{x})}\right] = \ln\Omega(\mathbf{x}) = \mathbf{x}\boldsymbol{\beta} = \beta_{0} + \beta_{1}x_{1} + \beta_{2}x_{2} + \beta_{3}x_{3}$$
+
+**For a unit change in *x~k~*, the logit is expected to change by *β~k~*, holding other variables constant**
+
+- Substantively, what does a change of β~k~ **logits** mean?
+  - To understand the change in logit, we transform it into odds
+
+### Change logit to odds and compute odds ratio (ORs)
+
+- Take the exponential of the logit with a focus on *x*~3~:
+
+$$\begin{aligned}
+\Omega(\mathbf{x}) &= \exp[\ln\Omega(\mathbf{x})] = \exp(\mathbf{x}\boldsymbol{\beta}) \\
+&= e^{\beta_{0} + \beta_{1}x_{1} + \beta_{2}x_{2} + \beta_{3}x_{3}} \\
+&= e^{\beta_{0}}e^{\beta_{1}x_{1}}e^{\beta_{2}x_{2}}{\color{red}{e^{\beta_{3}x_{3}}}} = \Omega(\mathbf{x}, x_{3})
+\end{aligned}$$
+
+- Let *x*~3~ change by 1
+
+$$\begin{aligned}
+\Omega(\mathbf{x}, x_{3} + 1) &= e^{\beta_{0}}e^{\beta_{1}x_{1}}e^{\beta_{2}x_{2}}{\color{green}{e^{\beta_{3}(x_{3} + 1)}}} \\
+&= e^{\beta_{0}}e^{\beta_{1}x_{1}}e^{\beta_{2}x_{2}}{\color{red}{e^{\beta_{3}x_{3}}}}{\color{blue}{e^{\beta_{3}}}}
+\end{aligned}$$
+
+- The odds ratio
+
+$$\frac{\text{Ending } \Omega}{\text{Starting } \Omega} = \frac{\Omega(\mathbf{x}, x_{3} + 1)}{\Omega(\mathbf{x}, x_{3})} = \frac{e^{\beta_{0}}e^{\beta_{1}x_{1}}e^{\beta_{2}x_{2}}{\color{red}{e^{\beta_{3}x_{3}}}}{\color{blue}{e^{\beta_{3}}}}}{e^{\beta_{0}}e^{\beta_{1}x_{1}}e^{\beta_{2}x_{2}}{\color{red}{e^{\beta_{3}x_{3}}}}} = {\color{blue}{e^{\beta_{3}}}}$$
+
+**For a unit increase in *x~k~*, the odds increase/decrease by a factor of OR holding other variables constant**
+
+## Interpreting odds ratios (ORs)
+
+- OR is a ***multiplicative*** coefficient:
+
+  **For a unit increase in *x~k~*, the odds increase/decrease [by a factor of]{.underline} OR holding other variables constant**
+
+  - 1 indicates no effect (e.g., 0.55 \* 1 = 0.55)
+  - For exp(*β~k~*)\>1, the odds are exp(*β~k~*) times larger
+    - Thus, a positive effect
+  - For exp(*β~k~*)\<1, the odds are exp(*β~k~*) times smaller
+    - Thus, a negative effect
+- Magnitudes of positive and negative ORs are compared by taking the inverse of the negative effect (or vice versa)
+  - A positive OR=2 (i.e., 2/1) has same magnitude as "negative" OR=0.5 (i.e., 1/2)
+  - An OR=0.1 (i.e.,1/10) is much larger than OR=2 (i.e., 2/1)
+    - The equivalent positive effect size is OR=10 (i.e., 10/1)
+- You should code your DV in the way that makes it more natural to interpret
+  - E.g., You can model the odds of *voting* or the odds of *not voting*
+
+:::: {.columns}
+::: {.column width="60%"}
+![](images/vaccination-rates-chart.png){fig-alt="Chart of 2020 election vote shares against the percent of residents not fully vaccinated by state: states with larger vote shares for Trump have more residents not fully vaccinated."}
+:::
+::: {.column width="40%"}
+::: {.callout-note icon="false" appearance="simple"}
+Example of what **not** to do. If your research question is about **vaccination rates**, don't code DV as **not vaccinated**
+
+\*Also use a normal *y*-axis label...
+:::
+:::
+::::
+
+### Logit example: DV = support marijuana legalization
+
+- **Data**: 2021 and 2022 General Social Survey (GSS)
+- **DV**: Support for marijuana legalization
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_gss22", clear
+
+drop if missing(grass, age, conserv, faminc, college, woman, race4)
+keep if year >= 2020 & year <= 2023
+fre grass
+recode grass 2 = 0
+lab def glab 0"not be legal" 1 "should be legal"
+lab val grass glab
+fre grass
+<</dd_do>>
+```
+
+## R
+
+```{r}
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(sjmisc)          # frequency tables
+library(questionr)       # odds ratios
+
+gss <- read_dta("https://tdmize.github.io/data/data/cda_gss22.dta")
+
+# Drop any missing data on model vars; keep 2021 and 2022
+gss <- gss[complete.cases(gss[c("grass", "age", "conserv", "faminc", "college",
+  "woman", "race4")]), ]
+gss <- gss |> filter(year >= 2020, year <= 2023)
+frq(gss, grass)
+```
+
+:::
+
+- **IVs**: Age, conservative political views (binary), household income, college degree, gender, race-ethnicity
+- In Stata, use the [**logit**](https://www.stata.com/manuals/rlogit.pdf) command
+  - In R, use [glm](https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/glm) and specify family=binomial(link="logit")
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+* binary logit model; or option for odds ratios
+logit grass c.age i.conserv c.faminc i.college i.woman i.race4, or
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# Treat binary/nominal variables as factors using their value labels
+gss <- gss |>
+  mutate(conserv = as_factor(conserv), college = as_factor(college),
+    woman = as_factor(woman), race4 = as_factor(race4))
+
+glm1 <- glm(grass ~ age + conserv + faminc + college + woman + race4,
+  data = gss, family = binomial(link = "logit"))
+
+odds.ratio(glm1, level = .95)
+```
+
+:::
+
+## Examples odds ratio interpretations in binary logit
+
+[Example binary/nominal IV interpretations]{.underline}:
+
+> *Conservative's odds of supporting marijuana legalization are lower than non-conservative's by a factor of 0.250, holding other variables constant*
+>
+> *Hispanic adults have odds of supporting marijuana legalization that are lower than White adults' by a factor of 0.289 (other variables held constant). Black and White adults odds of supporting marijuana legalization are not significantly different... \[and so on for other categories\]*
+
+[Example continuous IV interpretations]{.underline}:
+
+> *Controlling for other factors, a one-year increase in age decreases the odds of supporting marijuana legalization by a factor of 0.966*
+>
+> *After accounting for other factors, family income is not associated with the odds of supporting marijuana legalization*
+
+::: {.callout-note icon="false" appearance="simple"}
+**Interpretation tip**: A non-significant effect has a confidence interval that includes positive, null, and negative values. I do not think it is appropriate to interpret the direction of a null effect.
+:::
+
+### Considerations when interpreting odds ratios (ORs)
+
+- ORs are **multiplicative** effects---so you cannot say it "increases the odds by \_\_\_\_\_" (as you would with an additive effect)
+  - Instead, you must specify that it increases or decreases the odds **by a factor of/ \# times** which indicates effect is multiplicative instead of additive
+- You also cannot say things such as it "doubles the chance" of something happening or "makes it half as likely"---these are probability statements
+  - ***Odds are not in the probability metric***
+  - You must interpret ORs in terms of what they suggest in terms of a **multiplicative change in the odds**
+    - E.g., An OR=2 does not necessarily "double the chance" of observing an outcome
+    - The substantive impact in terms of probability depends on what the starting value is (see the next few sections for examples)
+- In general, I do not find odds ratios interpretations very satisfying
+  - Odds are less intuitive than probabilities; a ratio of two odds is **much less** intuitive than probabilities
+  - The same size OR can have drastically different effects on the probability depending on the starting value
+
+## How OR's and Pr(y) are related
+
+- The odds and probability are linked nonlinearly (see below)
+- The odds (often denoted $\Omega$ \[Omega\]) are:
+  - The probability of something happening (*probability* often denoted $\pi$ \[pi\])
+  - Compared to the probability of it not happening (1 -- $\pi$)
+
+$$\Omega = \frac{\pi}{1 - \pi}$$
+
+- If we know the odds, can convert to probability:
+
+$$\pi = \frac{\Omega}{1 + \Omega}$$
+
+### Effect sizes with multiplicative effects on the odds
+
+- Think about doubling the odds from 1/10 to 2/10
+  - Probability of 0.091 becomes 0.167
+    - An increase of 0.076
+- Think about doubling the odds from 1/1 to 2/1
+  - Probability of 0.500 becomes 0.667
+    - An increase of 0.167
+- Think about doubling the odds of winning the lottery from 1/100,000,000 to 2/100,000,000
+  - Probability of 0.00000001 becomes 0.00000002
+    - An increase of 0.00000001
+- ***The effect size depends on the starting probability***
+  - "Doubling the odds" means something fundamentally different across the two examples despite being the same multiplicative effect size
+
+### Comparison of Odds \* 2 on Odds and Probabilities
+
+| Original Odds | Prob. | | Double the Odds | Prob. | | Change in: Odds | Change in: Prob. |
+|:-------:|:------:|---|:-------:|:------:|---|:------:|:------:|
+| 1/1000 | 0.001 | | 2/1000 | 0.002 | | \*2 | +0.001 |
+| 1/100 | 0.010 | | 2/100 | 0.020 | | \*2 | +0.010 |
+| 1/10 | 0.091 | | 2/10 | 0.167 | | \*2 | +0.076 |
+| 1/2 | 0.333 | | 2/2 | 0.500 | | \*2 | +0.167 |
+| 1/1 | 0.500 | | 2/1 | 0.667 | | \*2 | +0.167 |
+| 2/1 | 0.667 | | 4/1 | 0.800 | | \*2 | +0.133 |
+| 10/1 | 0.909 | | 20/1 | 0.952 | | \*2 | +0.043 |
+| 100/1 | 0.990 | | 200/1 | 0.995 | | \*2 | +0.005 |
+| 1000/1 | 0.999 | | 2000/1 | 0.9995 | | \*2 | +0.001 |
+
+### Interpretations in the natural metric
+
+- Many have argued that probabilities are the more "natural metric" to interpret binary outcomes (e.g., [Mood 2010](https://doi.org/10.1093/esr/jcp006); [Mize 2019](/research/mize_2019_SocSci.qmd); [Long and Mustillo 2021](https://doi.org/10.1177/0049124118799374))
+  - The mean of a binary DV is the proportion; in model terms, this is a probability
+  - E.g., 75% of the GSS sample supports marijuana legalization; the probability someone supports marijuana legalization is 0.75 (odds are 3/1)
+- Odds have no ceiling for positive effects, but negative effects are constrained from 0 to 1
+  - Makes judging effect size difficult
+- Probabilities---and effects on the probabilities---are always between 0 and 1
+  - Absolute value of a marginal effect on the probabilities demonstrates magnitude of effect size (e.g., -.05 and .05 same magnitude)
+
+:::: {.columns}
+::: {.column width="75%"}
+![](images/probability-yardstick.jpeg){fig-alt="The UK Defence Intelligence probability yardstick: a scale from 0 to 100% with ranges labeled remote chance, highly unlikely, unlikely, realistic possibility, likely or probable, highly likely, and almost certain."}
+:::
+::: {.column width="25%"}
+::: {.callout-note icon="false" appearance="simple"}
+From [UK Ministry of Defense](https://www.gov.uk/government/news/defence-intelligence-communicating-probability)
+:::
+:::
+::::
+
+![](images/never-tell-odds.gif){width=50% fig-alt="Han Solo in Star Wars: Never tell me the odds!"}
