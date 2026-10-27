@@ -1,0 +1,245 @@
+---
+title: "4.1 Multinomial Logit Model"
+---
+<<dd_version: 2>>
+
+- The multinomial logit model *simultaneously estimates binary logit models* for all comparisons among outcome categories (e.g., A vs B, A vs C, B vs C)
+- Model estimation is complicated by large number of parameters
+  - With 5 outcomes, there are 10 binary logits
+  - With 10 outcomes, there are 45 binary logits
+    - This leads to **a lot** of coefficient estimates
+- In terms of coefficients, there are **many** contrasts that could be tested and interpreted
+  - However, coefficients are limited in ways discussed in the binary model, and in more ways in the nominal model
+- In terms of marginal effects, there are only as many marginal effects (MEs) as there are categories of your DV
+  - With 5 outcomes, there are 5 MEs for each IV
+  - With 10 outcomes, there are 10 MEs for each IV
+
+## Multinomial logit with three outcomes
+
+Categories L, M, and C with *n~L~*, *n~M~*, and *n~C~* observations in each category
+
+![](images/outcome-triangle.png){width=60% fig-alt="Triangle diagram with L - Liberal at the top and M - Moderate and C - Conservative at the bottom corners; a two-headed arrow connects each pair of outcomes."}
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_gss", clear
+
+keep if year >= 2016 & year <= 2021
+
+drop if missing(conserv, age, woman, race3, college, married, parent, faminc)
+
+fre polviews3
+<</dd_do>>
+```
+
+## R
+
+```{r}
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(sjmisc)          # frq() frequency tables
+library(nnet)            # multinomial logit: multinom()
+library(marginaleffects) # hypothesis tests
+library(car)             # Anova()
+
+gss <- read_dta("https://tdmize.github.io/data/data/cda_gss.dta")
+
+gss <- gss |> filter(year >= 2016 & year <= 2021)
+
+# Keep model variables; drop any missing data
+gss <- gss[c("polviews3", "age", "woman", "race3", "college", "married", "parent",
+  "faminc", "employed", "conserv")]
+gss <- gss[complete.cases(gss[c("conserv", "age", "woman", "race3", "college",
+  "married", "parent", "faminc")]), ]
+
+frq(gss$polviews3)
+
+# Treat binary/nominal variables as factors
+gss <- gss |>
+  mutate(across(c(polviews3, woman, race3, college, married, parent, employed), as_factor)) |>
+  droplevels()
+```
+
+:::
+
+### Multinomial logit is a set of binary logits that are simultaneously estimated
+
+- [***L vs M***]{.underline} using *n~L~* + *n~M~* observations
+
+  $$\ln\left[\frac{\Pr(L\,|\,\mathbf{x}_{i})}{\Pr(M\,|\,\mathbf{x}_{i})}\right] = \beta_{0,L|M} + \boldsymbol{\beta}_{X,L|M}\,\mathbf{x}_{i}$$
+
+  - Where **x**~*i*~ includes all focal IVs and control variables in the model
+
+- [***M vs C***]{.underline} using *n~M~* + *n~C~* observations
+
+$$\ln\left[\frac{\Pr(M\,|\,\mathbf{x}_{i})}{\Pr(C\,|\,\mathbf{x}_{i})}\right] = \beta_{0,M|C} + \boldsymbol{\beta}_{X,M|C}\,\mathbf{x}_{i}$$
+
+- [***L vs C***]{.underline} using *n~L~* + *n~C~* observations
+
+$$\ln\left[\frac{\Pr(L\,|\,\mathbf{x}_{i})}{\Pr(C\,|\,\mathbf{x}_{i})}\right] = \beta_{0,L|C} + \boldsymbol{\beta}_{X,L|C}\,\mathbf{x}_{i}$$
+
+### Minimal sets of coefficient estimates
+
+- Because of mathematical links among odds, some coefficients are "extra"
+  - $\beta_{L|M} = \beta_{L|C} + \beta_{C|M}$
+  - From any two of L/M, L/C, and C/M, you can compute the third
+- With *J* outcome categories you only need *J* - 1 comparisons/sets of coefficients
+- Each set of *J* - 1 comparisons is a ***minimal set***
+  - Different software computes different minimal sets
+
+::: {.panel-tabset group="language"}
+## Stata
+
+- In Stata, use the [**mlogit**](https://www.stata.com/manuals/rmlogit.pdf) command
+  - Default base/reference outcome category is one with most observations
+  - Change base/reference category with **base(#)** option
+
+```stata
+mlogit …, base(3)
+```
+
+## R
+
+- In R, use the [**multinom**](https://www.rdocumentation.org/packages/nnet/versions/7.3-20/topics/multinom) function in the **nnet** package
+  - Default base/reference outcome category is first one
+  - To change base/reference category, need to change the reference level in the variable itself before fitting model using [**relevel**](https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/relevel)
+
+```r
+gss$polviews3 <- relevel(gss$polviews3, ref = "Moderate")
+
+multinom(polviews3 ~ age + woman + race3 …, data = gss)
+```
+
+:::
+
+### mlogit estimates a minimal set of coefficients
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+mlogit polviews3 c.age i.woman i.race3 i.college ///
+    i.married i.parent c.faminc i.employed
+est store pol3mod
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# Moderate as the base/reference category (Stata's default here)
+gss$polviews3 <- relevel(gss$polviews3, ref = "Moderate")
+
+pol3mod <- multinom(polviews3 ~ age + woman + race3 + college + married + parent +
+  faminc + employed, data = gss, trace = FALSE)
+summary(pol3mod)
+```
+
+:::
+
+### Minimal sets vs all possible contrasts
+
+- Do not judge statistical significance using tests from a minimal set (which is what Stata and R produce by default)
+- Calculating all coefficients for all contrasts yourself is cumbersome. The **spost13** command **listcoef** in Stata will do this for you\*
+  - Wrapping your head around this many coefficients/contrasts is difficult:
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+listcoef, help
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# All contrasts among the outcomes: refit the model with each outcome
+# category as the base/reference category
+all_contrasts <- function(model, term) {
+  data <- eval(model$call$data)
+  y <- all.vars(formula(model))[1]
+  out <- lapply(model$lev, function(ref) {
+    data[[y]] <- relevel(data[[y]], ref = ref)
+    s <- summary(update(model, data = data))
+    b <- s$coefficients[, term]
+    z <- b / s$standard.errors[, term]
+    data.frame(contrast = paste(rownames(s$coefficients), "vs", ref),
+      b = round(b, 4), z = round(z, 3), p = round(2 * pnorm(-abs(z)), 3),
+      exp_b = round(exp(b), 3), row.names = NULL)
+  })
+  do.call(rbind, out)
+}
+
+all_contrasts(pol3mod, "age")
+all_contrasts(pol3mod, "womanWomen")
+all_contrasts(pol3mod, "race3black")
+```
+
+:::
+
+\*I don't know of an easy way to automate this in R
+
+- You don't want to interpret all of these possible contrasts in order to determine whether your independent variable of interest has an overall effect or not
+
+## Testing that a variable has no overall effect
+
+- The hypothesis that *x~k~* has no effect involves a joint test of all *J* - 1 coefficients for a given IV. E.g., Consider the null hypothesis that *age* has no overall effect on political views; with 3 outcome categories this is a joint test of 2 age coefficients:
+
+$$H_{0}: \beta_{age,L|M} = \beta_{age,C|M} = 0$$
+
+- We can use either Wald or likelihood-ratio tests (details on these in the Testing & Fit section of the class). Consider the Wald test:
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+test [Liberal]age [Conservative]age
+<</dd_do>>
+```
+
+## R
+
+```{r}
+hypotheses(pol3mod, joint = c("Liberal:age", "Conservative:age"), joint_test = "chisq")
+```
+
+:::
+
+*Age has a significant effect on political views (p \< 0.001)*
+
+::: {.callout-note icon="false" appearance="simple"}
+In Stata, the **spost13** command **mlogtest** will calculate joint tests for all IVs
+
+In R use **Anova(*modname*, type = 2)**
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+mlogtest
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# Likelihood-ratio tests (race3 is tested as one variable)
+Anova(pol3mod, type = 2)
+```
+
+:::
+
+#### Example interpretations:
+
+> *- Whether someone has a college degree or not has a significant effect on political views (p \< 0.001)*
+>
+> *- Gender has a significant overall effect on political views (p \< 0.001)*

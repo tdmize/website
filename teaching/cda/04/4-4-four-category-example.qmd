@@ -1,0 +1,276 @@
+---
+title: "4.4 Example with 4 DV Categories"
+---
+
+- Example --- GSS 1972 -- 2021
+  - DV = views of premarital sex
+  - Focal IVs:
+    - How have views changed over time (i.e., *year*)?\*
+    - How does religiosity pattern views (i.e., *religious* binary)?
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/cda_gss", clear
+(cda_gss.dta |  GSS 1972-2021 CDA - Categorical Data Analysis | date created 202
+> 3)
+
+. 
+. // Data cleaning //
+. gen religous = attend
+(665 missing values generated)
+
+. lab var religous "Religious Attendee"
+
+. recode religous 0/3 = 0 4/8 = 1
+(55,475 changes made to religous)
+
+. lab def religlab 0"Not Religious" 1"Religious"
+
+. lab val religous religlab
+
+. 
+. drop if missing(premarsx, college, age, woman, race3, year1972, religous)
+(28,360 observations deleted)
+
+. 
+. fre premarsx
+
+premarsx -- sex before marriage
+----------------------------------------------------------------------------
+                               |      Freq.    Percent      Valid       Cum.
+-------------------------------+--------------------------------------------
+Valid   1 always wrong         |      10433      25.77      25.77      25.77
+        2 almost always wrong  |       3587       8.86       8.86      34.63
+        3 wrong only sometimes |       8027      19.83      19.83      54.46
+        4 not wrong at all     |      18439      45.54      45.54     100.00
+        Total                  |      40486     100.00     100.00           
+----------------------------------------------------------------------------
+
+```
+
+## R
+
+```{r}
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(sjmisc)          # frq() frequency tables
+library(ggplot2)         # graphs
+library(nnet)            # multinomial logit: multinom()
+library(marginaleffects) # predictions and marginal effects
+library(cleanplots)      # graph scheme
+cleanplots_defaults()
+
+gss <- read_dta("https://tdmize.github.io/data/data/cda_gss.dta")
+
+# Data cleaning: religious attendee = attends about once a month or more
+gss <- gss |>
+  mutate(religous = case_when(attend <= 3 ~ 0, attend >= 4 ~ 1))
+
+# Keep model variables; drop any missing data
+gss <- gss[c("premarsx", "college", "age", "woman", "race3", "year1972", "religous")]
+gss <- gss[complete.cases(gss), ]
+
+frq(gss$premarsx)
+
+# Treat binary/nominal variables as factors
+gss <- gss |>
+  mutate(across(c(premarsx, college, woman, race3), as_factor),
+    religous = factor(religous, labels = c("Not Religious", "Religious")),
+    year1972 = as.numeric(year1972)) |>
+  droplevels()
+```
+
+:::
+
+\**year* has a highly nonlinear relationship with this outcome. [See the Appendix](appendix-4a-combining-outcomes.qmd#nonlinear-functional-forms) for how I worked out how to specify *year* in the model
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. *Preferred model with year^3
+. qui mlogit premarsx c.year1972##c.year1972##c.year1972 ///
+>     i.religous i.college c.age i.woman i.race3
+
+. est store psmod
+
+. 
+. *4.4.b
+. qui margins, at(year1972=(0(1)49))
+
+. marginsplot, ylab(0(.1).7) plotop(msym(none) lwid(*1.4)) ///
+>     recastci(rline) ciopt(col(*.4)) ///
+>     xlab(0"1972" 8"1980" 18"1990" 28"2000" 38"2010" 49"2021") xtitle("GSS Surv
+> ey Year") ///
+>     ytitle("Pr(View of Premarital Sex as Wrong)") ///
+>     title("[4.4.b] Predicted Probabilities of Views About When Premarital Sex 
+> is Wrong", size(*1.1)) ///
+>     legend(order(5 "Always" 6 "Usually" 7 "Sometimes" 8 "Not Wrong"))
+
+Variables that uniquely identify margins: year1972
+
+```
+
+![](fig/cda-04_04_b-prems-02.png){width=80% fig-alt="[4.4.b] Predicted probabilities of each view of premarital sex from 1972 to 2021: not wrong at all rises from about 0.30 to 0.67, always wrong falls from about 0.33 to 0.15, sometimes wrong falls from about 0.24 to 0.13, and usually wrong falls from about 0.12 to 0.05."}
+
+## R
+
+```{r}
+#| fig-alt: "[4.4.b] Predicted probabilities of each view of premarital sex from 1972 to 2021: not wrong at all rises from about 0.30 to 0.67, always wrong falls from about 0.33 to 0.15, sometimes wrong falls from about 0.24 to 0.13, and usually wrong falls from about 0.12 to 0.05."
+# Preferred model with year^3. Year is divided by 10 inside the polynomial so
+# that R computes the standard errors accurately (predictions are the same)
+psmod <- multinom(premarsx ~ poly(I(year1972 / 10), 3, raw = TRUE) +
+  religous + college + age + woman + race3, data = gss, trace = FALSE)
+
+# 4.4.b
+plot_predictions(psmod, by = c("year1972", "group"),
+  newdata = datagrid(year1972 = 0:49, grid_type = "counterfactual")) +
+  scale_color_manual(values = c("red", "skyblue", "gray50", "black"),
+    labels = c("Always", "Usually", "Sometimes", "Not Wrong")) +
+  scale_fill_manual(values = c("red", "skyblue", "gray50", "black"),
+    labels = c("Always", "Usually", "Sometimes", "Not Wrong")) +
+  scale_x_continuous(breaks = c(0, 8, 18, 28, 38, 49),
+    labels = c("1972", "1980", "1990", "2000", "2010", "2021")) +
+  scale_y_continuous(breaks = seq(0, .7, .1), limits = c(0, .7)) +
+  labs(title = "[4.4.b] Predicted Probabilities of Views About When Premarital Sex is Wrong",
+    x = "GSS Survey Year", y = "Pr(View of Premarital Sex as Wrong)",
+    color = NULL, fill = NULL) +
+  theme(plot.title.position = "plot")
+```
+
+:::
+
+## AMEs for effect of time across range
+
+- Yet another **amount( )** we can specify with **mecompare** is the **range** (In R, **minmax** on **avg_comparisons**)
+  - This will calculate the effect of a change from the minimum to the maximum of your IV
+    - Here, the total effect that time has had over the measured range of 1972 to 2021
+  - Usually I recommend the **trimrange** (5^th^ to 95^th^ percentile), but **range** is OK here as there is an entire GSS sample (*n* $\approx$ 2000) at the min and max values
+
+::: {.callout-note icon="false" appearance="simple"}
+[Bonus stats tip]{.underline}: *N* refers to the whole sample (*N* = 40,486) while *n* refers to a subsample. Subscripts are often useful, e.g., *n*~2021~=2,399. Statistics like *N* and *n* are always italicized.
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. *AMEs across entire range of year variable
+. mecompare year1972, amount(range) model(psmod)
+
+Predicting: Pr(premarsx)
+Marginal effects (N_psmod=40486)
+
+                                 |  ME #   Estimate         SE      P>|z|
+---------------------------------+---------------------------------------
+year1972(min-max)                |                                       
+            always wrong - psmod |     1     -0.177      0.010      0.000
+     almost always wrong - psmod |     2     -0.071      0.007      0.000
+    wrong only sometimes - psmod |     3     -0.116      0.010      0.000
+        not wrong at all - psmod |     4      0.364      0.011      0.000
+
+```
+
+## R
+
+```{r}
+# AMEs across entire range of year variable
+avg_comparisons(psmod, variables = list(year1972 = "minmax"))
+```
+
+:::
+
+> *From 1972 to 2021, views toward premarital sex have become more accepting. The largest change in opinions of premarital sex have been in the amount of US adults saying it is "not wrong at all." Specifically, the probability of thinking premarital sex is not wrong at all has increased by about 0.36 over the last 49 years. This change has been offset by decreasing numbers of individuals stating that premarital sex is always wrong (∆ = -0.18), usually wrong (∆ = -0.07), and sometimes wrong (∆ = -0.12).*
+
+::: {.callout-note icon="false" appearance="simple"}
+[Interpretation tip:]{.underline} It is easy for readers to get lost with so many MEs. Set the scene with a non-technical takeaway summary sentence first. Then, add specific #s and details.
+:::
+
+## AMEs for effect of religiosity
+
+- Here, "*religious*" = someone who attends religious services ≥ once a month
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. *4.4.c
+. est restore psmod
+(results psmod are active now)
+
+. qui margins, dydx(religous)
+
+. marginsplot, recast(bar) ciopts(color(gs5)) ///
+>     xlab(0.5 " " 1 "Always" 2 "Usually" 3 "Sometimes" 4 "Not Wrong" 4.5 " ") /
+> //
+>     yline(0) plotopts(barw(0.6) color(purple)) ylab(, format(%4.2f)) ///
+>     xtitle("View of When Premarital Sex is Wrong") ytitle("AME of Religiosity"
+> ) ///
+>     title("[4.4.c] Average Marginal Effects of Religiosity on Views of Premari
+> tal Sex", size(*1.1)) ///
+>     subtitle("Effects Above Zero Indicate That View is More Likely for Someone
+>  who is Religious", size(small))
+
+Variables that uniquely identify margins:
+
+```
+
+![](fig/cda-04_04_c-prems-03.png){width=80% fig-alt="[4.4.c] Bar chart of the average marginal effects of religiosity on each view of premarital sex: about 0.26 for always wrong, 0.05 for usually wrong, about 0 for sometimes wrong, and -0.30 for not wrong at all."}
+
+## R
+
+```{r}
+#| fig-alt: "[4.4.c] Bar chart of the average marginal effects of religiosity on each view of premarital sex: about 0.26 for always wrong, 0.05 for usually wrong, about 0 for sometimes wrong, and -0.30 for not wrong at all."
+# 4.4.c
+me_relig <- avg_comparisons(psmod, variables = "religous")
+
+ggplot(me_relig, aes(x = group, y = estimate)) +
+  geom_col(width = .6, fill = "purple") +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = .1, color = "gray30") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  scale_x_discrete(labels = c("Always", "Usually", "Sometimes", "Not Wrong")) +
+  labs(title = "[4.4.c] Average Marginal Effects of Religiosity on Views of Premarital Sex",
+    subtitle = "Effects Above Zero Indicate That View is More Likely for Someone who is Religious",
+    x = "View of When Premarital Sex is Wrong", y = "AME of Religiosity") +
+  theme(plot.title.position = "plot")
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. *AMEs for binary IV
+. mecompare religous, model(psmod)
+
+Predicting: Pr(premarsx)
+Marginal effects (N_psmod=40486)
+
+                                 |  ME #   Estimate         SE      P>|z|
+---------------------------------+---------------------------------------
+religous                         |                                       
+    Religious - Not Religiou     |                                       
+            always wrong - psmod |     1      0.257      0.004      0.000
+     almost always wrong - psmod |     2      0.047      0.003      0.000
+    wrong only sometimes - psmod |     3     -0.005      0.004      0.186
+        not wrong at all - psmod |     4     -0.299      0.005      0.000
+
+```
+
+## R
+
+```{r}
+# AMEs for binary IV
+me_relig
+```
+
+:::
+
+> *Religiosity has a polarizing effect on views of premarital sex. Religious individuals are much more likely to view premarital sex as always wrong (ME = 0.257) and somewhat more likely to view it as usually wrong (ME = 0.047). In contrast, they are much less likely to view premarital sex as not wrong at all (ME = -0.299). There are no differences in views of premarital sex as sometimes wrong based on religiosity.*
+
+::: {.callout-note icon="false" appearance="simple"}
+[Interpretation tip]{.underline}: It is common for some MEs to be significant and some null. Usually, best to explicitly note null effects on an outcome category.
+:::

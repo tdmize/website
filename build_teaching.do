@@ -45,7 +45,7 @@ set rmsg off
 local quarto "quarto"
 
 * Commands used by the teaching pages (their versions are recorded in the log)
-local cmds "mecompare metest meinequality mtable mchange mlincom mgen fre esttab binscatter binscatterhist combomarginsplot mkspline2 adjustrcspline usetdm"
+local cmds "mecompare metest meinequality totalme mtable mchange mlincom mgen listcoef mlogtest fre esttab coefplot binscatter binscatterhist combomarginsplot mkspline2 adjustrcspline usetdm"
 
 * ---------------------------------------------------------------- arguments --
 capture confirm file "_quarto.yml"
@@ -139,9 +139,11 @@ if `dyn' {
         cd "`root'/`secdir'"
         capture mkdir fig
         _teach_page "`rel'"
-        local dtas : dir . files "*.dta"
-        foreach f of local dtas {
-            erase "`f'"
+        foreach ext in dta gph {
+            local tmps : dir . files "*.`ext'"
+            foreach f of local tmps {
+                erase "`f'"
+            }
         }
         cd "`root'"
     }
@@ -162,10 +164,12 @@ if `dyn' {
                 _teach_page "`d'/`f'"
             }
         }
-        * files written by -margins, saving()- and the like
-        local dtas : dir . files "*.dta"
-        foreach f of local dtas {
-            erase "`f'"
+        * files written by -margins, saving()-, -graph, saving()- and the like
+        foreach ext in dta gph {
+            local tmps : dir . files "*.`ext'"
+            foreach f of local tmps {
+                erase "`f'"
+            }
         }
         cd "`root'"
     }

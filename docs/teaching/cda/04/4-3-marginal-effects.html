@@ -1,0 +1,2409 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>4.3 Marginal Effects – Trenton D. Mize</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../teaching/cda/04/4-4-four-category-example.html" rel="next">
+<link href="../../../teaching/cda/04/4-2-predicted-probabilities.html" rel="prev">
+<script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-d1074f4552fd9e64773fe67262ebb1c3.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">Trenton D. Mize</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../cv.html"> 
+<span class="menu-text">CV</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../research.html"> 
+<span class="menu-text">Research</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../software.html"> 
+<span class="menu-text">Software</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="../../../teaching.html" aria-current="page"> 
+<span class="menu-text">Teaching</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../resources.html"> 
+<span class="menu-text">Links</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../help.html"> 
+<span class="menu-text">Asking for Help</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/tdmize"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../teaching/cda/index.html">Categorical Data Analysis (Soc 681)</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/04/index.html">04 Nominal Models</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/04/4-3-marginal-effects.html">4.3 Marginal Effects</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Teaching</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Categorical Data Analysis (Soc 681)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/01/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">01 Introduction &amp; Linear Regression</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/1-0-categorical-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1.0 Categorical Data is Everywhere</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/1-2-linear-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1.2 Linear Regression (sans math)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/1-3-linear-regression-math.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1.3 Linear Regression (with math)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/appendix-a1-datasets.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix A1: Datasets for Assignments</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/appendix-a2-stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix A2: Stata Appendix</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/02/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">02 Nonlinearities &amp; Categorical IVs</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-1-marginal-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.1 Interpretation with Marginal Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-2-nonlinear-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.2 Marginal Effects with Nonlinearities</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-3-linear-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.3 Linear Interaction Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-4-nonlinear-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.4 Nonlinear Interaction Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-5-distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.5 Examining Distributions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-6-assessing-nonlinearities.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.6 Assessing and Modeling Complex Nonlinearities for Independent Variables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-7-categorical-ivs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.7 Categorical Independent Variables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-8-comparing-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.8 Comparing Effects Across IVs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-10-conclusion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.10 Conclusion</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/02/appendix-2a/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 2A: Stata Code and Tips</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-1-factor-syntax.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.1 Stata factor syntax</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-2-polynomials.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.2 Polynomial IVs with factor syntax</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-3-calculating-mes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.3 Calculating marginal effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-4-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.4 Interaction effect with factor syntax</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-5-nonlinear-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.5 Nonlinear interaction effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-6-distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.6 Tools for examining distributions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-7-assessing-nonlinearities.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.7 Assessing nonlinearities</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-8-splines.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.8 Splines</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-9-loglinear.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.9 Loglinear regression models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-10-transforming.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.10 Transforming variables</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2b-logged-dv.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 2B: Logged DV Regression Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2c-splines.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 2C: Splines</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/03/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">03 Binary Regression Models</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-0-linear-probability-model.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.0 Binary DVs and the Linear Probability Model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-1-binary-model-derivations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.1 Binary Model Derivations</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-2-scaling-identification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.2 Scaling and Identification</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-3-maximum-likelihood.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.3 Maximum Likelihood Estimation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-4-coefficient-interpretations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.4 Coefficient Interpretations</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-5-predictions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.5 Interpreting Predictions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-6-marginal-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.6 Marginal Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-7-effect-summary-comparison.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.7 Effect Summary Comparison</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-8-ideal-types.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.8 Predictions for Ideal Types</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-9-risk-ratios.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.9 Risk Ratios/Relative Risk (RR)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-10-tables-plots.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.10 Bonus: Tables &amp; Plots of Results</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-11-conclusion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.11 Miscellaneous &amp; Conclusion</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3a-stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3A: Stata Code and Tips</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3b-maximum-likelihood.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3B: Maximum Likelihood</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3c-or-mem.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3C: OR and MEM Comparison</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3d-me-distribution.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3D: Distribution of Marginal Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3e-functional-forms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3E: Flexible Functional Forms</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3f-ystar.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3F: Interpretation in y* Metric</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3g-marginal-odds-ratios.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3G: Marginal Odds Ratios</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/04/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">04 Nominal Models</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-0-nominal-dvs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.0 Nominal DVs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-1-multinomial-logit.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.1 Multinomial Logit Model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-2-predicted-probabilities.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.2 Predicted Probabilities</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-3-marginal-effects.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">4.3 Marginal Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-4-four-category-example.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.4 Example with 4 DV Categories</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-5-conditional-odds-ratios.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.5 Conditional Odds Ratios (ORs)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-6-iia.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.6 Independence of Irrelevant Alternatives (IIA)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-7-review.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.7 Review of Nominal DVs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/appendix-4a-combining-outcomes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 4A: Combining Outcomes and Functional Forms</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/appendix-4b-stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 4B: Stata Code and Tips</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cdash.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Categorical Data Analysis (Statistical Horizons)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cdaws.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Categorical Data Analysis Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/workflow.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Management / Workflow Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/dataviz.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Visualization</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/dvs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Visualization Using Stata and LLMs</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/dmv.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data &amp; Model Visualization Workshop</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/dmv/r-output.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">R Output</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/em.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Experimental Methods: Design &amp; Analysis</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/int.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Interaction Effects Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/irt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Item Response Theory</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/lvm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Latent Variable Modeling</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/mcapsi.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Longitudinal Data Analysis</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/miss.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Missing Data Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/spgrad.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Social Psychology (Graduate)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/spug.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Social Psychology (Undergrad)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Stata Programming Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/surveys.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Survey Design Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/sew.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Survey Experiments Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/twm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Teaching Workshops &amp; Methods</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#marginal-effects-at-the-mean-mem" id="toc-marginal-effects-at-the-mean-mem" class="nav-link active" data-scroll-target="#marginal-effects-at-the-mean-mem">Marginal effects at the mean (MEM)</a></li>
+  <li><a href="#average-marginal-effects-ames" id="toc-average-marginal-effects-ames" class="nav-link" data-scroll-target="#average-marginal-effects-ames">Average marginal effects (AMEs)</a>
+  <ul class="collapse">
+  <li><a href="#average-marginal-effects-ames-age" id="toc-average-marginal-effects-ames-age" class="nav-link" data-scroll-target="#average-marginal-effects-ames-age">Average marginal effects (AMEs): Age</a></li>
+  <li><a href="#average-marginal-effects-ames-for-binary-ivs" id="toc-average-marginal-effects-ames-for-binary-ivs" class="nav-link" data-scroll-target="#average-marginal-effects-ames-for-binary-ivs">Average marginal effects (AMEs) for binary IVs</a></li>
+  </ul></li>
+  <li><a href="#plots-of-binarynominal-ivs" id="toc-plots-of-binarynominal-ivs" class="nav-link" data-scroll-target="#plots-of-binarynominal-ivs">Plots of binary/nominal IVs</a></li>
+  <li><a href="#plots-of-marginal-effects-for-binary-ivs" id="toc-plots-of-marginal-effects-for-binary-ivs" class="nav-link" data-scroll-target="#plots-of-marginal-effects-for-binary-ivs">Plots of marginal effects for binary IVs</a></li>
+  <li><a href="#mes-for-multi-category-nominal-iv" id="toc-mes-for-multi-category-nominal-iv" class="nav-link" data-scroll-target="#mes-for-multi-category-nominal-iv">MEs for multi-category nominal IV</a>
+  <ul class="collapse">
+  <li><a href="#me-inequality-for-nominal-ivs" id="toc-me-inequality-for-nominal-ivs" class="nav-link" data-scroll-target="#me-inequality-for-nominal-ivs">ME inequality for nominal IVs</a></li>
+  </ul></li>
+  <li><a href="#total-marginal-effects" id="toc-total-marginal-effects" class="nav-link" data-scroll-target="#total-marginal-effects">Total marginal effects</a>
+  <ul class="collapse">
+  <li><a href="#total-marginal-effect-inequality-statistics" id="toc-total-marginal-effect-inequality-statistics" class="nav-link" data-scroll-target="#total-marginal-effect-inequality-statistics">Total marginal effect inequality statistics</a></li>
+  <li><a href="#total-marginal-effects-for-comparing-effects" id="toc-total-marginal-effects-for-comparing-effects" class="nav-link" data-scroll-target="#total-marginal-effects-for-comparing-effects">Total marginal effects for comparing effects</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../teaching/cda/index.html">Categorical Data Analysis (Soc 681)</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/04/index.html">04 Nominal Models</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/04/4-3-marginal-effects.html">4.3 Marginal Effects</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">4.3 Marginal Effects</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<ul>
+<li><p>The interpretation of a <strong>marginal effect</strong> in multinomial logit is all but identical to the interpretation in binary logit/probit:</p>
+<p><em>MEM: The difference in Pr(y = j | <strong>x</strong>) for a change in x<sub>k</sub> of δ, holding other control variables at their means</em></p>
+<p><em>AME: On average, the difference in Pr(y = j | <strong>x</strong>) for a change in x<sub>k</sub> of δ</em></p>
+<ul>
+<li>Here, we predict Pr(<em>y</em> = <em>j</em>), not Pr(<em>y</em>=1) as in the binary case
+<ul>
+<li>And have <em>J</em> total Pr(<em>y</em> = <em>j</em>), and thus <em>J</em> total MEs</li>
+</ul></li>
+</ul></li>
+<li><p>Decisions about where to hold the control variables follow the same logic as before (at their mean for MEM; average over observed values for AME; etc.)</p></li>
+<li><p>Decisions about the size of <em>δ</em> to use are the same</p>
+<ul>
+<li>An instantaneous rate of change / slope (first derivative)</li>
+<li>A finite change, AKA a discrete change
+<ul>
+<li>Can be any amount, e.g.&nbsp;one unit, SD, etc.</li>
+<li>I find discrete changes most useful</li>
+</ul></li>
+</ul></li>
+</ul>
+<section id="marginal-effects-at-the-mean-mem" class="level2">
+<h2 class="anchored" data-anchor-id="marginal-effects-at-the-mean-mem">Marginal effects at the mean (MEM)</h2>
+<ul>
+<li>Formulas for MEMs and AMEs are identical to before in linear and binary models. Only the formula for <span class="math inline">\(\eta\)</span> has changed (we use the formulas <a href="../../../teaching/cda/04/4-2-predicted-probabilities.html#predicted-probabilities-in-multinomial-logit">above</a>)</li>
+<li>For the MEM, we hold the control variables (<span class="math inline">\(\mathbf{x}_{-k}\)</span>) at their means (<span class="math inline">\(\overline{\mathbf{x}}\)</span>)</li>
+</ul>
+<p><span class="math display">\[MEM = \eta(x_{k} = end, \mathbf{x}_{-k} = \overline{\mathbf{x}}) - \eta(x_{k} = start, \mathbf{x}_{-k} = \overline{\mathbf{x}})\]</span></p>
+<ul>
+<li>E.g., For a binary variable (e.g.&nbsp;<em>woman</em>):</li>
+</ul>
+<p><span class="math display">\[{MEM}_{binary} = \eta(x_{k} = 1, \mathbf{x}_{-k} = \overline{\mathbf{x}}) - \eta(x_{k} = 0, \mathbf{x}_{-k} = \overline{\mathbf{x}})\]</span></p>
+<ul>
+<li>E.g., For a continuous variable (e.g., <em>age</em>) could compare predictions at the mean and at the mean + SD:</li>
+</ul>
+<p><span class="math display">\[{MEM}_{continuous} = \eta(x_{k} = \overline{x}_{k} + SD, \mathbf{x}_{-k} = \overline{\mathbf{x}}) - \eta(x_{k} = \overline{x}_{k}, \mathbf{x}_{-k} = \overline{\mathbf{x}})\]</span></p>
+<ul>
+<li>Because control variables were held at the sample means, can interpret MEM as effect <em>“for the average person”</em> in the data or someone <em>“average on all other variables included in the model”</em></li>
+</ul>
+</section>
+<section id="average-marginal-effects-ames" class="level2">
+<h2 class="anchored" data-anchor-id="average-marginal-effects-ames">Average marginal effects (AMEs)</h2>
+<ul>
+<li>For an AME, we first compute a marginal effect for each observation in the data with the control variables held at their observed values for that specific observation (<span class="math inline">\(\mathbf{x}_{-k,i}\)</span>):</li>
+</ul>
+<p><span class="math display">\[{ME}_{i} = \eta(x_{k} = {end}_{i}, \mathbf{x}_{-k} = \mathbf{x}_{-k,i}) - \eta(x_{k} = {start}_{i}, \mathbf{x}_{-k} = \mathbf{x}_{-k,i})\]</span></p>
+<ul>
+<li>The <strong>average marginal effect</strong> (AME) averages these effects over all observations in the data:</li>
+</ul>
+<p><span class="math display">\[AME = \frac{1}{N}\sum_{i = 1}^{N}\left\{\eta(x_{k} = {end}_{i}, \mathbf{x}_{-k} = \mathbf{x}_{-k,i}) - \eta(x_{k} = {start}_{i}, \mathbf{x}_{-k} = \mathbf{x}_{-k,i})\right\}\]</span></p>
+<ul>
+<li>Thus, the AME is interpreted as the effect “on average” in the data</li>
+</ul>
+<section id="average-marginal-effects-ames-age" class="level3">
+<h3 class="anchored" data-anchor-id="average-marginal-effects-ames-age">Average marginal effects (AMEs): Age</h3>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="st">"https://tdmize.github.io/data/data/cda_gss"</span>, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(cda_gss.dta |  GSS 1972-2021 CDA - Categorical Data Analysis | date created 202
+&gt; 3)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">keep</span> <span class="kw">if</span> <span class="fu">year</span> &gt;= 2016 &amp; <span class="fu">year</span> &lt;= 2021</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(59,599 observations deleted)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">drop</span> <span class="kw">if</span> <span class="fu">missing</span>(conserv, age, woman, race3, college, married, parent, faminc)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(1,421 observations deleted)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>*3 category political views <span class="kw">var</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> <span class="kw">mlogit</span> polviews3 c.age i.woman i.race3 i.college <span class="co">///</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    i.married i.parent c.faminc i.employed</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> pol3mod</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co">// AMEs +SD of age</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>mecompare age, amount(<span class="fu">sd</span>) <span class="kw">model</span>(pol3mod)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Predicting: Pr(polviews3)
+Marginal effects (N_pol3mod=7823)
+
+                                 |  ME #   Estimate         SE      P&gt;|z|
+---------------------------------+---------------------------------------
+age + SD (centered)              |                                       
+               Liberal - pol3mod |     1     -0.020      0.006      0.001
+              Moderate - pol3mod |     2     -0.029      0.006      0.000
+          Conservative - pol3mod |     3      0.049      0.006      0.000</code></pre>
+</div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(haven)           <span class="co"># import Stata data and labels</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)           <span class="co"># data manipulation</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)         <span class="co"># graphs</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(nnet)            <span class="co"># multinomial logit: multinom()</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(marginaleffects) <span class="co"># predictions and marginal effects</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(cleanplots)      <span class="co"># graph scheme</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="fu">cleanplots_defaults</span>()</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"https://raw.githubusercontent.com/tdmize/Rfunctions/main/ME_helper_functions.R"</span>)</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Center changes in continuous IVs on each observation's value</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">marginaleffects_contrast_direction =</span> <span class="st">"center"</span>)</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>gss <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">"https://tdmize.github.io/data/data/cda_gss.dta"</span>)</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>gss <span class="ot">&lt;-</span> gss <span class="sc">|&gt;</span> <span class="fu">filter</span>(year <span class="sc">&gt;=</span> <span class="dv">2016</span> <span class="sc">&amp;</span> year <span class="sc">&lt;=</span> <span class="dv">2021</span>)</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep model variables; drop any missing data</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>gss <span class="ot">&lt;-</span> gss[<span class="fu">c</span>(<span class="st">"polviews3"</span>, <span class="st">"age"</span>, <span class="st">"woman"</span>, <span class="st">"race3"</span>, <span class="st">"college"</span>, <span class="st">"married"</span>, <span class="st">"parent"</span>,</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>  <span class="st">"faminc"</span>, <span class="st">"employed"</span>, <span class="st">"conserv"</span>)]</span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>gss <span class="ot">&lt;-</span> gss[<span class="fu">complete.cases</span>(gss[<span class="fu">c</span>(<span class="st">"conserv"</span>, <span class="st">"age"</span>, <span class="st">"woman"</span>, <span class="st">"race3"</span>, <span class="st">"college"</span>,</span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>  <span class="st">"married"</span>, <span class="st">"parent"</span>, <span class="st">"faminc"</span>)]), ]</span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Treat binary/nominal variables as factors</span></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>gss <span class="ot">&lt;-</span> gss <span class="sc">|&gt;</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">c</span>(polviews3, woman, race3, college, married, parent, employed), as_factor)) <span class="sc">|&gt;</span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">droplevels</span>()</span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a><span class="co"># 3 category political views var</span></span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>pol3mod <span class="ot">&lt;-</span> <span class="fu">multinom</span>(polviews3 <span class="sc">~</span> age <span class="sc">+</span> woman <span class="sc">+</span> race3 <span class="sc">+</span> college <span class="sc">+</span> married <span class="sc">+</span> parent <span class="sc">+</span></span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>  faminc <span class="sc">+</span> employed, <span class="at">data =</span> gss, <span class="at">trace =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a><span class="co"># AMEs +SD of age</span></span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(pol3mod, <span class="at">variables =</span> <span class="fu">list</span>(<span class="at">age =</span> <span class="fu">sd</span>(gss<span class="sc">$</span>age)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+        Group Estimate Std. Error     z Pr(&gt;|z|)    S   2.5 %  97.5 %
+ Liberal       -0.0196    0.00596 -3.29  0.00102  9.9 -0.0313 -0.0079
+ Moderate      -0.0294    0.00618 -4.75  &lt; 0.001 18.9 -0.0415 -0.0173
+ Conservative   0.0489    0.00606  8.08  &lt; 0.001 50.4  0.0371  0.0608
+
+Term: age
+Type: probs
+Comparison: +17.3603297947298</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<blockquote class="blockquote">
+<p><em>On average, a standard deviation increase in age (about 17 years) is associated with a 0.049 higher probability of identifying as conservative. A standard deviation increase in age, in contrast, leads to a 0.029 lower probability of identifying as moderate and a 0.020 lower probability of identifying as liberal</em></p>
+</blockquote>
+</section>
+<section id="average-marginal-effects-ames-for-binary-ivs" class="level3">
+<h3 class="anchored" data-anchor-id="average-marginal-effects-ames-for-binary-ivs">Average marginal effects (AMEs) for binary IVs</h3>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// AMEs of binary/nominal IVs //</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>mecompare college, <span class="kw">model</span>(pol3mod)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Predicting: Pr(polviews3)
+Marginal effects (N_pol3mod=7823)
+
+                                 |  ME #   Estimate         SE      P&gt;|z|
+---------------------------------+---------------------------------------
+college                          |                                       
+    College Deg - No Col Deg     |                                       
+               Liberal - pol3mod |     1      0.176      0.012      0.000
+              Moderate - pol3mod |     2     -0.120      0.012      0.000
+          Conservative - pol3mod |     3     -0.055      0.012      0.000</code></pre>
+</div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># AMEs of binary/nominal IVs</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(pol3mod, <span class="at">variables =</span> <span class="st">"college"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+        Group Estimate Std. Error      z Pr(&gt;|z|)     S   2.5 %  97.5 %
+ Liberal        0.1759     0.0120  14.63   &lt;0.001 158.7  0.1523  0.1995
+ Moderate      -0.1205     0.0120 -10.06   &lt;0.001  76.7 -0.1440 -0.0970
+ Conservative  -0.0554     0.0116  -4.78   &lt;0.001  19.2 -0.0781 -0.0327
+
+Term: college
+Type: probs
+Comparison: College Degree - No Col Degree</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<blockquote class="blockquote">
+<p><em>Those with college degrees have a 0.176 higher probability of identifying as liberal (compared to those without college degrees). In contrast, college educated individuals are less likely to identify as moderate or conservative (</em><span class="math inline">\({ME}_{moderate} = -0.120;\ {ME}_{conservative} = -0.055\)</span><em>).</em></p>
+</blockquote>
+<div class="callout callout-style-simple callout-note no-icon">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><u>Interpretation tip:</u> A separate sentence for each ME can be tedious. I often use the strategy of grouping effects in the same direction into one sentence. At most, you would then need three sentences: one for positive effects, one for null effects, and one for negative effects.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="plots-of-binarynominal-ivs" class="level2">
+<h2 class="anchored" data-anchor-id="plots-of-binarynominal-ivs">Plots of binary/nominal IVs</h2>
+<ul>
+<li>For binary/nominal IVs, you only sometimes need a plot. It depends on how complicated the patterns are and how many categories you have of your IV and your DV</li>
+<li>All else equal, the more categories of the IV and/or the DV makes it more likely you will need a plot
+<ul>
+<li>Often helpful to make the plot to guide your interpretations even if the plot does not make it into the final article</li>
+</ul></li>
+<li>One option for binary/nominal IVs is to plot each set of predictions
+<ul>
+<li><strong>Pro</strong>: These are intuitive to understand</li>
+<li><strong>Con</strong>: These do not explicitly show the test of an effect of the focal IV</li>
+</ul></li>
+</ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
+<ul>
+<li>In Stata, <strong>marginsplot</strong> is not ideal for plots of predictions for nominal/ordinal outcome models
+<ul>
+<li>Instead, store predictions from <strong>margins</strong> and plot with <a href="https://repec.sowi.unibe.ch/stata/coefplot/getting-started.html"><strong>coefplot</strong></a></li>
+</ul></li>
+</ul>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>*4.3.a - Show pr() <span class="kw">of</span> each <span class="fu">group</span>; <span class="kw">default</span> is a <span class="bn">dot</span> plot</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">restore</span> pol3mod</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(results pol3mod are active now)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="fu">at</span>(college=0) <span class="kw">post</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Predictive margins                                       Number of obs = 7,823
+Model VCE: OIM
+
+1._predict: Pr(polviews3==Liberal), predict(pr outcome(1))
+2._predict: Pr(polviews3==Moderate), predict(pr outcome(2))
+3._predict: Pr(polviews3==Conservative), predict(pr outcome(3))
+
+At: college = 0
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |     Margin   std. err.      z    P&gt;|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+    _predict |
+          1  |      0.251      0.006   39.177   0.000        0.239       0.264
+          2  |      0.401      0.007   55.302   0.000        0.387       0.415
+          3  |      0.348      0.007   49.632   0.000        0.334       0.361
+------------------------------------------------------------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> col0</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">restore</span> pol3mod</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(results pol3mod are active now)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="fu">at</span>(college=1) <span class="kw">post</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Predictive margins                                       Number of obs = 7,823
+Model VCE: OIM
+
+1._predict: Pr(polviews3==Liberal), predict(pr outcome(1))
+2._predict: Pr(polviews3==Moderate), predict(pr outcome(2))
+3._predict: Pr(polviews3==Conservative), predict(pr outcome(3))
+
+At: college = 1
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |     Margin   std. err.      z    P&gt;|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+    _predict |
+          1  |      0.427      0.010   44.630   0.000        0.408       0.446
+          2  |      0.281      0.009   31.623   0.000        0.263       0.298
+          3  |      0.292      0.009   34.022   0.000        0.275       0.309
+------------------------------------------------------------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> col1</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>coefplot col0 col1, <span class="co">///</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">yline</span>(0) ylab(0(.1).5) vertical ciopts(<span class="kw">color</span>(*.3)) <span class="co">///</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    xlab(1 <span class="st">"Liberal"</span> 2 <span class="st">"Moderate"</span> 3 <span class="st">"Conservative"</span>) <span class="co">///</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    <span class="bn">legend</span>(<span class="kw">order</span>(2 <span class="st">"No Degree"</span> 4 <span class="st">"College"</span>)) <span class="co">///</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    <span class="bn">ytitle</span>(<span class="st">"Pr(Political View)"</span>) <span class="co">///</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[4.3.a] Probability of Each Political View Based on Educational Deg</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="st">ree"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><img src="fig/cda-04_03_a-polviews-01.png" class="img-fluid" style="width:80.0%" alt="[4.3.a] Dot plot of the predicted probability of each political view by college degree: liberal about 0.25 without a degree and 0.43 with one; moderate about 0.40 and 0.28; conservative about 0.35 and 0.29."></p>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<ul>
+<li>In R, use <a href="https://marginaleffects.com/bonus/plot.html"><strong>plot_predictions</strong></a>, the <strong>facet_wrap</strong> function, and include <strong>“group”</strong> in the <strong>by</strong> function for a fairly nice dot plot
+<ul>
+<li>Make sure to specify the counterfactual <strong>grid_type</strong> in <strong>newdata</strong> for average predictions, rather than predictions for modal person</li>
+</ul></li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 4.3.a - Show pr() of each group; dot plot</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_predictions</span>(pol3mod, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"college"</span>, <span class="st">"group"</span>),</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">newdata =</span> <span class="fu">datagrid</span>(<span class="at">college =</span> unique, <span class="at">grid_type =</span> <span class="st">"counterfactual"</span>)) <span class="sc">+</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> group) <span class="sc">+</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, .<span class="dv">5</span>, .<span class="dv">1</span>), <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, .<span class="dv">5</span>)) <span class="sc">+</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"[4.3.a] Probability of Each Political View Based on Educational Degree"</span>,</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="st">"Pr(Political View)"</span>) <span class="sc">+</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title.position =</span> <span class="st">"plot"</span>, <span class="at">legend.position =</span> <span class="st">"none"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="4-3-marginal-effects_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" style="width:80.0%" alt="[4.3.a] Dot plot of the predicted probability of each political view by college degree: liberal about 0.25 without a degree and 0.43 with one; moderate about 0.40 and 0.28; conservative about 0.35 and 0.29."></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>*4.3.b - Make a <span class="bn">bar</span> chart instead <span class="kw">of</span> <span class="kw">default</span> <span class="bn">dot</span> plot</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>coefplot (col0, <span class="kw">color</span>(<span class="bn">purple</span>)) (col1, <span class="kw">color</span>(<span class="bn">gold</span>)), <span class="co">///</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">recast</span>(<span class="bn">bar</span>) barw(0.2) vertical <span class="kw">yline</span>(0) ylab(0(.1).5) <span class="co">///</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    ciopts(<span class="kw">recast</span>(rcap) <span class="kw">color</span>(gs8)) citop <span class="co">///</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    xlab(1 <span class="st">"Liberal"</span> 2 <span class="st">"Moderate"</span> 3 <span class="st">"Conservative"</span>) <span class="co">///</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>    <span class="bn">legend</span>(<span class="kw">order</span>(1 <span class="st">"No Degree"</span> 3 <span class="st">"College"</span>)) <span class="co">///</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    <span class="bn">ytitle</span>(<span class="st">"Pr(Political View)"</span>) <span class="co">///</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[4.3.b] Probability of Each Political View Based on Educational Deg</span></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="st">ree"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><img src="fig/cda-04_03_b-polviews-01.png" class="img-fluid" style="width:80.0%" alt="[4.3.b] Bar chart of the same predictions: purple bars for no degree and gold bars for college for each political view, with confidence interval caps."></p>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 4.3.b - Make a bar chart instead of a dot plot</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>pr_college <span class="ot">&lt;-</span> <span class="fu">avg_predictions</span>(pol3mod, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"college"</span>, <span class="st">"group"</span>),</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">newdata =</span> <span class="fu">datagrid</span>(<span class="at">college =</span> unique, <span class="at">grid_type =</span> <span class="st">"counterfactual"</span>))</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(pr_college, <span class="fu">aes</span>(<span class="at">x =</span> group, <span class="at">y =</span> estimate, <span class="at">fill =</span> college)) <span class="sc">+</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">position =</span> <span class="fu">position_dodge</span>(<span class="at">width =</span> .<span class="dv">8</span>), <span class="at">width =</span> .<span class="dv">6</span>) <span class="sc">+</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_errorbar</span>(<span class="fu">aes</span>(<span class="at">ymin =</span> conf.low, <span class="at">ymax =</span> conf.high),</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">position =</span> <span class="fu">position_dodge</span>(<span class="at">width =</span> .<span class="dv">8</span>), <span class="at">width =</span> .<span class="dv">15</span>, <span class="at">color =</span> <span class="st">"gray50"</span>) <span class="sc">+</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"purple"</span>, <span class="st">"gold"</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"No Degree"</span>, <span class="st">"College"</span>)) <span class="sc">+</span></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, .<span class="dv">5</span>, .<span class="dv">1</span>), <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, .<span class="dv">5</span>)) <span class="sc">+</span></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"[4.3.b] Probability of Each Political View Based on Educational Degree"</span>,</span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="st">"Pr(Political View)"</span>, <span class="at">fill =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title.position =</span> <span class="st">"plot"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="4-3-marginal-effects_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" style="width:80.0%" alt="[4.3.b] Bar chart of the same predictions: purple bars for no degree and gold bars for college for each political view, with confidence interval caps."></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="plots-of-marginal-effects-for-binary-ivs" class="level2">
+<h2 class="anchored" data-anchor-id="plots-of-marginal-effects-for-binary-ivs">Plots of marginal effects for binary IVs</h2>
+<ul>
+<li>An alternative to plotting the predictions for each category of a binary/nominal IV is to plot the marginal effect for that variable (e.g., <em>college</em>: 1 vs 0)
+<ul>
+<li>Note this is the difference between each set of two bars above
+<ul>
+<li><strong>Pro</strong>: Half as many bars to plot; has information on significance test of the effect</li>
+<li><strong>Con</strong>: Less intuitive to readers—needs more explanation</li>
+</ul></li>
+</ul></li>
+<li>Make sure to always include a <strong>subtitle( )</strong> or a <strong>note( )</strong> on these plots to help readers interpret the direction of the effects</li>
+</ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
+<ul>
+<li>In Stata, estimate MEs using <strong>margins, dydx( )</strong> and then plot with <strong>marginsplot</strong>
+<ul>
+<li>Works well as dot plot or bar chart</li>
+</ul></li>
+</ul>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>*4.3.c - plot <span class="kw">of</span> MEs <span class="kw">for</span> binary IV</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">restore</span> pol3mod</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(results pol3mod are active now)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(college)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Average marginal effects                                 Number of obs = 7,823
+Model VCE: OIM
+
+dy/dx wrt: 1.college
+
+1._predict: Pr(polviews3==Liberal), predict(pr outcome(1))
+2._predict: Pr(polviews3==Moderate), predict(pr outcome(2))
+3._predict: Pr(polviews3==Conservative), predict(pr outcome(3))
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |      dy/dx   std. err.      z    P&gt;|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+0.college    |  (base outcome)
+-------------+----------------------------------------------------------------
+1.college    |
+    _predict |
+          1  |      0.176      0.012   14.634   0.000        0.152       0.199
+          2  |     -0.120      0.012  -10.061   0.000       -0.144      -0.097
+          3  |     -0.055      0.012   -4.784   0.000       -0.078      -0.033
+------------------------------------------------------------------------------
+Note: dy/dx for factor levels is the discrete change from the base level.</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>*Nicer <span class="bn">bar</span> chart with options</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>marginsplot, <span class="kw">recast</span>(<span class="bn">bar</span>) ciopts(<span class="kw">color</span>(gs8)) <span class="co">///</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    xlab(0.5 <span class="st">" "</span> 1 <span class="st">"Liberal"</span> 2 <span class="st">"Moderate"</span> 3 <span class="st">"Conservative"</span> 3.5 <span class="st">" "</span>) <span class="co">///</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">yline</span>(0) plotopts(barw(0.6) <span class="kw">color</span>(<span class="bn">ltblue</span>)) ylab(-.25(.05).25, <span class="kw">format</span>(%4.2f</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>)) <span class="co">///</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>    <span class="bn">xtitle</span>(<span class="st">"Political Views Outcome Category"</span>) <span class="bn">ytitle</span>(<span class="st">"Effect of College Degre</span></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a><span class="st">e"</span>) <span class="co">///</span></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[4.3.c] Average Marginal Effects of College Degree"</span>) <span class="co">///</span></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>    <span class="bn">subtitle</span>(<span class="st">"Effects Above Zero Indicate That Political View is More Likely f</span></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a><span class="st">or Someone with a College Degree"</span>, <span class="kw">size</span>(small))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Variables that uniquely identify margins:</code></pre>
+</div>
+<p><img src="fig/cda-04_03_c-polviews-01.png" class="img-fluid" style="width:80.0%" alt="[4.3.c] Bar chart of the average marginal effects of a college degree: about 0.18 for liberal, -0.12 for moderate, and -0.06 for conservative, with confidence intervals."></p>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>*4.3.<span class="kw">d</span> - Scatterplot <span class="kw">version</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="kw">dydx</span>(college)</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>marginsplot, <span class="kw">recast</span>(<span class="kw">scatter</span>) ciopts(<span class="kw">color</span>(gs8)) <span class="co">///</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    xlab(0.5 <span class="st">" "</span> 1 <span class="st">"Liberal"</span> 2 <span class="st">"Moderate"</span> 3 <span class="st">"Conservative"</span> 3.5 <span class="st">" "</span>) <span class="co">///</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">yline</span>(0) ylab(-.25(.05).25, <span class="kw">format</span>(%4.2f)) <span class="co">///</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>    <span class="bn">xtitle</span>(<span class="st">"Political Views Outcome Category"</span>) <span class="bn">ytitle</span>(<span class="st">"Effect of College Degre</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a><span class="st">e"</span>) <span class="co">///</span></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[4.3.d] Average Marginal Effects of College Degree"</span>) <span class="co">///</span></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>    <span class="bn">subtitle</span>(<span class="st">"Effects Above Zero Indicate That Political View is More Likely f</span></span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a><span class="st">or Someone with a College Degree"</span>, <span class="kw">size</span>(small))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Variables that uniquely identify margins:</code></pre>
+</div>
+<p><img src="fig/cda-04_03_d-polviews-01.png" class="img-fluid" style="width:80.0%" alt="[4.3.d] Dot plot of the same average marginal effects of a college degree (about 0.18, -0.12, and -0.06) with confidence intervals and a reference line at zero."></p>
+</div>
+<div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
+<ul>
+<li>In R, use <a href="https://marginaleffects.com/man/python/plot_comparisons.html"><strong>plot_comparisons</strong></a> and include <strong>“group”</strong> in the <strong>by</strong> function for a fairly nice dot plot
+<ul>
+<li>Add <strong>geom_hline(yintercept = 0)</strong> to easily see where a null effect is</li>
+</ul></li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 4.3.c - plot of MEs for binary IV: bar chart</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>me_college <span class="ot">&lt;-</span> <span class="fu">avg_comparisons</span>(pol3mod, <span class="at">variables =</span> <span class="st">"college"</span>)</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(me_college, <span class="fu">aes</span>(<span class="at">x =</span> group, <span class="at">y =</span> estimate)) <span class="sc">+</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">width =</span> .<span class="dv">6</span>, <span class="at">fill =</span> <span class="st">"lightblue"</span>) <span class="sc">+</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_errorbar</span>(<span class="fu">aes</span>(<span class="at">ymin =</span> conf.low, <span class="at">ymax =</span> conf.high), <span class="at">width =</span> .<span class="dv">1</span>, <span class="at">color =</span> <span class="st">"gray50"</span>) <span class="sc">+</span></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>) <span class="sc">+</span></span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="sc">-</span>.<span class="dv">25</span>, .<span class="dv">25</span>, .<span class="dv">05</span>), <span class="at">limits =</span> <span class="fu">c</span>(<span class="sc">-</span>.<span class="dv">25</span>, .<span class="dv">25</span>)) <span class="sc">+</span></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"[4.3.c] Average Marginal Effects of College Degree"</span>,</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Effects Above Zero Indicate That Political View is More Likely for Someone with a College Degree"</span>,</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Political Views Outcome Category"</span>, <span class="at">y =</span> <span class="st">"Effect of College Degree"</span>) <span class="sc">+</span></span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title.position =</span> <span class="st">"plot"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="4-3-marginal-effects_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" style="width:80.0%" alt="[4.3.c] Bar chart of the average marginal effects of a college degree: about 0.18 for liberal, -0.12 for moderate, and -0.06 for conservative, with confidence intervals."></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 4.3.d - dot plot version</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_comparisons</span>(pol3mod, <span class="at">variables =</span> <span class="st">"college"</span>, <span class="at">by =</span> <span class="st">"group"</span>) <span class="sc">+</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>) <span class="sc">+</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="sc">-</span>.<span class="dv">25</span>, .<span class="dv">25</span>, .<span class="dv">05</span>), <span class="at">limits =</span> <span class="fu">c</span>(<span class="sc">-</span>.<span class="dv">25</span>, .<span class="dv">25</span>)) <span class="sc">+</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"[4.3.d] Average Marginal Effects of College Degree"</span>,</span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Effects Above Zero Indicate That Political View is More Likely for Someone with a College Degree"</span>,</span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Political Views Outcome Category"</span>, <span class="at">y =</span> <span class="st">"Effect of College Degree"</span>) <span class="sc">+</span></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title.position =</span> <span class="st">"plot"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="4-3-marginal-effects_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" style="width:80.0%" alt="[4.3.d] Dot plot of the same average marginal effects of a college degree (about 0.18, -0.12, and -0.06) with confidence intervals and a reference line at zero."></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-6-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-1" role="tab" aria-controls="tabset-6-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-6-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-2" role="tab" aria-controls="tabset-6-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>*4.3.<span class="fu">e</span> - Invert x and <span class="fu">y</span>-axis <span class="kw">using</span> coefplot</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">restore</span> pol3mod</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(results pol3mod are active now)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="kw">dydx</span>(college) <span class="kw">post</span> <span class="co">// need to post predictions</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>coefplot, ylab(1 <span class="st">"Liberal"</span> 2 <span class="st">"Moderate"</span> 3 <span class="st">"Conservative"</span>) <span class="bn">xline</span>(0) <span class="co">///</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>    xlab(-.25(.05).25) <span class="bn">xtitle</span>(<span class="st">"Average Marginal Effects of College Degree"</span>) <span class="co">//</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>/</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[4.3.e] Effect of Educational Degree on Political Views"</span>) <span class="co">///</span></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>    <span class="bn">subtitle</span>(<span class="st">"Positive Effects Indicate That Political View is More Likely for</span></span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a><span class="st"> Someone with a College Degree"</span>, <span class="kw">size</span>(small))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><img src="fig/cda-04_03_e-polviews-01.png" class="img-fluid" style="width:80.0%" alt="[4.3.e] Horizontal dot plot with the outcomes on the vertical axis: the effect of a college degree is about 0.18 for liberal, -0.12 for moderate, and -0.06 for conservative, with a reference line at zero."></p>
+</div>
+<div id="tabset-6-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 4.3.e - Invert x and y-axis</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_comparisons</span>(pol3mod, <span class="at">variables =</span> <span class="st">"college"</span>, <span class="at">by =</span> <span class="st">"group"</span>) <span class="sc">+</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>) <span class="sc">+</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_discrete</span>(<span class="at">limits =</span> rev) <span class="sc">+</span></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="sc">-</span>.<span class="dv">25</span>, .<span class="dv">25</span>, .<span class="dv">05</span>), <span class="at">limits =</span> <span class="fu">c</span>(<span class="sc">-</span>.<span class="dv">25</span>, .<span class="dv">25</span>)) <span class="sc">+</span></span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"[4.3.e] Effect of Educational Degree on Political Views"</span>,</span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Positive Effects Indicate That Political View is More Likely for Someone with a College Degree"</span>,</span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="st">"Average Marginal Effects of College Degree"</span>) <span class="sc">+</span></span>
+<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title.position =</span> <span class="st">"plot"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="4-3-marginal-effects_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" style="width:80.0%" alt="[4.3.e] Horizontal dot plot with the outcomes on the vertical axis: the effect of a college degree is about 0.18 for liberal, -0.12 for moderate, and -0.06 for conservative, with a reference line at zero."></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-7-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-1" role="tab" aria-controls="tabset-7-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-7-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-2" role="tab" aria-controls="tabset-7-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-7-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-7-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>*4.3.f - Nice <span class="bn">bar</span> chart with different colors <span class="kw">for</span> polviews categories</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">restore</span> pol3mod</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(results pol3mod are active now)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(college) <span class="kw">predict</span>(outcome(1)) <span class="kw">post</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Average marginal effects                                 Number of obs = 7,823
+Model VCE: OIM
+
+Expression: Pr(polviews3==Liberal), predict(outcome(1))
+dy/dx wrt:  1.college
+
+-------------------------------------------------------------------------------
+              |            Delta-method
+              |      dy/dx   std. err.      z    P&gt;|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+      college |
+College De..  |      0.176      0.012   14.634   0.000        0.152       0.199
+-------------------------------------------------------------------------------
+Note: dy/dx for factor levels is the discrete change from the base level.</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> colme1</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">restore</span> pol3mod</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(results pol3mod are active now)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb47"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(college) <span class="kw">predict</span>(outcome(2)) <span class="kw">post</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Average marginal effects                                 Number of obs = 7,823
+Model VCE: OIM
+
+Expression: Pr(polviews3==Moderate), predict(outcome(2))
+dy/dx wrt:  1.college
+
+-------------------------------------------------------------------------------
+              |            Delta-method
+              |      dy/dx   std. err.      z    P&gt;|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+      college |
+College De..  |     -0.120      0.012  -10.061   0.000       -0.144      -0.097
+-------------------------------------------------------------------------------
+Note: dy/dx for factor levels is the discrete change from the base level.</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb49"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> colme2</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">restore</span> pol3mod</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(results pol3mod are active now)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb51"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(college) <span class="kw">predict</span>(outcome(3)) <span class="kw">post</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Average marginal effects                                 Number of obs = 7,823
+Model VCE: OIM
+
+Expression: Pr(polviews3==Conservative), predict(outcome(3))
+dy/dx wrt:  1.college
+
+-------------------------------------------------------------------------------
+              |            Delta-method
+              |      dy/dx   std. err.      z    P&gt;|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+      college |
+College De..  |     -0.055      0.012   -4.784   0.000       -0.078      -0.033
+-------------------------------------------------------------------------------
+Note: dy/dx for factor levels is the discrete change from the base level.</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb53"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> colme3</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>coefplot (colme1, <span class="kw">color</span>(<span class="bn">blue</span>)) (colme2, <span class="kw">color</span>(gs10)) (colme3, <span class="kw">color</span>(<span class="kw">red</span>)), <span class="co">///</span></span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">recast</span>(<span class="bn">bar</span>) barw(0.2) vertical <span class="kw">yline</span>(0) ylab(-.25(.05).25, <span class="kw">format</span>(%4.2f)) </span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a><span class="co">///</span></span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>    ciopts(<span class="kw">recast</span>(rcap) <span class="kw">color</span>(gs8)) citop <span class="co">///</span></span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>    <span class="bn">legend</span>(<span class="kw">order</span>(1 <span class="st">"Liberal"</span> 3 <span class="st">"Moderate"</span> 5 <span class="st">"Conservative"</span>)) <span class="co">///</span></span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>    <span class="bn">ytitle</span>(<span class="st">"Effect of College Degree"</span>) xlab(1 <span class="st">"Political Views Outcome Categor</span></span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a><span class="st">y"</span>) <span class="co">///</span></span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[4.3.f] Average Marginal Effects of College Degree"</span>) <span class="co">///</span></span>
+<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a>    <span class="bn">subtitle</span>(<span class="st">"Effects Above Zero Indicate That Political View is More Likely f</span></span>
+<span id="cb53-11"><a href="#cb53-11" aria-hidden="true" tabindex="-1"></a><span class="st">or Someone with a College Degree"</span>, <span class="kw">size</span>(small))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><img src="fig/cda-04_03_f-polviews-01.png" class="img-fluid" style="width:80.0%" alt="[4.3.f] Bar chart of the average marginal effects of a college degree with a different color for each outcome: blue liberal about 0.18, gray moderate about -0.12, red conservative about -0.06."></p>
+</div>
+<div id="tabset-7-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-7-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 4.3.f - Nice bar chart with different colors for polviews categories</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(me_college, <span class="fu">aes</span>(<span class="at">x =</span> group, <span class="at">y =</span> estimate, <span class="at">fill =</span> group)) <span class="sc">+</span></span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">width =</span> .<span class="dv">6</span>) <span class="sc">+</span></span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_errorbar</span>(<span class="fu">aes</span>(<span class="at">ymin =</span> conf.low, <span class="at">ymax =</span> conf.high), <span class="at">width =</span> .<span class="dv">1</span>, <span class="at">color =</span> <span class="st">"gray50"</span>) <span class="sc">+</span></span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>) <span class="sc">+</span></span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"blue"</span>, <span class="st">"gray70"</span>, <span class="st">"red"</span>)) <span class="sc">+</span></span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="sc">-</span>.<span class="dv">25</span>, .<span class="dv">25</span>, .<span class="dv">05</span>), <span class="at">limits =</span> <span class="fu">c</span>(<span class="sc">-</span>.<span class="dv">25</span>, .<span class="dv">25</span>)) <span class="sc">+</span></span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"[4.3.f] Average Marginal Effects of College Degree"</span>,</span>
+<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Effects Above Zero Indicate That Political View is More Likely for Someone with a College Degree"</span>,</span>
+<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Political Views Outcome Category"</span>, <span class="at">y =</span> <span class="st">"Effect of College Degree"</span>, <span class="at">fill =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb54-11"><a href="#cb54-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title.position =</span> <span class="st">"plot"</span>, <span class="at">axis.text.x =</span> <span class="fu">element_blank</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="4-3-marginal-effects_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" style="width:80.0%" alt="[4.3.f] Bar chart of the average marginal effects of a college degree with a different color for each outcome: blue liberal about 0.18, gray moderate about -0.12, red conservative about -0.06."></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="mes-for-multi-category-nominal-iv" class="level2">
+<h2 class="anchored" data-anchor-id="mes-for-multi-category-nominal-iv">MEs for multi-category nominal IV</h2>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-8-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-1" role="tab" aria-controls="tabset-8-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-8-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-2" role="tab" aria-controls="tabset-8-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-8-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-8-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb55"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>*4.3.g - Show pr() <span class="kw">of</span> each <span class="fu">group</span></span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">restore</span> pol3mod</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(results pol3mod are active now)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb57"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="fu">at</span>(race3=1) <span class="kw">post</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Predictive margins                                       Number of obs = 7,823
+Model VCE: OIM
+
+1._predict: Pr(polviews3==Liberal), predict(pr outcome(1))
+2._predict: Pr(polviews3==Moderate), predict(pr outcome(2))
+3._predict: Pr(polviews3==Conservative), predict(pr outcome(3))
+
+At: race3 = 1
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |     Margin   std. err.      z    P&gt;|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+    _predict |
+          1  |      0.308      0.006   53.069   0.000        0.296       0.319
+          2  |      0.343      0.006   56.053   0.000        0.331       0.355
+          3  |      0.349      0.006   57.431   0.000        0.337       0.361
+------------------------------------------------------------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb59"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> race1</span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">restore</span> pol3mod</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(results pol3mod are active now)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb61"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="fu">at</span>(race3=2) <span class="kw">post</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Predictive margins                                       Number of obs = 7,823
+Model VCE: OIM
+
+1._predict: Pr(polviews3==Liberal), predict(pr outcome(1))
+2._predict: Pr(polviews3==Moderate), predict(pr outcome(2))
+3._predict: Pr(polviews3==Conservative), predict(pr outcome(3))
+
+At: race3 = 2
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |     Margin   std. err.      z    P&gt;|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+    _predict |
+          1  |      0.364      0.014   25.203   0.000        0.336       0.392
+          2  |      0.406      0.015   27.781   0.000        0.377       0.434
+          3  |      0.230      0.013   17.802   0.000        0.205       0.256
+------------------------------------------------------------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb63"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> race2</span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">restore</span> pol3mod</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(results pol3mod are active now)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb65"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="fu">at</span>(race3=3) <span class="kw">post</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Predictive margins                                       Number of obs = 7,823
+Model VCE: OIM
+
+1._predict: Pr(polviews3==Liberal), predict(pr outcome(1))
+2._predict: Pr(polviews3==Moderate), predict(pr outcome(2))
+3._predict: Pr(polviews3==Conservative), predict(pr outcome(3))
+
+At: race3 = 3
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |     Margin   std. err.      z    P&gt;|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+    _predict |
+          1  |      0.346      0.017   20.308   0.000        0.313       0.379
+          2  |      0.388      0.018   21.901   0.000        0.354       0.423
+          3  |      0.266      0.016   16.143   0.000        0.233       0.298
+------------------------------------------------------------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb67"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> race3</span>
+<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>coefplot (race1, <span class="kw">color</span>(<span class="kw">green</span>*1.2)) (race2, <span class="kw">color</span>(<span class="bn">orange_red</span>)) (race3, <span class="kw">color</span>(<span class="bn">gs</span></span>
+<span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a>2)), <span class="co">///</span></span>
+<span id="cb67-4"><a href="#cb67-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">recast</span>(<span class="bn">bar</span>) barw(0.2) vertical <span class="kw">yline</span>(0) ylab(0(.1).5) <span class="co">///</span></span>
+<span id="cb67-5"><a href="#cb67-5" aria-hidden="true" tabindex="-1"></a>    ciopts(<span class="kw">recast</span>(rcap) <span class="kw">color</span>(gs8)) citop <span class="co">///</span></span>
+<span id="cb67-6"><a href="#cb67-6" aria-hidden="true" tabindex="-1"></a>    xlab(1 <span class="st">"Liberal"</span> 2 <span class="st">"Moderate"</span> 3 <span class="st">"Conservative"</span>, <span class="bn">labsize</span>(medsmall)) <span class="co">///</span></span>
+<span id="cb67-7"><a href="#cb67-7" aria-hidden="true" tabindex="-1"></a>    <span class="bn">legend</span>(<span class="kw">order</span>(1 <span class="st">"White"</span> 3 <span class="st">"Black"</span> 5 <span class="st">"Other Race"</span>)) <span class="co">///</span></span>
+<span id="cb67-8"><a href="#cb67-8" aria-hidden="true" tabindex="-1"></a>    <span class="bn">ytitle</span>(<span class="st">"Pr(Political Views)"</span>) <span class="co">///</span></span>
+<span id="cb67-9"><a href="#cb67-9" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[4.3.g] Probability of Each Political View Based on Race of Respond</span></span>
+<span id="cb67-10"><a href="#cb67-10" aria-hidden="true" tabindex="-1"></a><span class="st">ent"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><img src="fig/cda-04_03_g-polviews-01.png" class="img-fluid" style="width:80.0%" alt="[4.3.g] Bar chart of the predicted probability of each political view for White (green), Black (orange), and other race (dark gray) respondents: Black and other-race respondents are more likely to be liberal or moderate and less likely to be conservative (about 0.23 and 0.27 vs 0.35 for White respondents)."></p>
+</div>
+<div id="tabset-8-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-8-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb68"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 4.3.g - Show pr() of each group</span></span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a>pr_race <span class="ot">&lt;-</span> <span class="fu">avg_predictions</span>(pol3mod, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"race3"</span>, <span class="st">"group"</span>),</span>
+<span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">newdata =</span> <span class="fu">datagrid</span>(<span class="at">race3 =</span> unique, <span class="at">grid_type =</span> <span class="st">"counterfactual"</span>))</span>
+<span id="cb68-4"><a href="#cb68-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb68-5"><a href="#cb68-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(pr_race, <span class="fu">aes</span>(<span class="at">x =</span> group, <span class="at">y =</span> estimate, <span class="at">fill =</span> race3)) <span class="sc">+</span></span>
+<span id="cb68-6"><a href="#cb68-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">position =</span> <span class="fu">position_dodge</span>(<span class="at">width =</span> .<span class="dv">8</span>), <span class="at">width =</span> .<span class="dv">7</span>) <span class="sc">+</span></span>
+<span id="cb68-7"><a href="#cb68-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_errorbar</span>(<span class="fu">aes</span>(<span class="at">ymin =</span> conf.low, <span class="at">ymax =</span> conf.high),</span>
+<span id="cb68-8"><a href="#cb68-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">position =</span> <span class="fu">position_dodge</span>(<span class="at">width =</span> .<span class="dv">8</span>), <span class="at">width =</span> .<span class="dv">15</span>, <span class="at">color =</span> <span class="st">"gray50"</span>) <span class="sc">+</span></span>
+<span id="cb68-9"><a href="#cb68-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"forestgreen"</span>, <span class="st">"orangered"</span>, <span class="st">"gray20"</span>),</span>
+<span id="cb68-10"><a href="#cb68-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"White"</span>, <span class="st">"Black"</span>, <span class="st">"Other Race"</span>)) <span class="sc">+</span></span>
+<span id="cb68-11"><a href="#cb68-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, .<span class="dv">5</span>, .<span class="dv">1</span>), <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, .<span class="dv">5</span>)) <span class="sc">+</span></span>
+<span id="cb68-12"><a href="#cb68-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"[4.3.g] Probability of Each Political View Based on Race of Respondent"</span>,</span>
+<span id="cb68-13"><a href="#cb68-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="st">"Pr(Political Views)"</span>, <span class="at">fill =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb68-14"><a href="#cb68-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title.position =</span> <span class="st">"plot"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="4-3-marginal-effects_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" style="width:80.0%" alt="[4.3.g] Bar chart of the predicted probability of each political view for White (green), Black (orange), and other race (dark gray) respondents: Black and other-race respondents are more likely to be liberal or moderate and less likely to be conservative (about 0.23 and 0.27 vs 0.35 for White respondents)."></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-9-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-1" role="tab" aria-controls="tabset-9-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-9-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-2" role="tab" aria-controls="tabset-9-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-9-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-9-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb69"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>*4.3.<span class="kw">h</span> - Effects multi-category nominal IV (race)</span>
+<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">restore</span> pol3mod</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(results pol3mod are active now)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb71"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(race3) <span class="kw">predict</span>(outcome(1)) <span class="kw">post</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Average marginal effects                                 Number of obs = 7,823
+Model VCE: OIM
+
+Expression: Pr(polviews3==Liberal), predict(outcome(1))
+dy/dx wrt:  2.race3 3.race3
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |      dy/dx   std. err.      z    P&gt;|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+       race3 |
+      black  |      0.056      0.016    3.581   0.000        0.025       0.087
+      other  |      0.038      0.018    2.116   0.034        0.003       0.074
+------------------------------------------------------------------------------
+Note: dy/dx for factor levels is the discrete change from the base level.</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb73"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> raceme1</span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">restore</span> pol3mod</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(results pol3mod are active now)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb75"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(race3) <span class="kw">predict</span>(outcome(2)) <span class="kw">post</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Average marginal effects                                 Number of obs = 7,823
+Model VCE: OIM
+
+Expression: Pr(polviews3==Moderate), predict(outcome(2))
+dy/dx wrt:  2.race3 3.race3
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |      dy/dx   std. err.      z    P&gt;|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+       race3 |
+      black  |      0.062      0.016    3.905   0.000        0.031       0.094
+      other  |      0.045      0.019    2.391   0.017        0.008       0.082
+------------------------------------------------------------------------------
+Note: dy/dx for factor levels is the discrete change from the base level.</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb77"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> raceme2</span>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">restore</span> pol3mod</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(results pol3mod are active now)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb79"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(race3) <span class="kw">predict</span>(outcome(3)) <span class="kw">post</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Average marginal effects                                 Number of obs = 7,823
+Model VCE: OIM
+
+Expression: Pr(polviews3==Conservative), predict(outcome(3))
+dy/dx wrt:  2.race3 3.race3
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |      dy/dx   std. err.      z    P&gt;|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+       race3 |
+      black  |     -0.119      0.014   -8.228   0.000       -0.147      -0.090
+      other  |     -0.083      0.018   -4.728   0.000       -0.118      -0.049
+------------------------------------------------------------------------------
+Note: dy/dx for factor levels is the discrete change from the base level.</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb81"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> raceme3</span>
+<span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a>coefplot (raceme1, <span class="kw">color</span>(<span class="bn">blue</span>)) (raceme2, <span class="kw">color</span>(gs10)) (raceme3, <span class="kw">color</span>(<span class="kw">red</span>)), </span>
+<span id="cb81-3"><a href="#cb81-3" aria-hidden="true" tabindex="-1"></a><span class="co">///</span></span>
+<span id="cb81-4"><a href="#cb81-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">recast</span>(<span class="bn">bar</span>) barw(0.2) vertical <span class="kw">yline</span>(0) ylab(-.25(.05).25, <span class="kw">format</span>(%4.2f)) </span>
+<span id="cb81-5"><a href="#cb81-5" aria-hidden="true" tabindex="-1"></a><span class="co">///</span></span>
+<span id="cb81-6"><a href="#cb81-6" aria-hidden="true" tabindex="-1"></a>    ciopts(<span class="kw">recast</span>(rcap) <span class="kw">color</span>(gs8)) citop <span class="co">///</span></span>
+<span id="cb81-7"><a href="#cb81-7" aria-hidden="true" tabindex="-1"></a>    <span class="bn">legend</span>(<span class="kw">order</span>(1 <span class="st">"Liberal"</span> 3 <span class="st">"Moderate"</span> 5 <span class="st">"Conservative"</span>)) <span class="co">///</span></span>
+<span id="cb81-8"><a href="#cb81-8" aria-hidden="true" tabindex="-1"></a>    <span class="bn">ytitle</span>(<span class="st">"Effect of Race"</span>) xlab(0.5 <span class="st">" "</span> 1 <span class="st">"Black vs White"</span> 2 <span class="st">"Other vs White</span></span>
+<span id="cb81-9"><a href="#cb81-9" aria-hidden="true" tabindex="-1"></a><span class="st">"</span> 2.5 <span class="st">" "</span>) <span class="co">///</span></span>
+<span id="cb81-10"><a href="#cb81-10" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[4.3.h] Average Marginal Effects of Race"</span>) <span class="co">///</span></span>
+<span id="cb81-11"><a href="#cb81-11" aria-hidden="true" tabindex="-1"></a>    <span class="bn">subtitle</span>(<span class="st">"Effects Above Zero Indicate Minority Group is More Likely to Hol</span></span>
+<span id="cb81-12"><a href="#cb81-12" aria-hidden="true" tabindex="-1"></a><span class="st">d Political View than Whites"</span>, <span class="kw">size</span>(small))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><img src="fig/cda-04_03_h-polviews-01.png" class="img-fluid" style="width:80.0%" alt="[4.3.h] Bar chart of the average marginal effects of race for each outcome: Black vs White about 0.06 liberal, 0.06 moderate, and -0.12 conservative; other race vs White about 0.04, 0.05, and -0.08."></p>
+</div>
+<div id="tabset-9-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-9-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb82"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 4.3.h - Effects multi-category nominal IV (race)</span></span>
+<span id="cb82-2"><a href="#cb82-2" aria-hidden="true" tabindex="-1"></a>me_race <span class="ot">&lt;-</span> <span class="fu">avg_comparisons</span>(pol3mod, <span class="at">variables =</span> <span class="st">"race3"</span>)</span>
+<span id="cb82-3"><a href="#cb82-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb82-4"><a href="#cb82-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(me_race, <span class="fu">aes</span>(<span class="at">x =</span> contrast, <span class="at">y =</span> estimate, <span class="at">fill =</span> group)) <span class="sc">+</span></span>
+<span id="cb82-5"><a href="#cb82-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">position =</span> <span class="fu">position_dodge</span>(<span class="at">width =</span> .<span class="dv">8</span>), <span class="at">width =</span> .<span class="dv">7</span>) <span class="sc">+</span></span>
+<span id="cb82-6"><a href="#cb82-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_errorbar</span>(<span class="fu">aes</span>(<span class="at">ymin =</span> conf.low, <span class="at">ymax =</span> conf.high),</span>
+<span id="cb82-7"><a href="#cb82-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">position =</span> <span class="fu">position_dodge</span>(<span class="at">width =</span> .<span class="dv">8</span>), <span class="at">width =</span> .<span class="dv">15</span>, <span class="at">color =</span> <span class="st">"gray50"</span>) <span class="sc">+</span></span>
+<span id="cb82-8"><a href="#cb82-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>) <span class="sc">+</span></span>
+<span id="cb82-9"><a href="#cb82-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_discrete</span>(<span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Black vs White"</span>, <span class="st">"Other vs White"</span>)) <span class="sc">+</span></span>
+<span id="cb82-10"><a href="#cb82-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"blue"</span>, <span class="st">"gray70"</span>, <span class="st">"red"</span>)) <span class="sc">+</span></span>
+<span id="cb82-11"><a href="#cb82-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="sc">-</span>.<span class="dv">25</span>, .<span class="dv">25</span>, .<span class="dv">05</span>), <span class="at">limits =</span> <span class="fu">c</span>(<span class="sc">-</span>.<span class="dv">25</span>, .<span class="dv">25</span>)) <span class="sc">+</span></span>
+<span id="cb82-12"><a href="#cb82-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"[4.3.h] Average Marginal Effects of Race"</span>,</span>
+<span id="cb82-13"><a href="#cb82-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Effects Above Zero Indicate Minority Group is More Likely to Hold Political View than Whites"</span>,</span>
+<span id="cb82-14"><a href="#cb82-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="st">"Effect of Race"</span>, <span class="at">fill =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb82-15"><a href="#cb82-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title.position =</span> <span class="st">"plot"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="4-3-marginal-effects_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" style="width:80.0%" alt="[4.3.h] Bar chart of the average marginal effects of race for each outcome: Black vs White about 0.06 liberal, 0.06 moderate, and -0.12 conservative; other race vs White about 0.04, 0.05, and -0.08."></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-10-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-1" role="tab" aria-controls="tabset-10-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-10-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-2" role="tab" aria-controls="tabset-10-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-10-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-10-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb83"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a>*MEs</span>
+<span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a>mecompare race3, <span class="kw">model</span>(pol3mod) pwcompare</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Predicting: Pr(polviews3)
+Marginal effects (N_pol3mod=7823)
+
+                                 |  ME #   Estimate         SE      P&gt;|z|
+---------------------------------+---------------------------------------
+race3                            |                                       
+               black - white     |                                       
+               Liberal - pol3mod |     1      0.056      0.016      0.000
+              Moderate - pol3mod |     2      0.062      0.016      0.000
+          Conservative - pol3mod |     3     -0.119      0.014      0.000
+               other - white     |                                       
+               Liberal - pol3mod |     4      0.038      0.018      0.034
+              Moderate - pol3mod |     5      0.045      0.019      0.017
+          Conservative - pol3mod |     6     -0.083      0.018      0.000
+               other - black     |                                       
+               Liberal - pol3mod |     7     -0.018      0.022      0.418
+              Moderate - pol3mod |     8     -0.017      0.023      0.447
+          Conservative - pol3mod |     9      0.035      0.021      0.090</code></pre>
+</div>
+</div>
+<div id="tabset-10-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb85"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a><span class="co"># MEs</span></span>
+<span id="cb85-2"><a href="#cb85-2" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(pol3mod, <span class="at">variables =</span> <span class="fu">list</span>(<span class="at">race3 =</span> <span class="st">"pairwise"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+        Group      Contrast Estimate Std. Error     z Pr(&gt;|z|)    S    2.5 %  97.5 %
+ Liberal      black - white   0.0562     0.0157  3.58   &lt;0.001 11.5  0.02543  0.0869
+ Liberal      other - black  -0.0180     0.0222 -0.81   0.4181  1.3 -0.06150  0.0255
+ Liberal      other - white   0.0382     0.0180  2.12   0.0344  4.9  0.00281  0.0736
+ Moderate     black - white   0.0624     0.0160  3.91   &lt;0.001 13.4  0.03107  0.0937
+ Moderate     other - black  -0.0174     0.0228 -0.76   0.4471  1.2 -0.06210  0.0274
+ Moderate     other - white   0.0450     0.0188  2.39   0.0168  5.9  0.00812  0.0819
+ Conservative black - white  -0.1185     0.0144 -8.23   &lt;0.001 52.2 -0.14677 -0.0903
+ Conservative other - black   0.0353     0.0208  1.70   0.0897  3.5 -0.00548  0.0761
+ Conservative other - white  -0.0832     0.0176 -4.73   &lt;0.001 18.8 -0.11769 -0.0487
+
+Term: race3
+Type: probs</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<blockquote class="blockquote">
+<p><em>Black adults are significantly more likely to hold liberal or moderate political views, compared to White adults (both differences about 0.06). In contrast, Black adults have about a 0.12 lower probability of holding conservative political views than do White adults.</em></p>
+<p><em>Etc…</em></p>
+</blockquote>
+<section id="me-inequality-for-nominal-ivs" class="level3">
+<h3 class="anchored" data-anchor-id="me-inequality-for-nominal-ivs">ME inequality for nominal IVs</h3>
+<ul>
+<li>Combining nominal or ordinal IVs with nominal or ordinal outcomes presents a challenge of an overwhelming number of predictions and marginal effects to examine
+<ul>
+<li>The # of MEs for nominal/ordinal IVs in nominal/ordinal DV models = the # of outcome categories * the # of pairwise comparisons of the nominal/ordinal IV
+<ul>
+<li>For a nominal independent variable with <em>L</em> categories and a nominal or ordinal outcome with <span class="math inline">\(\Lambda\)</span> outcome categories</li>
+</ul></li>
+</ul></li>
+</ul>
+<p><span class="math display">\[\#\ of\ MEs = \Lambda * \frac{L(L - 1)}{2}\]</span></p>
+<ul>
+<li>One solution, simplify down to the ME inequality per outcome category <span class="math inline">\(\lambda\)</span> (<a href="../../../research/mize_han_socsci_2025.html">Mize and Han 2025</a>)</li>
+</ul>
+<p><span class="math display">\[{ME\ inequality}_{\lambda} \equiv |average\ weighted\ ME\ inequality|_{\lambda} = \sum_{a = 1}^{L}\sum_{b = 2;\ b &gt; a}^{L}\frac{w_{a,b}}{L - 1} \left|\eta_{\lambda}(x_{k} = a, \mathbf{x}_{-k} = \mathbf{x}_{-k}^{*}) - \eta_{\lambda}(x_{k} = b, \mathbf{x}_{-k} = \mathbf{x}_{-k}^{*})\right|\]</span></p>
+<p><em>“This procedure will greatly simplify interpretation. For example, with a four-category DV and a six-category IV there are</em></p>
+<p><span class="math display">\[\Lambda * \frac{L(L - 1)}{2} = 4 * \frac{6(6 - 1)}{2} = 4 * 15 = 60\]</span></p>
+<p><em>60 marginal effects. In contrast, there are always only</em> <span class="math inline">\(\Lambda\)</span> <span class="math inline">\({ME\ inequality}_{\lambda}\)</span> <em>measures; in this case, four.”</em> (<a href="../../../research/mize_han_socsci_2025.html">Mize and Han 2025</a>)</p>
+<ul>
+<li>In Stata, use the <a href="../../../software/meinequality/index.html"><strong>meinequality</strong></a> command or the <strong>meinequality</strong> option of <strong>mecompare</strong>
+<ul>
+<li>In R, use the <a href="../../../software/meinequality_r/index.html"><strong>meineq()</strong> function on <strong>avg_comparisons</strong></a></li>
+</ul></li>
+</ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-11-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-11-1" role="tab" aria-controls="tabset-11-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-11-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-11-2" role="tab" aria-controls="tabset-11-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-11-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-11-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb87"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a>*ME inequality</span>
+<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a>meinequality race3, <span class="kw">model</span>(pol3mod)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>ME Inequality Estimates (N = 7823)
+
+                         |   Estimate   Std. err.           z       P&gt;|z| 
+-------------------------+-----------------------------------------------
+race3 ME Ineq.           |                                               
+             Pr(Liberal) |      0.044       0.011       3.920       0.000 
+            Pr(Moderate) |      0.050       0.012       4.300       0.000 
+        Pr(Conservative) |      0.094       0.011       8.822       0.000 </code></pre>
+</div>
+</div>
+<div id="tabset-11-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-11-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb89"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ME inequality</span></span>
+<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(pol3mod, <span class="at">variables =</span> <span class="fu">list</span>(<span class="at">race3 =</span> <span class="st">"pairwise"</span>),</span>
+<span id="cb89-3"><a href="#cb89-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">hypothesis =</span> <span class="fu">meineq</span>(pol3mod))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+        Group Estimate Std. Error    z Pr(&gt;|z|)    S  2.5 % 97.5 %
+ Liberal        0.0440     0.0112 3.92   &lt;0.001 13.5 0.0220 0.0659
+ Moderate       0.0496     0.0115 4.30   &lt;0.001 15.8 0.0270 0.0722
+ Conservative   0.0936     0.0106 8.82   &lt;0.001 59.6 0.0728 0.1144
+
+Term: race3
+Type: probs</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<blockquote class="blockquote">
+<p><em>On average, individuals from different racial-ethnic groups differ by 4.4 percentage points in their probability of identifying as liberal</em></p>
+</blockquote>
+<ul>
+<li>Can test equality of any two ME inequalities using <strong>mecompare</strong> and <strong>metest</strong></li>
+</ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-12-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-12-1" role="tab" aria-controls="tabset-12-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-12-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-12-2" role="tab" aria-controls="tabset-12-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-12-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-12-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb91"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a>mecompare race3, <span class="kw">model</span>(pol3mod) meinequality</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Predicting: Pr(polviews3)
+Marginal effects (N_pol3mod=7823)
+
+                                 |  ME #   Estimate         SE      P&gt;|z|
+---------------------------------+---------------------------------------
+race3                            |                                       
+               ME Inequality     |                                       
+               Liberal - pol3mod |     1      0.044      0.011      0.000
+              Moderate - pol3mod |     2      0.050      0.012      0.000
+          Conservative - pol3mod |     3      0.094      0.011      0.000
+               black - white     |                                       
+               Liberal - pol3mod |     4      0.056      0.016      0.000
+              Moderate - pol3mod |     5      0.062      0.016      0.000
+          Conservative - pol3mod |     6     -0.119      0.014      0.000
+               other - white     |                                       
+               Liberal - pol3mod |     7      0.038      0.018      0.034
+              Moderate - pol3mod |     8      0.045      0.019      0.017
+          Conservative - pol3mod |     9     -0.083      0.018      0.000</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb93"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a>metest 3 - 1</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>                                 |  estimate         se     pvalue 
+---------------------------------+--------------------------------
+ race3_MEineq_3 - race3_MEineq_1 |     0.050      0.012      0.000 </code></pre>
+</div>
+</div>
+<div id="tabset-12-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-12-2-tab">
+<div class="callout callout-style-simple callout-note no-icon">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>In R, use the <strong>hypothesis</strong> option of <strong>avg_comparisons</strong></p>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb95"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a>me_ineq <span class="ot">&lt;-</span> <span class="fu">avg_comparisons</span>(pol3mod, <span class="at">variables =</span> <span class="fu">list</span>(<span class="at">race3 =</span> <span class="st">"pairwise"</span>),</span>
+<span id="cb95-2"><a href="#cb95-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">hypothesis =</span> <span class="fu">meineq</span>(pol3mod))</span>
+<span id="cb95-3"><a href="#cb95-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb95-4"><a href="#cb95-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Pr(Conservative) ME inequality - Pr(Liberal) ME inequality</span></span>
+<span id="cb95-5"><a href="#cb95-5" aria-hidden="true" tabindex="-1"></a><span class="fu">hypotheses</span>(me_ineq, <span class="at">hypothesis =</span> <span class="st">"b3 - b1 = 0"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+ Hypothesis Estimate Std. Error   z Pr(&gt;|z|)    S 2.5 % 97.5 %
+    b3-b1=0   0.0496     0.0115 4.3   &lt;0.001 15.8 0.027 0.0722</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<blockquote class="blockquote">
+<p><em>Racial-ethnic groups differ more in their identification as conservative than in their identification as liberal</em></p>
+</blockquote>
+</section>
+</section>
+<section id="total-marginal-effects" class="level2">
+<h2 class="anchored" data-anchor-id="total-marginal-effects">Total marginal effects</h2>
+<ul>
+<li>With a linear or binary outcome, a single ME summarizes the total effect of a continuous or binary IV
+<ul>
+<li><a href="../../../research/mize_han_socsci_2025.html">Mize and Han (2025)</a> suggest that similar logic can be applied in nominal and ordinal outcome models by aggregating the effect of a single IV across each outcome category</li>
+<li>That is, an IV’s total effect is its holistic effect across all outcomes
+<ul>
+<li>Then, the <strong>total ME</strong> statistic is simply the sum of all the marginal effects for that IV (using absolute values) divided by two*</li>
+</ul></li>
+</ul></li>
+</ul>
+<p><span class="math display">\[total\ ME = \frac{\sum_{\lambda = 1}^{\Lambda}\left|\eta_{\lambda}(x_{k} = end, \mathbf{x}_{-k} = \mathbf{x}_{-k}^{*}) - \eta_{\lambda}(x_{k} = start, \mathbf{x}_{-k} = \mathbf{x}_{-k}^{*})\right|}{2}\]</span></p>
+<blockquote class="blockquote">
+<p><em>“The total ME represents the proportion of observations that are predicted to change outcomes given a change in the independent variable. Put another way, this represents the complete effect of the independent variable across all outcome categories.”</em> (<a href="../../../research/mize_han_socsci_2025.html">Mize and Han 2025</a>)</p>
+</blockquote>
+<p>*The <em>total ME</em> is divided by two to account for the fact that MEs in multi-outcome models are symmetric/zero-sum.</p>
+<ul>
+<li>In Stata, use the <a href="../../../software/totalme/index.html"><strong>totalme</strong></a> command or the <strong>totalme</strong> option of <strong>mecompare</strong>
+<ul>
+<li>In R, use the <a href="../../../software/totalme_r/index.html"><strong>totalme()</strong> function on <strong>avg_comparisons</strong></a></li>
+</ul></li>
+</ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-13-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-13-1" role="tab" aria-controls="tabset-13-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-13-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-13-2" role="tab" aria-controls="tabset-13-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-13-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-13-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb97"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a>*continuous and binary IVs</span>
+<span id="cb97-2"><a href="#cb97-2" aria-hidden="true" tabindex="-1"></a>totalme college age, amount(trimrange) <span class="kw">model</span>(pol3mod)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Total ME Estimates (N = 7823)
+
+                         |   Estimate   Std. err.           z       P&gt;|z| 
+-------------------------+-----------------------------------------------
+college                  |                                               
+College De vs No Col Deg |      0.176       0.012      14.634       0.000 
+-------------------------+-----------------------------------------------
+age                      |                                               
+               p5 to p95 |      0.157       0.020       8.017       0.000 </code></pre>
+</div>
+</div>
+<div id="tabset-13-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-13-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb99"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a><span class="co"># continuous and binary IVs</span></span>
+<span id="cb99-2"><a href="#cb99-2" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(pol3mod, <span class="at">variables =</span> <span class="fu">list</span>(<span class="at">college =</span> <span class="st">"reference"</span>,</span>
+<span id="cb99-3"><a href="#cb99-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">age =</span> <span class="fu">quantile</span>(gss<span class="sc">$</span>age, <span class="fu">c</span>(.<span class="dv">05</span>, .<span class="dv">95</span>))),</span>
+<span id="cb99-4"><a href="#cb99-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">hypothesis =</span> <span class="fu">totalme</span>(pol3mod))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+    Term Estimate Std. Error     z Pr(&gt;|z|)     S 2.5 % 97.5 %
+ age        0.157     0.0195  8.02   &lt;0.001  49.7 0.118  0.195
+ college    0.176     0.0120 14.63   &lt;0.001 158.7 0.152  0.199
+
+Type: probs</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<blockquote class="blockquote">
+<p><em>Those with and without college degrees differ by about 18 percentage points in their political views</em></p>
+<p><em>Across the range of age, political views differ by about 16 total percentage points</em></p>
+</blockquote>
+<section id="total-marginal-effect-inequality-statistics" class="level3">
+<h3 class="anchored" data-anchor-id="total-marginal-effect-inequality-statistics">Total marginal effect inequality statistics</h3>
+<ul>
+<li>We can combine the <em>ME inequality</em> approach to summarizing nominal and ordinal IV effects with the <em>total ME</em> approach developed in the prior section to obtain a single summary measure
+<ul>
+<li>In this case, the <em>total ME inequality</em> for a nominal or ordinal IV is simply the sum of the <span class="math inline">\({ME\ inequality}_{\lambda}\)</span> measures divided by two.</li>
+</ul></li>
+</ul>
+<p><span class="math display">\[total\ ME\ inequality = \frac{\sum_{\lambda = 1}^{\Lambda}{ME\ inequality}_{\lambda}}{2}\]</span></p>
+<ul>
+<li>The default statistic for <strong>totalme</strong> after a nominal model is the total ME inequality</li>
+</ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-14-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-14-1" role="tab" aria-controls="tabset-14-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-14-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-14-2" role="tab" aria-controls="tabset-14-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-14-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-14-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb101"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb101-1"><a href="#cb101-1" aria-hidden="true" tabindex="-1"></a>*nominal IV gives the <span class="kw">total</span> ME inequality</span>
+<span id="cb101-2"><a href="#cb101-2" aria-hidden="true" tabindex="-1"></a>totalme race3, <span class="kw">model</span>(pol3mod)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Total ME Estimates (N = 7823)
+
+                         |   Estimate   Std. err.           z       P&gt;|z| 
+-------------------------+-----------------------------------------------
+race3                    |                                               
+          total ME Ineq. |      0.094       0.011       8.822       0.000 </code></pre>
+</div>
+</div>
+<div id="tabset-14-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-14-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb103"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb103-1"><a href="#cb103-1" aria-hidden="true" tabindex="-1"></a><span class="co"># nominal IV gives the total ME inequality</span></span>
+<span id="cb103-2"><a href="#cb103-2" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(pol3mod, <span class="at">variables =</span> <span class="fu">list</span>(<span class="at">race3 =</span> <span class="st">"pairwise"</span>),</span>
+<span id="cb103-3"><a href="#cb103-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">hypothesis =</span> <span class="fu">totalme</span>(pol3mod))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+ Estimate Std. Error    z Pr(&gt;|z|)    S  2.5 % 97.5 %
+   0.0936     0.0106 8.82   &lt;0.001 59.6 0.0728  0.114
+
+Term: race3
+Type: probs</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<blockquote class="blockquote">
+<p><em>Racial-ethnic groups differ by a little over 9 percentage points in total in their political views</em></p>
+</blockquote>
+</section>
+<section id="total-marginal-effects-for-comparing-effects" class="level3">
+<h3 class="anchored" data-anchor-id="total-marginal-effects-for-comparing-effects">Total marginal effects for comparing effects</h3>
+<ul>
+<li>Total marginal effects are especially helpful if you want to compare effects
+<ul>
+<li>How would you determine if age or college had a larger effect when there are four MEs for each IV?
+<ul>
+<li>The total ME provides one # per IV</li>
+</ul></li>
+</ul></li>
+<li>Tests of interaction and cross-model comparisons like mediation similarly benefit from a total ME
+<ul>
+<li>Is the effect of age different for men and women?
+<ul>
+<li>Instead of testing per outcome category, total ME gives one answer</li>
+</ul></li>
+<li>Does SES explain part of the racial-ethnic gaps?
+<ul>
+<li>Calculate a total ME for <em>race</em> in a model with and without SES</li>
+</ul></li>
+</ul></li>
+</ul>
+
+
+</section>
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/www\.trentonmize\.com");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../../../teaching/cda/04/4-2-predicted-probabilities.html" class="pagination-link" aria-label="4.2 Predicted Probabilities">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">4.2 Predicted Probabilities</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../../teaching/cda/04/4-4-four-category-example.html" class="pagination-link" aria-label="4.4 Example with 4 DV Categories">
+        <span class="nav-page-text">4.4 Example with 4 DV Categories</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Trenton D. Mize, Purdue University</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org">Quarto</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

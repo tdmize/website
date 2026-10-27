@@ -1,0 +1,174 @@
+---
+title: "Appendix 4B: Stata Code and Tips"
+---
+
+![](images/stata-logo.png){width=35% fig-alt="Stata 17 logo."}
+
+- For all sets of lecture notes, there is an accompanying replication Stata do-file ([available here](https://drive.google.com/drive/folders/1E0tqULBiY1WKic3A6pSG0_vFlcP-dhcF?usp=sharing) or on Brightspace)
+  - This includes all of the Stata code necessary to recreate anything in the slides
+- In this Appendix, I include some comments, notes, and examples for things that are new or that might be hard to follow without more detail
+- For more streamlined, less complicated, and more notated do-files showing the basics of the types of analyses covered in this section, see the [Assignment example code](https://drive.google.com/drive/folders/1kcmZsaKoyZ4Y51X9BjmCZMuLGsw4GKNx?usp=sharing) (also available on Brightspace)
+
+## A4.2 Plots of predicted probabilities
+
+- The same tools can be used for plotting predictions from **mlogit** that we have used throughout the class *for continuous IVs*
+  - Use **margins** to make the predictions
+    - **margins** automatically makes separate predictions for each outcome category (and defaults to predicted probabilities)
+  - Use **marginsplot** to graph the predictions
+    - **marginsplot** does not nicely label the predictions
+      - i.e. It defaults to "Pr(Outcome = 1)" rather than "Pr(Liberal)"
+    - Use the **legend(order( ))** option to label the predictions
+      - Label the predictions in order of the categories of the DV by specifying the #, a space, and "the label" in quotes
+  - As nominal models produce multiple prediction lines, including CIs can sometimes make the plot impossible to read; option **noci** will omit them
+
+```stata
+qui margins, at(age=(18(5)88))
+
+marginsplot, noci ///
+    legend(order(1 "Liberal" 2 "Moderate" 3 "Conservative"))
+```
+
+### Plots of predictions for binary IVs
+
+- **marginsplot** makes OK plots of marginal effects for binary variables
+  - It does not handle nominal IV's with 3+ categories well
+- **coefplot** ([Jann 2014 *StataJ*](https://www.stata-journal.com/sjpdf.html?articlenum=gr0059); [more **coefplot** examples](https://www.stata.com/meeting/germany14/abstracts/materials/de14_jann.pdf)) is very similar to **marginsplot** but works with a wider array of estimates (e.g. regression results in addition to **margins** results) and is more flexible
+  - Makes nicer and more customizable bar charts than **marginsplot** can
+  - Handles nominal IV's with 3+ categories well and with the same basic syntax as for a binary IV
+- To make a plot of predictions:
+  - Make sets of predictions for each level of your IV (e.g. *college* = 0 and at *college* = 1) using **margins**
+  - Store the predictions with **estimates store**
+  - Make the plot using **coefplot**
+
+#### coefplot example
+
+```stata
+est restore pol3mod
+margins, at(college=0) post
+est store col0
+
+est restore pol3mod
+margins, at(college=1) post
+est store col1
+
+coefplot (col0, color(purple)) (col1, color(gold)), ///
+    recast(bar) barw(0.2) vertical yline(0) ylab(0(.1).5) ///
+    ciopts(recast(rcap) color(gs8)) citop … title options …
+```
+
+## A4.3 Plots of MEs for Binary/Nominal IVs
+
+- To obtain marginal effects, use the **dydx( )** option on **margins**. This will automatically calculate marginal effects for each outcome category
+  - Note, the following three plots are all based on the margins output from the following command: **margins, dydx(college)**
+
+```stata
+margins, dydx(college)
+marginsplot, recast(bar) xlab(1 "Liberal" 2 "Moderate" 3 "Conservative")
+```
+
+- Note that for this type of plot you need to label your predictions with the **xlab( )** option. The defaults from this type of **marginsplot** leave much to be desired
+  - A few options make a huge difference
+
+```stata
+marginsplot, recast(bar) ciopts(color(gs8)) ///
+    xlab(0.5 " " 1 "Liberal" 2 "Moderate" 3 "Conservative" 3.5 " ") ///
+    yline(0) plotopts(barw(0.6) color(ltblue)) … title options …
+```
+
+- Alternatively, can use a dot plot instead of a bar chart via the **recast(scatter)** option:
+
+```stata
+marginsplot, recast(scatter) ciopts(color(gs8)) yline(0) ///
+    xlab(0.5 " " 1 "Liberal" 2 "Moderate" 3 "Conservative" 3.5 " ") … title options …
+```
+
+### coefplot for a vertical plot of effects
+
+- The primary purpose of **coefplot** is for dot plots of coefficients (hence the name) but **coefplot** also plays nicely with **margins** estimates (if you **post** them)
+- By default, these are similar to the plots above, but with the x and y-axes flipped
+  - This is particularly useful if you have many categories of your DV as it is much easier to fit in lots of readable category labels
+
+```stata
+est restore pol3mod               // restore regression estimates
+qui margins, dydx(college) post   // need to post predictions
+coefplot, ylab(1 "Liberal" 2 "Moderate" 3 "Conservative") xline(0) ///
+    … title options …
+```
+
+### coefplot for Plots of Binary/Nominal IVs
+
+- Estimate separate predictions for each outcome category---which you specify with the option **predict(outcome(#))** on **margins**
+  - Make sure to **post** the predictions to store them
+
+```stata
+est restore pol3mod
+margins, dydx(college) predict(outcome(1)) post
+est store colme1
+
+est restore pol3mod
+margins, dydx(college) predict(outcome(2)) post
+est store colme2
+
+est restore pol3mod
+margins, dydx(college) predict(outcome(3)) post
+est store colme3
+
+coefplot (colme1, color(blue)) (colme2, color(gs10)) (colme3, color(red)), ///
+    recast(bar) barw(0.2) vertical yline(0) ///
+    ciopts(recast(rcap) color(gs8)) citop ///
+    legend(order(1 "Liberal" 3 "Moderate" 5 "Conservative")) ///
+    xlab(1 "Political Views Outcome Category") ///
+    … title options …
+```
+
+- An advantage of **coefplot** is that it treats each marginal effect separately so you can customize the plot such as making the bars different colors
+
+### Plots of predictions for multi-category nominal IV
+
+- Making plots of predictions when your nominal IV has more than 2 categories is no harder than before
+  - Need to make a separate set of predictions for each level of the nominal IV (e.g. below example, at race3 = 1, race3 = 2, race3 = 3)
+  - Store predictions and plot with **coefplot**
+
+```stata
+est restore pol3mod
+margins, at(race3=1) post
+est store race1
+
+est restore pol3mod
+margins, at(race3=2) post
+est store race2
+
+est restore pol3mod
+margins, at(race3=3) post
+est store race3
+
+coefplot (race1, color(green*1.2)) (race2, color(orange_red)) (race3, color(gs2)), ///
+    recast(bar) barw(0.2) vertical yline(0) ylab(0(.1).5) ///
+    ciopts(recast(rcap) color(gs8)) citop … title options …
+```
+
+### Marginal effects plots for multi-category nominal IV
+
+- **margins** handles multi-category nominal variables easily to calculate the marginal effects when you use the **dydx( )** option, but **marginsplot** does not plot them effectively. Using **coefplot** to make the marginal effects plots is the best solution:
+
+```stata
+est restore pol3mod
+margins, dydx(race3) predict(outcome(1)) post
+est store raceme1
+
+est restore pol3mod
+margins, dydx(race3) predict(outcome(2)) post
+est store raceme2
+
+est restore pol3mod
+margins, dydx(race3) predict(outcome(3)) post
+est store raceme3
+
+coefplot (raceme1, color(blue)) (raceme2, color(gs10)) (raceme3, color(red)), ///
+    recast(bar) barw(0.2) vertical yline(0) ///
+    ciopts(recast(rcap) color(gs8)) citop ///
+    legend(order(1 "Liberal" 3 "Moderate" 5 "Conservative")) ///
+    xlab(0.5 " " 1 "Black vs White" 2 "Other vs White" 2.5 " ") … title options …
+```
+
+*Note a trick I used on the **xlab( )** option. I put a blank / invisible marker at 0.5 and 2.5 using **" "** so that the bars aren't stretched to the edges of the chart*

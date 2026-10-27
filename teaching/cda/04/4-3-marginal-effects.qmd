@@ -1,0 +1,1048 @@
+---
+title: "4.3 Marginal Effects"
+---
+
+- The interpretation of a **marginal effect** in multinomial logit is all but identical to the interpretation in binary logit/probit:
+
+  *MEM: The difference in Pr(y = j \| **x**) for a change in x~k~ of δ, holding other control variables at their means*
+
+  *AME: On average, the difference in Pr(y = j \| **x**) for a change in x~k~ of δ*
+
+  - Here, we predict Pr(*y* = *j*), not Pr(*y*=1) as in the binary case
+    - And have *J* total Pr(*y* = *j*), and thus *J* total MEs
+- Decisions about where to hold the control variables follow the same logic as before (at their mean for MEM; average over observed values for AME; etc.)
+- Decisions about the size of *δ* to use are the same
+  - An instantaneous rate of change / slope (first derivative)
+  - A finite change, AKA a discrete change
+    - Can be any amount, e.g. one unit, SD, etc.
+    - I find discrete changes most useful
+
+## Marginal effects at the mean (MEM)
+
+- Formulas for MEMs and AMEs are identical to before in linear and binary models. Only the formula for $\eta$ has changed (we use the formulas [above](4-2-predicted-probabilities.qmd#predicted-probabilities-in-multinomial-logit))
+- For the MEM, we hold the control variables ($\mathbf{x}_{-k}$) at their means ($\overline{\mathbf{x}}$)
+
+$$MEM = \eta(x_{k} = end, \mathbf{x}_{-k} = \overline{\mathbf{x}}) - \eta(x_{k} = start, \mathbf{x}_{-k} = \overline{\mathbf{x}})$$
+
+- E.g., For a binary variable (e.g. *woman*):
+
+$${MEM}_{binary} = \eta(x_{k} = 1, \mathbf{x}_{-k} = \overline{\mathbf{x}}) - \eta(x_{k} = 0, \mathbf{x}_{-k} = \overline{\mathbf{x}})$$
+
+- E.g., For a continuous variable (e.g., *age*) could compare predictions at the mean and at the mean + SD:
+
+$${MEM}_{continuous} = \eta(x_{k} = \overline{x}_{k} + SD, \mathbf{x}_{-k} = \overline{\mathbf{x}}) - \eta(x_{k} = \overline{x}_{k}, \mathbf{x}_{-k} = \overline{\mathbf{x}})$$
+
+- Because control variables were held at the sample means, can interpret MEM as effect *"for the average person"* in the data or someone *"average on all other variables included in the model"*
+
+## Average marginal effects (AMEs)
+
+- For an AME, we first compute a marginal effect for each observation in the data with the control variables held at their observed values for that specific observation ($\mathbf{x}_{-k,i}$):
+
+$${ME}_{i} = \eta(x_{k} = {end}_{i}, \mathbf{x}_{-k} = \mathbf{x}_{-k,i}) - \eta(x_{k} = {start}_{i}, \mathbf{x}_{-k} = \mathbf{x}_{-k,i})$$
+
+- The **average marginal effect** (AME) averages these effects over all observations in the data:
+
+$$AME = \frac{1}{N}\sum_{i = 1}^{N}\left\{\eta(x_{k} = {end}_{i}, \mathbf{x}_{-k} = \mathbf{x}_{-k,i}) - \eta(x_{k} = {start}_{i}, \mathbf{x}_{-k} = \mathbf{x}_{-k,i})\right\}$$
+
+- Thus, the AME is interpreted as the effect "on average" in the data
+
+### Average marginal effects (AMEs): Age
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/cda_gss", clear
+(cda_gss.dta |  GSS 1972-2021 CDA - Categorical Data Analysis | date created 202
+> 3)
+
+. 
+. keep if year >= 2016 & year <= 2021
+(59,599 observations deleted)
+
+. 
+. drop if missing(conserv, age, woman, race3, college, married, parent, faminc)
+(1,421 observations deleted)
+
+. 
+. *3 category political views var
+. qui mlogit polviews3 c.age i.woman i.race3 i.college ///
+>     i.married i.parent c.faminc i.employed
+
+. est store pol3mod
+
+. 
+. // AMEs +SD of age
+. mecompare age, amount(sd) model(pol3mod)
+
+Predicting: Pr(polviews3)
+Marginal effects (N_pol3mod=7823)
+
+                                 |  ME #   Estimate         SE      P>|z|
+---------------------------------+---------------------------------------
+age + SD (centered)              |                                       
+               Liberal - pol3mod |     1     -0.020      0.006      0.001
+              Moderate - pol3mod |     2     -0.029      0.006      0.000
+          Conservative - pol3mod |     3      0.049      0.006      0.000
+
+```
+
+## R
+
+```{r}
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(ggplot2)         # graphs
+library(nnet)            # multinomial logit: multinom()
+library(marginaleffects) # predictions and marginal effects
+library(cleanplots)      # graph scheme
+cleanplots_defaults()
+
+source("https://raw.githubusercontent.com/tdmize/Rfunctions/main/ME_helper_functions.R")
+
+# Center changes in continuous IVs on each observation's value
+options(marginaleffects_contrast_direction = "center")
+
+gss <- read_dta("https://tdmize.github.io/data/data/cda_gss.dta")
+
+gss <- gss |> filter(year >= 2016 & year <= 2021)
+
+# Keep model variables; drop any missing data
+gss <- gss[c("polviews3", "age", "woman", "race3", "college", "married", "parent",
+  "faminc", "employed", "conserv")]
+gss <- gss[complete.cases(gss[c("conserv", "age", "woman", "race3", "college",
+  "married", "parent", "faminc")]), ]
+
+# Treat binary/nominal variables as factors
+gss <- gss |>
+  mutate(across(c(polviews3, woman, race3, college, married, parent, employed), as_factor)) |>
+  droplevels()
+
+# 3 category political views var
+pol3mod <- multinom(polviews3 ~ age + woman + race3 + college + married + parent +
+  faminc + employed, data = gss, trace = FALSE)
+
+# AMEs +SD of age
+avg_comparisons(pol3mod, variables = list(age = sd(gss$age)))
+```
+
+:::
+
+> *On average, a standard deviation increase in age (about 17 years) is associated with a 0.049 higher probability of identifying as conservative. A standard deviation increase in age, in contrast, leads to a 0.029 lower probability of identifying as moderate and a 0.020 lower probability of identifying as liberal*
+
+### Average marginal effects (AMEs) for binary IVs
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. // AMEs of binary/nominal IVs //
+. mecompare college, model(pol3mod)
+
+Predicting: Pr(polviews3)
+Marginal effects (N_pol3mod=7823)
+
+                                 |  ME #   Estimate         SE      P>|z|
+---------------------------------+---------------------------------------
+college                          |                                       
+    College Deg - No Col Deg     |                                       
+               Liberal - pol3mod |     1      0.176      0.012      0.000
+              Moderate - pol3mod |     2     -0.120      0.012      0.000
+          Conservative - pol3mod |     3     -0.055      0.012      0.000
+
+```
+
+## R
+
+```{r}
+# AMEs of binary/nominal IVs
+avg_comparisons(pol3mod, variables = "college")
+```
+
+:::
+
+> *Those with college degrees have a 0.176 higher probability of identifying as liberal (compared to those without college degrees). In contrast, college educated individuals are less likely to identify as moderate or conservative (*${ME}_{moderate} = -0.120;\ {ME}_{conservative} = -0.055$*).*
+
+::: {.callout-note icon="false" appearance="simple"}
+[Interpretation tip:]{.underline} A separate sentence for each ME can be tedious. I often use the strategy of grouping effects in the same direction into one sentence. At most, you would then need three sentences: one for positive effects, one for null effects, and one for negative effects.
+:::
+
+## Plots of binary/nominal IVs
+
+- For binary/nominal IVs, you only sometimes need a plot. It depends on how complicated the patterns are and how many categories you have of your IV and your DV
+- All else equal, the more categories of the IV and/or the DV makes it more likely you will need a plot
+  - Often helpful to make the plot to guide your interpretations even if the plot does not make it into the final article
+- One option for binary/nominal IVs is to plot each set of predictions
+  - **Pro**: These are intuitive to understand
+  - **Con**: These do not explicitly show the test of an effect of the focal IV
+
+::: {.panel-tabset group="language"}
+## Stata
+
+- In Stata, **marginsplot** is not ideal for plots of predictions for nominal/ordinal outcome models
+  - Instead, store predictions from **margins** and plot with [**coefplot**](https://repec.sowi.unibe.ch/stata/coefplot/getting-started.html)
+
+```{.stata-run}
+. *4.3.a - Show pr() of each group; default is a dot plot
+. est restore pol3mod
+(results pol3mod are active now)
+
+. margins, at(college=0) post
+
+Predictive margins                                       Number of obs = 7,823
+Model VCE: OIM
+
+1._predict: Pr(polviews3==Liberal), predict(pr outcome(1))
+2._predict: Pr(polviews3==Moderate), predict(pr outcome(2))
+3._predict: Pr(polviews3==Conservative), predict(pr outcome(3))
+
+At: college = 0
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |     Margin   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+    _predict |
+          1  |      0.251      0.006   39.177   0.000        0.239       0.264
+          2  |      0.401      0.007   55.302   0.000        0.387       0.415
+          3  |      0.348      0.007   49.632   0.000        0.334       0.361
+------------------------------------------------------------------------------
+
+. est store col0
+
+. est restore pol3mod
+(results pol3mod are active now)
+
+. margins, at(college=1) post
+
+Predictive margins                                       Number of obs = 7,823
+Model VCE: OIM
+
+1._predict: Pr(polviews3==Liberal), predict(pr outcome(1))
+2._predict: Pr(polviews3==Moderate), predict(pr outcome(2))
+3._predict: Pr(polviews3==Conservative), predict(pr outcome(3))
+
+At: college = 1
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |     Margin   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+    _predict |
+          1  |      0.427      0.010   44.630   0.000        0.408       0.446
+          2  |      0.281      0.009   31.623   0.000        0.263       0.298
+          3  |      0.292      0.009   34.022   0.000        0.275       0.309
+------------------------------------------------------------------------------
+
+. est store col1
+
+. 
+. coefplot col0 col1, ///
+>     yline(0) ylab(0(.1).5) vertical ciopts(color(*.3)) ///
+>     xlab(1 "Liberal" 2 "Moderate" 3 "Conservative") ///
+>     legend(order(2 "No Degree" 4 "College")) ///
+>     ytitle("Pr(Political View)") ///
+>     title("[4.3.a] Probability of Each Political View Based on Educational Deg
+> ree")
+
+```
+
+![](fig/cda-04_03_a-polviews-01.png){width=80% fig-alt="[4.3.a] Dot plot of the predicted probability of each political view by college degree: liberal about 0.25 without a degree and 0.43 with one; moderate about 0.40 and 0.28; conservative about 0.35 and 0.29."}
+
+## R
+
+- In R, use [**plot_predictions**](https://marginaleffects.com/bonus/plot.html), the **facet_wrap** function, and include **"group"** in the **by** function for a fairly nice dot plot
+  - Make sure to specify the counterfactual **grid_type** in **newdata** for average predictions, rather than predictions for modal person
+
+```{r}
+#| fig-alt: "[4.3.a] Dot plot of the predicted probability of each political view by college degree: liberal about 0.25 without a degree and 0.43 with one; moderate about 0.40 and 0.28; conservative about 0.35 and 0.29."
+#| fig-width: 9.5
+# 4.3.a - Show pr() of each group; dot plot
+plot_predictions(pol3mod, by = c("college", "group"),
+  newdata = datagrid(college = unique, grid_type = "counterfactual")) +
+  facet_wrap(~ group) +
+  scale_y_continuous(breaks = seq(0, .5, .1), limits = c(0, .5)) +
+  labs(title = "[4.3.a] Probability of Each Political View Based on Educational Degree",
+    x = NULL, y = "Pr(Political View)") +
+  theme(plot.title.position = "plot", legend.position = "none")
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. *4.3.b - Make a bar chart instead of default dot plot
+. coefplot (col0, color(purple)) (col1, color(gold)), ///
+>     recast(bar) barw(0.2) vertical yline(0) ylab(0(.1).5) ///
+>     ciopts(recast(rcap) color(gs8)) citop ///
+>     xlab(1 "Liberal" 2 "Moderate" 3 "Conservative") ///
+>     legend(order(1 "No Degree" 3 "College")) ///
+>     ytitle("Pr(Political View)") ///
+>     title("[4.3.b] Probability of Each Political View Based on Educational Deg
+> ree")
+
+```
+
+![](fig/cda-04_03_b-polviews-01.png){width=80% fig-alt="[4.3.b] Bar chart of the same predictions: purple bars for no degree and gold bars for college for each political view, with confidence interval caps."}
+
+## R
+
+```{r}
+#| fig-alt: "[4.3.b] Bar chart of the same predictions: purple bars for no degree and gold bars for college for each political view, with confidence interval caps."
+# 4.3.b - Make a bar chart instead of a dot plot
+pr_college <- avg_predictions(pol3mod, by = c("college", "group"),
+  newdata = datagrid(college = unique, grid_type = "counterfactual"))
+
+ggplot(pr_college, aes(x = group, y = estimate, fill = college)) +
+  geom_col(position = position_dodge(width = .8), width = .6) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high),
+    position = position_dodge(width = .8), width = .15, color = "gray50") +
+  scale_fill_manual(values = c("purple", "gold"), labels = c("No Degree", "College")) +
+  scale_y_continuous(breaks = seq(0, .5, .1), limits = c(0, .5)) +
+  labs(title = "[4.3.b] Probability of Each Political View Based on Educational Degree",
+    x = NULL, y = "Pr(Political View)", fill = NULL) +
+  theme(plot.title.position = "plot")
+```
+
+:::
+
+## Plots of marginal effects for binary IVs
+
+- An alternative to plotting the predictions for each category of a binary/nominal IV is to plot the marginal effect for that variable (e.g., *college*: 1 vs 0)
+  - Note this is the difference between each set of two bars above
+    - **Pro**: Half as many bars to plot; has information on significance test of the effect
+    - **Con**: Less intuitive to readers---needs more explanation
+- Make sure to always include a **subtitle( )** or a **note( )** on these plots to help readers interpret the direction of the effects
+
+::: {.panel-tabset group="language"}
+## Stata
+
+- In Stata, estimate MEs using **margins, dydx( )** and then plot with **marginsplot**
+  - Works well as dot plot or bar chart
+
+```{.stata-run}
+. *4.3.c - plot of MEs for binary IV
+. est restore pol3mod
+(results pol3mod are active now)
+
+. margins, dydx(college)
+
+Average marginal effects                                 Number of obs = 7,823
+Model VCE: OIM
+
+dy/dx wrt: 1.college
+
+1._predict: Pr(polviews3==Liberal), predict(pr outcome(1))
+2._predict: Pr(polviews3==Moderate), predict(pr outcome(2))
+3._predict: Pr(polviews3==Conservative), predict(pr outcome(3))
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |      dy/dx   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+0.college    |  (base outcome)
+-------------+----------------------------------------------------------------
+1.college    |
+    _predict |
+          1  |      0.176      0.012   14.634   0.000        0.152       0.199
+          2  |     -0.120      0.012  -10.061   0.000       -0.144      -0.097
+          3  |     -0.055      0.012   -4.784   0.000       -0.078      -0.033
+------------------------------------------------------------------------------
+Note: dy/dx for factor levels is the discrete change from the base level.
+
+. *Nicer bar chart with options
+. marginsplot, recast(bar) ciopts(color(gs8)) ///
+>     xlab(0.5 " " 1 "Liberal" 2 "Moderate" 3 "Conservative" 3.5 " ") ///
+>     yline(0) plotopts(barw(0.6) color(ltblue)) ylab(-.25(.05).25, format(%4.2f
+> )) ///
+>     xtitle("Political Views Outcome Category") ytitle("Effect of College Degre
+> e") ///
+>     title("[4.3.c] Average Marginal Effects of College Degree") ///
+>     subtitle("Effects Above Zero Indicate That Political View is More Likely f
+> or Someone with a College Degree", size(small))
+
+Variables that uniquely identify margins:
+
+```
+
+![](fig/cda-04_03_c-polviews-01.png){width=80% fig-alt="[4.3.c] Bar chart of the average marginal effects of a college degree: about 0.18 for liberal, -0.12 for moderate, and -0.06 for conservative, with confidence intervals."}
+
+```{.stata-run}
+. *4.3.d - Scatterplot version
+. qui margins, dydx(college)
+
+. marginsplot, recast(scatter) ciopts(color(gs8)) ///
+>     xlab(0.5 " " 1 "Liberal" 2 "Moderate" 3 "Conservative" 3.5 " ") ///
+>     yline(0) ylab(-.25(.05).25, format(%4.2f)) ///
+>     xtitle("Political Views Outcome Category") ytitle("Effect of College Degre
+> e") ///
+>     title("[4.3.d] Average Marginal Effects of College Degree") ///
+>     subtitle("Effects Above Zero Indicate That Political View is More Likely f
+> or Someone with a College Degree", size(small))
+
+Variables that uniquely identify margins:
+
+```
+
+![](fig/cda-04_03_d-polviews-01.png){width=80% fig-alt="[4.3.d] Dot plot of the same average marginal effects of a college degree (about 0.18, -0.12, and -0.06) with confidence intervals and a reference line at zero."}
+
+## R
+
+- In R, use [**plot_comparisons**](https://marginaleffects.com/man/python/plot_comparisons.html) and include **"group"** in the **by** function for a fairly nice dot plot
+  - Add **geom_hline(yintercept = 0)** to easily see where a null effect is
+
+```{r}
+#| fig-alt: "[4.3.c] Bar chart of the average marginal effects of a college degree: about 0.18 for liberal, -0.12 for moderate, and -0.06 for conservative, with confidence intervals."
+# 4.3.c - plot of MEs for binary IV: bar chart
+me_college <- avg_comparisons(pol3mod, variables = "college")
+
+ggplot(me_college, aes(x = group, y = estimate)) +
+  geom_col(width = .6, fill = "lightblue") +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = .1, color = "gray50") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  scale_y_continuous(breaks = seq(-.25, .25, .05), limits = c(-.25, .25)) +
+  labs(title = "[4.3.c] Average Marginal Effects of College Degree",
+    subtitle = "Effects Above Zero Indicate That Political View is More Likely for Someone with a College Degree",
+    x = "Political Views Outcome Category", y = "Effect of College Degree") +
+  theme(plot.title.position = "plot")
+```
+
+```{r}
+#| fig-alt: "[4.3.d] Dot plot of the same average marginal effects of a college degree (about 0.18, -0.12, and -0.06) with confidence intervals and a reference line at zero."
+# 4.3.d - dot plot version
+plot_comparisons(pol3mod, variables = "college", by = "group") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  scale_y_continuous(breaks = seq(-.25, .25, .05), limits = c(-.25, .25)) +
+  labs(title = "[4.3.d] Average Marginal Effects of College Degree",
+    subtitle = "Effects Above Zero Indicate That Political View is More Likely for Someone with a College Degree",
+    x = "Political Views Outcome Category", y = "Effect of College Degree") +
+  theme(plot.title.position = "plot")
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. *4.3.e - Invert x and y-axis using coefplot
+. est restore pol3mod
+(results pol3mod are active now)
+
+. qui margins, dydx(college) post // need to post predictions
+
+. coefplot, ylab(1 "Liberal" 2 "Moderate" 3 "Conservative") xline(0) ///
+>     xlab(-.25(.05).25) xtitle("Average Marginal Effects of College Degree") //
+> /
+>     title("[4.3.e] Effect of Educational Degree on Political Views") ///
+>     subtitle("Positive Effects Indicate That Political View is More Likely for
+>  Someone with a College Degree", size(small))
+
+```
+
+![](fig/cda-04_03_e-polviews-01.png){width=80% fig-alt="[4.3.e] Horizontal dot plot with the outcomes on the vertical axis: the effect of a college degree is about 0.18 for liberal, -0.12 for moderate, and -0.06 for conservative, with a reference line at zero."}
+
+## R
+
+```{r}
+#| fig-alt: "[4.3.e] Horizontal dot plot with the outcomes on the vertical axis: the effect of a college degree is about 0.18 for liberal, -0.12 for moderate, and -0.06 for conservative, with a reference line at zero."
+# 4.3.e - Invert x and y-axis
+plot_comparisons(pol3mod, variables = "college", by = "group") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  scale_x_discrete(limits = rev) +
+  scale_y_continuous(breaks = seq(-.25, .25, .05), limits = c(-.25, .25)) +
+  coord_flip() +
+  labs(title = "[4.3.e] Effect of Educational Degree on Political Views",
+    subtitle = "Positive Effects Indicate That Political View is More Likely for Someone with a College Degree",
+    x = NULL, y = "Average Marginal Effects of College Degree") +
+  theme(plot.title.position = "plot")
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. *4.3.f - Nice bar chart with different colors for polviews categories
+. est restore pol3mod
+(results pol3mod are active now)
+
+. margins, dydx(college) predict(outcome(1)) post
+
+Average marginal effects                                 Number of obs = 7,823
+Model VCE: OIM
+
+Expression: Pr(polviews3==Liberal), predict(outcome(1))
+dy/dx wrt:  1.college
+
+-------------------------------------------------------------------------------
+              |            Delta-method
+              |      dy/dx   std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+      college |
+College De..  |      0.176      0.012   14.634   0.000        0.152       0.199
+-------------------------------------------------------------------------------
+Note: dy/dx for factor levels is the discrete change from the base level.
+
+. est store colme1
+
+. est restore pol3mod
+(results pol3mod are active now)
+
+. margins, dydx(college) predict(outcome(2)) post
+
+Average marginal effects                                 Number of obs = 7,823
+Model VCE: OIM
+
+Expression: Pr(polviews3==Moderate), predict(outcome(2))
+dy/dx wrt:  1.college
+
+-------------------------------------------------------------------------------
+              |            Delta-method
+              |      dy/dx   std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+      college |
+College De..  |     -0.120      0.012  -10.061   0.000       -0.144      -0.097
+-------------------------------------------------------------------------------
+Note: dy/dx for factor levels is the discrete change from the base level.
+
+. est store colme2
+
+. est restore pol3mod
+(results pol3mod are active now)
+
+. margins, dydx(college) predict(outcome(3)) post
+
+Average marginal effects                                 Number of obs = 7,823
+Model VCE: OIM
+
+Expression: Pr(polviews3==Conservative), predict(outcome(3))
+dy/dx wrt:  1.college
+
+-------------------------------------------------------------------------------
+              |            Delta-method
+              |      dy/dx   std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+      college |
+College De..  |     -0.055      0.012   -4.784   0.000       -0.078      -0.033
+-------------------------------------------------------------------------------
+Note: dy/dx for factor levels is the discrete change from the base level.
+
+. est store colme3
+
+. 
+. coefplot (colme1, color(blue)) (colme2, color(gs10)) (colme3, color(red)), ///
+>     recast(bar) barw(0.2) vertical yline(0) ylab(-.25(.05).25, format(%4.2f)) 
+> ///
+>     ciopts(recast(rcap) color(gs8)) citop ///
+>     legend(order(1 "Liberal" 3 "Moderate" 5 "Conservative")) ///
+>     ytitle("Effect of College Degree") xlab(1 "Political Views Outcome Categor
+> y") ///
+>     title("[4.3.f] Average Marginal Effects of College Degree") ///
+>     subtitle("Effects Above Zero Indicate That Political View is More Likely f
+> or Someone with a College Degree", size(small))
+
+```
+
+![](fig/cda-04_03_f-polviews-01.png){width=80% fig-alt="[4.3.f] Bar chart of the average marginal effects of a college degree with a different color for each outcome: blue liberal about 0.18, gray moderate about -0.12, red conservative about -0.06."}
+
+## R
+
+```{r}
+#| fig-alt: "[4.3.f] Bar chart of the average marginal effects of a college degree with a different color for each outcome: blue liberal about 0.18, gray moderate about -0.12, red conservative about -0.06."
+# 4.3.f - Nice bar chart with different colors for polviews categories
+ggplot(me_college, aes(x = group, y = estimate, fill = group)) +
+  geom_col(width = .6) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = .1, color = "gray50") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  scale_fill_manual(values = c("blue", "gray70", "red")) +
+  scale_y_continuous(breaks = seq(-.25, .25, .05), limits = c(-.25, .25)) +
+  labs(title = "[4.3.f] Average Marginal Effects of College Degree",
+    subtitle = "Effects Above Zero Indicate That Political View is More Likely for Someone with a College Degree",
+    x = "Political Views Outcome Category", y = "Effect of College Degree", fill = NULL) +
+  theme(plot.title.position = "plot", axis.text.x = element_blank())
+```
+
+:::
+
+## MEs for multi-category nominal IV
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. *4.3.g - Show pr() of each group
+. est restore pol3mod
+(results pol3mod are active now)
+
+. margins, at(race3=1) post
+
+Predictive margins                                       Number of obs = 7,823
+Model VCE: OIM
+
+1._predict: Pr(polviews3==Liberal), predict(pr outcome(1))
+2._predict: Pr(polviews3==Moderate), predict(pr outcome(2))
+3._predict: Pr(polviews3==Conservative), predict(pr outcome(3))
+
+At: race3 = 1
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |     Margin   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+    _predict |
+          1  |      0.308      0.006   53.069   0.000        0.296       0.319
+          2  |      0.343      0.006   56.053   0.000        0.331       0.355
+          3  |      0.349      0.006   57.431   0.000        0.337       0.361
+------------------------------------------------------------------------------
+
+. est store race1
+
+. est restore pol3mod
+(results pol3mod are active now)
+
+. margins, at(race3=2) post
+
+Predictive margins                                       Number of obs = 7,823
+Model VCE: OIM
+
+1._predict: Pr(polviews3==Liberal), predict(pr outcome(1))
+2._predict: Pr(polviews3==Moderate), predict(pr outcome(2))
+3._predict: Pr(polviews3==Conservative), predict(pr outcome(3))
+
+At: race3 = 2
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |     Margin   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+    _predict |
+          1  |      0.364      0.014   25.203   0.000        0.336       0.392
+          2  |      0.406      0.015   27.781   0.000        0.377       0.434
+          3  |      0.230      0.013   17.802   0.000        0.205       0.256
+------------------------------------------------------------------------------
+
+. est store race2
+
+. est restore pol3mod
+(results pol3mod are active now)
+
+. margins, at(race3=3) post
+
+Predictive margins                                       Number of obs = 7,823
+Model VCE: OIM
+
+1._predict: Pr(polviews3==Liberal), predict(pr outcome(1))
+2._predict: Pr(polviews3==Moderate), predict(pr outcome(2))
+3._predict: Pr(polviews3==Conservative), predict(pr outcome(3))
+
+At: race3 = 3
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |     Margin   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+    _predict |
+          1  |      0.346      0.017   20.308   0.000        0.313       0.379
+          2  |      0.388      0.018   21.901   0.000        0.354       0.423
+          3  |      0.266      0.016   16.143   0.000        0.233       0.298
+------------------------------------------------------------------------------
+
+. est store race3
+
+. 
+. coefplot (race1, color(green*1.2)) (race2, color(orange_red)) (race3, color(gs
+> 2)), ///
+>     recast(bar) barw(0.2) vertical yline(0) ylab(0(.1).5) ///
+>     ciopts(recast(rcap) color(gs8)) citop ///
+>     xlab(1 "Liberal" 2 "Moderate" 3 "Conservative", labsize(medsmall)) ///
+>     legend(order(1 "White" 3 "Black" 5 "Other Race")) ///
+>     ytitle("Pr(Political Views)") ///
+>     title("[4.3.g] Probability of Each Political View Based on Race of Respond
+> ent")
+
+```
+
+![](fig/cda-04_03_g-polviews-01.png){width=80% fig-alt="[4.3.g] Bar chart of the predicted probability of each political view for White (green), Black (orange), and other race (dark gray) respondents: Black and other-race respondents are more likely to be liberal or moderate and less likely to be conservative (about 0.23 and 0.27 vs 0.35 for White respondents)."}
+
+## R
+
+```{r}
+#| fig-alt: "[4.3.g] Bar chart of the predicted probability of each political view for White (green), Black (orange), and other race (dark gray) respondents: Black and other-race respondents are more likely to be liberal or moderate and less likely to be conservative (about 0.23 and 0.27 vs 0.35 for White respondents)."
+# 4.3.g - Show pr() of each group
+pr_race <- avg_predictions(pol3mod, by = c("race3", "group"),
+  newdata = datagrid(race3 = unique, grid_type = "counterfactual"))
+
+ggplot(pr_race, aes(x = group, y = estimate, fill = race3)) +
+  geom_col(position = position_dodge(width = .8), width = .7) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high),
+    position = position_dodge(width = .8), width = .15, color = "gray50") +
+  scale_fill_manual(values = c("forestgreen", "orangered", "gray20"),
+    labels = c("White", "Black", "Other Race")) +
+  scale_y_continuous(breaks = seq(0, .5, .1), limits = c(0, .5)) +
+  labs(title = "[4.3.g] Probability of Each Political View Based on Race of Respondent",
+    x = NULL, y = "Pr(Political Views)", fill = NULL) +
+  theme(plot.title.position = "plot")
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. *4.3.h - Effects multi-category nominal IV (race)
+. est restore pol3mod
+(results pol3mod are active now)
+
+. margins, dydx(race3) predict(outcome(1)) post
+
+Average marginal effects                                 Number of obs = 7,823
+Model VCE: OIM
+
+Expression: Pr(polviews3==Liberal), predict(outcome(1))
+dy/dx wrt:  2.race3 3.race3
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |      dy/dx   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+       race3 |
+      black  |      0.056      0.016    3.581   0.000        0.025       0.087
+      other  |      0.038      0.018    2.116   0.034        0.003       0.074
+------------------------------------------------------------------------------
+Note: dy/dx for factor levels is the discrete change from the base level.
+
+. est store raceme1
+
+. est restore pol3mod
+(results pol3mod are active now)
+
+. margins, dydx(race3) predict(outcome(2)) post
+
+Average marginal effects                                 Number of obs = 7,823
+Model VCE: OIM
+
+Expression: Pr(polviews3==Moderate), predict(outcome(2))
+dy/dx wrt:  2.race3 3.race3
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |      dy/dx   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+       race3 |
+      black  |      0.062      0.016    3.905   0.000        0.031       0.094
+      other  |      0.045      0.019    2.391   0.017        0.008       0.082
+------------------------------------------------------------------------------
+Note: dy/dx for factor levels is the discrete change from the base level.
+
+. est store raceme2
+
+. est restore pol3mod
+(results pol3mod are active now)
+
+. margins, dydx(race3) predict(outcome(3)) post
+
+Average marginal effects                                 Number of obs = 7,823
+Model VCE: OIM
+
+Expression: Pr(polviews3==Conservative), predict(outcome(3))
+dy/dx wrt:  2.race3 3.race3
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |      dy/dx   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+       race3 |
+      black  |     -0.119      0.014   -8.228   0.000       -0.147      -0.090
+      other  |     -0.083      0.018   -4.728   0.000       -0.118      -0.049
+------------------------------------------------------------------------------
+Note: dy/dx for factor levels is the discrete change from the base level.
+
+. est store raceme3
+
+. 
+. coefplot (raceme1, color(blue)) (raceme2, color(gs10)) (raceme3, color(red)), 
+> ///
+>     recast(bar) barw(0.2) vertical yline(0) ylab(-.25(.05).25, format(%4.2f)) 
+> ///
+>     ciopts(recast(rcap) color(gs8)) citop ///
+>     legend(order(1 "Liberal" 3 "Moderate" 5 "Conservative")) ///
+>     ytitle("Effect of Race") xlab(0.5 " " 1 "Black vs White" 2 "Other vs White
+> " 2.5 " ") ///
+>     title("[4.3.h] Average Marginal Effects of Race") ///
+>     subtitle("Effects Above Zero Indicate Minority Group is More Likely to Hol
+> d Political View than Whites", size(small))
+
+```
+
+![](fig/cda-04_03_h-polviews-01.png){width=80% fig-alt="[4.3.h] Bar chart of the average marginal effects of race for each outcome: Black vs White about 0.06 liberal, 0.06 moderate, and -0.12 conservative; other race vs White about 0.04, 0.05, and -0.08."}
+
+## R
+
+```{r}
+#| fig-alt: "[4.3.h] Bar chart of the average marginal effects of race for each outcome: Black vs White about 0.06 liberal, 0.06 moderate, and -0.12 conservative; other race vs White about 0.04, 0.05, and -0.08."
+# 4.3.h - Effects multi-category nominal IV (race)
+me_race <- avg_comparisons(pol3mod, variables = "race3")
+
+ggplot(me_race, aes(x = contrast, y = estimate, fill = group)) +
+  geom_col(position = position_dodge(width = .8), width = .7) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high),
+    position = position_dodge(width = .8), width = .15, color = "gray50") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  scale_x_discrete(labels = c("Black vs White", "Other vs White")) +
+  scale_fill_manual(values = c("blue", "gray70", "red")) +
+  scale_y_continuous(breaks = seq(-.25, .25, .05), limits = c(-.25, .25)) +
+  labs(title = "[4.3.h] Average Marginal Effects of Race",
+    subtitle = "Effects Above Zero Indicate Minority Group is More Likely to Hold Political View than Whites",
+    x = NULL, y = "Effect of Race", fill = NULL) +
+  theme(plot.title.position = "plot")
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. *MEs
+. mecompare race3, model(pol3mod) pwcompare
+
+Predicting: Pr(polviews3)
+Marginal effects (N_pol3mod=7823)
+
+                                 |  ME #   Estimate         SE      P>|z|
+---------------------------------+---------------------------------------
+race3                            |                                       
+               black - white     |                                       
+               Liberal - pol3mod |     1      0.056      0.016      0.000
+              Moderate - pol3mod |     2      0.062      0.016      0.000
+          Conservative - pol3mod |     3     -0.119      0.014      0.000
+               other - white     |                                       
+               Liberal - pol3mod |     4      0.038      0.018      0.034
+              Moderate - pol3mod |     5      0.045      0.019      0.017
+          Conservative - pol3mod |     6     -0.083      0.018      0.000
+               other - black     |                                       
+               Liberal - pol3mod |     7     -0.018      0.022      0.418
+              Moderate - pol3mod |     8     -0.017      0.023      0.447
+          Conservative - pol3mod |     9      0.035      0.021      0.090
+
+```
+
+## R
+
+```{r}
+# MEs
+avg_comparisons(pol3mod, variables = list(race3 = "pairwise"))
+```
+
+:::
+
+> *Black adults are significantly more likely to hold liberal or moderate political views, compared to White adults (both differences about 0.06). In contrast, Black adults have about a 0.12 lower probability of holding conservative political views than do White adults.*
+>
+> *Etc...*
+
+### ME inequality for nominal IVs
+
+- Combining nominal or ordinal IVs with nominal or ordinal outcomes presents a challenge of an overwhelming number of predictions and marginal effects to examine
+  - The \# of MEs for nominal/ordinal IVs in nominal/ordinal DV models = the \# of outcome categories \* the \# of pairwise comparisons of the nominal/ordinal IV
+    - For a nominal independent variable with *L* categories and a nominal or ordinal outcome with $\Lambda$ outcome categories
+
+$$\#\ of\ MEs = \Lambda * \frac{L(L - 1)}{2}$$
+
+- One solution, simplify down to the ME inequality per outcome category $\lambda$ ([Mize and Han 2025](/research/mize_han_socsci_2025.qmd))
+
+$${ME\ inequality}_{\lambda} \equiv |average\ weighted\ ME\ inequality|_{\lambda} = \sum_{a = 1}^{L}\sum_{b = 2;\ b > a}^{L}\frac{w_{a,b}}{L - 1} \left|\eta_{\lambda}(x_{k} = a, \mathbf{x}_{-k} = \mathbf{x}_{-k}^{*}) - \eta_{\lambda}(x_{k} = b, \mathbf{x}_{-k} = \mathbf{x}_{-k}^{*})\right|$$
+
+*"This procedure will greatly simplify interpretation. For example, with a four-category DV and a six-category IV there are*
+
+$$\Lambda * \frac{L(L - 1)}{2} = 4 * \frac{6(6 - 1)}{2} = 4 * 15 = 60$$
+
+*60 marginal effects. In contrast, there are always only* $\Lambda$ ${ME\ inequality}_{\lambda}$ *measures; in this case, four."* ([Mize and Han 2025](/research/mize_han_socsci_2025.qmd))
+
+- In Stata, use the [**meinequality**](/software/meinequality/index.qmd) command or the **meinequality** option of **mecompare**
+  - In R, use the [**meineq()** function on **avg_comparisons**](/software/meinequality_r/index.qmd)
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. *ME inequality
+. meinequality race3, model(pol3mod)
+
+ME Inequality Estimates (N = 7823)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+race3 ME Ineq.           |                                               
+             Pr(Liberal) |      0.044       0.011       3.920       0.000 
+            Pr(Moderate) |      0.050       0.012       4.300       0.000 
+        Pr(Conservative) |      0.094       0.011       8.822       0.000 
+
+```
+
+## R
+
+```{r}
+# ME inequality
+avg_comparisons(pol3mod, variables = list(race3 = "pairwise"),
+  hypothesis = meineq(pol3mod))
+```
+
+:::
+
+> *On average, individuals from different racial-ethnic groups differ by 4.4 percentage points in their probability of identifying as liberal*
+
+- Can test equality of any two ME inequalities using **mecompare** and **metest**
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. mecompare race3, model(pol3mod) meinequality
+
+Predicting: Pr(polviews3)
+Marginal effects (N_pol3mod=7823)
+
+                                 |  ME #   Estimate         SE      P>|z|
+---------------------------------+---------------------------------------
+race3                            |                                       
+               ME Inequality     |                                       
+               Liberal - pol3mod |     1      0.044      0.011      0.000
+              Moderate - pol3mod |     2      0.050      0.012      0.000
+          Conservative - pol3mod |     3      0.094      0.011      0.000
+               black - white     |                                       
+               Liberal - pol3mod |     4      0.056      0.016      0.000
+              Moderate - pol3mod |     5      0.062      0.016      0.000
+          Conservative - pol3mod |     6     -0.119      0.014      0.000
+               other - white     |                                       
+               Liberal - pol3mod |     7      0.038      0.018      0.034
+              Moderate - pol3mod |     8      0.045      0.019      0.017
+          Conservative - pol3mod |     9     -0.083      0.018      0.000
+
+. metest 3 - 1
+
+                                 |  estimate         se     pvalue 
+---------------------------------+--------------------------------
+ race3_MEineq_3 - race3_MEineq_1 |     0.050      0.012      0.000 
+
+```
+
+## R
+
+::: {.callout-note icon="false" appearance="simple"}
+In R, use the **hypothesis** option of **avg_comparisons**
+:::
+
+```{r}
+me_ineq <- avg_comparisons(pol3mod, variables = list(race3 = "pairwise"),
+  hypothesis = meineq(pol3mod))
+
+# Pr(Conservative) ME inequality - Pr(Liberal) ME inequality
+hypotheses(me_ineq, hypothesis = "b3 - b1 = 0")
+```
+
+:::
+
+> *Racial-ethnic groups differ more in their identification as conservative than in their identification as liberal*
+
+## Total marginal effects
+
+- With a linear or binary outcome, a single ME summarizes the total effect of a continuous or binary IV
+  - [Mize and Han (2025)](/research/mize_han_socsci_2025.qmd) suggest that similar logic can be applied in nominal and ordinal outcome models by aggregating the effect of a single IV across each outcome category
+  - That is, an IV's total effect is its holistic effect across all outcomes
+    - Then, the **total ME** statistic is simply the sum of all the marginal effects for that IV (using absolute values) divided by two\*
+
+$$total\ ME = \frac{\sum_{\lambda = 1}^{\Lambda}\left|\eta_{\lambda}(x_{k} = end, \mathbf{x}_{-k} = \mathbf{x}_{-k}^{*}) - \eta_{\lambda}(x_{k} = start, \mathbf{x}_{-k} = \mathbf{x}_{-k}^{*})\right|}{2}$$
+
+> *"The total ME represents the proportion of observations that are predicted to change outcomes given a change in the independent variable. Put another way, this represents the complete effect of the independent variable across all outcome categories."* ([Mize and Han 2025](/research/mize_han_socsci_2025.qmd))
+
+\*The *total ME* is divided by two to account for the fact that MEs in multi-outcome models are symmetric/zero-sum.
+
+- In Stata, use the [**totalme**](/software/totalme/index.qmd) command or the **totalme** option of **mecompare**
+  - In R, use the [**totalme()** function on **avg_comparisons**](/software/totalme_r/index.qmd)
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. *continuous and binary IVs
+. totalme college age, amount(trimrange) model(pol3mod)
+
+Total ME Estimates (N = 7823)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+college                  |                                               
+College De vs No Col Deg |      0.176       0.012      14.634       0.000 
+-------------------------+-----------------------------------------------
+age                      |                                               
+               p5 to p95 |      0.157       0.020       8.017       0.000 
+
+```
+
+## R
+
+```{r}
+# continuous and binary IVs
+avg_comparisons(pol3mod, variables = list(college = "reference",
+  age = quantile(gss$age, c(.05, .95))),
+  hypothesis = totalme(pol3mod))
+```
+
+:::
+
+> *Those with and without college degrees differ by about 18 percentage points in their political views*
+>
+> *Across the range of age, political views differ by about 16 total percentage points*
+
+### Total marginal effect inequality statistics
+
+- We can combine the *ME inequality* approach to summarizing nominal and ordinal IV effects with the *total ME* approach developed in the prior section to obtain a single summary measure
+  - In this case, the *total ME inequality* for a nominal or ordinal IV is simply the sum of the ${ME\ inequality}_{\lambda}$ measures divided by two.
+
+$$total\ ME\ inequality = \frac{\sum_{\lambda = 1}^{\Lambda}{ME\ inequality}_{\lambda}}{2}$$
+
+- The default statistic for **totalme** after a nominal model is the total ME inequality
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. *nominal IV gives the total ME inequality
+. totalme race3, model(pol3mod)
+
+Total ME Estimates (N = 7823)
+
+                         |   Estimate   Std. err.           z       P>|z| 
+-------------------------+-----------------------------------------------
+race3                    |                                               
+          total ME Ineq. |      0.094       0.011       8.822       0.000 
+
+```
+
+## R
+
+```{r}
+# nominal IV gives the total ME inequality
+avg_comparisons(pol3mod, variables = list(race3 = "pairwise"),
+  hypothesis = totalme(pol3mod))
+```
+
+:::
+
+> *Racial-ethnic groups differ by a little over 9 percentage points in total in their political views*
+
+### Total marginal effects for comparing effects
+
+- Total marginal effects are especially helpful if you want to compare effects
+  - How would you determine if age or college had a larger effect when there are four MEs for each IV?
+    - The total ME provides one \# per IV
+- Tests of interaction and cross-model comparisons like mediation similarly benefit from a total ME
+  - Is the effect of age different for men and women?
+    - Instead of testing per outcome category, total ME gives one answer
+  - Does SES explain part of the racial-ethnic gaps?
+    - Calculate a total ME for *race* in a model with and without SES

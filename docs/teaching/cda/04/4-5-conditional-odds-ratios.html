@@ -1,0 +1,1942 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>4.5 Conditional Odds Ratios (ORs) – Trenton D. Mize</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../teaching/cda/04/4-6-iia.html" rel="next">
+<link href="../../../teaching/cda/04/4-4-four-category-example.html" rel="prev">
+<script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-d1074f4552fd9e64773fe67262ebb1c3.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">Trenton D. Mize</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../cv.html"> 
+<span class="menu-text">CV</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../research.html"> 
+<span class="menu-text">Research</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../software.html"> 
+<span class="menu-text">Software</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="../../../teaching.html" aria-current="page"> 
+<span class="menu-text">Teaching</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../resources.html"> 
+<span class="menu-text">Links</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../help.html"> 
+<span class="menu-text">Asking for Help</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/tdmize"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../teaching/cda/index.html">Categorical Data Analysis (Soc 681)</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/04/index.html">04 Nominal Models</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/04/4-5-conditional-odds-ratios.html">4.5 Conditional Odds Ratios (ORs)</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Teaching</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Categorical Data Analysis (Soc 681)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/01/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">01 Introduction &amp; Linear Regression</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/1-0-categorical-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1.0 Categorical Data is Everywhere</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/1-2-linear-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1.2 Linear Regression (sans math)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/1-3-linear-regression-math.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1.3 Linear Regression (with math)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/appendix-a1-datasets.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix A1: Datasets for Assignments</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/appendix-a2-stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix A2: Stata Appendix</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/02/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">02 Nonlinearities &amp; Categorical IVs</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-1-marginal-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.1 Interpretation with Marginal Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-2-nonlinear-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.2 Marginal Effects with Nonlinearities</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-3-linear-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.3 Linear Interaction Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-4-nonlinear-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.4 Nonlinear Interaction Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-5-distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.5 Examining Distributions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-6-assessing-nonlinearities.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.6 Assessing and Modeling Complex Nonlinearities for Independent Variables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-7-categorical-ivs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.7 Categorical Independent Variables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-8-comparing-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.8 Comparing Effects Across IVs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-10-conclusion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.10 Conclusion</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/02/appendix-2a/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 2A: Stata Code and Tips</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-1-factor-syntax.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.1 Stata factor syntax</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-2-polynomials.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.2 Polynomial IVs with factor syntax</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-3-calculating-mes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.3 Calculating marginal effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-4-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.4 Interaction effect with factor syntax</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-5-nonlinear-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.5 Nonlinear interaction effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-6-distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.6 Tools for examining distributions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-7-assessing-nonlinearities.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.7 Assessing nonlinearities</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-8-splines.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.8 Splines</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-9-loglinear.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.9 Loglinear regression models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-10-transforming.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.10 Transforming variables</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2b-logged-dv.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 2B: Logged DV Regression Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2c-splines.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 2C: Splines</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/03/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">03 Binary Regression Models</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-0-linear-probability-model.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.0 Binary DVs and the Linear Probability Model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-1-binary-model-derivations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.1 Binary Model Derivations</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-2-scaling-identification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.2 Scaling and Identification</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-3-maximum-likelihood.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.3 Maximum Likelihood Estimation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-4-coefficient-interpretations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.4 Coefficient Interpretations</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-5-predictions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.5 Interpreting Predictions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-6-marginal-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.6 Marginal Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-7-effect-summary-comparison.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.7 Effect Summary Comparison</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-8-ideal-types.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.8 Predictions for Ideal Types</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-9-risk-ratios.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.9 Risk Ratios/Relative Risk (RR)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-10-tables-plots.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.10 Bonus: Tables &amp; Plots of Results</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-11-conclusion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.11 Miscellaneous &amp; Conclusion</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3a-stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3A: Stata Code and Tips</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3b-maximum-likelihood.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3B: Maximum Likelihood</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3c-or-mem.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3C: OR and MEM Comparison</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3d-me-distribution.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3D: Distribution of Marginal Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3e-functional-forms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3E: Flexible Functional Forms</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3f-ystar.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3F: Interpretation in y* Metric</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3g-marginal-odds-ratios.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3G: Marginal Odds Ratios</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/04/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">04 Nominal Models</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-0-nominal-dvs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.0 Nominal DVs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-1-multinomial-logit.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.1 Multinomial Logit Model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-2-predicted-probabilities.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.2 Predicted Probabilities</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-3-marginal-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.3 Marginal Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-4-four-category-example.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.4 Example with 4 DV Categories</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-5-conditional-odds-ratios.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">4.5 Conditional Odds Ratios (ORs)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-6-iia.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.6 Independence of Irrelevant Alternatives (IIA)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-7-review.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.7 Review of Nominal DVs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/appendix-4a-combining-outcomes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 4A: Combining Outcomes and Functional Forms</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/appendix-4b-stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 4B: Stata Code and Tips</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cdash.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Categorical Data Analysis (Statistical Horizons)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cdaws.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Categorical Data Analysis Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/workflow.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Management / Workflow Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/dataviz.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Visualization</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/dvs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Visualization Using Stata and LLMs</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/dmv.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data &amp; Model Visualization Workshop</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/dmv/r-output.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">R Output</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/em.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Experimental Methods: Design &amp; Analysis</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/int.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Interaction Effects Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/irt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Item Response Theory</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/lvm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Latent Variable Modeling</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/mcapsi.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Longitudinal Data Analysis</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/miss.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Missing Data Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/spgrad.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Social Psychology (Graduate)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/spug.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Social Psychology (Undergrad)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Stata Programming Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/surveys.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Survey Design Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/sew.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Survey Experiments Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/twm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Teaching Workshops &amp; Methods</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#comparing-mes-and-coefficients-in-multinomial-logit" id="toc-comparing-mes-and-coefficients-in-multinomial-logit" class="nav-link active" data-scroll-target="#comparing-mes-and-coefficients-in-multinomial-logit">Comparing MEs and coefficients in multinomial logit</a></li>
+  <li><a href="#multinomial-logit-is-a-set-of-binary-logits-that-are-simultaneously-estimated" id="toc-multinomial-logit-is-a-set-of-binary-logits-that-are-simultaneously-estimated" class="nav-link" data-scroll-target="#multinomial-logit-is-a-set-of-binary-logits-that-are-simultaneously-estimated">Multinomial logit is a set of binary logits that are simultaneously estimated</a>
+  <ul class="collapse">
+  <li><a href="#odds-ratios-ors-vs-conditional-ors" id="toc-odds-ratios-ors-vs-conditional-ors" class="nav-link" data-scroll-target="#odds-ratios-ors-vs-conditional-ors">Odds ratios (ORs) vs conditional ORs</a></li>
+  <li><a href="#nominal-dvs-and-conditional-ors" id="toc-nominal-dvs-and-conditional-ors" class="nav-link" data-scroll-target="#nominal-dvs-and-conditional-ors">Nominal DVs and conditional ORs</a></li>
+  <li><a href="#conditional-odds-ratios-relative-risk-ratios" id="toc-conditional-odds-ratios-relative-risk-ratios" class="nav-link" data-scroll-target="#conditional-odds-ratios-relative-risk-ratios">Conditional odds ratios / “relative risk ratios”</a></li>
+  </ul></li>
+  <li><a href="#interpreting-conditional-ors-rrrs" id="toc-interpreting-conditional-ors-rrrs" class="nav-link" data-scroll-target="#interpreting-conditional-ors-rrrs">Interpreting conditional ORs / RRRs</a>
+  <ul class="collapse">
+  <li><a href="#interpreting-ors-in-multinomial-logit" id="toc-interpreting-ors-in-multinomial-logit" class="nav-link" data-scroll-target="#interpreting-ors-in-multinomial-logit">Interpreting ORs in multinomial logit</a></li>
+  <li><a href="#interpreting-ors-in-multinomial-logit-continuous-iv" id="toc-interpreting-ors-in-multinomial-logit-continuous-iv" class="nav-link" data-scroll-target="#interpreting-ors-in-multinomial-logit-continuous-iv">Interpreting ORs in multinomial logit: continuous IV</a></li>
+  <li><a href="#interpreting-ors-in-multinomial-logit-nominal-iv" id="toc-interpreting-ors-in-multinomial-logit-nominal-iv" class="nav-link" data-scroll-target="#interpreting-ors-in-multinomial-logit-nominal-iv">Interpreting ORs in multinomial logit: nominal IV</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../teaching/cda/index.html">Categorical Data Analysis (Soc 681)</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/04/index.html">04 Nominal Models</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/04/4-5-conditional-odds-ratios.html">4.5 Conditional Odds Ratios (ORs)</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">4.5 Conditional Odds Ratios (ORs)</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<ul>
+<li>Similar to binary logit, multinomial logit can also be interpreted by exponentiating the regression coefficients
+<ul>
+<li>The coefficients represent the dynamics among the outcome categories
+<ul>
+<li>These are in terms of <strong>a specific outcome category</strong> compared <strong>to a specific other outcome category</strong>
+<ul>
+<li>E.g., The odds of being in <em>category 1</em> compared to the odds of being in <em>category 3</em></li>
+</ul></li>
+<li>Note this is different than what the MEs summarize (probability of <strong>a specific outcome category</strong> out of <strong>all possible outcome categories</strong>)
+<ul>
+<li>E.g., The probability of being in <em>category 1</em> out of the probability of being in any of <em>categories 1, 2, 3, 4, … J</em></li>
+</ul></li>
+</ul></li>
+</ul></li>
+<li>Because of this discrepancy in what the coefficients and the MEs summarize, the coefficients can have confusing and non-intuitive relationships to the MEs</li>
+</ul>
+<p><em>Consider an example I simulated below…</em></p>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>*Show simulation <span class="kw">of</span> <span class="kw">mlogit</span> where MEs and coefs diverge</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">clear</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">set</span> <span class="dv">seed</span> 3704</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">set</span> <span class="kw">obs</span> 5000</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Number of observations (_N) was 0, now 5,000.</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">gen</span> x1 = rnormal()</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">gen</span> <span class="kw">x2</span> = rnormal()</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">gen</span> xb1 = <span class="fu">ln</span>(.5) + <span class="fu">ln</span>(1.5)*x1 + <span class="fu">ln</span>(.5)*<span class="kw">x2</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">gen</span> xb2 = <span class="fu">ln</span>(2) + <span class="fu">ln</span>(.33)*x1 + <span class="fu">ln</span>(2)*<span class="kw">x2</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">gen</span> p1 = 1 / ( 1 + <span class="fu">exp</span>(xb2) )</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">gen</span> p2 = <span class="fu">exp</span>(xb1) / ( 1 + <span class="fu">exp</span>(xb1) + <span class="fu">exp</span>(xb2) )</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">gen</span> p3 = <span class="fu">exp</span>(xb2) / ( 1 + <span class="fu">exp</span>(xb1) + <span class="fu">exp</span>(xb2) )</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">gen</span> u = runiform()</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="kw">gen</span> <span class="fu">y</span> = <span class="fu">cond</span>(u &lt; p1, 1, <span class="co">///</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cond</span>(u &lt; p1 + p2, 2, 3 ))</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> <span class="kw">mlogit</span> <span class="fu">y</span> x1 <span class="kw">x2</span>, base(1) rrr</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> simmod</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>*4.5.a</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="fu">at</span>(<span class="kw">x2</span>=(-2.5(.1)2.5))</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>marginsplot, recastci(rarea) ciopt(col(gs14)) <span class="co">///</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    plotopts(lwid(<span class="bn">medthick</span>) msym(<span class="kw">none</span>)) xlab(-2.5(1)2.5) <span class="co">///</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="bn">xtitle</span>(<span class="st">"Continuous IV"</span>) <span class="bn">ytitle</span>(<span class="st">"Pr(Outcome)"</span>) <span class="co">///</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[4.5.a] Pr(Outcome) from Simulated Multinomial Logit Model"</span>, <span class="kw">size</span>(<span class="fu">m</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>edlarge))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Variables that uniquely identify margins: x2</code></pre>
+</div>
+<p><img src="fig/cda-04_05_a-rrrs-01.png" class="img-fluid" style="width:80.0%" alt="[4.5.a] Predicted probabilities of three outcomes across the continuous IV from -2.5 to 2.5: Pr(outcome 1) falls from about 0.57 to 0.09, Pr(outcome 2) falls from about 0.35 to 0.02, and Pr(outcome 3) rises from about 0.08 to 0.89."></p>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(haven)           <span class="co"># import Stata data and labels</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)           <span class="co"># data manipulation</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)         <span class="co"># graphs</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(nnet)            <span class="co"># multinomial logit: multinom()</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(marginaleffects) <span class="co"># predictions and marginal effects</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(cleanplots)      <span class="co"># graph scheme</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="fu">cleanplots_defaults</span>()</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Center changes in continuous IVs on each observation's value</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">marginaleffects_contrast_direction =</span> <span class="st">"center"</span>)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Show simulation of a multinomial logit where MEs and coefs diverge</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="co"># (R's random numbers differ from Stata's, so the estimates differ a little)</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">3704</span>)</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">5000</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>sim <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">x1 =</span> <span class="fu">rnorm</span>(n), <span class="at">x2 =</span> <span class="fu">rnorm</span>(n)) <span class="sc">|&gt;</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">xb1 =</span> <span class="fu">log</span>(.<span class="dv">5</span>) <span class="sc">+</span> <span class="fu">log</span>(<span class="fl">1.5</span>) <span class="sc">*</span> x1 <span class="sc">+</span> <span class="fu">log</span>(.<span class="dv">5</span>) <span class="sc">*</span> x2,</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">xb2 =</span> <span class="fu">log</span>(<span class="dv">2</span>) <span class="sc">+</span> <span class="fu">log</span>(.<span class="dv">33</span>) <span class="sc">*</span> x1 <span class="sc">+</span> <span class="fu">log</span>(<span class="dv">2</span>) <span class="sc">*</span> x2,</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">p1 =</span> <span class="dv">1</span> <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">+</span> <span class="fu">exp</span>(xb2)),</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">p2 =</span> <span class="fu">exp</span>(xb1) <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">+</span> <span class="fu">exp</span>(xb1) <span class="sc">+</span> <span class="fu">exp</span>(xb2)),</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">p3 =</span> <span class="fu">exp</span>(xb2) <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">+</span> <span class="fu">exp</span>(xb1) <span class="sc">+</span> <span class="fu">exp</span>(xb2)),</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">u =</span> <span class="fu">runif</span>(n),</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="fu">factor</span>(<span class="fu">case_when</span>(u <span class="sc">&lt;</span> p1 <span class="sc">~</span> <span class="dv">1</span>, u <span class="sc">&lt;</span> p1 <span class="sc">+</span> p2 <span class="sc">~</span> <span class="dv">2</span>, <span class="cn">TRUE</span> <span class="sc">~</span> <span class="dv">3</span>)))</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>simmod <span class="ot">&lt;-</span> <span class="fu">multinom</span>(y <span class="sc">~</span> x1 <span class="sc">+</span> x2, <span class="at">data =</span> sim, <span class="at">trace =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="co"># 4.5.a</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_predictions</span>(simmod, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"x2"</span>, <span class="st">"group"</span>),</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">newdata =</span> <span class="fu">datagrid</span>(<span class="at">x2 =</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="fl">2.5</span>, <span class="fl">2.5</span>, .<span class="dv">1</span>), <span class="at">grid_type =</span> <span class="st">"counterfactual"</span>)) <span class="sc">+</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="fl">2.5</span>, <span class="fl">2.5</span>, <span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"[4.5.a] Pr(Outcome) from Simulated Multinomial Logit Model"</span>,</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Continuous IV"</span>, <span class="at">y =</span> <span class="st">"Pr(Outcome)"</span>, <span class="at">color =</span> <span class="st">"Outcome"</span>, <span class="at">fill =</span> <span class="st">"Outcome"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="4-5-conditional-odds-ratios_files/figure-html/unnamed-chunk-1-1.png" class="img-fluid figure-img" style="width:80.0%" alt="[4.5.a] Predicted probabilities of three outcomes across the continuous IV from -2.5 to 2.5: Pr(outcome 1) falls from about 0.57 to 0.09, Pr(outcome 2) falls from about 0.35 to 0.02, and Pr(outcome 3) rises from about 0.08 to 0.89."></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<p>Write down your general interpretation of the effect of the continuous IV (<em>x2</em>)</p>
+<section id="comparing-mes-and-coefficients-in-multinomial-logit" class="level2">
+<h2 class="anchored" data-anchor-id="comparing-mes-and-coefficients-in-multinomial-logit">Comparing MEs and coefficients in multinomial logit</h2>
+<ul>
+<li>Below are the AMEs for <em>x2</em> (from the model graphed above):</li>
+</ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>*AMEs <span class="kw">for</span> +<span class="kw">SD</span> <span class="kw">for</span> <span class="kw">x2</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>mecompare <span class="kw">x2</span>, amount(<span class="fu">sd</span>) <span class="kw">model</span>(simmod)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Predicting: Pr(y)
+Marginal effects (N_simmod=5000)
+
+                                 |  ME #   Estimate         SE      P&gt;|z|
+---------------------------------+---------------------------------------
+x2 + SD (centered)               |                                       
+              Outcome 1 - simmod |     1     -0.114      0.006      0.000
+              Outcome 2 - simmod |     2     -0.071      0.005      0.000
+              Outcome 3 - simmod |     3      0.186      0.005      0.000</code></pre>
+</div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># AMEs for +SD for x2</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(simmod, <span class="at">variables =</span> <span class="fu">list</span>(<span class="at">x2 =</span> <span class="fu">sd</span>(sim<span class="sc">$</span>x2)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+ Group Estimate Std. Error     z Pr(&gt;|z|)     S   2.5 %  97.5 %
+     1  -0.1190    0.00564 -21.1   &lt;0.001 326.3 -0.1301 -0.1080
+     2  -0.0731    0.00488 -15.0   &lt;0.001 166.2 -0.0826 -0.0635
+     3   0.1921    0.00443  43.3   &lt;0.001   Inf  0.1834  0.2008
+
+Term: x2
+Type: probs
+Comparison: +0.99401597047263</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<ul>
+<li>How do these compare to your descriptions of the effect of <em>x2</em> that you wrote down based only on the graph shown above?</li>
+</ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>*All ORs <span class="kw">for</span> <span class="kw">x2</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">restore</span> simmod</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(results simmod are active now)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>listcoef <span class="kw">x2</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>mlogit (N=5000): Factor change in the odds of y 
+
+Variable: x2 (sd=0.999)
+------------------------------------------------------------------------------
+                             |         b        z    P&gt;|z|       e^b   e^bStdX
+-----------------------------+------------------------------------------------
+1            vs 2            |    0.1858    3.776    0.000     1.204     1.204
+1            vs 3            |   -1.2784  -25.272    0.000     0.278     0.279
+2            vs 1            |   -0.1858   -3.776    0.000     0.830     0.831
+2            vs 3            |   -1.4642  -24.046    0.000     0.231     0.232
+3            vs 1            |    1.2784   25.272    0.000     3.591     3.584
+3            vs 2            |    1.4642   24.046    0.000     4.324     4.315
+------------------------------------------------------------------------------</code></pre>
+</div>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># All contrasts among the outcomes: refit the model with each outcome</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co"># category as the base/reference category</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>all_contrasts <span class="ot">&lt;-</span> <span class="cf">function</span>(model, term) {</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> <span class="fu">eval</span>(model<span class="sc">$</span>call<span class="sc">$</span>data)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  y <span class="ot">&lt;-</span> <span class="fu">all.vars</span>(<span class="fu">formula</span>(model))[<span class="dv">1</span>]</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  out <span class="ot">&lt;-</span> <span class="fu">lapply</span>(model<span class="sc">$</span>lev, <span class="cf">function</span>(ref) {</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    data[[y]] <span class="ot">&lt;-</span> <span class="fu">relevel</span>(data[[y]], <span class="at">ref =</span> ref)</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    s <span class="ot">&lt;-</span> <span class="fu">summary</span>(<span class="fu">update</span>(model, <span class="at">data =</span> data))</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    b <span class="ot">&lt;-</span> s<span class="sc">$</span>coefficients[, term]</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    z <span class="ot">&lt;-</span> b <span class="sc">/</span> s<span class="sc">$</span>standard.errors[, term]</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">data.frame</span>(<span class="at">contrast =</span> <span class="fu">paste</span>(<span class="fu">rownames</span>(s<span class="sc">$</span>coefficients), <span class="st">"vs"</span>, ref),</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">b =</span> <span class="fu">round</span>(b, <span class="dv">4</span>), <span class="at">z =</span> <span class="fu">round</span>(z, <span class="dv">3</span>), <span class="at">p =</span> <span class="fu">round</span>(<span class="dv">2</span> <span class="sc">*</span> <span class="fu">pnorm</span>(<span class="sc">-</span><span class="fu">abs</span>(z)), <span class="dv">3</span>),</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>      <span class="at">exp_b =</span> <span class="fu">round</span>(<span class="fu">exp</span>(b), <span class="dv">3</span>), <span class="at">row.names =</span> <span class="cn">NULL</span>)</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>  })</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">do.call</span>(rbind, out)</span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a><span class="co"># All ORs for x2</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a><span class="fu">all_contrasts</span>(simmod, <span class="st">"x2"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>  contrast       b       z     p exp_b
+1   2 vs 1 -0.1594  -3.203 0.001 0.853
+2   3 vs 1  1.3261  26.197 0.000 3.767
+3   1 vs 2  0.1594   3.202 0.001 1.173
+4   3 vs 2  1.4856  24.529 0.000 4.418
+5   1 vs 3 -1.3262 -26.197 0.000 0.265
+6   2 vs 3 -1.4856 -24.530 0.000 0.226</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<ul>
+<li>Note, column “<strong>b</strong>” is the log-odds; column “<strong>e^b</strong>” is exp(b) which are the conditional odds ratios</li>
+<li>To start, let’s examine the effects for category 3 (odds of category 3 compared to odds of category 2 and category 1)
+<ul>
+<li>Do these match your general impressions of the effects of <em>x2</em>?</li>
+</ul></li>
+<li>What about the effect of category 1 vs 2—the odds of category 1 compared to category 2?
+<ul>
+<li>Do these match your general impressions of the effects of <em>x2</em>?</li>
+</ul></li>
+</ul>
+</section>
+<section id="multinomial-logit-is-a-set-of-binary-logits-that-are-simultaneously-estimated" class="level2">
+<h2 class="anchored" data-anchor-id="multinomial-logit-is-a-set-of-binary-logits-that-are-simultaneously-estimated">Multinomial logit is a set of binary logits that are simultaneously estimated</h2>
+<p><em>Recall back to our example of political views (Conservative, Moderate, Liberal):</em></p>
+<ul>
+<li><u><strong><em>L vs M</em></strong></u> using <em>n</em><sub>L</sub> + <em>n</em><sub>M</sub> observations</li>
+</ul>
+<p><span class="math display">\[\ln\left[\frac{\Pr(L\,|\,\mathbf{x}_{i})}{\Pr(M\,|\,\mathbf{x}_{i})}\right] = \beta_{0,L|M} + \boldsymbol{\beta}_{X,L|M}\,\mathbf{x}_{i}\]</span></p>
+<blockquote class="blockquote">
+<p><u>Interpretation</u>: For a unit increase in <em>x<sub>k</sub></em> the odds of category <strong>L</strong> versus category <strong>M</strong> change by a factor of exp(β<sub>k,&nbsp;L|M</sub>), conditional on not being in any other categories</p>
+</blockquote>
+<ul>
+<li><em>The “conditional on not being in any other categories” part is important and what distinguishes an exponentiated coefficient in multinomial logit from a true odds ratio from binary logit</em>
+<ul>
+<li>In the example above <strong>only</strong> the observations in categories <strong>L</strong> or <strong>M</strong> are being compared</li>
+<li>Observations in category <strong>C</strong> are not used—the odds ratio for <strong>L</strong> vs <strong>M</strong> is <em>conditional on</em> the observation not being in category <strong>C</strong></li>
+</ul></li>
+</ul>
+<section id="odds-ratios-ors-vs-conditional-ors" class="level3">
+<h3 class="anchored" data-anchor-id="odds-ratios-ors-vs-conditional-ors">Odds ratios (ORs) vs conditional ORs</h3>
+<ul>
+<li><p>Consider a binary outcome <em>conservative/not</em> and gender (<em>woman</em>=1) as an IV</p>
+<p>Pr(conserv = 1 | woman = 0) = .3594</p>
+<p>Pr(conserv = 1 | woman = 1) = .2962</p></li>
+</ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="st">"https://tdmize.github.io/data/data/cda_gss"</span>, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(cda_gss.dta |  GSS 1972-2021 CDA - Categorical Data Analysis | date created 202
+&gt; 3)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">keep</span> <span class="kw">if</span> <span class="fu">year</span> &gt;= 2016 &amp; <span class="fu">year</span> &lt;= 2021</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(59,599 observations deleted)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">drop</span> <span class="kw">if</span> <span class="fu">missing</span>(conserv, age, woman, race3, college, married, parent, faminc)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(1,421 observations deleted)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>*Show that OR <span class="kw">in</span> binary <span class="kw">logit</span> = <span class="kw">ratio</span> <span class="kw">of</span> <span class="kw">two</span> risk ratios</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="kw">tab</span> conserv woman, col</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>+-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+| column percentage |
++-------------------+
+
+                 |        Woman R
+  Conservative R |       Men      Women |     Total
+-----------------+----------------------+----------
+Not Conservative |     2,280      3,003 |     5,283 
+                 |     64.06      70.38 |     67.51 
+-----------------+----------------------+----------
+    Conservative |     1,279      1,264 |     2,543 
+                 |     35.94      29.62 |     32.49 
+-----------------+----------------------+----------
+           Total |     3,559      4,267 |     7,826 
+                 |    100.00     100.00 |    100.00 </code></pre>
+</div>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>gss <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">"https://tdmize.github.io/data/data/cda_gss.dta"</span>)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>gss <span class="ot">&lt;-</span> gss <span class="sc">|&gt;</span> <span class="fu">filter</span>(year <span class="sc">&gt;=</span> <span class="dv">2016</span> <span class="sc">&amp;</span> year <span class="sc">&lt;=</span> <span class="dv">2021</span>)</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep model variables; drop any missing data</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>gss <span class="ot">&lt;-</span> gss[<span class="fu">c</span>(<span class="st">"conserv"</span>, <span class="st">"polviews3"</span>, <span class="st">"age"</span>, <span class="st">"woman"</span>, <span class="st">"race3"</span>, <span class="st">"college"</span>,</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"married"</span>, <span class="st">"parent"</span>, <span class="st">"faminc"</span>, <span class="st">"employed"</span>)]</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>gss <span class="ot">&lt;-</span> gss[<span class="fu">complete.cases</span>(gss[<span class="fu">c</span>(<span class="st">"conserv"</span>, <span class="st">"age"</span>, <span class="st">"woman"</span>, <span class="st">"race3"</span>, <span class="st">"college"</span>,</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"married"</span>, <span class="st">"parent"</span>, <span class="st">"faminc"</span>)]), ]</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Treat binary/nominal variables as factors</span></span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>gss <span class="ot">&lt;-</span> gss <span class="sc">|&gt;</span></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">c</span>(polviews3, woman, race3, college, married, parent, employed), as_factor)) <span class="sc">|&gt;</span></span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">droplevels</span>()</span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Show that OR in binary logit = ratio of two risk ratios</span></span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(<span class="fu">as_factor</span>(gss<span class="sc">$</span>conserv), gss<span class="sc">$</span>woman)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>                  
+                    Men Women
+  Not Conservative 2280  3003
+  Conservative     1279  1264</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> <span class="fu">prop.table</span>(<span class="fu">table</span>(<span class="fu">as_factor</span>(gss<span class="sc">$</span>conserv), gss<span class="sc">$</span>woman), <span class="at">margin =</span> <span class="dv">2</span>), <span class="dv">2</span>)  <span class="co"># column %</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>                  
+                     Men Women
+  Not Conservative 64.06 70.38
+  Conservative     35.94 29.62</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<section id="odds-ratios-in-binary-logit" class="level4">
+<h4 class="anchored" data-anchor-id="odds-ratios-in-binary-logit">Odds ratios in binary logit</h4>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">di</span> <span class="st">"Odds of being conservative for women = "</span> .2962 / (1 - .2962)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Odds of being conservative for women = .4208582</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">di</span> <span class="st">"Odds of being conservative for men = "</span> .3594 / (1 - .3594)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Odds of being conservative for men = .56103653</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">di</span> <span class="st">"Odds ratio of women / men = "</span> .4208582 / .56103653</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Odds ratio of women / men = .75014402</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">logit</span> conserv i.woman, <span class="kw">or</span> <span class="kw">nolog</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Logistic regression                                     Number of obs =  7,826
+                                                        LR chi2(1)    =  35.21
+                                                        Prob &gt; chi2   = 0.0000
+Log likelihood = -4916.995                              Pseudo R2     = 0.0036
+
+------------------------------------------------------------------------------
+     conserv | Odds ratio   Std. err.      z    P&gt;|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+       woman |
+      Women  |      0.750      0.036   -5.932   0.000        0.682       0.825
+       _cons |      0.561      0.020  -16.548   0.000        0.524       0.601
+------------------------------------------------------------------------------
+Note: _cons estimates baseline odds.</code></pre>
+</div>
+</div>
+<div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Odds of being conservative for women</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>.<span class="dv">2962</span> <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">-</span> .<span class="dv">2962</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>[1] 0.4208582</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Odds of being conservative for men</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>.<span class="dv">3594</span> <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">-</span> .<span class="dv">3594</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>[1] 0.5610365</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Odds ratio of women / men</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>.<span class="dv">4208582</span> <span class="sc">/</span> .<span class="dv">56103653</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>[1] 0.750144</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>genmod <span class="ot">&lt;-</span> <span class="fu">glm</span>(conserv <span class="sc">~</span> woman, <span class="at">data =</span> gss, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"logit"</span>))</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="fu">exp</span>(<span class="fu">cbind</span>(<span class="at">OR =</span> <span class="fu">coef</span>(genmod), <span class="fu">confint.default</span>(genmod)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>                   OR     2.5 %    97.5 %
+(Intercept) 0.5609649 0.5238403 0.6007205
+womanWomen  0.7503365 0.6824015 0.8250345</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<p>The odds ratio (OR) from a binary logit is the ratio of women to men’s odds</p>
+</section>
+</section>
+<section id="nominal-dvs-and-conditional-ors" class="level3">
+<h3 class="anchored" data-anchor-id="nominal-dvs-and-conditional-ors">Nominal DVs and conditional ORs</h3>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-6-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-1" role="tab" aria-controls="tabset-6-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-6-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-2" role="tab" aria-controls="tabset-6-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="kw">tab</span> polviews3 woman, col</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>+-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+| column percentage |
++-------------------+
+
+   Political |
+        View |        Woman R
+  Categories |       Men      Women |     Total
+-------------+----------------------+----------
+     Liberal |     1,100      1,392 |     2,492 
+             |     30.91      32.62 |     31.84 
+-------------+----------------------+----------
+    Moderate |     1,180      1,611 |     2,791 
+             |     33.16      37.75 |     35.66 
+-------------+----------------------+----------
+Conservative |     1,279      1,264 |     2,543 
+             |     35.94      29.62 |     32.49 
+-------------+----------------------+----------
+       Total |     3,559      4,267 |     7,826 
+             |    100.00     100.00 |    100.00 </code></pre>
+</div>
+</div>
+<div id="tabset-6-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(gss<span class="sc">$</span>polviews3, gss<span class="sc">$</span>woman)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>              
+                Men Women
+  Liberal      1100  1392
+  Moderate     1180  1611
+  Conservative 1279  1264</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> <span class="fu">prop.table</span>(<span class="fu">table</span>(gss<span class="sc">$</span>polviews3, gss<span class="sc">$</span>woman), <span class="at">margin =</span> <span class="dv">2</span>), <span class="dv">2</span>)  <span class="co"># column %</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>              
+                 Men Women
+  Liberal      30.91 32.62
+  Moderate     33.16 37.75
+  Conservative 35.94 29.62</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<ul>
+<li>Recall from <a href="#odds-ratios-in-binary-logit">above</a> the OR for gender (woman=1): .4208582 / .56103653 = .75014402</li>
+</ul>
+</section>
+<section id="conditional-odds-ratios-relative-risk-ratios" class="level3">
+<h3 class="anchored" data-anchor-id="conditional-odds-ratios-relative-risk-ratios">Conditional odds ratios / “relative risk ratios”</h3>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-7-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-1" role="tab" aria-controls="tabset-7-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-7-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-2" role="tab" aria-controls="tabset-7-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-7-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-7-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb50"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="kw">mlogit</span> polviews3 i.woman, base(1) rrr <span class="kw">nolog</span> cformat(%6.4f)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Multinomial logistic regression                         Number of obs =  7,826
+                                                        LR chi2(2)    =  37.07
+                                                        Prob &gt; chi2   = 0.0000
+Log likelihood = -8569.4951                             Pseudo R2     = 0.0022
+
+------------------------------------------------------------------------------
+   polviews3 |        RRR   Std. err.      z    P&gt;|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+Liberal      |  (base outcome)
+-------------+----------------------------------------------------------------
+Moderate     |
+       woman |
+      Women  |     1.0789     0.0600    1.364   0.172       0.9674      1.2032
+       _cons |     1.0727     0.0450    1.675   0.094       0.9881      1.1646
+-------------+----------------------------------------------------------------
+Conservative |
+       woman |
+      Women  |     0.7810     0.0442   -4.370   0.000       0.6990      0.8725
+       _cons |     1.1627     0.0478    3.666   0.000       1.0727      1.2603
+------------------------------------------------------------------------------
+Note: _cons estimates baseline relative risk for each outcome.</code></pre>
+</div>
+</div>
+<div id="tabset-7-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-7-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>pol3mod <span class="ot">&lt;-</span> <span class="fu">multinom</span>(polviews3 <span class="sc">~</span> woman, <span class="at">data =</span> gss, <span class="at">trace =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="fu">exp</span>(<span class="fu">coef</span>(pol3mod))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>             (Intercept) womanWomen
+Moderate        1.072727   1.078865
+Conservative    1.162727   0.780962</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<ul>
+<li>The conditional OR for <em>women</em> is 0.7810 in the conservative panel—which does not match the OR of 0.750 we calculated above. Why do you think this is?</li>
+</ul>
+<p>* Quick terminology note: Stata uses the term “relative risk ratio” (<a href="https://www.stata.com/statalist/archive/2005-04/msg00678.html">rationale for term here</a>) which is a synonym for conditional odds ratio; this is the exponentiated regression coefficient</p>
+<section id="calculating-conditional-ors-relative-risk-ratios-rrrs" class="level4">
+<h4 class="anchored" data-anchor-id="calculating-conditional-ors-relative-risk-ratios-rrrs">Calculating conditional ORs / relative risk ratios (RRRs)</h4>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-8-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-1" role="tab" aria-controls="tabset-8-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-8-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-2" role="tab" aria-controls="tabset-8-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-8-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-8-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb54"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="kw">di</span> <span class="st">"Women: pr(conserv) conditional on not being moderate = "</span> .2962 / (.2962 + </span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>.3262)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Women: pr(conserv) conditional on not being moderate = .47589974</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb56"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="kw">di</span> <span class="st">"Men: pr(conserv) conditional on not being moderate = "</span> .3594 / (.3594 + .3</span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>091)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Men: pr(conserv) conditional on not being moderate = .53762154</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb58"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="kw">di</span> <span class="st">"Women: Odds(conserv) conditional on not being moderate = "</span> .47589974 / (1 </span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>- .47589974)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Women: Odds(conserv) conditional on not being moderate = .90803187</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb60"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="kw">di</span> <span class="st">"Men: Odds(conserv) conditional on not being moderate = "</span> .53762154 / (1 - </span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>.53762154)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Men: Odds(conserv) conditional on not being moderate = 1.1627305</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb62"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="kw">di</span> <span class="st">"Odds ratio of women / men conditional on not being moderate = "</span> .90803187 </span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>/ 1.1627305</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Odds ratio of women / men conditional on not being moderate = .78094784</code></pre>
+</div>
+</div>
+<div id="tabset-8-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-8-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Women: pr(conserv) conditional on not being moderate</span></span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>.<span class="dv">2962</span> <span class="sc">/</span> (.<span class="dv">2962</span> <span class="sc">+</span> .<span class="dv">3262</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>[1] 0.4758997</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Men: pr(conserv) conditional on not being moderate</span></span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>.<span class="dv">3594</span> <span class="sc">/</span> (.<span class="dv">3594</span> <span class="sc">+</span> .<span class="dv">3091</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>[1] 0.5376215</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb68"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Women: Odds(conserv) conditional on not being moderate</span></span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a>.<span class="dv">47589974</span> <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">-</span> .<span class="dv">47589974</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>[1] 0.9080319</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb70"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Men: Odds(conserv) conditional on not being moderate</span></span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>.<span class="dv">53762154</span> <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">-</span> .<span class="dv">53762154</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>[1] 1.162731</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb72"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Odds ratio of women / men conditional on not being moderate</span></span>
+<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>.<span class="dv">90803187</span> <span class="sc">/</span> <span class="fl">1.1627305</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>[1] 0.7809478</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note no-icon">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Remember that the coefficients <strong>mlogit</strong> reports are conditional on not being in other categories—here, the coefficient in conservative panel is for Conservative vs Liberal (the base/reference category), <em>conditional on not being moderate</em></p>
+</div>
+</div>
+</div>
+</section>
+</section>
+</section>
+<section id="interpreting-conditional-ors-rrrs" class="level2">
+<h2 class="anchored" data-anchor-id="interpreting-conditional-ors-rrrs">Interpreting conditional ORs / RRRs</h2>
+<ul>
+<li>Because of this “conditional” nature of the coefficients in multinomial logit, it is not strictly appropriate to refer to them as odds ratios
+<ul>
+<li>Some call these “conditional odds ratios” (an <a href="https://www.statalist.org/forums/forum/general-stata-discussion/general/545887-multinomial-logit-interpretation-rrr-vs-cor">interesting discussion here</a>)</li>
+<li>Others conceptualize them as “relative risk ratios” (Stata’s term, <a href="https://www.stata.com/statalist/archive/2005-04/msg00678.html">explained here</a>)—TLDR: mathematically a ratio of two risk ratios (conditional on not being in other categories) is equivalent to a conditional odds ratio</li>
+<li><a href="https://www.stata.com/bookstore/regression-models-categorical-dependent-variables/">Long and Freese 2014</a> refer to them simply as odds ratios
+<ul>
+<li>Within sociology, referring to them as “odds ratios” is not problematic and you generally will be understood</li>
+<li>May not be the case in other fields
+<ul>
+<li>Within or outside of sociology, it cannot hurt to note your understanding of this distinction in your Analytic Strategy section of your paper. E.g., Feel free to copy this for your needs:</li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul>
+<blockquote class="blockquote">
+<p><em>I report exponentiated coefficients from the multinomial logit models, which represent conditional odds ratios (AKA relative risk ratios)—referred to simply as “odds ratios” in what follows (see Long and Freese 2014).</em></p>
+</blockquote>
+<section id="interpreting-ors-in-multinomial-logit" class="level3">
+<h3 class="anchored" data-anchor-id="interpreting-ors-in-multinomial-logit">Interpreting ORs in multinomial logit</h3>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-9-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-1" role="tab" aria-controls="tabset-9-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-9-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-2" role="tab" aria-controls="tabset-9-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-9-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-9-1-tab">
+<ul>
+<li>In Stata, the SPost command <strong>listcoef</strong> will calculate ORs for all contrasts for you</li>
+</ul>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb74"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> <span class="kw">mlogit</span> polviews3 c.age i.woman i.race3 i.college <span class="co">///</span></span>
+<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>    i.married i.parent c.faminc i.employed</span>
+<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> pol3mod</span>
+<span id="cb74-4"><a href="#cb74-4" aria-hidden="true" tabindex="-1"></a>listcoef age</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>mlogit (N=7823): Factor change in the odds of polviews3 
+
+Variable: age (sd=17.361)
+------------------------------------------------------------------------------
+                             |         b        z    P&gt;|z|       e^b   e^bStdX
+-----------------------------+------------------------------------------------
+Liberal      vs Moderate     |    0.0010    0.518    0.604     1.001     1.017
+Liberal      vs Conservative |   -0.0130   -6.489    0.000     0.987     0.799
+Moderate     vs Liberal      |   -0.0010   -0.518    0.604     0.999     0.983
+Moderate     vs Conservative |   -0.0139   -7.329    0.000     0.986     0.785
+Conservative vs Liberal      |    0.0130    6.489    0.000     1.013     1.252
+Conservative vs Moderate     |    0.0139    7.329    0.000     1.014     1.274
+------------------------------------------------------------------------------</code></pre>
+</div>
+</div>
+<div id="tabset-9-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-9-2-tab">
+<ul>
+<li>In R, would need to refit model changing the reference outcome category</li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb76"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>pol3mod <span class="ot">&lt;-</span> <span class="fu">multinom</span>(polviews3 <span class="sc">~</span> age <span class="sc">+</span> woman <span class="sc">+</span> race3 <span class="sc">+</span> college <span class="sc">+</span> married <span class="sc">+</span> parent <span class="sc">+</span></span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a>  faminc <span class="sc">+</span> employed, <span class="at">data =</span> gss, <span class="at">trace =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb76-4"><a href="#cb76-4" aria-hidden="true" tabindex="-1"></a><span class="fu">all_contrasts</span>(pol3mod, <span class="st">"age"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>                  contrast       b      z     p exp_b
+1      Moderate vs Liberal -0.0010 -0.518 0.604 0.999
+2  Conservative vs Liberal  0.0130  6.489 0.000 1.013
+3      Liberal vs Moderate  0.0010  0.518 0.604 1.001
+4 Conservative vs Moderate  0.0139  7.329 0.000 1.014
+5  Liberal vs Conservative -0.0130 -6.489 0.000 0.987
+6 Moderate vs Conservative -0.0139 -7.329 0.000 0.986</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<p>Each contrast appears twice (e.g., Liberal vs Moderate and Moderate vs Liberal), so half of the coefficients and significance tests are redundant; there are only three unique ORs. Which direction of the contrast to interpret depends on your research question, but there is no reason to interpret both</p>
+</section>
+<section id="interpreting-ors-in-multinomial-logit-continuous-iv" class="level3">
+<h3 class="anchored" data-anchor-id="interpreting-ors-in-multinomial-logit-continuous-iv">Interpreting ORs in multinomial logit: continuous IV</h3>
+<blockquote class="blockquote">
+<p><em>For a one year increase in age, the odds of identifying as conservative compared to moderate increase by a factor of 1.014 (holding all else constant)</em></p>
+<p><em>For a one-year increase in age, the odds of identifying as conservative instead of liberal increase by a factor of 1.013 (all else equal)</em></p>
+<p><em>Age has no significant effect on the odds of identifying as liberal compared to moderate (p = ns)</em></p>
+</blockquote>
+<p><img src="fig/cda-04_02_a-polviews.png" class="img-fluid" style="width:70.0%" alt="[4.2.a] Predicted probabilities of each political ideology by age with confidence intervals: Pr(liberal) falls from about 0.35 to 0.27, Pr(moderate) falls from about 0.41 to 0.29, and Pr(conservative) rises from about 0.24 to 0.44."></p>
+<div class="callout callout-style-simple callout-note no-icon">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Do the ORs interpreted above tell the whole story? Would you be able to ascertain that age has a negative effect on the probability of identifying as moderate? A positive effect on the probability of identifying as conservative? Etc.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="interpreting-ors-in-multinomial-logit-nominal-iv" class="level3">
+<h3 class="anchored" data-anchor-id="interpreting-ors-in-multinomial-logit-nominal-iv">Interpreting ORs in multinomial logit: nominal IV</h3>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-10-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-1" role="tab" aria-controls="tabset-10-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-10-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-2" role="tab" aria-controls="tabset-10-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-10-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-10-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb78"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>listcoef college</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>mlogit (N=7823): Factor change in the odds of polviews3 
+
+Variable: 1.college (sd=0.485)
+------------------------------------------------------------------------------
+                             |         b        z    P&gt;|z|       e^b   e^bStdX
+-----------------------------+------------------------------------------------
+Liberal      vs Moderate     |    0.9020   14.071    0.000     2.465     1.549
+Liberal      vs Conservative |    0.7312   11.234    0.000     2.078     1.426
+Moderate     vs Liberal      |   -0.9020  -14.071    0.000     0.406     0.645
+Moderate     vs Conservative |   -0.1708   -2.602    0.009     0.843     0.920
+Conservative vs Liberal      |   -0.7312  -11.234    0.000     0.481     0.701
+Conservative vs Moderate     |    0.1708    2.602    0.009     1.186     1.086
+------------------------------------------------------------------------------</code></pre>
+</div>
+</div>
+<div id="tabset-10-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb80"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="fu">all_contrasts</span>(pol3mod, <span class="st">"collegeCollege Degree"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>                  contrast       b       z     p exp_b
+1      Moderate vs Liberal -0.9020 -14.071 0.000 0.406
+2  Conservative vs Liberal -0.7312 -11.234 0.000 0.481
+3      Liberal vs Moderate  0.9020  14.071 0.000 2.465
+4 Conservative vs Moderate  0.1708   2.602 0.009 1.186
+5  Liberal vs Conservative  0.7312  11.234 0.000 2.078
+6 Moderate vs Conservative -0.1708  -2.602 0.009 0.843</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<blockquote class="blockquote">
+<p><em>For those with college degrees, the odds of identifying as liberal are 2.465 times higher than the odds of identifying as moderate (compared to those without college degrees)</em></p>
+<p><em>The odds of identifying as liberal over conservative increase by a factor of 2.078 for those with a college degree</em></p>
+<p><em>The odds of identifying as conservative compared to moderate are 1.186 times higher for those with a college degree</em></p>
+</blockquote>
+<p><img src="images/mize-2017-table3.png" class="img-fluid" style="width:90.0%" alt="Table 3 from Mize (2017): odds ratios for all contrasts among five latent health lifestyles (Health Conscious, Idle Abstainers, Indulgers, Active Drinkers, Active Indulgers, Abstainers) for obligatory and voluntary role change; for example, Health Conscious versus Idle Abstainers is 1.08 for obligatory role change and 0.83 (p < 0.01) for voluntary role change."></p>
+<blockquote class="blockquote">
+<p><em>“… the first row of the table indicates that obligatory role change does not distinguish between membership in the Idle Abstainer and Health Conscious lifestyle at Wave 4 (OR = 1.08, ns), but that gaining an additional voluntary role between waves is associated with lower odds of being in the Idle Abstainer lifestyle compared to being in the Health Conscious lifestyle (OR = 0.83, 95% CI [0.73, 0.93]).”</em> (<a href="https://doi.org/10.1016/j.socscimed.2017.02.017">Mize 2017</a>)</p>
+</blockquote>
+<p><img src="images/mize-2017-fig3.png" class="img-fluid" style="width:60.0%" alt="Figure 3 from Mize (2017): predicted probabilities of health lifestyles by the number of voluntary roles gained or lost, from -3 to 4: Idle Abstainers falls from about 0.34 to 0.15, Health Conscious rises from about 0.17 to 0.22, Active Drinkers rises from about 0.08 to 0.22, and Active Indulgers rises from about 0.03 to 0.10."></p>
+
+
+</section>
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/www\.trentonmize\.com");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../../../teaching/cda/04/4-4-four-category-example.html" class="pagination-link" aria-label="4.4 Example with 4 DV Categories">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">4.4 Example with 4 DV Categories</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../../teaching/cda/04/4-6-iia.html" class="pagination-link" aria-label="4.6 Independence of Irrelevant Alternatives (IIA)">
+        <span class="nav-page-text">4.6 Independence of Irrelevant Alternatives (IIA)</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Trenton D. Mize, Purdue University</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org">Quarto</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>
