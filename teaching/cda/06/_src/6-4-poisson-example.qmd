@@ -1,0 +1,552 @@
+---
+title: "6.4 Poisson Regression Example"
+---
+<<dd_version: 2>>
+
+## Software considerations
+
+- Convergence (of the maximum likelihood estimates) is usually fast and problems are rarely encountered
+  - Also true for negative binomial model (covered next)
+- Convergence can be trickier for zero-inflated count models (covered end of this section)
+  - But, lack of convergence generally indicates that model is not a good fit for your data and solution is to use a regular count model
+
+## Example
+
+- Add Health Wave IV
+  - DV: Number of drinks consumed in a typical sitting
+  - IVs: Gender, Age (24 -- 33)
+  - Controls: Education, race, income, marital status, parental status
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_ah4", clear
+
+*6.4.a
+hist drinktime, percent fcolor(none) xlab(0(2)18) ///
+    title("[6.4.a] Distribution of Number of Drinks Consumed in a Typical Sitting")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-06_04_a-drinks-01.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-06_04_a-drinks-01.png){width=80% fig-alt="[6.4.a] Histogram of the average number of drinks in a sitting, from 0 to 18: about 42% report 0 drinks, about 10% 1, 15% 2, 11% 3, and few report more than 6."}
+
+## R
+
+```{r}
+#| fig-alt: "[6.4.a] Histogram of the average number of drinks in a sitting, from 0 to 18: about 42% report 0 drinks, about 10% 1, 15% 2, 11% 3, and few report more than 6."
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(ggplot2)         # graphs
+library(modelsummary)    # regression tables
+library(marginaleffects) # predictions and marginal effects
+library(cleanplots)      # graph scheme
+cleanplots_defaults()
+
+ah4 <- read_dta("https://tdmize.github.io/data/data/cda_ah4.dta")
+
+# 6.4.a
+ggplot(ah4, aes(x = drinktime)) +
+  geom_histogram(aes(y = after_stat(100 * count / sum(count))), binwidth = 1,
+    fill = NA, color = "black") +
+  scale_x_continuous(breaks = seq(0, 18, 2)) +
+  labs(title = "[6.4.a] Distribution of Number of Drinks Consumed in a Typical Sitting",
+    x = "Average Drinks Each Time", y = "Percent")
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*6.4.b
+poisson drinktime i.woman c.age i.college i.race c.income ///
+    i.spouserole i.parrole
+est store pmod
+est table pmod, ///
+    title("[6.4.b] Poisson regression for # of drinks in a sitting") ///
+    b(%5.3f) star(.05 .01 .001)
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# Keep model variables; drop any missing data
+ah4 <- ah4[c("drinktime", "woman", "age", "college", "race", "income", "spouserole",
+  "parrole")]
+ah4 <- ah4[complete.cases(ah4), ]
+
+# Treat binary/nominal variables as factors
+ah4 <- ah4 |>
+  mutate(across(c(woman, college, race, spouserole, parrole), as_factor))
+
+# 6.4.b
+pmod <- glm(drinktime ~ woman + age + college + race + income + spouserole + parrole,
+  family = "poisson", data = ah4)
+
+modelsummary(pmod, stars = c("*" = .05, "**" = .01, "***" = .001),
+  title = "[6.4.b] Poisson regression for # of drinks in a sitting")
+```
+
+:::
+
+::: {.callout-note icon="false" appearance="simple"}
+In Stata, use the [**poisson**](https://www.stata.com/manuals13/rpoisson.pdf) command
+
+In R, use [**glm**](https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/glm) and specify family = "poisson"
+
+Poisson regression coefficients are in the metric of the log rate---which is not very useful
+
+We usually exponentiate the coefficients and interpret in terms of the factor change on the rate (see below)
+:::
+
+## Factor change in the rate E(y | x)
+
+- To go from log rates to rates metric, we exponentiate the coefficients
+  - This makes the coefficients multiplicative effects
+- The effect of a change in *x~k~* does not depend on values of the *x*'s
+
+> ***Factor change interpretation**: For a unit change in x~k~ the expected count (rate) changes by a factor of exp(β~k~), holding other variables constant*
+
+### Interpreting factor changes in rate
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*6.4.c - Exponentiated coefs with irr option
+qui poisson drinktime i.woman c.age i.college i.race c.income ///
+    i.spouserole i.parrole, irr
+est table pmod, ///
+    title("[6.4.c] Poisson regression for # of drinks in a sitting (exponentiated coefficients = IRRs)") ///
+    b(%5.3f) star(.05 .01 .001) eform
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# 6.4.c - Exponentiated coefficients
+exp(coef(pmod))
+```
+
+:::
+
+::: {.callout-note icon="false" appearance="simple"}
+Exponentiated coefficients are referred to as "incident rate ratios" in Poisson
+:::
+
+> - *Women's rates of drinking are lower than men's by a factor of about 0.61*
+> - *Each additional year of age is associated with a 0.95 times decrease in the number of drinks consumed in a sitting*
+> - *Black and Asian respondents drink fewer drinks in a sitting than do White respondents (e^b^ = 0.69; e^b^ = 0.88); in contrast, Native American respondents drink 1.33 times more drinks in a sitting than White respondents*
+> - *An additional \$1000 of income is associated with consuming 1.003 times more drinks in a sitting*
+
+## Plots of the predicted rate
+
+- The predicted rate is the default quantity with **margins** in Stata and with **plot_predictions** in R
+  - Easy to calculate
+
+$$E(y) = \widehat{\mu} = \exp(\mathbf{x}\boldsymbol{\beta})$$
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*6.4.e
+qui margins, at(age=(24(1)33) woman=(0 1))
+marginsplot, recastci(rline) ciopts(lpat(dash) col(gs12)) ylab(0(1)4) ///
+    ytitle("Number of Drinks") xtitle("Age in Years") ///
+    title("[6.4.e] Predicted Number of Drinks in a Typical Sitting Based on Age", size(medium))
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-06_04_e-drinks-06.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-06_04_e-drinks-06.png){width=80% fig-alt="[6.4.e] Predicted number of drinks in a sitting by age, with confidence intervals: men's predictions fall from about 3.3 at age 24 to 2.1 at age 33, and women's from about 2.0 to 1.3."}
+
+## R
+
+::: {.callout-note icon="false" appearance="simple"}
+R's **plot_predictions** default would hold controls at modal person. To get average predictions, need the **newdata** statement with a "counterfactual" **grid_type.**
+:::
+
+```{r}
+#| fig-alt: "[6.4.e] Predicted number of drinks in a sitting by age, with confidence intervals: men's predictions fall from about 3.3 at age 24 to 2.1 at age 33, and women's from about 2.0 to 1.3."
+# 6.4.e
+plot_predictions(pmod, by = c("age", "woman"),
+  newdata = datagrid(age = 24:33, woman = unique, grid_type = "counterfactual")) +
+  scale_x_continuous(breaks = 24:33) +
+  scale_y_continuous(breaks = 0:4, limits = c(0, 4)) +
+  labs(title = "[6.4.e] Predicted Number of Drinks in a Typical Sitting Based on Age",
+    x = "Age in Years", y = "Number of Drinks", color = NULL, fill = NULL)
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*6.4.f
+qui margins, at(income=(0(5)150) woman=(0 1))
+marginsplot, recastci(rline) ciopts(lpat(dash) col(gs12)) ylab(0(1)4) xlab(0(25)150) ///
+    plotopts(msym(i)) ///
+    ytitle("Number of Drinks") xtitle("Personal Income in $1000s") ///
+    title("[6.4.f] Predicted Number of Drinks in a Typical Sitting Based on Income", size(medium))
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-06_04_f-drinks-08.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-06_04_f-drinks-08.png){width=80% fig-alt="[6.4.f] Predicted number of drinks in a sitting by personal income, with confidence intervals: men's predictions rise from about 2.4 at no income to 3.7 at $150,000, and women's from about 1.5 to 2.3."}
+
+## R
+
+```{r}
+#| fig-alt: "[6.4.f] Predicted number of drinks in a sitting by personal income, with confidence intervals: men's predictions rise from about 2.4 at no income to 3.7 at $150,000, and women's from about 1.5 to 2.3."
+# 6.4.f
+plot_predictions(pmod, by = c("income", "woman"),
+  newdata = datagrid(income = seq(0, 150, 5), woman = unique, grid_type = "counterfactual")) +
+  scale_x_continuous(breaks = seq(0, 150, 25)) +
+  scale_y_continuous(breaks = 0:4) +
+  coord_cartesian(ylim = c(0, 4)) +
+  labs(title = "[6.4.f] Predicted Number of Drinks in a Typical Sitting Based on Income",
+    x = "Personal Income in $1000s", y = "Number of Drinks", color = NULL, fill = NULL)
+```
+
+:::
+
+### Marginal effects on rates are not constant
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*Show nonlinearities (predictions across a broader range)
+*6.4.g
+qui margins, at(age=(0(2.5)100))
+marginsplot, noci xlab(0(20)100) ylab(0(2)10) plotopts(msym(i)) ///
+    ytitle("Number of Drinks") xtitle("Age in Years") ///
+    title("[6.4.g] Predicted Number of Drinks in a Typical Sitting Based on Age", size(medium))
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-06_04_g-drinks-07.png", replace width(1400)
+<</dd_do>>
+<<dd_do>>
+*6.4.h
+qui margins, at(income=(0(50)2000))
+marginsplot, noci ylab() xlab(0(250)2000) ///
+    plotopts(msym(i)) ///
+    ytitle("Number of Drinks") xtitle("Personal Income in $1000s") ///
+    title("[6.4.h] Predicted Number of Drinks in a Typical Sitting Based on Income", size(medium))
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-06_04_h-drinks-09.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-06_04_g-drinks-07.png){width=80% fig-alt="[6.4.g] Predicted number of drinks by age from 0 to 100, far beyond the observed ages: the curve falls steeply from about 9 at age 0 and flattens near 0 by age 80, showing the exponential form of the model."}
+
+![](fig/cda-06_04_h-drinks-09.png){width=80% fig-alt="[6.4.h] Predicted number of drinks by personal income from 0 to $2,000,000, far beyond the observed incomes: the curve is nearly flat at first and then rises steeply to about 600 drinks, showing the exponential form of the model."}
+
+## R
+
+```{r}
+#| fig-alt: "[6.4.g] Predicted number of drinks by age from 0 to 100, far beyond the observed ages: the curve falls steeply from about 9 at age 0 and flattens near 0 by age 80, showing the exponential form of the model."
+# Show nonlinearities (predictions across a broader range)
+# 6.4.g
+plot_predictions(pmod, by = "age",
+  newdata = datagrid(age = seq(0, 100, 2.5), grid_type = "counterfactual"), vcov = FALSE) +
+  scale_x_continuous(breaks = seq(0, 100, 20)) +
+  scale_y_continuous(breaks = seq(0, 10, 2), limits = c(0, 10)) +
+  labs(title = "[6.4.g] Predicted Number of Drinks in a Typical Sitting Based on Age",
+    x = "Age in Years", y = "Number of Drinks")
+```
+
+```{r}
+#| fig-alt: "[6.4.h] Predicted number of drinks by personal income from 0 to $2,000,000, far beyond the observed incomes: the curve is nearly flat at first and then rises steeply to about 600 drinks, showing the exponential form of the model."
+# 6.4.h
+plot_predictions(pmod, by = "income",
+  newdata = datagrid(income = seq(0, 2000, 50), grid_type = "counterfactual"), vcov = FALSE) +
+  scale_x_continuous(breaks = seq(0, 2000, 250)) +
+  labs(title = "[6.4.h] Predicted Number of Drinks in a Typical Sitting Based on Income",
+    x = "Personal Income in $1000s", y = "Number of Drinks")
+```
+
+:::
+
+## Marginal effect on the rate
+
+- The factor change (*e^b^*) is constant; it does not differ across values of the IVs
+- The marginal effect depends on the values of the IVs
+  - Considerations about what starting and ending values to use; whether to hold control variables at the mean (MEM) or to average over observed values (AMEs) are identical in count models to other nonlinear models
+
+$$ME = \eta(x_{k} = end,\, \mathbf{x}_{-k} = \mathbf{x}^{*}) - \eta(x_{k} = start,\, \mathbf{x}_{-k} = \mathbf{x}^{*})$$
+
+- There are multiple potential predictions of interest with count models
+  - Can define $\eta$ as the rate (AKA expected count; AKA \# of expected "events")
+  - Can define $\eta$ as the Pr(*y* = *j*)
+  - Can define $\eta$ as the probability of a range of outcomes, e.g., Pr(*y* = 4,5,6,7, or 8)
+- For marginal effects on the rate/count:
+
+> ***Interpretation:** The difference in the expected count for a change in x~k~ of δ, holding other independent variables constant*
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+mecompare woman, model(pmod)
+<</dd_do>>
+```
+
+## R
+
+```{r}
+avg_comparisons(pmod, variables = "woman")
+```
+
+:::
+
+> *On average, women consume about one fewer drink in a typical sitting than do men (ME = -1.038; p \< 0.001).*
+
+::: {.callout-note icon="false" appearance="simple"}
+**Interpretation tip**: Count DVs tend to have a natural metric; using it in your interpretations instead of "rate" or "expected count" is recommended. Here, "number of drinks".
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+::: {.callout-note icon="false" appearance="simple"}
+With [**mecompare**](https://www.trentonmize.com/software/mecompare/examples/model-types.html), can customize **start()** place of change, and the **amount(#)** of change. **uncenter** the change if you want an ME between those two exact \#s.
+:::
+
+```{.stata-run}
+<<dd_do>>
+mecompare age, model(pmod) start(age=25) amount(5) uncenter
+<</dd_do>>
+```
+
+## R
+
+```{r}
+avg_comparisons(pmod, variables = list(age = c(25, 30)))
+```
+
+:::
+
+> *Aging from 25 to 30 is associated with consuming about ½ a drink less per sitting (ME = -0.562; p \< 0.001).*
+
+## Probabilities of specific counts
+
+- For a given rate, the probability of count *j* for observation *i* is:
+
+$$\Pr(y_{i} = j\,|\,\mathbf{x}_{i}) = \frac{e^{-\widehat{\mu}_{i}}\,\widehat{\mu}_{i}^{\,j}}{j!}$$
+
+- Sometimes the probability of specific count is of interest
+  - Pr(*y* = 0) is commonly of interest
+  - Depending on research question, probabilities at other values and/or cumulative probabilities may be of interest
+    - E.g., To determine who is at risk, examine what the probability is that someone consumes ≥ 4 drinks in a typical sitting: Pr(*y* ≥ 4)
+- Probabilities are also used to assess the adequacy of the model
+
+### Plotting probabilities of specific counts
+
+::: {.panel-tabset group="language"}
+## Stata
+
+- In Stata, can request the probability of a specific count \# on **margins**, with option **predict(pr(#))**
+  - And a range with **predict(pr(#,#))**
+
+```{.stata-run}
+<<dd_do>>
+*6.4.i - Pr(y=0)
+qui margins, at(age=(21(1)35) woman=(0 1)) predict(pr(0))
+marginsplot, recastci(rline) ciopts(lpat(dash) col(gs12)) ylab(0(.1).4) xlab(21(2)35) ///
+    ytitle("Pr(Typically Consumes 0 Drinks)") xtitle("Age in Years") ///
+    title("[6.4.i] Probability of Consuming Zero Drinks in a Typical Sitting", size(medium))
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-06_04_i-drinks-10.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-06_04_i-drinks-10.png){width=80% fig-alt="[6.4.i] Probability of typically consuming zero drinks by age, with confidence intervals: it rises with age for both groups, from about 0.03 at 21 to 0.17 at 35 for men and from about 0.11 to 0.33 for women."}
+
+## R
+
+- In R, **plot_predictions** only predicts the expected count
+  - Instead, use **predictions()** first and convert each person's predicted count to the probability of a specific count with **dpois(#, x)** inside the **hypothesis** option
+    - Take the **mean()** to average within each age and gender combination
+  - Use **ggplot** to make the graph using the stored predictions
+
+```{r}
+#| fig-alt: "[6.4.i] Probability of typically consuming zero drinks by age, with confidence intervals: it rises with age for both groups, from about 0.03 at 21 to 0.17 at 35 for men and from about 0.11 to 0.33 for women."
+# 6.4.i - Pr(y=0)
+pr0 <- predictions(pmod, type = "response",
+  newdata = datagrid(age = 21:35, woman = unique, grid_type = "counterfactual"),
+  hypothesis = ~ I(mean(dpois(0, x))) | age + woman)
+
+ggplot(pr0, aes(age, estimate, ymin = conf.low, ymax = conf.high, color = woman, fill = woman)) +
+  geom_ribbon(alpha = .2, color = NA) + geom_line() +
+  scale_x_continuous(breaks = seq(21, 35, 2)) +
+  scale_y_continuous(breaks = seq(0, .4, .1), limits = c(0, .4)) +
+  labs(title = "[6.4.i] Probability of Consuming Zero Drinks in a Typical Sitting",
+    x = "Age in Years", y = "Pr(Typically Consumes 0 Drinks)", color = NULL, fill = NULL)
+```
+
+:::
+
+### Marginal effects on probabilities of specific counts
+
+- Define $\eta$ as the probability of a specific count \# (or range)
+
+$$\eta = \Pr(y = j\,|\,\mathbf{x}_{i}) = \frac{e^{-\widehat{\mu}_{i}}\,\widehat{\mu}_{i}^{\,j}}{j!}$$
+
+- Marginal effect is difference in probability of specific count, conditional on two values of the focal IV of interest
+
+$$ME = \eta(x_{k} = end,\, \mathbf{x}_{-k} = \mathbf{x}^{*}) - \eta(x_{k} = start,\, \mathbf{x}_{-k} = \mathbf{x}^{*})$$
+
+> ***Interpretation:** The difference in the probability of a count of \# for a change in x~k~ of δ, holding other independent variables constant*
+
+- And for a range of counts
+
+> ***Interpretation:** The difference in the probability of a count between \# and \# for a change in x~k~ of δ, holding other independent variables constant*
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*NOTE: Pass customized predict() functions
+mecompare age, model(pmod) amount(trimrange) predict(pr(0))
+<</dd_do>>
+```
+
+## R
+
+```{r}
+avg_comparisons(pmod, variables = list(age = c(26, 31)),
+  comparison = function(hi, lo) dpois(0, hi) - dpois(0, lo))
+```
+
+:::
+
+> *Aging from the 5^th^ to 95^th^ percentile in the data (26 to 31), predicts a 6.5 percentage point increase in the probability of not drinking any alcoholic drinks.*
+
+::: {.callout-note icon="false" appearance="simple"}
+**Interpretation tip**: As with a +SD effect, the first time you report a (trimmed) range ME, useful to remind readers what those values are in your data.
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*6.4.j - Pr(y=3)
+qui margins, at(age=(21(1)35) woman=(0 1)) predict(pr(3))
+marginsplot, recastci(rline) ciopts(lpat(dash) col(gs12)) ylab(0(.1).4) xlab(21(2)35) ///
+    ytitle("Pr(Typically Consumes 3 Drinks)") xtitle("Age in Years") ///
+    title("[6.4.j] Probability of Consuming Three Drinks in a Typical Sitting", size(medium))
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-06_04_j-drinks-11.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-06_04_j-drinks-11.png){width=80% fig-alt="[6.4.j] Probability of typically consuming three drinks by age, with confidence intervals: for men it is about 0.19 to 0.21 and peaks in the mid-20s before falling to about 0.16 at 35; for women it falls from about 0.19 at 21 to 0.08 at 35."}
+
+## R
+
+```{r}
+#| fig-alt: "[6.4.j] Probability of typically consuming three drinks by age, with confidence intervals: for men it is about 0.19 to 0.21 and peaks in the mid-20s before falling to about 0.16 at 35; for women it falls from about 0.19 at 21 to 0.08 at 35."
+# 6.4.j - Pr(y=3)
+pr3 <- predictions(pmod, type = "response",
+  newdata = datagrid(age = 21:35, woman = unique, grid_type = "counterfactual"),
+  hypothesis = ~ I(mean(dpois(3, x))) | age + woman)
+
+ggplot(pr3, aes(age, estimate, ymin = conf.low, ymax = conf.high, color = woman, fill = woman)) +
+  geom_ribbon(alpha = .2, color = NA) + geom_line() +
+  scale_x_continuous(breaks = seq(21, 35, 2)) +
+  scale_y_continuous(breaks = seq(0, .4, .1), limits = c(0, .4)) +
+  labs(title = "[6.4.j] Probability of Consuming Three Drinks in a Typical Sitting",
+    x = "Age in Years", y = "Pr(Typically Consumes 3 Drinks)", color = NULL, fill = NULL)
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*6.4.k - Pr(y >= 4)
+qui margins, at(age=(21(1)35) woman=(0 1)) predict(pr(4,18))
+marginsplot, recastci(rline) ciopts(lpat(dash) col(gs12)) ylab(0(.1).7) xlab(21(2)35) ///
+    ytitle("Pr(Typically Consumes 4+ Drinks)") xtitle("Age in Years") ///
+    title("[6.4.k] Probability of Consuming Four or More Drinks in a Typical Sitting", size(medium))
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-06_04_k-drinks-13.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-06_04_k-drinks-13.png){width=80% fig-alt="[6.4.k] Probability of typically consuming four or more drinks by age, with confidence intervals: it falls with age, from about 0.52 at 21 to 0.13 at 35 for men and from about 0.22 to 0.04 for women."}
+
+## R
+
+- In R, for a range of counts, use **ppois(#, x)**, which gives the probability of \# or fewer. Specify amount between *end \#* and *start \# -- 1*. E.g. For Pr(*y* = 4--18)
+
+```{r}
+#| fig-alt: "[6.4.k] Probability of typically consuming four or more drinks by age, with confidence intervals: it falls with age, from about 0.52 at 21 to 0.13 at 35 for men and from about 0.22 to 0.04 for women."
+# 6.4.k - Pr(y >= 4)
+pr4_18 <- predictions(pmod, type = "response",
+  newdata = datagrid(age = 21:35, woman = unique, grid_type = "counterfactual"),
+  hypothesis = ~ I(mean(ppois(18, x) - ppois(3, x))) | age + woman)
+
+ggplot(pr4_18, aes(age, estimate, ymin = conf.low, ymax = conf.high, color = woman, fill = woman)) +
+  geom_ribbon(alpha = .2, color = NA) + geom_line() +
+  scale_x_continuous(breaks = seq(21, 35, 2)) +
+  scale_y_continuous(breaks = seq(0, .7, .1), limits = c(0, .7)) +
+  labs(title = "[6.4.k] Probability of Consuming Four or More Drinks in a Typical Sitting",
+    x = "Age in Years", y = "Pr(Typically Consumes 4+ Drinks)", color = NULL, fill = NULL)
+```
+
+:::
+
+### Marginal effects on probability of a range of counts
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+mecompare age, model(pmod) amount(sd) predict(pr(4,18))
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# Center changes in continuous IVs on each observation's value (as mecompare does)
+options(marginaleffects_contrast_direction = "center")
+
+avg_comparisons(pmod, variables = list(age = sd(ah4$age)),
+  comparison = function(hi, lo) (ppois(18, hi) - ppois(3, hi)) - (ppois(18, lo) - ppois(3, lo)))
+```
+
+:::
+
+> *In this article, we define **risk of alcohol misuse** as reporting an average number of alcoholic drinks in a sitting as 4 or more. Using this definition, aging a standard deviation (about 2 years) predicts a 3.5 percentage point decrease in the probability of being at risk of alcohol misuse.*

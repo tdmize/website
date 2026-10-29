@@ -1,0 +1,601 @@
+---
+title: "6.6 Negative Binomial Models"
+---
+<<dd_version: 2>>
+
+- The Poisson model rarely fits due to **overdispersion**
+  - *Overdispersion: var(y) \> E(y)*
+    - *I.e., The variance of the DV is larger than the mean of the DV*
+- The model typically under-predicts 0's and over-predicts larger counts
+- If the Poisson model mean structure is correct, but there is over-dispersion:
+  - Coefficient estimates are consistent, but inefficient
+    - Prediction and marginal effects estimates (especially for specific count \#s) can be biased
+  - *z*-values are spuriously large; i.e., Type I errors common
+- The Poisson model assumes
+
+$$Var(y\,|\,\mathbf{x}) = E(y\,|\,\mathbf{x}) = \exp(\mathbf{x}\boldsymbol{\beta})$$
+
+- The negative binomial model adds a parameter so that
+
+$$Var(y\,|\,\mathbf{x}) > E(y\,|\,\mathbf{x})$$
+
+- This single parameter often makes a huge difference in fit
+
+## Unobserved heterogeneity
+
+- In the negative binomial model, a new source of error is added
+
+$$\mu = \exp(\beta_{0} + \beta_{1}x_{1,i} + \beta_{2}x_{2,i} + \ldots + \beta_{k}x_{k,i}) \quad \text{for the Poisson model}$$
+
+$$\widetilde{\mu} = \exp(\beta_{0} + \beta_{1}x_{1,i} + \beta_{2}x_{2,i} + \ldots + \beta_{k}x_{k,i} + \varepsilon) \quad \text{for the negative binomial model}$$
+
+- ε is assumed uncorrelated with **x**
+- ε can be due to
+  - Combined effects of excluded variables
+  - Pure randomness
+- $\widetilde{\mu}$ from NBRM and $\mu$ from PRM are related
+
+$$\begin{aligned} \widetilde{\mu} &= \exp(\beta_{0} + \beta_{1}x_{1} + \beta_{2}x_{2} + \beta_{3}x_{3}) \times \exp(\varepsilon) \\ &= \mu \times \exp(\varepsilon) \\ &= \mu\nu \quad \text{where } \nu \equiv \exp(\varepsilon) \end{aligned}$$
+
+### Identification & the negative binomial distribution
+
+- In linear regression we assume E(ε) = 0 to identify the model
+  - We need a similar assumption for the negative binomial model
+- Most ***conveniently*** assume
+
+$$E(\nu) = 1 = E[\exp(\varepsilon)]$$
+
+- With this assumption, Poisson and negative binomial have *the same mean structure*
+
+$$E(\widetilde{\mu}) = E(\mu\nu) = \mu E(\nu) = \mu$$
+
+#### Poisson distribution given x and ν
+
+- ν ("nu") is unobserved, but **assume** we know the value of ν for each observation
+  - Knowing ν, we treat it as an independent variable with β~ν~ = 1
+- The distribution of y given **both x and ν** is Poisson (since ν is just another x)
+
+$$\Pr(y\,|\,\mathbf{x}, \nu) = \frac{e^{-\widetilde{\mu}}\,\widetilde{\mu}^{\,y}}{y!} = \frac{e^{-\mu\nu}(\mu\nu)^{y}}{y!}$$
+
+- However, ν is unobserved so we cannot compute Pr(y\|**x**, ν)!
+  - Instead, we compute Pr(y\|**x**) by **mixing across ν**
+
+### Mixing distributions
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do: quietly>>
+clear
+set seed 30004
+set obs 50000
+genpoisson y0_8, mu(0.8) adoonly
+genpoisson y1_5, mu(1.5) adoonly
+genpoisson y3, mu(3) adoonly
+genpoisson y4_5, mu(4.5) adoonly
+poisson y1_5, nolog
+mgen, pr(0/10) meanpred stub(p15) replace
+poisson y3, nolog
+mgen, pr(0/10) meanpred stub(p3) replace
+poisson y4_5, nolog
+mgen, pr(0/10) meanpred stub(p45) replace
+<</dd_do>>
+<<dd_do>>
+* Simulated data from 6.1 (see the code there)
+
+*Show that mixture of two Poissons is not Poisson
+gen mixpo = (p15obeq + p45obeq) / 2
+
+twoway ///
+    connected p15obeq p15val || ///
+    connected p3obeq  p3val || ///
+    connected p45obeq p45val || ///
+    connected mixpo p45val || ///
+    , ytitle("Pr(y = m)") xtitle("# of successes") ///
+    title("Mixture of Poisson distributions is not a Poisson distribution") ///
+    legend(order(1 "{&mu} = 1.5" 2 "{&mu} = 3" ///
+        3 "{&mu} = 4.5" 4 "Mixture of" "{&mu} = 1.5 & {&mu} = 4.5"))
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-06_01_f-pdf-06.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-06_01_f-pdf-06.png){width=80% fig-alt="Simulated Poisson distributions with means 1.5, 3, and 4.5, and the mixture of the 1.5 and 4.5 distributions: the mixture peaks at 1 to 2 with a long right tail and does not match the Poisson distribution with mean 3, which peaks at 2 to 3."}
+
+## R
+
+```{r}
+#| include: false
+library(dplyr)           # data manipulation
+library(ggplot2)         # graphs
+library(cleanplots)      # graph scheme
+cleanplots_defaults()
+
+set.seed(30004)
+n <- 50000
+sim <- data.frame(y0_8 = rpois(n, 0.8), y1_5 = rpois(n, 1.5), y3 = rpois(n, 3),
+  y4_5 = rpois(n, 4.5), y10 = rpois(n, 10))
+pr_count <- function(y, maxk) data.frame(k = 0:maxk, pr = sapply(0:maxk, function(j) mean(y == j)))
+```
+
+```{r}
+#| fig-alt: "Simulated Poisson distributions with means 1.5, 3, and 4.5, and the mixture of the 1.5 and 4.5 distributions: the mixture peaks at 1 to 2 with a long right tail and does not match the Poisson distribution with mean 3, which peaks at 2 to 3."
+# Simulated data from 6.1 (see the code there)
+
+# Show that mixture of two Poissons is not Poisson
+mixture <- bind_rows(
+  "μ = 1.5" = pr_count(sim$y1_5, 10),
+  "μ = 3" = pr_count(sim$y3, 10),
+  "μ = 4.5" = pr_count(sim$y4_5, 10),
+  "Mixture of μ = 1.5 & μ = 4.5" = data.frame(k = 0:10,
+    pr = (pr_count(sim$y1_5, 10)$pr + pr_count(sim$y4_5, 10)$pr) / 2),
+  .id = "dist") |>
+  mutate(dist = factor(dist, levels = unique(dist)))
+
+ggplot(mixture, aes(x = k, y = pr, color = dist)) +
+  geom_line() + geom_point() +
+  scale_x_continuous(breaks = seq(0, 10, 2)) +
+  labs(title = "Mixture of Poisson distributions is not a Poisson distribution",
+    x = "# of successes", y = "Pr(y = m)", color = NULL)
+```
+
+:::
+
+#### Mixing distributions for the negative binomial model
+
+- A mixture of two Poisson distributions (e.g., μ~1~ = 1.5 and μ~2~ = 4.5) will not produce a Poisson (μ = 3) distribution
+- In the negative binomial model, the Pr(*y* \| **x**) is a **mixture across ν**
+  - We assume ν has a ***gamma distribution*** with:
+    - E(ν) = 1
+    - Var(ν) = 1/δ ≡ α
+  - The distribution varies in shape with changes in α (see below)
+- Idea is different people/groups in the data have different count processes governing their observed counts
+  - Each individually is a Poisson process
+    - We observe the pooled/mixed distribution in the data, which is not a Poisson
+  - Details omitted due to space and time. See [Long (1997)](https://us.sagepub.com/en-us/nam/regression-models-for-categorical-and-limited-dependent-variables/book6071) for more specifics as to how this works
+
+![](images/gamma-distributions.png){width=60% fig-alt="Gamma distributions for seven combinations of the shape parameter alpha and scale parameter theta, from a steeply falling curve when alpha is 0.5 or 1 to hump-shaped curves that peak further right as alpha grows."}
+
+\*Gamma distribution varies based on shape parameter α, which we estimate
+
+## Negative binomial distribution
+
+- The mixture of Poisson PDFs by gamma is a negative binomial distribution
+
+$$\Pr(y\,|\,\mathbf{x}) = \frac{\Gamma(y + \alpha^{-1})}{y!\,\Gamma(\alpha^{-1})}\left(\frac{\alpha^{-1}}{\alpha^{-1} + \mu}\right)^{\alpha^{-1}}\left(\frac{\mu}{\alpha^{-1} + \mu}\right)^{y}$$
+
+- It has the same mean structure as the Poisson model. So, predicted rates are calculated in the exact same way:
+
+$$E(y\,|\,\mathbf{x}) = \exp(\mathbf{x}\boldsymbol{\beta}) = \mu$$
+
+- Where the variance is larger
+
+$$Var(y\,|\,\mathbf{x}) = \mu(1 + \alpha\mu) = \exp(\mathbf{x}\boldsymbol{\beta})(1 + \alpha\exp(\mathbf{x}\boldsymbol{\beta})) > \mu$$
+
+  - Since μ and α are positive, the negative binomial **has overdispersion**
+
+### Negative binomial model example
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_ah4", clear
+
+*6.6.a
+nbreg drinktime i.woman c.age i.college i.race c.income ///
+    i.spouserole i.parrole, irr
+est store nbmod
+est table nbmod, ///
+    title("[6.6.a] Negative binomial regression for # of drinks in a sitting") ///
+    b(%5.3f) star(.05 .01 .001) eform
+<</dd_do>>
+```
+
+## R
+
+```{r}
+library(haven)           # import Stata data and labels
+library(MASS)            # negative binomial: glm.nb()
+library(pscl)            # odTest()
+library(modelsummary)    # regression tables
+library(marginaleffects) # predictions and marginal effects
+
+ah4 <- read_dta("https://tdmize.github.io/data/data/cda_ah4.dta")
+
+# Keep model variables; drop any missing data
+ah4 <- ah4[c("drinktime", "woman", "age", "college", "race", "income", "spouserole",
+  "parrole")]
+ah4 <- ah4[complete.cases(ah4), ]
+ah4 <- ah4 |>
+  mutate(across(c(woman, college, race, spouserole, parrole), as_factor))
+
+# 6.6.a
+nbmod <- glm.nb(drinktime ~ woman + age + college + race + income + spouserole + parrole,
+  data = ah4)
+summary(nbmod)
+
+# Exponentiated coefficients
+exp(coef(nbmod))
+```
+
+:::
+
+::: {.callout-note icon="false" appearance="simple"}
+In Stata, use the [**nbreg**](https://www.stata.com/manuals/rnbreg.pdf) command
+
+In R, use the [**glm.nb**](https://www.rdocumentation.org/packages/MASS/versions/7.3-65/topics/glm.nb) function in the MASS package
+
+As with Poisson, we usually exponentiate the coefficients to interpret them as factor changes on the rate:
+
+- *Women's rates of drinking are lower than men's by a factor of .62*
+- *Each additional year of age is associated with a .95 lower rate of drinking*
+- *Etc.*
+:::
+
+### Comparing Poisson and negative binomial
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*6.6.b re-estimate Poisson for comparison to nbreg
+qui poisson drinktime i.woman c.age i.college i.race c.income ///
+    i.spouserole i.parrole, nolog
+est store pmod
+est table pmod nbmod, stats(N r2_p bic) eform b(%9.3f) t(%6.3f) vsquish ///
+    title("[6.6.b] Comparison of Poisson and Neg. Binomial Estimates")
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# 6.6.b re-estimate Poisson for comparison to the negative binomial
+pmod <- glm(drinktime ~ woman + age + college + race + income + spouserole + parrole,
+  family = "poisson", data = ah4)
+
+modelsummary(list("Poisson" = pmod, "Neg. Binomial" = nbmod), exponentiate = TRUE,
+  statistic = "statistic", gof_map = c("nobs", "bic"),
+  title = "[6.6.b] Comparison of Poisson and Neg. Binomial Estimates")
+```
+
+:::
+
+::: {.callout-note icon="false" appearance="simple"}
+Estimates of the factor change on the rate (the exponentiated coefficients) are very similar; test statistics (*z*) are quite different; fit statistics clearly favor negative binomial (more on this soon)
+:::
+
+## Testing for overdispersion
+
+- With overdispersion, Poisson estimates are **inefficient** with **standard errors that are biased**
+  - You will almost always find evidence of overdispersion in real data examples
+- We test H~0~: α = 0 since when α = 0 the negative binomial is equivalent to Poisson
+- A likelihood ratio test of H~0~: α = 0 is
+
+$$G^{2} = 2(\ln L_{NBRM} - \ln L_{PRM})$$
+
+- Stata reports this test automatically as the last line in the **nbreg** output
+  - [**odTest**](https://www.rdocumentation.org/packages/pscl/versions/1.5.9/topics/odTest) in R provides the test
+
+::: {.panel-tabset group="language"}
+## Stata
+
+From the last line of the **nbreg** output above:
+
+```
+LR test of alpha=0: chibar2(01) = 4900.12              Prob >= chibar2 = 0.000
+```
+
+## R
+
+```{r}
+odTest(nbmod)
+```
+
+:::
+
+- In this example, there is strong evidence of overdispersion
+
+> *There is evidence of overdispersion, suggesting the Poisson model is not appropriate and instead favoring a negative binomial model.*
+
+## Interpretation in the negative binomial model
+
+- Interpretation based on rates is identical to Poisson
+- The same methods for predicted probabilities can be used although the formula for calculating predicted probabilities is much less user-friendly:
+
+$$\Pr(y\,|\,\mathbf{x}) = \frac{\Gamma(y + \widehat{\alpha}^{-1})}{y!\,\Gamma(\widehat{\alpha}^{-1})}\left(\frac{\widehat{\alpha}^{-1}}{\widehat{\alpha}^{-1} + \widehat{\mu}}\right)^{\widehat{\alpha}^{-1}}\left(\frac{\widehat{\mu}}{\widehat{\alpha}^{-1} + \widehat{\mu}}\right)^{y}$$
+
+- Poisson and negative binomial tend to differ more in predictions for specific counts (especially zeroes) than in predictions for the rate
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*6.6.c - Compare predictions on rate from Poisson and nbreg
+est restore nbmod
+qui margins, at(income=(0(5)200)) saving(nbpred, replace)
+est restore pmod
+qui margins, at(income=(0(5)200)) saving(ppred, replace)
+
+combomarginsplot ppred nbpred, noci file1opts(msym(i)) ///
+    file2opts(msym(i)) xlab(0(25)200) ylab(0(1)4) ///
+    legend(order(1 "Poisson" 2 "Neg. Binomial")) ///
+    ytitle("Number of Drinks") xtitle("Income in $1,000s") ///
+    title("[6.6.c] Comparison of Predictions for Income - Poisson vs Negative Binomial", size(medium))
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-06_06_c-drinks-15.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-06_06_c-drinks-15.png){width=80% fig-alt="[6.6.c] Predicted number of drinks by income from the Poisson and negative binomial models: both rise from about 1.9 at no income, to about 3.4 (Poisson) and 3.6 (negative binomial) at $200,000, so the two models' predicted rates are very close."}
+
+## R
+
+```{r}
+#| fig-alt: "[6.6.c] Predicted number of drinks by income from the Poisson and negative binomial models: both rise from about 1.9 at no income, to about 3.4 (Poisson) and 3.6 (negative binomial) at $200,000, so the two models' predicted rates are very close."
+# 6.6.c - Compare predictions on rate from Poisson and negative binomial
+pr_income <- bind_rows(
+  "Poisson" = avg_predictions(pmod, by = "income",
+    newdata = datagrid(income = seq(0, 200, 5), grid_type = "counterfactual")),
+  "Neg. Binomial" = avg_predictions(nbmod, by = "income",
+    newdata = datagrid(income = seq(0, 200, 5), grid_type = "counterfactual")),
+  .id = "model") |>
+  mutate(model = factor(model, levels = c("Poisson", "Neg. Binomial")))
+
+ggplot(pr_income, aes(x = income, y = estimate, color = model)) +
+  geom_line() +
+  scale_x_continuous(breaks = seq(0, 200, 25)) +
+  scale_y_continuous(breaks = 0:4, limits = c(0, 4)) +
+  labs(title = "[6.6.c] Comparison of Predictions for Income - Poisson vs Negative Binomial",
+    x = "Income in $1,000s", y = "Number of Drinks", color = NULL)
+```
+
+:::
+
+> Predictions for the rate (\# of drinks) are very close
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*6.6.d - Compare predictions on Pr(y=0)
+est restore nbmod
+qui margins, at(income=(0(5)200)) predict(pr(0)) saving(nbpred, replace)
+est restore pmod
+qui margins, at(income=(0(5)200)) predict(pr(0)) saving(ppred, replace)
+
+combomarginsplot ppred nbpred, file1opts(msym(i)) ///
+    file2opts(msym(i)) xlab(0(25)200) ylab(0(.1).5) ///
+    recastci(rline) ciopts(lpat(dash) col(gs12)) ///
+    legend(order(3 "Poisson" 4 "Neg. Binomial")) ///
+    ytitle("Pr(Drinks = 0)") xtitle("Income in $1,000s") ///
+    title("[6.6.d] Comparison of Pr(Zero Drinks) for Income - Poisson vs Negative Binomial", size(medium))
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-06_06_d-drinks-16.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-06_06_d-drinks-16.png){width=80% fig-alt="[6.6.d] Probability of zero drinks by income from the Poisson and negative binomial models, with confidence intervals: the negative binomial predicts about 0.40 at no income falling to 0.28 at $200,000, while the Poisson predicts much lower probabilities, about 0.18 falling to 0.06."}
+
+## R
+
+```{r}
+#| fig-alt: "[6.6.d] Probability of zero drinks by income from the Poisson and negative binomial models, with confidence intervals: the negative binomial predicts about 0.40 at no income falling to 0.28 at $200,000, while the Poisson predicts much lower probabilities, about 0.18 falling to 0.06."
+# 6.6.d - Compare predictions on Pr(y=0)
+pr0_income <- bind_rows(
+  "Poisson" = predictions(pmod, type = "response",
+    newdata = datagrid(income = seq(0, 200, 5), grid_type = "counterfactual"),
+    hypothesis = ~ I(mean(dpois(0, x))) | income),
+  "Neg. Binomial" = predictions(nbmod, type = "response",
+    newdata = datagrid(income = seq(0, 200, 5), grid_type = "counterfactual"),
+    hypothesis = ~ I(mean(dnbinom(0, size = nbmod$theta, mu = x))) | income),
+  .id = "model") |>
+  mutate(model = factor(model, levels = c("Poisson", "Neg. Binomial")))
+
+ggplot(pr0_income, aes(x = income, y = estimate, ymin = conf.low, ymax = conf.high,
+    color = model, fill = model)) +
+  geom_ribbon(alpha = .2, color = NA) + geom_line() +
+  scale_x_continuous(breaks = seq(0, 200, 25)) +
+  scale_y_continuous(breaks = seq(0, .5, .1), limits = c(0, .5)) +
+  labs(title = "[6.6.d] Comparison of Pr(Zero Drinks) for Income - Poisson vs Negative Binomial",
+    x = "Income in $1,000s", y = "Pr(Drinks = 0)", color = NULL, fill = NULL)
+```
+
+:::
+
+> Probability *y* = 0 (person generally consumes zero drinks) differ considerably
+
+## Predictions and marginal effects in negative binomial models
+
+- Interpretation of predictions and marginal effects is identical across negative binomial and Poisson models
+- Stata and R tools for predictions and marginal effects are identical for negative binomial and Poisson
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*6.6.f - Predicted # of drinks across range of age, for men and women
+est restore nbmod
+qui margins woman, at(age=(21(1)35))
+marginsplot, recastci(rline) ciopts(lpat(dash) col(gs12)) ylab(0(1)5) xlab(21(2)35) ///
+    ytitle("# of drinks") xtitle("Age in Years") ///
+    title("[6.6.f] Predicted Number of Alcoholic Drinks in a Typical Sitting", size(medium))
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-06_06_f-drinks_age_gender.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-06_06_f-drinks_age_gender.png){width=80% fig-alt="[6.6.f] Negative binomial predicted number of drinks by age, with confidence intervals: men's predictions fall from about 3.9 at age 21 to 1.9 at 35, and women's from about 2.4 to 1.2."}
+
+## R
+
+::: {.callout-note icon="false" appearance="simple"}
+In R, for probabilities, specify the negative binomial formula instead of Poisson; see the examples below
+:::
+
+```{r}
+#| fig-alt: "[6.6.f] Negative binomial predicted number of drinks by age, with confidence intervals: men's predictions fall from about 3.9 at age 21 to 1.9 at 35, and women's from about 2.4 to 1.2."
+# 6.6.f - Predicted # of drinks across range of age, for men and women
+plot_predictions(nbmod, by = c("age", "woman"),
+  newdata = datagrid(age = 21:35, woman = unique, grid_type = "counterfactual")) +
+  scale_x_continuous(breaks = seq(21, 35, 2)) +
+  scale_y_continuous(breaks = 0:5, limits = c(0, 5)) +
+  labs(title = "[6.6.f] Predicted Number of Alcoholic Drinks in a Typical Sitting",
+    x = "Age in Years", y = "# of drinks", color = NULL, fill = NULL)
+```
+
+:::
+
+#### Marginal effects on the rate
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+mecompare woman age, model(nbmod) amount(trimrange)
+<</dd_do>>
+```
+
+## R
+
+```{r}
+avg_comparisons(nbmod, variables = list(woman = "reference", age = c(26, 31)))
+```
+
+:::
+
+> *On average, women report drinking 1.01 fewer drinks than men*
+>
+> *The oldest adults in this sample are predicted to drink about 0.55 fewer drinks per sitting than the youngest adults*
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*6.6.g - Pr(y=0) across range of age, for men and women
+est restore nbmod
+qui margins woman, at(age=(21(1)35)) predict(pr(0))
+marginsplot, recastci(rline) ciopts(lpat(dash) col(gs12)) ylab(0(.1).6) xlab(21(2)35) ///
+    ytitle("Pr(Typically Consumes 0 Drinks)") xtitle("Age in Years") ///
+    title("[6.6.g] Probability of Consuming Zero Drinks in a Typical Sitting", size(medium))
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-06_06_g-pr0_drinks_age_gender.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-06_06_g-pr0_drinks_age_gender.png){width=80% fig-alt="[6.6.g] Negative binomial probability of typically consuming zero drinks by age, with confidence intervals: it rises from about 0.26 at age 21 to 0.40 at 35 for men and from about 0.35 to 0.50 for women."}
+
+## R
+
+```{r}
+#| fig-alt: "[6.6.g] Negative binomial probability of typically consuming zero drinks by age, with confidence intervals: it rises from about 0.26 at age 21 to 0.40 at 35 for men and from about 0.35 to 0.50 for women."
+# 6.6.g - Pr(y=0) across range of age, for men and women
+pr0_nb <- predictions(nbmod, type = "response",
+  newdata = datagrid(age = 21:35, woman = unique, grid_type = "counterfactual"),
+  hypothesis = ~ I(mean(dnbinom(0, size = nbmod$theta, mu = x))) | age + woman)
+
+ggplot(pr0_nb, aes(age, estimate, ymin = conf.low, ymax = conf.high, color = woman, fill = woman)) +
+  geom_ribbon(alpha = .2, color = NA) + geom_line() +
+  scale_x_continuous(breaks = seq(21, 35, 2)) +
+  scale_y_continuous(breaks = seq(0, .6, .1), limits = c(0, .6)) +
+  labs(title = "[6.6.g] Probability of Consuming Zero Drinks in a Typical Sitting",
+    x = "Age in Years", y = "Pr(Typically Consumes 0 Drinks)", color = NULL, fill = NULL)
+```
+
+:::
+
+#### Marginal effects on the probability of count \#
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+mecompare woman age, model(nbmod) amount(trimrange) predict(pr(0))
+<</dd_do>>
+```
+
+## R
+
+::: {.callout-note icon="false" appearance="simple"}
+In R, for Pr(*y* = #) with negative binomial models, use **dnbinom()**. Negative binomial probabilities depend on both the predicted count and the overdispersion parameter, so supply both: **dnbinom(#, size = nbmod\$theta, mu = x)**.
+:::
+
+```{r}
+avg_comparisons(nbmod, variables = list(woman = "reference", age = c(26, 31)),
+  comparison = function(hi, lo)
+    dnbinom(0, size = nbmod$theta, mu = hi) - dnbinom(0, size = nbmod$theta, mu = lo))
+```
+
+:::
+
+> *Women's average probability of having zero drinks is about 10 percentage points higher than men's.*
+>
+> *Across the trimmed range of age, the probability of having zero drinks increases by about .05.*
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*6.5.b
+est restore pmod
+qui mgen, pr(0/18) meanpred stub(pmod) replace
+est restore nbmod
+qui mgen, pr(0/18) meanpred stub(nb) replace
+
+twoway connected pmodobeq pmodpreq nbpreq pmodval, ylab(0(.1).45) xlab(0(2)18) ///
+    ytitle("Pr(y = k)") xtitle("Number of Drinks in Typical Sitting") ///
+    title("[6.5.b] Comparison of Observed vs Poisson Model Average Predictions") ///
+    text(.3 14 "{&mu} = 2.10" " " "{&sigma}{sup:2} = 8.20") ///
+    legend(order(1 "Observed" 2 "Poisson Pred" 3 "Neg. Binomial"))
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-06_05_b-drinks-04.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-06_05_b-drinks-04.png){width=80% fig-alt="[6.5.b] Observed proportions of each number of drinks with the average predicted probabilities from the Poisson and negative binomial models: the negative binomial predicts about 38% at 0 drinks, close to the 42% observed, while the Poisson predicts about 16%; the negative binomial also tracks the observed proportions at 1 to 4 drinks much better."}
+
+## R
+
+```{r}
+#| fig-alt: "[6.5.b] Observed proportions of each number of drinks with the average predicted probabilities from the Poisson and negative binomial models: the negative binomial predicts about 38% at 0 drinks, close to the 42% observed, while the Poisson predicts about 16%; the negative binomial also tracks the observed proportions at 1 to 4 drinks much better."
+library(tidyr)           # reshape data: pivot_longer()
+
+# 6.5.b - Observed proportions and average predicted probabilities of each count
+meanpred <- data.frame(k = 0:18) |>
+  mutate(Observed = sapply(k, function(j) mean(ah4$drinktime == j)),
+    "Poisson Pred" = sapply(k, function(j) mean(dpois(j, fitted(pmod)))),
+    "Neg. Binomial" = sapply(k, function(j)
+      mean(dnbinom(j, size = nbmod$theta, mu = fitted(nbmod))))) |>
+  pivot_longer(-k, names_to = "type", values_to = "pr") |>
+  mutate(type = factor(type, levels = c("Observed", "Poisson Pred", "Neg. Binomial")))
+
+ggplot(meanpred, aes(x = k, y = pr, color = type)) +
+  geom_line() + geom_point() +
+  annotate("text", x = 14, y = .3, label = 'mu == "2.10"', parse = TRUE) +
+  annotate("text", x = 14, y = .27, label = 'sigma^2 == "8.20"', parse = TRUE) +
+  scale_x_continuous(breaks = seq(0, 18, 2)) +
+  scale_y_continuous(breaks = seq(0, .4, .1), limits = c(0, .45)) +
+  labs(title = "[6.5.b] Comparison of Observed vs Poisson Model Average Predictions",
+    x = "Number of Drinks in Typical Sitting", y = "Pr(y = k)", color = NULL)
+```
+
+:::
+
+> Negative binomial does a noticeably better job at modeling the observed data

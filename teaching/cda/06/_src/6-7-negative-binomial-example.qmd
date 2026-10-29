@@ -1,0 +1,509 @@
+---
+title: "6.7 Another Negative Binomial Example"
+---
+<<dd_version: 2>>
+
+- Add Health Wave 4 (young adults)
+- DV: \# of depressive symptoms (0 to 30)
+  - Clear evidence of overdispersion
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_ah4", clear
+
+*DV has non-integer values, so need to round to make it work for a count model
+replace depressSS = depressSS * 10
+replace depressSS = round(depressSS, 1)
+tabstat depressSS, stat(mean var sd) format(%4.2f)
+<</dd_do>>
+```
+
+## R
+
+```{r}
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(sjmisc)          # frq() frequency tables
+library(tidyr)           # reshape data: pivot_longer()
+library(ggplot2)         # graphs
+library(MASS)            # negative binomial: glm.nb()
+library(pscl)            # odTest()
+library(marginaleffects) # predictions and marginal effects
+library(cleanplots)      # graph scheme
+cleanplots_defaults()
+
+source("https://raw.githubusercontent.com/tdmize/Rfunctions/main/ME_helper_functions.R")
+
+ah4 <- read_dta("https://tdmize.github.io/data/data/cda_ah4.dta")
+
+# DV has non-integer values, so need to round to make it work for a count model
+ah4 <- ah4 |> mutate(depressSS = round(depressSS * 10))
+
+ah4 |> summarise(mean = mean(depressSS, na.rm = TRUE), var = var(depressSS, na.rm = TRUE),
+  sd = sd(depressSS, na.rm = TRUE))
+```
+
+:::
+
+- IVs: *Gender* and social *roles* held (0 to 10)
+  - Social roles: Employee, student, parent, spouse, girlfriend/boyfriend, child, sibling, friend, volunteer, teammate, religion
+  - It is of theoretical interest as to whether role accumulation has diminishing returns, so including both *roles* and *roles^2^* coefficients ([Mize and Kincaid 2025](https://www.trentonmize.com/research/mize_kincaid_asr_2025.html))
+    - Squared term allows for more pronounced nonlinearities and/or different nonlinearities than the standard count model functional form
+- Controls: income, age, race
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*6.7.a
+hist depressSS, percent discrete fcol(none) ///
+    title("[6.7.a] Distribution of depressive symptoms")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-06_07_a-drinks-17.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-06_07_a-drinks-17.png){width=80% fig-alt="[6.7.a] Histogram of the number of depressive symptoms from 0 to 30: most respondents have 1 to 8 symptoms, the peak is about 10% at 4 symptoms, and the distribution has a long right tail."}
+
+## R
+
+```{r}
+#| fig-alt: "[6.7.a] Histogram of the number of depressive symptoms from 0 to 30: most respondents have 1 to 8 symptoms, the peak is about 10% at 4 symptoms, and the distribution has a long right tail."
+# 6.7.a
+ggplot(ah4, aes(x = depressSS)) +
+  geom_histogram(aes(y = after_stat(100 * count / sum(count))), binwidth = 1,
+    fill = NA, color = "black") +
+  labs(title = "[6.7.a] Distribution of depressive symptoms",
+    x = "CESD depressive symptoms SS", y = "Percent")
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*6.7.b - compare predictions to choose model
+qui nbreg depressSS i.woman c.role##c.role c.income c.age i.race, irr
+qui mgen, pr(0/30) meanpred stub(nb) replace
+
+qui poisson depressSS i.woman c.role##c.role c.income c.age i.race, irr
+qui mgen, pr(0/30) meanpred stub(p) replace
+
+twoway connected pobeq ppreq nbpreq pval, ylab(0(.05).2, format(%4.2f)) ///
+    xlab(0(5)30) ytitle("Pr(y = k)") xtitle("Number of Depressive Symptoms") ///
+    title("[6.7.b] Comparison of Mean Predictions from Poisson and Negative Binomial") ///
+    text(.15 20 "{&mu} = 6.09" " " "{&sigma}{sup:2} = 21.99") ///
+    legend(order(1 "Observed" 2 "Poisson" 3 "Neg. Binomial"))
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-06_07_b-dep-04.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-06_07_b-dep-04.png){width=80% fig-alt="[6.7.b] Observed proportions of each number of depressive symptoms with average predicted probabilities from the Poisson and negative binomial models: the Poisson predictions are too peaked, about 0.15 at 5 symptoms and near 0 at 0 to 1, while the negative binomial predictions closely match the observed proportions across the whole range."}
+
+## R
+
+```{r}
+#| fig-alt: "[6.7.b] Observed proportions of each number of depressive symptoms with average predicted probabilities from the Poisson and negative binomial models: the Poisson predictions are too peaked, about 0.15 at 5 symptoms and near 0 at 0 to 1, while the negative binomial predictions closely match the observed proportions across the whole range."
+# Keep model variables; drop any missing data
+dep <- ah4[c("depressSS", "woman", "role", "income", "age", "race")]
+dep <- dep[complete.cases(dep), ]
+dep <- dep |> mutate(across(c(woman, race), as_factor))
+
+# 6.7.b - compare predictions to choose model
+nbdep <- glm.nb(depressSS ~ woman + poly(role, 2, raw = TRUE) + income + age + race,
+  data = dep)
+pdep <- glm(depressSS ~ woman + poly(role, 2, raw = TRUE) + income + age + race,
+  family = "poisson", data = dep)
+
+meanpred <- data.frame(k = 0:30) |>
+  mutate(Observed = sapply(k, function(j) mean(dep$depressSS == j)),
+    Poisson = sapply(k, function(j) mean(dpois(j, fitted(pdep)))),
+    "Neg. Binomial" = sapply(k, function(j)
+      mean(dnbinom(j, size = nbdep$theta, mu = fitted(nbdep))))) |>
+  pivot_longer(-k, names_to = "type", values_to = "pr") |>
+  mutate(type = factor(type, levels = c("Observed", "Poisson", "Neg. Binomial")))
+
+ggplot(meanpred, aes(x = k, y = pr, color = type)) +
+  geom_line() + geom_point() +
+  annotate("text", x = 20, y = .15, label = 'mu == "6.09"', parse = TRUE) +
+  annotate("text", x = 20, y = .135, label = 'sigma^2 == "21.99"', parse = TRUE) +
+  scale_x_continuous(breaks = seq(0, 30, 5)) +
+  scale_y_continuous(breaks = seq(0, .2, .05), limits = c(0, .2)) +
+  labs(title = "[6.7.b] Comparison of Mean Predictions from Poisson and Negative Binomial",
+    x = "Number of Depressive Symptoms", y = "Pr(y = k)", color = NULL)
+```
+
+:::
+
+> Poisson does quite a bad job; negative binomial is remarkably effective here at matching the true distribution of the DV
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+nbreg depressSS i.woman c.role##c.role c.income c.age i.race, irr
+est store nbmod
+<</dd_do>>
+```
+
+## R
+
+```{r}
+summary(nbdep)
+
+# Exponentiated coefficients
+exp(coef(nbdep))
+
+odTest(nbdep)
+```
+
+:::
+
+- Significant evidence of overdispersion suggests the negative binomial fits better than the Poisson model
+- *Women's rates of depressive symptoms are 1.16 times higher than men*
+- Social roles' effect is harder to ascertain because of both the *roles* and *roles^2^* terms and because of the inherent nonlinearities of the model
+  - The significant coefficient on *roles^2^* suggest we should leave that term in
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*6.7.c - Predictions on rate/count
+est restore nbmod
+qui margins woman, at(role=(0(1)10))
+marginsplot, recastci(rline) ciopts(lpat(dash) col(gs12)) ylab(0(5)17) ///
+    ytitle("# of Depressive Symptoms") ///
+    title("[6.7.c] Predicted Number of Depressive Symptoms by Social Roles Held and Gender", size(medium))
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-06_07_c-dep-02.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-06_07_c-dep-02.png){width=80% fig-alt="[6.7.c] Predicted number of depressive symptoms by number of social roles held, with confidence intervals: predictions fall steeply from about 11 (men) and 13 (women) with no roles to about 6 with 5 roles, then level off near 5 with 10 roles; women are predicted to have slightly more symptoms than men throughout."}
+
+## R
+
+```{r}
+#| fig-alt: "[6.7.c] Predicted number of depressive symptoms by number of social roles held, with confidence intervals: predictions fall steeply from about 11 (men) and 13 (women) with no roles to about 6 with 5 roles, then level off near 5 with 10 roles; women are predicted to have slightly more symptoms than men throughout."
+# 6.7.c - Predictions on rate/count
+plot_predictions(nbdep, by = c("role", "woman"),
+  newdata = datagrid(role = 0:10, woman = unique, grid_type = "counterfactual")) +
+  scale_x_continuous(breaks = 0:10) +
+  scale_y_continuous(breaks = seq(0, 15, 5)) +
+  coord_cartesian(ylim = c(0, 17)) +
+  labs(title = "[6.7.c] Predicted Number of Depressive Symptoms by Social Roles Held and Gender",
+    x = "Role Count - Total", y = "# of Depressive Symptoms", color = NULL, fill = NULL)
+```
+
+:::
+
+## AMEs on the rate of depressive symptoms
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*MEs on the rate
+mecompare woman role, model(nbmod)
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# Center changes in continuous IVs on each observation's value (as mecompare does)
+options(marginaleffects_contrast_direction = "center")
+
+# MEs on the rate
+avg_comparisons(nbdep, variables = list(woman = "reference", role = 1))
+```
+
+:::
+
+> *On average, women report about 0.89 more depressive symptoms than men*
+>
+> *On average, an additional role is predicted to reduce depressive symptoms by 0.46*
+
+- Because of the pronounced nonlinearities, do not want to only report average effect for *roles* (see the graph above)
+  - Based on graph (and/or percentiles), show effects at low value, and high value
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+mecompare role, model(nbmod) start(role=(0 7)) uncenter
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# Forward (uncentered) changes from the values given in datagrid()
+options(marginaleffects_contrast_direction = "forward")
+
+avg_comparisons(nbdep, variables = list(role = 1), by = "role",
+  newdata = datagrid(role = c(0, 7), grid_type = "counterfactual"))
+```
+
+:::
+
+> *The average effect of an additional social role is a 0.46 reduction in depressive symptoms. However, social roles have a diminishing effect. For example, for someone with zero social roles, gaining an additional role is predicted to reduce depressive symptoms by almost 2. In contrast, a change from 7 to 8 social roles is predicted to reduce depressive symptoms by only about 0.21.*
+
+### Bonus: difference in marginal effects
+
+- In Stata, test the difference in the two MEs above with [**metest**](https://www.trentonmize.com/software/metest/)
+- In R, specify a difference in MEs as a **hypothesis** on **avg_comparisons**
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+metest 2 - 1
+<</dd_do>>
+```
+
+## R
+
+```{r}
+avg_comparisons(nbdep, variables = list(role = 1), by = "role",
+  newdata = datagrid(role = c(0, 7), grid_type = "counterfactual"),
+  hypothesis = "b2 - b1 = 0")
+```
+
+:::
+
+> *The marginal effect of a +1 increase in social roles is larger (more negative) at 0 roles than at 7 roles (difference p \< .01).*
+
+## Effects on cumulative probabilities
+
+- Scores above 12 on the CES-D depression scale are considered "at risk" for depression (e.g., see [Roberts et al. 1990](https://psycnet.apa.org/record/1990-29878-001); [McLeod et al. 2012](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3752654/))
+- Rather than dichotomizing the depression scale for analysis you can treat this properly as a count and analyze cumulative probabilities for 12 or more symptoms
+  - Or for 11 or fewer symptoms (i.e., "not at risk")
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*6.7.d - Predictions for low range of depressive symptoms (0 to 11)
+qui margins woman, at(role=(0(1)10)) predict(pr(0,11))
+marginsplot, recastci(rline) ciopts(lpat(dash) col(gs12)) ylab(.2(.2)1) ///
+    ytitle("Pr(Not at Risk of Depression)") ///
+    title("[6.7.d] Probability of Having 11 or Fewer Depressive Symptoms (i.e. Not At Risk)", size(medium))
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-06_07_d-dep-03.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-06_07_d-dep-03.png){width=80% fig-alt="[6.7.d] Probability of having 11 or fewer depressive symptoms (not at risk of depression) by number of social roles, with confidence intervals: it rises from about 0.60 (men) and 0.52 (women) with no roles to about 0.94 and 0.91 with 10 roles."}
+
+## R
+
+```{r}
+#| fig-alt: "[6.7.d] Probability of having 11 or fewer depressive symptoms (not at risk of depression) by number of social roles, with confidence intervals: it rises from about 0.60 (men) and 0.52 (women) with no roles to about 0.94 and 0.91 with 10 roles."
+# 6.7.d - Predictions for low range of depressive symptoms (0 to 11)
+pr0_11 <- predictions(nbdep, type = "response",
+  newdata = datagrid(role = 0:10, woman = unique, grid_type = "counterfactual"),
+  hypothesis = ~ I(mean(pnbinom(11, size = nbdep$theta, mu = x))) | role + woman)
+
+ggplot(pr0_11, aes(role, estimate, ymin = conf.low, ymax = conf.high, color = woman, fill = woman)) +
+  geom_ribbon(alpha = .2, color = NA) + geom_line() +
+  scale_x_continuous(breaks = 0:10) +
+  scale_y_continuous(breaks = seq(.2, 1, .2), limits = c(.2, 1)) +
+  labs(title = "[6.7.d] Probability of Having 11 or Fewer Depressive Symptoms (i.e. Not At Risk)",
+    x = "Role Count - Total", y = "Pr(Not at Risk of Depression)", color = NULL, fill = NULL)
+```
+
+:::
+
+## Nominal IVs
+
+- Adding two nominal IVs to our model for depressive symptoms
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+fre educ orient5 if educ < . & orient5 < .
+qui nbreg depressSS i.woman i.educ i.orient5 c.age i.race, irr
+est store nbnom
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# Keep model variables; drop any missing data
+nom <- ah4[c("depressSS", "woman", "educ", "orient5", "age", "race")]
+nom <- nom[complete.cases(nom), ]
+nom <- nom |> mutate(across(c(woman, educ, orient5, race), as_factor))
+
+# Frequencies for those with valid values on both IVs
+nomfre <- ah4[!is.na(ah4$educ) & !is.na(ah4$orient5), ]
+frq(nomfre$educ)
+frq(nomfre$orient5)
+
+nbnom <- glm.nb(depressSS ~ woman + educ + orient5 + age + race, data = nom)
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*6.7.e - Plots of predictions
+qui margins educ, post
+coefplot, vertical recast(bar) barw(0.5) color(eltblue*.7) ///
+    ciopts(recast(rcap) color(gs8)) citop xlabel(, alternate) ///
+    ylab(0(1)10) ytitle("# of depressive symptoms") ///
+    title("Educational attainment") name(pr_educ, replace)
+
+est restore nbnom
+qui margins orient5, post
+coefplot, vertical recast(bar) barw(0.5) color(*.7) ///
+    ciopts(recast(rcap) color(gs8)) citop xlabel(, alternate) ///
+    ylab(0(1)10) ytitle("# of depressive symptoms") ///
+    title("Sexual orientation identity") name(pr_orient, replace)
+
+graph combine pr_educ pr_orient, ///
+    title("[6.7.e] Predicted number of depressive symptoms, by education and sexuality")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-06_07_e-dep_educ_orient5.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-06_07_e-dep_educ_orient5.png){width=80% fig-alt="[6.7.e] Two bar charts of the predicted number of depressive symptoms with confidence intervals: by education, from about 8.4 with no high school degree down to about 4.7 with a graduate degree; by sexual orientation identity, about 5.8 for heterosexual, 7.7 for mostly heterosexual, 8.3 for bisexual, 7.6 for mostly gay, and 6.3 for gay respondents."}
+
+## R
+
+```{r}
+#| fig-alt: "[6.7.e] Two bar charts of the predicted number of depressive symptoms with confidence intervals: by education, from about 8.4 with no high school degree down to about 4.7 with a graduate degree; by sexual orientation identity, about 5.8 for heterosexual, 7.7 for mostly heterosexual, 8.3 for bisexual, 7.6 for mostly gay, and 6.3 for gay respondents."
+#| fig-width: 9.5
+# 6.7.e - Plots of predictions
+pr_educ <- avg_predictions(nbnom, by = "educ",
+  newdata = datagrid(educ = unique, grid_type = "counterfactual"))
+pr_orient <- avg_predictions(nbnom, by = "orient5",
+  newdata = datagrid(orient5 = unique, grid_type = "counterfactual"))
+
+pr_nom <- bind_rows(
+  "Educational attainment" = mutate(pr_educ, group = as.character(educ)),
+  "Sexual orientation identity" = mutate(pr_orient, group = as.character(orient5)),
+  .id = "iv") |>
+  mutate(group = factor(group, levels = unique(group)))
+
+ggplot(pr_nom, aes(x = group, y = estimate, fill = iv)) +
+  geom_col(width = .5) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = .1, color = "gray50") +
+  facet_wrap(~ iv, scales = "free_x") +
+  scale_x_discrete(labels = scales::label_wrap(12)) +
+  scale_y_continuous(breaks = 0:10, limits = c(0, 10)) +
+  labs(title = "[6.7.e] Predicted number of depressive symptoms, by education and sexuality",
+    x = NULL, y = "# of depressive symptoms") +
+  theme(legend.position = "none")
+```
+
+:::
+
+### Marginal effects
+
+- The default coefficient and marginal effect interpretations will be contrasts with an omitted reference category
+  - Ask for all pairwise comparisons with the **pwcompare** option of **mecompare** or ask for **"pairwise"** with **avg_comparisons**
+    - But, be careful with Type I errors (false positives) given so many contrasts tested
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*MEs; all pairwise comparisons with pwcompare
+mecompare educ orient5, model(nbnom) pwcompare
+<</dd_do>>
+```
+
+## R
+
+```{r}
+avg_comparisons(nbnom, variables = list(educ = "pairwise", orient5 = "pairwise"))
+```
+
+:::
+
+![](images/grimace.jpeg){width=12% fig-alt="Grimacing face emoji."} ![](images/grimace.jpeg){width=12% fig-alt="Grimacing face emoji."} ![](images/grimace.jpeg){width=12% fig-alt="Grimacing face emoji."}
+
+### Marginal effect inequality
+
+- The **marginal effect (ME) inequality** summarizes the holistic effect of a nominal IV by calculating the average (absolute) pairwise comparison between categories of a nominal IV
+  - By default, weighted so larger categories receive proportional weight to their share of the sample
+  - In Stata, use the [**meinequality**](/software/meinequality/index.qmd) command or the **meinequality** option of **mecompare**
+  - In R, use the [**meineq()** function on **avg_comparisons**](/software/meinequality_r/index.qmd)
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*Nominal IVs and ME inequality
+meinequality educ orient5, model(nbnom)
+<</dd_do>>
+```
+
+## R
+
+```{r}
+avg_comparisons(nbnom, variables = list(educ = "pairwise", orient5 = "pairwise"),
+  hypothesis = meineq(nbnom))
+```
+
+:::
+
+> - *Individuals with differing amounts of educational attainment differ by about 1.7 depressive symptoms, on average.*
+> - *Differences across sexual orientation identity groups average about 1.6 depressive symptoms.*
+
+#### Bonus: tests of equality of ME inequalities
+
+- To test the equality of two MEs---including ME inequalities---use [**metest**](https://www.trentonmize.com/software/metest/) in Stata or the [**hypotheses**](https://marginaleffects.com/man/r/hypotheses.html) function in R
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*Bonus: test equality of ME inequalities using mecompare & metest
+mecompare educ orient5, model(nbnom) meinequality
+metest 1 - 6
+<</dd_do>>
+```
+
+## R
+
+```{r}
+meineq_nbnom <- avg_comparisons(nbnom,
+  variables = list(educ = "pairwise", orient5 = "pairwise"),
+  hypothesis = meineq(nbnom))
+
+hypotheses(meineq_nbnom, hypothesis = "b1 - b2 = 0")
+```
+
+:::
+
+> *Education and sexuality have similar sized overall effects on depressive symptoms (difference p = n.s.).*

@@ -45,7 +45,7 @@ set rmsg off
 local quarto "quarto"
 
 * Commands used by the teaching pages (their versions are recorded in the log)
-local cmds "mecompare metest meinequality totalme mtable mchange mlincom mgen listcoef mlogtest brant gologit2 fre esttab coefplot colorpalette binscatter binscatterhist combomarginsplot mkspline2 adjustrcspline usetdm"
+local cmds "mecompare metest meinequality totalme mtable mchange mlincom mgen listcoef mlogtest brant gologit2 fre esttab coefplot colorpalette binscatter binscatterhist combomarginsplot genpoisson countfit mkspline2 adjustrcspline usetdm"
 
 * ---------------------------------------------------------------- arguments --
 capture confirm file "_quarto.yml"

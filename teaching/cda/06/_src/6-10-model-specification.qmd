@@ -1,0 +1,141 @@
+---
+title: "6.10 Model Specification"
+---
+<<dd_version: 2>>
+
+- With zero inflated models you have two separate models to estimate simultaneously: (1) the always or sometimes zero binary model and the (2) count model (for non-zero counts)
+- Best practices for model specification apply to each model individually
+  - The best model specification for one model may not apply to the other
+- Often (but not always!), you will want the same IVs in both models
+  - But specification of these can---and sometimes should---differ
+    - E.g., I found evidence that both *income* and *income^2^* are needed in the count portion of the models; but that only *income* is needed for the "inflation" part of the model (i.e., the logit predicting zero/not)
+- See [Jenkins, Maher, and Fahrer 2014](https://journals.sagepub.com/doi/abs/10.1177/0022343314523027) for an applied example with a theoretical justification for different IVs in the two different parts of the model
+  - *"Our guiding idea is that structural factors affect the presence of insurgency (i.e. zeros vs. non-zeros) and that political dynamics affect the count of attacks."*
+
+## Estimation in Stata and R
+
+::: {.panel-tabset group="language"}
+## Stata
+
+- In Stata, use the [**zip**](https://www.stata.com/manuals/rzip.pdf) and [**zinb**](https://www.stata.com/manuals/rzinb.pdf) commands to estimate zero-inflated Poisson and negative binomial models
+  - Specify count model in first equation
+  - Binary inflation part in an **inflate( )** option
+
+```stata
+zinb mntlhlth i.woman i.married c.age##c.age c.faminc##c.faminc, ///
+    inflate(i.woman i.married c.age##c.age c.faminc) irr zip
+```
+
+## R
+
+- In R, use the [**zeroinfl( )**](https://www.rdocumentation.org/packages/pscl/versions/1.5.9/topics/zeroinfl) function from the **pscl** package
+  - Specify the distribution you want with **dist = "negbin"** or **"poisson"**
+  - Specify count model in first equation; inflation model in second equation after **\|**
+
+```r
+zeroinfl(mntlhlth ~ woman + married + poly(age, 2) + poly(faminc, 2) |
+  woman + married + poly(age, 2) + faminc, data = gss, dist = "negbin")
+```
+
+:::
+
+## Zero-inflated negative binomial estimates
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_gss", clear
+keep if year >= 2002 & year <= 2014
+
+*Data management
+gen notrelig = relig
+lab var notrelig "R Not Religious"
+recode notrelig 1 2 11 = 0 4 = 1 3 5/10 12/13 = .
+lab def notrlab 0"Christian" 1"Not Religious"
+lab val notrelig notrlab
+
+drop if missing(mntlhlth, physhlth, woman, race3, year, college, ///
+    parent, faminc, metro, notrelig, married)
+
+*Zero-inflated negative binomial model
+zinb mntlhlth i.woman i.married c.age##c.age c.faminc##c.faminc ///
+    i.race3 i.college i.parent i.notrelig i.year, ///
+    inflate(i.woman i.married c.age##c.age c.faminc ///
+    i.race3 i.college i.parent i.notrelig i.year) irr zip
+est store mhmod
+<</dd_do>>
+```
+
+## R
+
+```{r}
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(pscl)            # zero-inflated models: zeroinfl()
+
+gss <- read_dta("https://tdmize.github.io/data/data/cda_gss.dta")
+gss <- gss |> filter(year >= 2002 & year <= 2014)
+
+# Data management: Christian (Protestant, Catholic, Christian) vs not religious
+gss <- gss |>
+  mutate(notrelig = case_when(relig %in% c(1, 2, 11) ~ 0, relig == 4 ~ 1))
+
+# Keep model variables; drop any missing data
+gss <- gss[c("mntlhlth", "physhlth", "woman", "race3", "year", "college", "parent",
+  "faminc", "metro", "notrelig", "married", "age")]
+gss <- gss[complete.cases(gss), ]
+
+# Treat binary/nominal variables as factors
+gss <- gss |>
+  mutate(across(c(woman, married, race3, college, parent), as_factor),
+    notrelig = factor(notrelig, labels = c("Christian", "Not Religious")),
+    year = factor(year))
+
+# Zero-inflated negative binomial model
+mhmod <- zeroinfl(mntlhlth ~ woman + married + poly(age, 2) + poly(faminc, 2) +
+    race3 + college + parent + notrelig + year |
+    woman + married + poly(age, 2) + faminc + race3 + college + parent + notrelig + year,
+  data = gss, dist = "negbin")
+summary(mhmod)
+
+# Exponentiated count model coefficients (IRRs)
+round(exp(coef(mhmod, model = "count")), 3)
+```
+
+:::
+
+- *The inflation model coefficients are in the log-odds metric ☹. Need to exponentiate yourself*
+- *We have evidence that zinb is preferred to zip due to overdispersion*
+
+### Interpretation of coefficients
+
+- The count model coefficients are Poisson or negative binomial coefficients and can be interpreted like any count model coefficients
+  - But remember they are **only for those who have non-zero counts**
+
+> *Among those who report some bad mental health days, women report fewer bad days than men by factor of 0.917*
+
+- The inflation model coefficients are logit coefficients and can be interpreted as odds ratios (once exponentiated)
+  - Remember this is predicting **if you have any bad mental health days or not**
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*Exponentiate the inflation model logit coefficients for ORs
+di exp(-0.756)
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# Exponentiate the inflation model logit coefficients for ORs
+exp(coef(mhmod, model = "zero")["womanWomen"])
+```
+
+:::
+
+> *Women's odds of having no bad mental health days are 0.47 times lower than men's odds of having no bad mental health days*

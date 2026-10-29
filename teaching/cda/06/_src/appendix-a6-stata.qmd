@@ -1,0 +1,356 @@
+---
+title: "Appendix A6: Stata Code and Tips"
+---
+<<dd_version: 2>>
+
+![](images/stata-logo.png){width=35% fig-alt="Stata 17 logo."}
+
+- For all sets of lecture notes, there is an accompanying replication Stata do-file ([available here](https://drive.google.com/drive/folders/1E0tqULBiY1WKic3A6pSG0_vFlcP-dhcF?usp=sharing) or on Brightspace)
+  - This includes all of the Stata code necessary to recreate anything in the slides
+- In this Appendix, I include some comments, notes, and examples for things that are new or that might be hard to follow without more detail
+- For more streamlined, less complicated, and more notated do-files showing the basics of the types of analyses covered in this section, see the [Assignment example code](https://drive.google.com/drive/folders/1kcmZsaKoyZ4Y51X9BjmCZMuLGsw4GKNx?usp=sharing) (also available on Brightspace)
+
+## A6.4 Poisson regression model in Stata
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_ah4", clear
+
+poisson drinktime i.woman c.age i.college i.race c.income ///
+    i.spouserole i.parrole
+<</dd_do>>
+```
+
+### Factor change in rate with irr option
+
+Factor changes are referred to as "incident rate ratios" in Poisson; hence the option **irr** which will exponentiate the coefficients for you.
+
+```{.stata-run}
+<<dd_do>>
+poisson drinktime i.woman c.age i.college i.race c.income ///
+    i.spouserole i.parrole, irr
+<</dd_do>>
+```
+
+> *Women's rates of drinking are lower than men's by a factor of about 0.61*
+>
+> *Aging each year is associated with a 0.95 times decrease in the number of drinks consumed in a sitting*
+
+### Plots of the predicted rate
+
+- The default for predictions and marginal effects is in the metric of the rate
+
+```stata
+qui margins, at(age=(24(1)33) woman=(0 1))
+marginsplot, recastci(rline) ciopts(lpat(dash)) ylab(0(1)4) ///
+    …titleoptions…
+```
+
+#### Marginal effect on the rate
+
+```{.stata-run}
+<<dd_do>>
+mchange woman
+<</dd_do>>
+```
+
+> *On average, women consume about one fewer drink in a typical sitting than do men (ME = -1.038; p \< 0.001).*
+
+```{.stata-run}
+<<dd_do>>
+mchange age, amount(delta) delta(5) at(age=(25))
+<</dd_do>>
+```
+
+> *Aging from 25 to 30 is associated with consuming about ½ fewer drinks per sitting (ME = -0.562; p \< 0.001).*
+
+### Calculating probability of exact counts with margins
+
+- The default with **margins** after count models is to predict the rate. You can also predict probabilities for specific outcomes with the **predict(pr(#))** option
+
+```stata
+qui margins, at(age=(21(1)35) woman=(0 1)) predict(pr(0))
+
+marginsplot, recastci(rline) ciopts(lpat(dash)) ylab(0(.1).3) xlab(21(2)35) ///
+    … titleoptions …
+```
+
+- Cumulative probabilities can be calculated by specifying the range of specific outcomes with **predict(pr(# , #))**. E.g. For the cumulative probability that someone consumes between 4 to the max observed (18) number of drinks per sitting:
+
+```stata
+qui margins, at(age=(21(1)35) woman=(0 1)) predict(pr(4,18))
+
+marginsplot, recastci(rline) ciopts(lpat(dash)) ylab(0(.1).7) xlab(21(2)35) ///
+    … titleoptions …
+```
+
+## A6.5 Generating mean predictions to plot
+
+- The SPost command **mgen, meanpred** computes mean and observed probabilities of specific counts
+
+```{.stata-run}
+<<dd_do>>
+mgen, pr(0/20) meanpred stub(pmod) replace
+<</dd_do>>
+```
+
+```stata
+twoway connected pmodobeq pmodpreq pmodval, ylab(0(.1).4) xlab(0(2)20) ///
+    ytitle("Pr(y = k)") xtitle("Number of Drinks in Typical Sitting") ///
+    title("Comparison of Observed vs Poisson Model Average Predictions") ///
+    legend(order(1 "Observed" 2 "Poisson Pred"))
+```
+
+## A6.6 Negative binomial model in Stata with nbreg
+
+```{.stata-run}
+<<dd_do>>
+nbreg drinktime i.woman c.age i.college i.race c.income ///
+    i.spouserole i.parrole, irr
+<</dd_do>>
+```
+
+### Predictions and marginal effects
+
+- The same **margins** commands and tools can be used as with Poisson
+  - As with Poisson, **margins** will default to predicted rates after a negative binomial model, but can also be used to calculate predicted probabilities of specific counts
+
+#### Marginal effects for Pr(y = 0)
+
+- After negative binomial, can easily calculate marginal effects for the probability that *y* = 0 (or any value of interest)
+
+```{.stata-run}
+<<dd_do>>
+mchange woman income, predict(pr(0)) amount(sd)
+<</dd_do>>
+```
+
+## A6.7 Effects on cumulative probabilities
+
+- For cumulative probabilities, specify the range for margins
+  - Here, probability of experiencing between 0 and 11 depressive symptoms
+
+```stata
+qui margins, at(role=(0(1)10) woman=(0 1)) predict(pr(0,11))
+
+marginsplot, recastci(rline) ciopts(lpat(dash) col(gs12)) ///
+    … titleoptions …
+```
+
+## A6.10 zip and zinb for zero inflated count models in Stata
+
+```stata
+zinb mntlhlth i.woman i.married c.age##c.age c.faminc##c.faminc ///
+    i.race3 i.college i.parent i.notrelig i.year, ///
+    inflate(i.woman i.married c.age##c.age c.faminc ///
+    i.race3 i.college i.parent i.notrelig i.year) irr zip
+```
+
+- The first part of the model specification is for the count model (the same syntax as you would use with **nbreg**)
+  - As an option, you specify the inflation model IVs with **inflate( )**
+- The option **zip** will provide the likelihood ratio test for whether the overdispersion parameter α is needed (i.e. the test of ZINB \[zero inflated negative binomial\] vs ZIP \[zero inflated Poisson\])
+- The option **irr** will report exponentiated coefficients for the count part of the model (i.e. "incident rate ratios")
+  - An annoying omission is that there is not an option to exponentiate the coefficients in the inflation logit part of the model (for odds ratios)
+    - Do this yourself with **di exp(β)**
+
+### Comparing logit to inflation part of zero-inflated model
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_gss", clear
+keep if year >= 2002 & year <= 2014
+
+*Data management
+gen notrelig = relig
+lab var notrelig "R Not Religious"
+recode notrelig 1 2 11 = 0 4 = 1 3 5/10 12/13 = .
+lab def notrlab 0"Christian" 1"Not Religious"
+lab val notrelig notrlab
+
+drop if missing(mntlhlth, physhlth, woman, race3, year, college, ///
+    parent, faminc, metro, notrelig, married)
+
+qui zinb mntlhlth i.woman i.married c.age##c.age c.faminc##c.faminc ///
+    i.race3 i.college i.parent i.notrelig i.year, ///
+    inflate(i.woman i.married c.age##c.age c.faminc ///
+    i.race3 i.college i.parent i.notrelig i.year) irr zip
+est store coefs_zinb
+
+qui margins, dydx(*) predict(pr) post
+est store MEs_inflate
+
+est restore coefs_zinb
+qui margins, dydx(*) expression(exp(predict(equation(mntlhlth)))) post
+est store MEs_zinb
+
+*Compare to logit for 0 or >0
+gen mntlhlth0 = mntlhlth
+lab var mntlhlth0 "No Bad Mental Health Days"
+recode mntlhlth0 0=1 1/30 = 0
+
+qui logit mntlhlth0 i.woman i.married c.age##c.age c.faminc ///
+    i.race3 i.college i.parent i.notrelig i.year
+est store coefs_logit
+qui margins, dydx(*) post
+est store MEs_logit
+
+est table MEs_inflate MEs_logit, star stats(N) b(%9.3f) vsquish ///
+    title("[6.10.c] Comparing MEs from ZINB and logit for Pr(zero)")
+<</dd_do>>
+```
+
+::: {.callout-note icon="false" appearance="simple"}
+To help wrap our heads around what the model is doing, I've compared the inflation estimates of the ZINB to those from a binary logit model predicting whether someone is a zero or not for the DV *mntlhlth*
+
+As you can see, results are very similar
+:::
+
+```{.stata-run}
+<<dd_do>>
+*6.10.b - Distribution of Pr(zero)
+est restore coefs_logit
+predict przero
+lab var przero "Pr(mntlhlth = 0)"
+hist przero, percent fcolor(none) ylab(0(1)7) ///
+    xline(0.598, lcol(red) lpat(solid)) text(6.3 .68 "Mean = 0.60") ///
+    title("[6.10.b] Distribution of Predicted Probabilities: Pr(Zero Bad Mental Health Days)")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-06_10_b-zero.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-06_10_b-zero.png){width=80% fig-alt="[6.10.b] Histogram of the logit model's predicted probabilities of having zero bad mental health days: roughly bell-shaped from about 0.3 to 0.95, centered near the mean of 0.60, which is marked with a red line."}
+
+### Comparing nbreg to count part of zero-inflated model
+
+```{.stata-run}
+<<dd_do>>
+*Compare to regular count model for >0, weighted by 1 - przero
+qui nbreg mntlhlth i.woman i.married c.age##c.age c.faminc##c.faminc ///
+    i.race3 i.college i.parent i.notrelig i.year [iweight = 1-przero] ///
+    if mntlhlth != 0, irr
+est store coefs_nbreg
+qui margins, dydx(*) post
+est store MEs_nbreg
+
+est table MEs_zinb MEs_nbreg, star stats(N) b(%9.3f) vsquish ///
+    title("[6.10.e] Comparing MEs from ZINB and NBREG for non-zero counts")
+<</dd_do>>
+```
+
+::: {.callout-note icon="false" appearance="simple"}
+To help wrap our heads around what the model is doing, I've compared the count estimates from the ZINB to those from a negative binomial model predicting the non-zero counts of the DV *mntlhlth*, weighting the results by the probability someone is (not) a zero
+
+As you can see, results are very similar
+:::
+
+## A6.11 Plots of predictions & MEs in zero inflated models
+
+- As the inflation part of the model is a logit, plots and marginal effects are of most interest
+  - The option **predict(pr)** makes predictions as to whether someone is always in the zero group or not
+    - It can be confusing that this is Pr(in the always zero group)
+  - Note **predict(pr)** is not the same as **predict(pr(0))**
+    - **predict(pr)** is the probability that someone is always in the zero group or not
+    - **predict(pr(0))** is the probability of a zero count (combining people in the always zero group and sometimes zero group)
+
+```stata
+qui margins, at(age=(18(2.5)103) woman=(0 1)) predict(pr)
+marginsplot, recastci(rline) ciopts(lpat(dash) col(gs12)) … options …
+
+qui margins, at(age=(18(2.5)103) married=(0 1)) predict(pr)
+marginsplot, recastci(rline) ciopts(lpat(dash) col(gs12)) … options …
+
+qui margins, at(age=(18(2.5)103) woman=(0 1) married=(0 1)) predict(pr)
+marginsplot, noci … options …
+```
+
+### Marginal effects for inflation part of the model
+
+- You can use **mchange** to estimate marginal effects for the inflation (logit) part of the model using the **predict(pr)** option
+  - These are interpreted just as you would any ME from a logit model \[but remember these are the Pr(always in the zero group)\]
+
+```{.stata-run}
+<<dd_do>>
+est restore coefs_zinb
+mchange woman married age faminc, amount(sd) predict(pr)
+<</dd_do>>
+```
+
+### Plots of predictions for the rate or probability of specific outcomes
+
+- By default, **margins** predicts a combination of both the always and sometimes zero groups
+- These can be interpreted as you would interpret rates of predictions for specific outcomes from **nbreg**
+  - See examples in [6.11](6-11-predictions-mes.qmd)
+- It is unclear to me the advantage of **zinb** (besides possibly a slightly better fit) over **nbreg** if this is your interest
+  - The default on **margins** is to predict the rate (i.e. expected count)
+  - You can also plot probabilities of specific outcomes with the option **predict(pr(#))** or **predict(pr(#, #))** for a range
+
+### Plots of predictions for only the count part of model
+
+- Frustratingly, Stata does not make it easy to obtain predictions for only the count part of the **zip** or **zinb** model
+- Here is a solution for the predicted rate (remember the interpretation is **for someone who is not always a zero**):
+  - To only include the count part of the model in the predictions, you must include the option **expression(exp(predict(equation(mntlhlth))))**
+    - **exp( )** exponentiates the linear prediction which gives you the expected rate
+    - **equation( )** specifies which coefficients to use to make the predictions; where I have *mntlhlth* you should put whatever your count DV is
+  - There is plausibly a way to do this for probabilities of specific outcomes for someone who is not always a zero but this would be quite difficult
+
+```stata
+*Plot predicted rates
+qui margins, at(age=(18(2.5)103) woman=(0 1) married=(0 1)) ///
+    expression(exp(predict(equation(mntlhlth))))
+
+marginsplot, noci plotopts(msym(i)) … options …
+```
+
+### Marginal effects for count part of the model
+
+- Have to specify you want to exponentiate the predictions from the count part of the model (which is named whatever the dependent variable is named; here, *mntlhlth*)
+
+```{.stata-run}
+<<dd_do>>
+mchange woman married age faminc, amount(sd) ///
+    expression(exp(predict(equation(mntlhlth))))
+<</dd_do>>
+```
+
+#### Marginal effects on the rate for all observations
+
+- Remember that the results above are **for those who report some bad mental health days**
+- The default prediction with **margins** after zero-inflated models is for the rate (expected count) for all observations
+  - This mixes the always zeroes and the sometimes zeroes
+
+```{.stata-run}
+<<dd_do>>
+mchange woman married age faminc, amount(sd)
+<</dd_do>>
+```
+
+\*Note the differences in the results compared to those above
+
+## A6.12 Model selection for count models
+
+- **countfit** will perform all of the relevant tests for you
+  - By default it compares Poisson, negative binomial, zero inflated Poisson, and zero inflated negative binomial
+  - It reports the statistical tests and makes the graphs shown in [6.12](6-12-model-selection.qmd) (observed -- predicted)
+  - Syntax is the same as **zip** or **zinb**
+    - *Adding the **replace** option is helpful if you run **countfit** multiple times*
+    - *There is lots and lots of output*
+      - *In my opinion, the tables of "Comparison of Mean Observed and Predicted Count" and the table of "Tests and Fit Statistics" are most helpful*
+      - *The graph is also very helpful*
+
+```stata
+countfit mntlhlth i.woman i.married c.age##c.age c.faminc##c.faminc ///
+    i.race3 i.college i.parent i.notrelig i.year, ///
+    inflate(i.woman i.married c.age##c.age c.faminc ///
+    i.race3 i.college i.parent i.notrelig i.year) replace
+```
+
+### Troubleshooting with countfit
+
+- Zero inflated models can be tricky to obtain convergence---especially if there is not actually an excess of zeros
+- If **countfit** does not produce any output, add the option **noisily** to see where it is getting stuck
+  - You can ask for **countfit** to only compare particular models by adding the options **prm nbreg zip zinb**
+    - *This is the default (to compare all four)*
+    - *Remove the one that won't converge to still get the output of comparisons for the others*
+- If one of the models does not converge, this is pretty compelling evidence that is not the best model...

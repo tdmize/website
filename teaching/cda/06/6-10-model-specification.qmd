@@ -1,0 +1,264 @@
+---
+title: "6.10 Model Specification"
+---
+
+- With zero inflated models you have two separate models to estimate simultaneously: (1) the always or sometimes zero binary model and the (2) count model (for non-zero counts)
+- Best practices for model specification apply to each model individually
+  - The best model specification for one model may not apply to the other
+- Often (but not always!), you will want the same IVs in both models
+  - But specification of these can---and sometimes should---differ
+    - E.g., I found evidence that both *income* and *income^2^* are needed in the count portion of the models; but that only *income* is needed for the "inflation" part of the model (i.e., the logit predicting zero/not)
+- See [Jenkins, Maher, and Fahrer 2014](https://journals.sagepub.com/doi/abs/10.1177/0022343314523027) for an applied example with a theoretical justification for different IVs in the two different parts of the model
+  - *"Our guiding idea is that structural factors affect the presence of insurgency (i.e. zeros vs. non-zeros) and that political dynamics affect the count of attacks."*
+
+## Estimation in Stata and R
+
+::: {.panel-tabset group="language"}
+## Stata
+
+- In Stata, use the [**zip**](https://www.stata.com/manuals/rzip.pdf) and [**zinb**](https://www.stata.com/manuals/rzinb.pdf) commands to estimate zero-inflated Poisson and negative binomial models
+  - Specify count model in first equation
+  - Binary inflation part in an **inflate( )** option
+
+```stata
+zinb mntlhlth i.woman i.married c.age##c.age c.faminc##c.faminc, ///
+    inflate(i.woman i.married c.age##c.age c.faminc) irr zip
+```
+
+## R
+
+- In R, use the [**zeroinfl( )**](https://www.rdocumentation.org/packages/pscl/versions/1.5.9/topics/zeroinfl) function from the **pscl** package
+  - Specify the distribution you want with **dist = "negbin"** or **"poisson"**
+  - Specify count model in first equation; inflation model in second equation after **\|**
+
+```r
+zeroinfl(mntlhlth ~ woman + married + poly(age, 2) + poly(faminc, 2) |
+  woman + married + poly(age, 2) + faminc, data = gss, dist = "negbin")
+```
+
+:::
+
+## Zero-inflated negative binomial estimates
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/cda_gss", clear
+(cda_gss.dta |  GSS 1972-2021 CDA - Categorical Data Analysis | date created 202
+> 3)
+
+. keep if year >= 2002 & year <= 2014
+(50,180 observations deleted)
+
+. 
+. *Data management
+. gen notrelig = relig
+(106 missing values generated)
+
+. lab var notrelig "R Not Religious"
+
+. recode notrelig 1 2 11 = 0 4 = 1 3 5/10 12/13 = .
+(18,560 changes made to notrelig)
+
+. lab def notrlab 0"Christian" 1"Not Religious"
+
+. lab val notrelig notrlab
+
+. 
+. drop if missing(mntlhlth, physhlth, woman, race3, year, college, ///
+>     parent, faminc, metro, notrelig, married)
+(13,623 observations deleted)
+
+. 
+. *Zero-inflated negative binomial model
+. zinb mntlhlth i.woman i.married c.age##c.age c.faminc##c.faminc ///
+>     i.race3 i.college i.parent i.notrelig i.year, ///
+>     inflate(i.woman i.married c.age##c.age c.faminc ///
+>     i.race3 i.college i.parent i.notrelig i.year) irr zip
+
+Fitting zip model:
+
+Iteration 0:  Log likelihood = -14834.119  
+Iteration 1:  Log likelihood = -14240.706  
+Iteration 2:  Log likelihood = -14227.839  
+Iteration 3:  Log likelihood = -14227.827  
+Iteration 4:  Log likelihood = -14227.827  
+
+Fitting constant-only model:
+
+Iteration 0:  Log likelihood = -10387.556  (not concave)
+Iteration 1:  Log likelihood = -9567.0298  
+Iteration 2:  Log likelihood = -9512.8605  
+Iteration 3:  Log likelihood = -9509.3573  
+Iteration 4:  Log likelihood = -9509.3308  
+Iteration 5:  Log likelihood = -9509.3308  
+
+Fitting full model:
+
+Iteration 0:  Log likelihood = -9509.3308  
+Iteration 1:  Log likelihood = -9485.3695  
+Iteration 2:  Log likelihood = -9440.9936  
+Iteration 3:  Log likelihood = -9440.7017  
+Iteration 4:  Log likelihood = -9440.7015  
+
+Zero-inflated negative binomial regression              Number of obs =  5,036
+Inflation model: logit                                  Nonzero obs   =  2,019
+                                                        Zero obs      =  3,017
+                                                        LR chi2(14)   = 137.26
+Log likelihood = -9440.701                              Prob > chi2   = 0.0000
+
+-------------------------------------------------------------------------------
+     mntlhlth |        IRR   Std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+mntlhlth      |
+        woman |
+       Women  |      0.917      0.051   -1.556   0.120        0.822       1.023
+              |
+      married |
+     Married  |      0.899      0.054   -1.765   0.078        0.800       1.012
+          age |      0.967      0.013   -2.430   0.015        0.941       0.994
+              |
+  c.age#c.age |      1.000      0.000    2.417   0.016        1.000       1.001
+              |
+       faminc |      0.989      0.003   -3.971   0.000        0.983       0.994
+              |
+     c.faminc#|
+     c.faminc |      1.000      0.000    2.851   0.004        1.000       1.000
+              |
+        race3 |
+       black  |      0.965      0.079   -0.438   0.661        0.821       1.133
+       other  |      1.026      0.103    0.256   0.798        0.843       1.249
+              |
+      college |
+College De..  |      0.665      0.042   -6.488   0.000        0.588       0.752
+              |
+       parent |
+      Parent  |      1.062      0.069    0.923   0.356        0.935       1.207
+              |
+     notrelig |
+Not Religi..  |      1.032      0.068    0.484   0.628        0.908       1.174
+              |
+         year |
+        2006  |      0.778      0.055   -3.545   0.000        0.677       0.894
+        2010  |      0.840      0.062   -2.349   0.019        0.726       0.971
+        2014  |      0.912      0.070   -1.203   0.229        0.785       1.060
+              |
+        _cons |     24.782      6.989   11.382   0.000       14.258      43.073
+--------------+----------------------------------------------------------------
+inflate       |
+        woman |
+       Women  |     -0.756      0.075  -10.063   0.000       -0.904      -0.609
+              |
+      married |
+     Married  |      0.340      0.082    4.147   0.000        0.179       0.501
+          age |     -0.055      0.018   -3.089   0.002       -0.090      -0.020
+              |
+  c.age#c.age |      0.001      0.000    4.379   0.000        0.000       0.001
+              |
+       faminc |      0.004      0.001    3.082   0.002        0.001       0.006
+              |
+        race3 |
+       black  |      0.680      0.105    6.467   0.000        0.474       0.886
+       other  |      0.266      0.133    1.994   0.046        0.005       0.528
+              |
+      college |
+College De..  |     -0.294      0.090   -3.259   0.001       -0.470      -0.117
+              |
+       parent |
+      Parent  |     -0.169      0.091   -1.868   0.062       -0.347       0.008
+              |
+     notrelig |
+Not Religi..  |     -0.307      0.094   -3.259   0.001       -0.491      -0.122
+              |
+         year |
+        2006  |      0.118      0.095    1.247   0.213       -0.068       0.304
+        2010  |     -0.223      0.107   -2.078   0.038       -0.434      -0.013
+        2014  |      0.194      0.101    1.918   0.055       -0.004       0.392
+              |
+        _cons |      0.878      0.367    2.391   0.017        0.158       1.598
+--------------+----------------------------------------------------------------
+     /lnalpha |      0.286      0.061    4.682   0.000        0.166       0.406
+--------------+----------------------------------------------------------------
+        alpha |      1.331      0.081                         1.181       1.500
+-------------------------------------------------------------------------------
+Note: Estimates are transformed only in the first equation to incidence-rate
+      ratios.
+Note: _cons estimates baseline incidence rate.
+Likelihood-ratio test of alpha=0: chibar2(01) =  9574.25 Pr>=chibar2 =  0.0000
+
+. est store mhmod
+
+```
+
+## R
+
+```{r}
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(pscl)            # zero-inflated models: zeroinfl()
+
+gss <- read_dta("https://tdmize.github.io/data/data/cda_gss.dta")
+gss <- gss |> filter(year >= 2002 & year <= 2014)
+
+# Data management: Christian (Protestant, Catholic, Christian) vs not religious
+gss <- gss |>
+  mutate(notrelig = case_when(relig %in% c(1, 2, 11) ~ 0, relig == 4 ~ 1))
+
+# Keep model variables; drop any missing data
+gss <- gss[c("mntlhlth", "physhlth", "woman", "race3", "year", "college", "parent",
+  "faminc", "metro", "notrelig", "married", "age")]
+gss <- gss[complete.cases(gss), ]
+
+# Treat binary/nominal variables as factors
+gss <- gss |>
+  mutate(across(c(woman, married, race3, college, parent), as_factor),
+    notrelig = factor(notrelig, labels = c("Christian", "Not Religious")),
+    year = factor(year))
+
+# Zero-inflated negative binomial model
+mhmod <- zeroinfl(mntlhlth ~ woman + married + poly(age, 2) + poly(faminc, 2) +
+    race3 + college + parent + notrelig + year |
+    woman + married + poly(age, 2) + faminc + race3 + college + parent + notrelig + year,
+  data = gss, dist = "negbin")
+summary(mhmod)
+
+# Exponentiated count model coefficients (IRRs)
+round(exp(coef(mhmod, model = "count")), 3)
+```
+
+:::
+
+- *The inflation model coefficients are in the log-odds metric ☹. Need to exponentiate yourself*
+- *We have evidence that zinb is preferred to zip due to overdispersion*
+
+### Interpretation of coefficients
+
+- The count model coefficients are Poisson or negative binomial coefficients and can be interpreted like any count model coefficients
+  - But remember they are **only for those who have non-zero counts**
+
+> *Among those who report some bad mental health days, women report fewer bad days than men by factor of 0.917*
+
+- The inflation model coefficients are logit coefficients and can be interpreted as odds ratios (once exponentiated)
+  - Remember this is predicting **if you have any bad mental health days or not**
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. *Exponentiate the inflation model logit coefficients for ORs
+. di exp(-0.756)
+.46954084
+
+```
+
+## R
+
+```{r}
+# Exponentiate the inflation model logit coefficients for ORs
+exp(coef(mhmod, model = "zero")["womanWomen"])
+```
+
+:::
+
+> *Women's odds of having no bad mental health days are 0.47 times lower than men's odds of having no bad mental health days*
