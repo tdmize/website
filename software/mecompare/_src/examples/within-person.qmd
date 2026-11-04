@@ -17,14 +17,15 @@ random-effects model. The coefficient on the predictor is then the
 within-person effect.
 
 The data are those of the [panel models](panel.html) example: depressive
-symptoms among adults aged 51 and older in the Health and Retirement Study,
-2010 to 2020. Marital status and age change over time, so each gets its
-person mean.
+symptoms among adults aged 51 and older in a 30% sample of households from the
+Health and Retirement Study, 2010 to 2020. Marital status and age change over
+time, so each gets its person mean.
 
 ```{.stata-run}
 <<dd_do>>
 use "https://tdmize.github.io/data/data/hrs_si_2025", clear
 keep if year >= 2010 & age >= 51
+keep if mod(floor(hhidpn/1000), 10) < 3
 generate depressed = cesd >= 4 if !missing(cesd)
 drop if missing(depressed, marstatB, age, woman, race4cat, collegeB)
 xtset hhidpn year
@@ -56,11 +57,11 @@ mecompare marstatB, models(re cre)
 <</dd_do>>
 ```
 
-In the random-effects model, being married is associated with a 9.0
+In the random-effects model, being married is associated with a 9.6
 percentage point reduction in the probability of depressive symptoms.
-Examining only within-person variation, the effect of being married is a 5.9
-percentage point reduction. The random-effects estimate is 3.2 points larger
-(p < .001) because it pools both between- and within-person variation, shown
+Examining only within-person variation, the effect of being married is a 6.6
+percentage point reduction. The random-effects estimate is 3.0 points larger
+(p < .01) because it pools both between- and within-person variation, shown
 next.
 
 ## The between-person effect
@@ -80,9 +81,9 @@ metest 2 - 1
 <</dd_do>>
 ```
 
-Within a person, being married is associated with a 5.9 percentage point
+Within a person, being married is associated with a 6.6 percentage point
 reduction in the probability of depressive symptoms; between people, it is
-associated with a 10.6 percentage point reduction. `metest` shows the
-between-person effect is 4.7 points larger (p < .001): people who are married
+associated with an 11.0 percentage point reduction. `metest` shows the
+between-person effect is 4.5 points larger (p < .001): people who are married
 at every interview differ from people who are married at none by more than the
 same person differs when married and when not.
