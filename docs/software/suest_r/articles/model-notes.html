@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../../../">
 <link href="../../../software/suest_r/reference/index.html" rel="next">
-<link href="../../../software/suest_r/articles/two-part.html" rel="prev">
+<link href="../../../software/suest_r/articles/instrumental-variables.html" rel="prev">
 <script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="../../../site_libs/quarto-html/popper.min.js"></script>
@@ -1074,12 +1074,6 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
  <span class="menu-text">Instrumental-variable models</span></a>
   </div>
 </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../../software/suest_r/articles/two-part.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Two-part models</span></a>
-  </div>
-</li>
       </ul>
   </li>
           <li class="sidebar-item">
@@ -1119,12 +1113,6 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
   <div class="sidebar-item-container"> 
   <a href="../../../software/suest_r/reference/suest_newdata.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">suest_newdata</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../../software/suest_r/reference/suest_twopart.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">suest_twopart</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -1289,6 +1277,7 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
   <li><a href="#linear-models" id="toc-linear-models" class="nav-link active" data-scroll-target="#linear-models">Linear models</a></li>
   <li><a href="#linear-panel-models" id="toc-linear-panel-models" class="nav-link" data-scroll-target="#linear-panel-models">Linear panel models</a></li>
   <li><a href="#mixed-models-fitted-with-glmmtmb" id="toc-mixed-models-fitted-with-glmmtmb" class="nav-link" data-scroll-target="#mixed-models-fitted-with-glmmtmb">Mixed models fitted with glmmTMB</a></li>
+  <li><a href="#several-random-slopes-and-three-level-models" id="toc-several-random-slopes-and-three-level-models" class="nav-link" data-scroll-target="#several-random-slopes-and-three-level-models">Several random slopes and three-level models</a></li>
   <li><a href="#survey-models" id="toc-survey-models" class="nav-link" data-scroll-target="#survey-models">Survey models</a></li>
   <li><a href="#stata-models-without-an-r-version" id="toc-stata-models-without-an-r-version" class="nav-link" data-scroll-target="#stata-models-without-an-r-version">Stata models without an R version</a></li>
   <li><a href="#models-fitted-with-different-packages" id="toc-models-fitted-with-different-packages" class="nav-link" data-scroll-target="#models-fitted-with-different-packages">Models fitted with different packages</a></li>
@@ -1332,6 +1321,16 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 <li>Predictions and marginal effects average over the random intercept, and over the random slope when there is one.</li>
 <li>Center continuous predictors and keep them in well-scaled units. glmmTMB’s covariance matrix can be inaccurate with extreme predictor units even when the model reports convergence, and <code>suest</code> uses that covariance as supplied.</li>
 <li>For slopes of continuous predictors in logit random-slope models, use <code>numderiv = list("fdcenter", eps = 1e-4)</code> in <a href="https://rdrr.io/pkg/marginaleffects/man/slopes.html"><code>avg_slopes()</code></a> for more stable standard errors, and check that nearby step sizes (such as <code>5e-5</code> and <code>2e-4</code>) give similar answers.</li>
+</ul>
+</section>
+<section id="several-random-slopes-and-three-level-models" class="level2">
+<h2 class="anchored" data-anchor-id="several-random-slopes-and-three-level-models">Several random slopes and three-level models</h2>
+<ul>
+<li><code>lmer()</code>, <code>glmer()</code>, <code>glmmTMB()</code>, and <a href="https://rdrr.io/pkg/ordinal/man/clmm.html"><code>clmm()</code></a> models can have several random slopes for the grouping variable, <code>(1 + x1 + x2 | school)</code>, and one level nested in it, <code>(1 + x1 | school) + (1 | school:class)</code> or <code>(1 | school/class)</code>. In Stata, these are <code>|| school: x1 x2, covariance(unstructured) || class:</code>. Independent terms, <code>(1 + x1 || school)</code>, and glmmTMB’s <a href="https://rdrr.io/r/base/diag.html"><code>diag()</code></a> are Stata’s <code>covariance(independent)</code>. Crossed random effects and a third grouping level are not supported.</li>
+<li>Slopes must be numeric data columns. Make a numeric 0/1 version of a factor, and create transformed variables (such as squares) before fitting.</li>
+<li>The variance parameters are each term’s log standard deviations, <code>log_sd_school_x1</code>, and Fisher z correlations, <code>atanh_rho_school_intercept_x1</code>, as in Stata’s <code>lns</code> and <code>atr</code>. A nested level is named with a dot: <code>log_sd_school.class_intercept</code>.</li>
+<li>Nonlinear models with these structures use the Laplace approximation (lme4 allows adaptive quadrature only for a single random intercept). suest2 requires adaptive quadrature, so to check results in Stata, fit each model with <code>intmethod(laplace) vce(cluster school)</code>; its standard errors equal that model’s block of the <a href="../reference/suest.html"><code>suest()</code></a> covariance. Linear models agree with <code>mixed</code> exactly.</li>
+<li>Fits near a boundary, with a variance near zero or correlations near -1 or 1, are refused even when lme4 does not flag them as singular. Simplify the random-effects structure.</li>
 </ul>
 </section>
 <section id="survey-models" class="level2">
@@ -1857,8 +1856,8 @@ Comparison: High - Low</code></pre>
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../../../software/suest_r/articles/two-part.html" class="pagination-link" aria-label="Two-part models">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Two-part models</span>
+      <a href="../../../software/suest_r/articles/instrumental-variables.html" class="pagination-link" aria-label="Instrumental-variable models">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Instrumental-variable models</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
