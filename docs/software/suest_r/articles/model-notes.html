@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../../../">
 <link href="../../../software/suest_r/reference/index.html" rel="next">
-<link href="../../../software/suest_r/articles/instrumental-variables.html" rel="prev">
+<link href="../../../software/suest_r/articles/two-part.html" rel="prev">
 <script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="../../../site_libs/quarto-html/popper.min.js"></script>
@@ -982,6 +982,12 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
  <span class="menu-text">Predictions and graphs</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest_r/articles/tables.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Regression tables</span></a>
+  </div>
+</li>
           <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../../../software/suest_r/articles/mediation.html" class="sidebar-item-text sidebar-link">
@@ -1068,6 +1074,12 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
  <span class="menu-text">Instrumental-variable models</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest_r/articles/two-part.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Two-part models</span></a>
+  </div>
+</li>
       </ul>
   </li>
           <li class="sidebar-item">
@@ -1107,6 +1119,18 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
   <div class="sidebar-item-container"> 
   <a href="../../../software/suest_r/reference/suest_newdata.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">suest_newdata</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest_r/reference/suest_twopart.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">suest_twopart</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest_r/reference/tidy.suest_model.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">tidy.suest_model</span></a>
   </div>
 </li>
       </ul>
@@ -1265,6 +1289,8 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
   <li><a href="#linear-models" id="toc-linear-models" class="nav-link active" data-scroll-target="#linear-models">Linear models</a></li>
   <li><a href="#linear-panel-models" id="toc-linear-panel-models" class="nav-link" data-scroll-target="#linear-panel-models">Linear panel models</a></li>
   <li><a href="#mixed-models-fitted-with-glmmtmb" id="toc-mixed-models-fitted-with-glmmtmb" class="nav-link" data-scroll-target="#mixed-models-fitted-with-glmmtmb">Mixed models fitted with glmmTMB</a></li>
+  <li><a href="#survey-models" id="toc-survey-models" class="nav-link" data-scroll-target="#survey-models">Survey models</a></li>
+  <li><a href="#stata-models-without-an-r-version" id="toc-stata-models-without-an-r-version" class="nav-link" data-scroll-target="#stata-models-without-an-r-version">Stata models without an R version</a></li>
   <li><a href="#models-fitted-with-different-packages" id="toc-models-fitted-with-different-packages" class="nav-link" data-scroll-target="#models-fitted-with-different-packages">Models fitted with different packages</a></li>
   </ul>
 </nav>
@@ -1307,6 +1333,72 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 <li>Center continuous predictors and keep them in well-scaled units. glmmTMB’s covariance matrix can be inaccurate with extreme predictor units even when the model reports convergence, and <code>suest</code> uses that covariance as supplied.</li>
 <li>For slopes of continuous predictors in logit random-slope models, use <code>numderiv = list("fdcenter", eps = 1e-4)</code> in <a href="https://rdrr.io/pkg/marginaleffects/man/slopes.html"><code>avg_slopes()</code></a> for more stable standard errors, and check that nearby step sizes (such as <code>5e-5</code> and <code>2e-4</code>) give similar answers.</li>
 </ul>
+</section>
+<section id="survey-models" class="level2">
+<h2 class="anchored" data-anchor-id="survey-models">Survey models</h2>
+<ul>
+<li>Binary probit and cloglog (<code>svyglm()</code>), ordered (<code>svyolr()</code>), multinomial, negative-binomial, and generalized ordered (<code>svy_vglm()</code>), and survival (<code>svysurvreg()</code>) models use exact observed information, as Stata does. Their standard errors can differ from the fitted model’s own: <code>svyglm()</code> and VGAM use expected information, <code>svyolr()</code> uses a numerical Hessian, and for interval-censored outcomes survival’s scale residuals are incorrect.</li>
+<li>These fits stop at fairly loose tolerances. For results that agree closely with Stata, tighten them: <code>control = list(reltol = 1e-12)</code> in <code>svyolr()</code> and <code>control = VGAM::vglm.control(criterion = "coefficients", epsilon = 1e-9)</code> in <code>svy_vglm()</code>.</li>
+<li><code>svy_vglm()</code> multinomial models use the last category as the reference unless <code>multinomial(refLevel = )</code> says otherwise.</li>
+<li><a href="../reference/suest.html"><code>suest()</code></a> finds an <code>svyivreg()</code> model’s design from its call, so keep that design object available.</li>
+</ul>
+</section>
+<section id="stata-models-without-an-r-version" class="level2">
+<h2 class="anchored" data-anchor-id="stata-models-without-an-r-version">Stata models without an R version</h2>
+<p>For these Stata models, <code>suest</code> supports a model that answers the same question. The last column fits the same model in Stata.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Stata model</th>
+<th>Use in R</th>
+<th>Same model in Stata</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>xtlogit, fe</code></td>
+<td>Random-intercept logit with each time-varying predictor’s person mean added (<code>glmer()</code>, <code>glmmTMB()</code>, or <code>pglm()</code>); see <a href="within-person.html">Within-person effects</a></td>
+<td><code>xtlogit, re</code> or <code>melogit</code> with the person means</td>
+</tr>
+<tr class="even">
+<td><code>xtmlogit, fe</code></td>
+<td><a href="https://rdrr.io/pkg/nnet/man/multinom.html"><code>nnet::multinom()</code></a> with the person means, clustered on person</td>
+<td><code>mlogit</code> with the person means, <code>vce(cluster id)</code></td>
+</tr>
+<tr class="odd">
+<td><code>xtmlogit, re</code></td>
+<td><a href="https://rdrr.io/pkg/nnet/man/multinom.html"><code>nnet::multinom()</code></a> clustered on person</td>
+<td><code>mlogit, vce(cluster id)</code></td>
+</tr>
+<tr class="even">
+<td><code>xtnbreg, fe</code></td>
+<td>Fixed-effects Poisson, <a href="https://lrberge.github.io/fixest/reference/feglm.html"><code>fixest::fepois()</code></a></td>
+<td><code>xtpoisson, fe</code></td>
+</tr>
+<tr class="odd">
+<td><code>xtnbreg, re</code></td>
+<td>Random-intercept negative binomial, <code>glmmTMB()</code></td>
+<td><code>menbreg</code></td>
+</tr>
+<tr class="even">
+<td><code>xtnbreg, pa</code></td>
+<td>Population-averaged Poisson, <a href="https://rdrr.io/pkg/geepack/man/geeglm.html"><code>geepack::geeglm()</code></a></td>
+<td><code>xtpoisson, pa vce(robust)</code></td>
+</tr>
+<tr class="odd">
+<td><code>mestreg</code></td>
+<td><code>survreg()</code> clustered on the group</td>
+<td><code>streg, vce(cluster group)</code></td>
+</tr>
+<tr class="even">
+<td><code>biprobit</code> with different predictors</td>
+<td>Two probit models</td>
+<td>Two <code>probit</code> models</td>
+</tr>
+</tbody>
+</table>
+<p>Fixed-effects Poisson with robust standard errors is valid for overdispersed counts, and <code>xtnbreg, fe</code> is not a true fixed-effects model (Allison and Waterman 2002). The multinomial and survival stand-ins have no random effects, so they estimate effects averaged over people rather than for a given person. Two probit models estimate the same effects on each outcome as a bivariate probit, without the correlation between their errors.</p>
+<p>Allison, P. D., &amp; Waterman, R. P. (2002). Fixed-effects negative binomial regression models. <em>Sociological Methodology</em>, 32, 247-265.</p>
 </section>
 <section id="models-fitted-with-different-packages" class="level2">
 <h2 class="anchored" data-anchor-id="models-fitted-with-different-packages">Models fitted with different packages</h2>
@@ -1765,8 +1857,8 @@ Comparison: High - Low</code></pre>
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../../../software/suest_r/articles/instrumental-variables.html" class="pagination-link" aria-label="Instrumental-variable models">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Instrumental-variable models</span>
+      <a href="../../../software/suest_r/articles/two-part.html" class="pagination-link" aria-label="Two-part models">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Two-part models</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
