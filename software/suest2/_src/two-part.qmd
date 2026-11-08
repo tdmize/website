@@ -1,0 +1,232 @@
+---
+title: "Two-part models"
+subtitle: "Expected outcomes from a model of whether the outcome is positive and a model of how large it is"
+---
+<<dd_version: 2>>
+
+Outcomes such as medical expenditures are zero for many people and spread over
+a long right tail for the rest. A two-part model handles them in two steps: a
+binary model of whether the outcome is positive, and a model of its size for
+the people with a positive outcome. The expected outcome is the product of the
+two:
+
+$$E(y) = \Pr(y > 0) \times E(y \mid y > 0)$$
+
+This is the model the `twopm` command fits (Belotti, Deb, Manning, and Norton
+2015). With `suest2`, fit the two parts as separate models, combine them, and
+give `margins` the product of the two predictions in `expression()`. Each
+`predict()` names its model with `model()`, so the same combined results also
+give effects within each part, comparisons across groups, and comparisons
+across two-part models.
+
+The examples use the medical expenditures of 19,386 adults in the 2004 Medical
+Expenditure Panel Survey.
+
+## Fit the two parts and combine them
+
+The first part is a logit of whether a person had any medical expenditures.
+The second part is a `glm` with a gamma family and a log link, fit to the
+people who had any. Both cluster on the dwelling unit (`duid`).
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/meps", clear
+generate byte any = exp_tot > 0
+tabulate any
+
+local x "c.age i.female c.lninc c.pcs12 c.mcs12 i.ins_unins i.anylim"
+
+quietly logit any `x', vce(cluster duid)
+estimates store Any
+
+quietly glm exp_tot `x' if any, family(gamma) link(log) vce(cluster duid)
+estimates store Amount
+
+suest2 Any Amount
+<</dd_do>>
+```
+
+## Expected expenditures and effects on them
+
+`predict(model(Any))` is the probability of any expenditures and
+`predict(model(Amount))` the expected expenditures of someone who has any.
+Their product is the expected expenditures:
+
+```{.stata-run}
+<<dd_do>>
+local twopart "predict(model(Any)) * predict(model(Amount))"
+
+margins, expression(`twopart')
+margins, dydx(age female ins_unins anylim) expression(`twopart')
+<</dd_do>>
+```
+
+Expected expenditures average about $3,760 a year. Being uninsured lowers them
+by about $2,610, and each year of age raises them by about $63.
+
+## Effects in each part
+
+Naming one model in `predict()` gives the effect in that part alone:
+
+```{.stata-run}
+<<dd_do>>
+margins, dydx(ins_unins) predict(model(Any))
+margins, dydx(ins_unins) predict(model(Amount))
+<</dd_do>>
+```
+
+Being uninsured lowers the probability of any expenditures by 24 percentage
+points, and the expected expenditures of someone who has any by about $2,480.
+Both are averaged over the whole sample.
+
+## Comparing groups
+
+`over()` gives the effect within each group, and `over(r.)` the difference
+between the groups, with its test:
+
+```{.stata-run}
+<<dd_do>>
+local twopart "predict(model(Any)) * predict(model(Amount))"
+
+margins, dydx(ins_unins) over(female) expression(`twopart')
+margins, dydx(ins_unins) over(r.female) expression(`twopart')
+<</dd_do>>
+```
+
+Being uninsured lowers expected expenditures by about $2,170 for men and $2,980
+for women; the difference, about $810, is significant.
+
+## Other models for the second part
+
+**A linear second part.** Fit `regress` among the people with any
+expenditures, and use its prediction in place of the `glm` one:
+
+```{.stata-run}
+<<dd_do>>
+local x "c.age i.female c.lninc c.pcs12 c.mcs12 i.ins_unins i.anylim"
+
+quietly regress exp_tot `x' if any, vce(cluster duid)
+estimates store Linear
+
+quietly suest2 Any Linear
+margins, dydx(ins_unins) expression(predict(model(Any)) * predict(model(Linear)))
+<</dd_do>>
+```
+
+**A regression of log expenditures.** When the second part is a regression of
+the log of the outcome, its prediction is on the log scale. Exponentiating it
+gives exp(*xb*), which understates the mean; the expected outcome is exp(*xb*)
+times the mean of the exponentiated errors. Two estimates of that constant are
+common: Duan's (1983) smearing estimate, the mean of the exponentiated
+residuals, and, if the errors are normal, exp(*s*²/2), where *s*² is the
+residual variance. Compute either one from the stored regression and include
+it in `expression()`:
+
+```{.stata-run}
+<<dd_do>>
+local x "c.age i.female c.lninc c.pcs12 c.mcs12 i.ins_unins i.anylim"
+
+generate double lnexp = ln(exp_tot) if any
+quietly regress lnexp `x' if any, vce(cluster duid)
+estimates store LnAmount
+local s2 = e(rss) / e(N)
+
+predict double res if e(sample), residuals
+generate double expres = exp(res)
+summarize expres, meanonly
+local duan = r(mean)
+
+display "Smearing constant: " %5.3f `duan' _n "Normal constant:   " %5.3f exp(`s2' / 2)
+
+quietly suest2 Any LnAmount
+margins, dydx(ins_unins) expression(predict(model(Any)) * exp(predict(model(LnAmount))) * `duan')
+margins, dydx(ins_unins) expression(predict(model(Any)) * exp(predict(model(LnAmount)) + `s2' / 2))
+<</dd_do>>
+```
+
+`margins` treats the constant as known, so the standard errors do not include
+the uncertainty in estimating it.
+
+## Weights and survey data
+
+**Sampling weights.** Fit each part with the weights but without `vce()`, and
+give the clustering to `suest2` with `cluster()`:
+
+```{.stata-run}
+<<dd_do>>
+local x "c.age i.female c.lninc c.pcs12 c.mcs12 i.ins_unins i.anylim"
+
+quietly logit any `x' [pw = wtdper]
+estimates store AnyW
+
+quietly glm exp_tot `x' if any [pw = wtdper], family(gamma) link(log)
+estimates store AmountW
+
+quietly suest2 AnyW AmountW, cluster(duid)
+margins, dydx(ins_unins) expression(predict(model(AnyW)) * predict(model(AmountW)))
+<</dd_do>>
+```
+
+**Survey data.** `svyset` the data and fit each part with `svy:`. Fit the
+second part with `if any`, as above, not with `subpop()`; `suest2` computes the
+standard errors from the full survey design.
+
+```{.stata-run}
+<<dd_do>>
+local x "c.age i.female c.lninc c.pcs12 c.mcs12 i.ins_unins i.anylim"
+
+svyset duid [pw = wtdper]
+
+quietly svy: logit any `x'
+estimates store AnyS
+
+quietly svy: glm exp_tot `x' if any, family(gamma) link(log)
+estimates store AmountS
+
+quietly suest2 AnyS AmountS
+margins, dydx(ins_unins) expression(predict(model(AnyS)) * predict(model(AmountS)))
+<</dd_do>>
+```
+
+## Comparing two two-part models
+
+`suest2` can combine more than one two-part model. Here a two-part model
+without the health measures (`pcs12`, `mcs12`, and `anylim`) is combined with
+the full one, to ask how much the effect of being uninsured changes when health
+is held constant. The difference between the two expected outcomes goes in one
+`expression()`:
+
+```{.stata-run}
+<<dd_do>>
+local x1 "c.age i.female c.lninc i.ins_unins"
+
+quietly logit any `x1', vce(cluster duid)
+estimates store Any1
+
+quietly glm exp_tot `x1' if any, family(gamma) link(log) vce(cluster duid)
+estimates store Amount1
+
+quietly suest2 Any1 Amount1 Any Amount
+
+local tp1 "predict(model(Any1)) * predict(model(Amount1))"
+local tp2 "predict(model(Any)) * predict(model(Amount))"
+
+margins, dydx(ins_unins) expression(`tp1')
+margins, dydx(ins_unins) expression(`tp2')
+margins, dydx(ins_unins) expression(`tp1' - `tp2')
+<</dd_do>>
+```
+
+Without the health measures, being uninsured lowers expected expenditures by
+about $2,840; with them, by about $2,610. The difference, about $230, is
+significant.
+
+## References
+
+> Belotti, Federico, Partha Deb, Willard G. Manning, and Edward C. Norton.
+> 2015. "twopm: Two-part Models." *Stata Journal* 15(1): 3--20.
+> <https://doi.org/10.1177/1536867X1501500102>
+
+> Duan, Naihua. 1983. "Smearing Estimate: A Nonparametric Retransformation
+> Method." *Journal of the American Statistical Association* 78(383):
+> 605--610. <https://doi.org/10.2307/2288126>
