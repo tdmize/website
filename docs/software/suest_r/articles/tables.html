@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Regression tables – Trenton D. Mize</title>
+<title>Regression tables and coefficient plots – Trenton D. Mize</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -185,7 +185,7 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../software/suest_r/index.html">suest (R)</a></li><li class="breadcrumb-item"><a href="../../../software/suest_r/articles/tables.html">Regression tables</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../software/suest_r/index.html">suest (R)</a></li><li class="breadcrumb-item"><a href="../../../software/suest_r/articles/tables.html">Regression tables and coefficient plots</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -991,7 +991,7 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../../software/suest_r/articles/tables.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">Regression tables</span></a>
+ <span class="menu-text">Regression tables and coefficient plots</span></a>
   </div>
 </li>
           <li class="sidebar-item sidebar-item-section">
@@ -1288,9 +1288,9 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../software/suest_r/index.html">suest (R)</a></li><li class="breadcrumb-item"><a href="../../../software/suest_r/articles/tables.html">Regression tables</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../software/suest_r/index.html">suest (R)</a></li><li class="breadcrumb-item"><a href="../../../software/suest_r/articles/tables.html">Regression tables and coefficient plots</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">Regression tables</h1>
+<h1 class="title">Regression tables and coefficient plots</h1>
 </div>
 
 
@@ -1307,22 +1307,23 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 </header>
 
 
-<p><a href="https://modelsummary.com/"><code>modelsummary</code></a> makes tables from a combined object and from the <code>marginaleffects</code> results computed with it. Add <code>shape = term ~ group</code> to put each model in its own column.</p>
+<p><a href="https://modelsummary.com/"><code>modelsummary</code></a> makes tables from a combined object and from the <code>marginaleffects</code> results computed with it. Add <code>shape = term ~ group</code> to put each model in its own column. <a href="https://modelsummary.com/man/modelplot.html"><code>modelplot()</code></a> makes coefficient plots and takes the same arguments.</p>
 <p>The models are the two logits of union membership from Getting started:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(suest)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(marginaleffects)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(modelsummary)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(haven)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>nlsw <span class="ot">&lt;-</span> <span class="fu">zap_labels</span>(<span class="fu">read_dta</span>(<span class="st">"https://tdmize.github.io/data/data/nlsw88.dta"</span>))</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>nlsw <span class="ot">&lt;-</span> nlsw[<span class="sc">!</span><span class="fu">is.na</span>(nlsw<span class="sc">$</span>union), ]</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>nlsw[<span class="fu">c</span>(<span class="st">"collgrad"</span>, <span class="st">"south"</span>)] <span class="ot">&lt;-</span> <span class="fu">lapply</span>(nlsw[<span class="fu">c</span>(<span class="st">"collgrad"</span>, <span class="st">"south"</span>)], factor)</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>base <span class="ot">&lt;-</span> <span class="fu">glm</span>(union <span class="sc">~</span> collgrad <span class="sc">+</span> age <span class="sc">+</span> south, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="st">"logit"</span>),</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>            <span class="at">data =</span> nlsw)</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>adjusted <span class="ot">&lt;-</span> <span class="fu">glm</span>(union <span class="sc">~</span> collgrad <span class="sc">+</span> age <span class="sc">+</span> south <span class="sc">+</span> wage <span class="sc">+</span> ttl_exp,</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>                <span class="at">family =</span> <span class="fu">binomial</span>(<span class="st">"logit"</span>), <span class="at">data =</span> nlsw)</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>combined <span class="ot">&lt;-</span> <span class="fu">suest</span>(base, adjusted, <span class="at">model_names =</span> <span class="fu">c</span>(<span class="st">"Base"</span>, <span class="st">"Adjusted"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(haven)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>nlsw <span class="ot">&lt;-</span> <span class="fu">zap_labels</span>(<span class="fu">read_dta</span>(<span class="st">"https://tdmize.github.io/data/data/nlsw88.dta"</span>))</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>nlsw <span class="ot">&lt;-</span> nlsw[<span class="sc">!</span><span class="fu">is.na</span>(nlsw<span class="sc">$</span>union), ]</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>nlsw[<span class="fu">c</span>(<span class="st">"collgrad"</span>, <span class="st">"south"</span>)] <span class="ot">&lt;-</span> <span class="fu">lapply</span>(nlsw[<span class="fu">c</span>(<span class="st">"collgrad"</span>, <span class="st">"south"</span>)], factor)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>base <span class="ot">&lt;-</span> <span class="fu">glm</span>(union <span class="sc">~</span> collgrad <span class="sc">+</span> age <span class="sc">+</span> south, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="st">"logit"</span>),</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>            <span class="at">data =</span> nlsw)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>adjusted <span class="ot">&lt;-</span> <span class="fu">glm</span>(union <span class="sc">~</span> collgrad <span class="sc">+</span> age <span class="sc">+</span> south <span class="sc">+</span> wage <span class="sc">+</span> ttl_exp,</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>                <span class="at">family =</span> <span class="fu">binomial</span>(<span class="st">"logit"</span>), <span class="at">data =</span> nlsw)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>combined <span class="ot">&lt;-</span> <span class="fu">suest</span>(base, adjusted, <span class="at">model_names =</span> <span class="fu">c</span>(<span class="st">"Base"</span>, <span class="st">"Adjusted"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <section id="coefficients" class="level2">
 <h2 class="anchored" data-anchor-id="coefficients">Coefficients</h2>
 <p>The standard errors are each model’s robust standard errors from the joint covariance matrix.</p>
@@ -1408,17 +1409,26 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 </tr>
 </tbody>
 </table>
+<p>The same coefficients as a plot, without the intercepts:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">modelplot</span>(combined, <span class="at">shape =</span> term <span class="sc">~</span> group, <span class="at">coef_omit =</span> <span class="st">"Intercept"</span>) <span class="sc">+</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_discrete</span>(<span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Base"</span>, <span class="st">"Adjusted"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="tables_files/figure-html/coefficients-plot-1.png" class="img-fluid figure-img"></p>
+<figcaption>Logit coefficients and 95% confidence intervals for union membership from the base and adjusted models.</figcaption>
+</figure>
+</div>
 </section>
 <section id="marginal-effects-and-their-differences" class="level2">
 <h2 class="anchored" data-anchor-id="marginal-effects-and-their-differences">Marginal effects and their differences</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>effects <span class="ot">&lt;-</span> <span class="fu">avg_slopes</span>(combined, <span class="at">variables =</span> <span class="fu">c</span>(<span class="st">"collgrad"</span>, <span class="st">"age"</span>, <span class="st">"south"</span>))</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>differences <span class="ot">&lt;-</span> <span class="fu">hypotheses</span>(effects, <span class="at">hypothesis =</span> difference <span class="sc">~</span> revpairwise <span class="sc">|</span> term)</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>differences<span class="sc">$</span>group <span class="ot">&lt;-</span> <span class="st">"Base - Adjusted"</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">modelsummary</span>(</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="st">"Average marginal effects"</span> <span class="ot">=</span> effects, <span class="st">"Difference"</span> <span class="ot">=</span> differences),</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">shape =</span> term <span class="sc">~</span> group</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>effects <span class="ot">&lt;-</span> <span class="fu">avg_slopes</span>(combined, <span class="at">variables =</span> <span class="fu">c</span>(<span class="st">"collgrad"</span>, <span class="st">"age"</span>, <span class="st">"south"</span>))</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>differences <span class="ot">&lt;-</span> <span class="fu">hypotheses</span>(effects, <span class="at">hypothesis =</span> difference <span class="sc">~</span> revpairwise <span class="sc">|</span> term)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>differences<span class="sc">$</span>group <span class="ot">&lt;-</span> <span class="st">"Base - Adjusted"</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">modelsummary</span>(</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="st">"Average marginal effects"</span> <span class="ot">=</span> effects, <span class="st">"Difference"</span> <span class="ot">=</span> differences),</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">shape =</span> term <span class="sc">~</span> group</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -1479,6 +1489,19 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 </tr>
 </tbody>
 </table>
+<p>The same results as a plot:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">modelplot</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="st">"Average marginal effects"</span> <span class="ot">=</span> effects, <span class="st">"Difference"</span> <span class="ot">=</span> differences),</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">shape =</span> term <span class="sc">~</span> group,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">background =</span> <span class="fu">list</span>(<span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">0</span>, <span class="at">color =</span> <span class="st">"grey50"</span>))</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Change in the probability of union membership"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="tables_files/figure-html/effects-plot-1.png" class="img-fluid figure-img"></p>
+<figcaption>Average marginal effects on the probability of union membership from the base and adjusted models, and their differences, with 95% confidence intervals.</figcaption>
+</figure>
+</div>
 
 
 </section>

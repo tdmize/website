@@ -991,7 +991,7 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../../software/suest_r/articles/tables.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Regression tables</span></a>
+ <span class="menu-text">Regression tables and coefficient plots</span></a>
   </div>
 </li>
           <li class="sidebar-item sidebar-item-section">
@@ -1282,6 +1282,13 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
   <ul>
   <li><a href="#linear-models" id="toc-linear-models" class="nav-link active" data-scroll-target="#linear-models">Linear models</a></li>
   <li><a href="#linear-panel-models" id="toc-linear-panel-models" class="nav-link" data-scroll-target="#linear-panel-models">Linear panel models</a></li>
+  <li><a href="#constant-dispersion-negative-binomial" id="toc-constant-dispersion-negative-binomial" class="nav-link" data-scroll-target="#constant-dispersion-negative-binomial">Constant-dispersion negative binomial</a></li>
+  <li><a href="#population-averaged-gee-models" id="toc-population-averaged-gee-models" class="nav-link" data-scroll-target="#population-averaged-gee-models">Population-averaged (GEE) models</a></li>
+  <li><a href="#parametric-survival-models" id="toc-parametric-survival-models" class="nav-link" data-scroll-target="#parametric-survival-models">Parametric survival models</a></li>
+  <li><a href="#gompertz-and-generalized-gamma-survival" id="toc-gompertz-and-generalized-gamma-survival" class="nav-link" data-scroll-target="#gompertz-and-generalized-gamma-survival">Gompertz and generalized gamma survival</a></li>
+  <li><a href="#bivariate-probit" id="toc-bivariate-probit" class="nav-link" data-scroll-target="#bivariate-probit">Bivariate probit</a></li>
+  <li><a href="#generalized-ordered-models" id="toc-generalized-ordered-models" class="nav-link" data-scroll-target="#generalized-ordered-models">Generalized ordered models</a></li>
+  <li><a href="#zero-inflated-models" id="toc-zero-inflated-models" class="nav-link" data-scroll-target="#zero-inflated-models">Zero-inflated models</a></li>
   <li><a href="#mixed-models-fitted-with-glmmtmb" id="toc-mixed-models-fitted-with-glmmtmb" class="nav-link" data-scroll-target="#mixed-models-fitted-with-glmmtmb">Mixed models fitted with glmmTMB</a></li>
   <li><a href="#several-random-slopes-and-three-level-models" id="toc-several-random-slopes-and-three-level-models" class="nav-link" data-scroll-target="#several-random-slopes-and-three-level-models">Several random slopes and three-level models</a></li>
   <li><a href="#survey-models" id="toc-survey-models" class="nav-link" data-scroll-target="#survey-models">Survey models</a></li>
@@ -1321,6 +1328,131 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 <h2 class="anchored" data-anchor-id="linear-panel-models">Linear panel models</h2>
 <p>For <a href="https://rdrr.io/pkg/plm/man/plm.html"><code>plm::plm()</code></a> models, comparisons of slopes and changes are supported. Confidence intervals and tests for average predicted levels at the estimation-sample means are not: their standard errors can be missing or near zero.</p>
 </section>
+<section id="constant-dispersion-negative-binomial" class="level2">
+<h2 class="anchored" data-anchor-id="constant-dispersion-negative-binomial">Constant-dispersion negative binomial</h2>
+<ul>
+<li>Stata’s <code>nbreg, dispersion(constant)</code> is <code>glmmTMB(y ~ x, family = nbinom1())</code>, and <code>menbreg, dispersion(constant)</code> adds random effects, as in <code>glmmTMB(y ~ x + (1 | id), family = nbinom1())</code>. The conditional variance is <code>mu*(1 + exp(log_phi))</code>, and <code>log_phi</code> is Stata’s <code>/lndelta</code>.</li>
+<li>Stata’s default <code>nbreg</code> (mean dispersion) is <a href="https://rdrr.io/pkg/MASS/man/glm.nb.html"><code>MASS::glm.nb()</code></a>, or <code>glmmTMB(family = nbinom2())</code> with random effects.</li>
+</ul>
+</section>
+<section id="population-averaged-gee-models" class="level2">
+<h2 class="anchored" data-anchor-id="population-averaged-gee-models">Population-averaged (GEE) models</h2>
+<ul>
+<li><code>geeglm()</code> models can use independence, exchangeable, ar1, or unstructured working correlations. As in Stata, <code>suest</code> holds the working correlation at its estimate.</li>
+<li>geepack and Stata estimate unstructured correlations the same way, so their results match. They estimate ar1 correlations differently, so ar1 coefficients and standard errors differ slightly. To reproduce R’s ar1 results in Stata, use <code>corr(fixed R)</code> (for example <code>xtlogit y x, pa corr(fixed R)</code>), where <code>R</code> has entries <code>alpha^|j - k|</code> and <code>alpha</code> is <code>model$geese$alpha</code>.</li>
+<li>For ar1, give <code>geeglm()</code> the time variable, <code>waves = time</code>, so the correlation depends on the time between observations; without it, geepack uses each observation’s position in its panel. Stata leaves out panels whose times are unequally spaced unless you add <code>force</code>, which then uses the order of the observations.</li>
+<li>Unstructured correlations need each panel’s waves to run 1, 2, …; panels can end early but cannot skip a wave. geepack cannot fit unstructured correlations with skipped waves (R stops with a memory error), although Stata can.</li>
+</ul>
+</section>
+<section id="parametric-survival-models" class="level2">
+<h2 class="anchored" data-anchor-id="parametric-survival-models">Parametric survival models</h2>
+<ul>
+<li>Predictions from <code>survreg()</code> and <code>svysurvreg()</code> models of survival time (Weibull, exponential, lognormal, log-logistic) are median survival times, as after <code>streg</code>. <code>predict(type = "response")</code> instead gives exp(linear predictor), which is the median for lognormal and log-logistic models but not for Weibull and exponential ones.</li>
+<li>Stata’s log likelihood after <code>streg</code> leaves out the sum of log times over the failures, so it is higher than survreg’s and flexsurv’s by that amount. Estimates and standard errors are the same.</li>
+</ul>
+</section>
+<section id="gompertz-and-generalized-gamma-survival" class="level2">
+<h2 class="anchored" data-anchor-id="gompertz-and-generalized-gamma-survival">Gompertz and generalized gamma survival</h2>
+<ul>
+<li>Stata’s <code>streg, distribution(gompertz)</code> is <code>flexsurvreg(Surv(time, event) ~ x, dist = "gompertz")</code>, and <code>streg, distribution(ggamma)</code> is <code>dist = "gengamma"</code>. Stata’s <code>ancillary()</code> and <code>anc2()</code> are flexsurv’s <code>anc</code>, as in <code>anc = list(shape = ~ z)</code> for the Gompertz <code>gamma</code> or <code>anc = list(sigma = ~ z, Q = ~ z)</code> for the generalized gamma.</li>
+<li>Delayed entry, <code>stset time, failure(event) enter(time entry)</code>, is <code>Surv(entry, time, event)</code>.</li>
+<li>Predictions are median survival times, as after <code>streg</code>.</li>
+<li>flexsurv’s optimizer can stop slightly short of the maximum, so estimates can differ from Stata’s in the fourth or fifth decimal place (up to about 1e-4 for a generalized gamma coefficient with flexsurv’s default settings).</li>
+</ul>
+</section>
+<section id="bivariate-probit" class="level2">
+<h2 class="anchored" data-anchor-id="bivariate-probit">Bivariate probit</h2>
+<ul>
+<li>Stata’s <code>biprobit (y1 = x z) (y2 = x w)</code> is <code>gjrm(list(y1 ~ x + z, y2 ~ x + w), margins = c("probit", "probit"), model = "B", data = d)</code>. Predictions are the probability that both outcomes equal 1, as after <code>biprobit</code>.</li>
+<li>GJRM approximates the bivariate normal probabilities closely but not exactly, so its estimates can differ from Stata’s by about 1e-7.</li>
+</ul>
+</section>
+<section id="generalized-ordered-models" class="level2">
+<h2 class="anchored" data-anchor-id="generalized-ordered-models">Generalized ordered models</h2>
+<ul>
+<li><a href="https://rdrr.io/pkg/VGAM/man/vglm.html"><code>VGAM::vglm()</code></a> with <code>cumulative(link = ..., reverse = TRUE)</code> is <code>gologit2</code> with the logit, probit, cloglog, or cauchit link (<code>"logitlink"</code>, <code>"probitlink"</code>, <code>"clogloglink"</code>, <code>"cauchitlink"</code>). <code>parallel = TRUE</code> is <code>gologit2, pl</code>, and <code>parallel = FALSE ~ x</code> frees <code>x</code> only, as in <code>gologit2, npl(x)</code>.</li>
+<li>gologit2’s <code>link(loglog)</code> is <code>cumulative(link = "clogloglink", reverse = FALSE)</code>: the same model, with every coefficient’s sign reversed.</li>
+</ul>
+</section>
+<section id="zero-inflated-models" class="level2">
+<h2 class="anchored" data-anchor-id="zero-inflated-models">Zero-inflated models</h2>
+<p>When every model in the system is a <a href="https://rdrr.io/pkg/pscl/man/zeroinfl.html"><code>pscl::zeroinfl()</code></a> model (Poisson or negative binomial), predictions and marginal effects take the same <code>type</code> values as zeroinfl:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th><code>type</code></th>
+<th>Prediction</th>
+<th>Stata <code>margins</code> after <code>zip</code> or <code>zinb</code></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>"response"</code> (the default)</td>
+<td>Expected count</td>
+<td><code>predict(n)</code></td>
+</tr>
+<tr class="even">
+<td><code>"count"</code></td>
+<td>Mean of the count part</td>
+<td><code>expression(exp(predict(equation(depvar))))</code></td>
+</tr>
+<tr class="odd">
+<td><code>"zero"</code></td>
+<td>Probability of a structural zero</td>
+<td><code>predict(pr)</code></td>
+</tr>
+<tr class="even">
+<td><code>"prob"</code></td>
+<td><code>Pr(y = k)</code> for k = 0 to the largest observed count</td>
+<td><code>predict(pr(k))</code></td>
+</tr>
+</tbody>
+</table>
+<p>Here <code>depvar</code> is the name of the count outcome, which names the count equation. With <code>type = "prob"</code>, each count is a separate outcome, labeled <code>model::0</code>, <code>model::1</code>, and so on. Negative-binomial probabilities depend on the dispersion parameter, and their standard errors include its uncertainty. Standard errors use the exact observed information, as Stata does.</p>
+<div class="r-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(suest)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(marginaleffects)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(<span class="st">"bioChemists"</span>, <span class="at">package =</span> <span class="st">"pscl"</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>zip <span class="ot">&lt;-</span> pscl<span class="sc">::</span><span class="fu">zeroinfl</span>(art <span class="sc">~</span> fem <span class="sc">+</span> kid5 <span class="sc">+</span> ment <span class="sc">|</span> ment, <span class="at">data =</span> bioChemists)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>zinb <span class="ot">&lt;-</span> pscl<span class="sc">::</span><span class="fu">zeroinfl</span>(art <span class="sc">~</span> fem <span class="sc">+</span> kid5 <span class="sc">+</span> ment <span class="sc">|</span> ment, <span class="at">data =</span> bioChemists,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>                       <span class="at">dist =</span> <span class="st">"negbin"</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>zi_fit <span class="ot">&lt;-</span> <span class="fu">suest</span>(zip, zinb, <span class="at">model_names =</span> <span class="fu">c</span>(<span class="st">"ZIP"</span>, <span class="st">"ZINB"</span>))</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Effect of mentor productivity on the probability of a structural zero,</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co"># and its difference across the two models</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_slopes</span>(zi_fit, <span class="at">variables =</span> <span class="st">"ment"</span>, <span class="at">type =</span> <span class="st">"zero"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="r-output"><code> Group Estimate Std. Error     z Pr(&gt;|z|)    S   2.5 %   97.5 %
+  ZIP   -0.0178    0.00679 -2.62  0.00877  6.8 -0.0311 -0.00449
+  ZINB  -0.0304    0.00791 -3.85  &lt; 0.001 13.1 -0.0459 -0.01495
+
+Term: ment
+Type: zero
+Comparison: dY/dX</code></pre>
+</div>
+<div class="r-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_slopes</span>(zi_fit, <span class="at">variables =</span> <span class="st">"ment"</span>, <span class="at">type =</span> <span class="st">"zero"</span>, <span class="at">hypothesis =</span> <span class="sc">~</span> pairwise)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="r-output"><code>     Hypothesis Estimate Std. Error     z Pr(&gt;|z|)   S   2.5 %  97.5 %
+ (ZINB) - (ZIP)  -0.0127     0.0074 -1.71   0.0872 3.5 -0.0272 0.00185
+
+Type: zero</code></pre>
+</div>
+<div class="r-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Predicted Pr(no articles) in each model</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> <span class="fu">avg_predictions</span>(zi_fit, <span class="at">type =</span> <span class="st">"prob"</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>p[p<span class="sc">$</span>group <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"ZIP::0"</span>, <span class="st">"ZINB::0"</span>), ]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="r-output"><code>   Group Estimate Std. Error    z Pr(&gt;|z|)     S 2.5 % 97.5 %
+ ZIP::0     0.298     0.0154 19.4   &lt;0.001 275.5 0.268  0.329
+ ZINB::0    0.313     0.0134 23.4   &lt;0.001 400.2 0.287  0.339
+
+Type: prob</code></pre>
+</div>
+</section>
 <section id="mixed-models-fitted-with-glmmtmb" class="level2">
 <h2 class="anchored" data-anchor-id="mixed-models-fitted-with-glmmtmb">Mixed models fitted with glmmTMB</h2>
 <ul>
@@ -1335,7 +1467,7 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 <li><code>lmer()</code>, <code>glmer()</code>, <code>glmmTMB()</code>, and <a href="https://rdrr.io/pkg/ordinal/man/clmm.html"><code>clmm()</code></a> models can have several random slopes for the grouping variable, <code>(1 + x1 + x2 | school)</code>, and one level nested in it, <code>(1 + x1 | school) + (1 | school:class)</code> or <code>(1 | school/class)</code>. In Stata, these are <code>|| school: x1 x2, covariance(unstructured) || class:</code>. Independent terms, <code>(1 + x1 || school)</code>, and glmmTMB’s <a href="https://rdrr.io/r/base/diag.html"><code>diag()</code></a> are Stata’s <code>covariance(independent)</code>. Crossed random effects and a third grouping level are not supported.</li>
 <li>Slopes must be numeric data columns. Make a numeric 0/1 version of a factor, and create transformed variables (such as squares) before fitting.</li>
 <li>The variance parameters are each term’s log standard deviations, <code>log_sd_school_x1</code>, and Fisher z correlations, <code>atanh_rho_school_intercept_x1</code>, as in Stata’s <code>lns</code> and <code>atr</code>. A nested level is named with a dot: <code>log_sd_school.class_intercept</code>.</li>
-<li>Nonlinear models with these structures use the Laplace approximation (lme4 allows adaptive quadrature only for a single random intercept). suest2 requires adaptive quadrature, so to check results in Stata, fit each model with <code>intmethod(laplace) vce(cluster school)</code>; its standard errors equal that model’s block of the <a href="../reference/suest.html"><code>suest()</code></a> covariance. Linear models agree with <code>mixed</code> exactly.</li>
+<li>Nonlinear models with these structures use the Laplace approximation (lme4 allows adaptive quadrature only for a single random intercept), while suest2 requires adaptive quadrature. Stata’s <code>me</code> commands with <code>intmethod(laplace)</code> give the same estimates and log likelihood, but the standard errors they report for these fits can differ from the exact Laplace standard errors by a few percent. Linear models agree with <code>mixed</code> exactly.</li>
 <li>Fits near a boundary, with a variance near zero or correlations near -1 or 1, are refused even when lme4 does not flag them as singular. Simplify the random-effects structure.</li>
 </ul>
 </section>
@@ -1395,32 +1527,27 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 <td><code>survreg()</code> clustered on the group</td>
 <td><code>streg, vce(cluster group)</code></td>
 </tr>
-<tr class="even">
-<td><code>biprobit</code> with different predictors</td>
-<td>Two probit models</td>
-<td>Two <code>probit</code> models</td>
-</tr>
 </tbody>
 </table>
-<p>Fixed-effects Poisson with robust standard errors is valid for overdispersed counts, and <code>xtnbreg, fe</code> is not a true fixed-effects model (Allison and Waterman 2002). The multinomial and survival stand-ins have no random effects, so they estimate effects averaged over people rather than for a given person. Two probit models estimate the same effects on each outcome as a bivariate probit, without the correlation between their errors.</p>
+<p>Fixed-effects Poisson with robust standard errors is valid for overdispersed counts, and <code>xtnbreg, fe</code> is not a true fixed-effects model (Allison and Waterman 2002). The multinomial and survival stand-ins have no random effects, so they estimate effects averaged over people rather than for a given person.</p>
 <p>Allison, P. D., &amp; Waterman, R. P. (2002). Fixed-effects negative binomial regression models. <em>Sociological Methodology</em>, 32, 247-265.</p>
 </section>
 <section id="models-fitted-with-different-packages" class="level2">
 <h2 class="anchored" data-anchor-id="models-fitted-with-different-packages">Models fitted with different packages</h2>
 <p>Models fitted by different packages can be combined, as long as they are supported models.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(suest)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(marginaleffects)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(suest)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(marginaleffects)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><a href="https://rdrr.io/r/stats/glm.html"><code>glm()</code></a> and <a href="https://rdrr.io/pkg/glm2/man/glm2.html"><code>glm2::glm2()</code></a>:</p>
 <div class="r-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(glm2)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> mtcars</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>dat<span class="sc">$</span>am <span class="ot">&lt;-</span> <span class="fu">factor</span>(dat<span class="sc">$</span>am)</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>standard <span class="ot">&lt;-</span> <span class="fu">glm</span>(am <span class="sc">~</span> wt <span class="sc">+</span> hp, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="st">"logit"</span>), <span class="at">data =</span> dat)</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>alternative <span class="ot">&lt;-</span> <span class="fu">glm2</span>(am <span class="sc">~</span> wt <span class="sc">+</span> hp, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="st">"logit"</span>), <span class="at">data =</span> dat)</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>engine_fit <span class="ot">&lt;-</span> <span class="fu">suest</span>(standard, alternative, <span class="at">model_names =</span> <span class="fu">c</span>(<span class="st">"glm"</span>, <span class="st">"glm2"</span>))</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(engine_fit, <span class="at">variables =</span> <span class="st">"wt"</span>, <span class="at">newdata =</span> dat)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(glm2)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> mtcars</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>dat<span class="sc">$</span>am <span class="ot">&lt;-</span> <span class="fu">factor</span>(dat<span class="sc">$</span>am)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>standard <span class="ot">&lt;-</span> <span class="fu">glm</span>(am <span class="sc">~</span> wt <span class="sc">+</span> hp, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="st">"logit"</span>), <span class="at">data =</span> dat)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>alternative <span class="ot">&lt;-</span> <span class="fu">glm2</span>(am <span class="sc">~</span> wt <span class="sc">+</span> hp, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="st">"logit"</span>), <span class="at">data =</span> dat)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>engine_fit <span class="ot">&lt;-</span> <span class="fu">suest</span>(standard, alternative, <span class="at">model_names =</span> <span class="fu">c</span>(<span class="st">"glm"</span>, <span class="st">"glm2"</span>))</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(engine_fit, <span class="at">variables =</span> <span class="st">"wt"</span>, <span class="at">newdata =</span> dat)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="r-output"><code> Group Estimate Std. Error     z Pr(&gt;|z|)     S  2.5 % 97.5 %
   glm    -0.355     0.0184 -19.3   &lt;0.001 273.3 -0.391 -0.319
   glm2   -0.355     0.0184 -19.3   &lt;0.001 273.3 -0.391 -0.319
@@ -1431,18 +1558,18 @@ Comparison: +1</code></pre>
 </div>
 <p><a href="https://rdrr.io/pkg/ordinal/man/clm.html"><code>ordinal::clm()</code></a> and <a href="https://rdrr.io/pkg/MASS/man/polr.html"><code>MASS::polr()</code></a>. <a href="https://rdrr.io/pkg/ordinal/man/clm.html"><code>clm()</code></a> models need flexible thresholds and no scale or nominal-effects formula.</p>
 <div class="r-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ordinal)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>housing <span class="ot">&lt;-</span> MASS<span class="sc">::</span>housing[<span class="fu">rep</span>(<span class="fu">seq_len</span>(<span class="fu">nrow</span>(MASS<span class="sc">::</span>housing)), MASS<span class="sc">::</span>housing<span class="sc">$</span>Freq),</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>                         <span class="fu">c</span>(<span class="st">"Sat"</span>, <span class="st">"Infl"</span>, <span class="st">"Type"</span>, <span class="st">"Cont"</span>)]</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(housing) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>housing<span class="sc">$</span>Sat <span class="ot">&lt;-</span> <span class="fu">ordered</span>(housing<span class="sc">$</span>Sat, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Low"</span>, <span class="st">"Medium"</span>, <span class="st">"High"</span>))</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>clm_model <span class="ot">&lt;-</span> <span class="fu">clm</span>(Sat <span class="sc">~</span> Cont <span class="sc">+</span> Infl <span class="sc">+</span> Type, <span class="at">data =</span> housing, <span class="at">link =</span> <span class="st">"logit"</span>)</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>polr_model <span class="ot">&lt;-</span> MASS<span class="sc">::</span><span class="fu">polr</span>(Sat <span class="sc">~</span> Cont <span class="sc">+</span> Infl <span class="sc">+</span> Type, <span class="at">data =</span> housing,</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>                         <span class="at">method =</span> <span class="st">"logistic"</span>, <span class="at">Hess =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>ordinal_fit <span class="ot">&lt;-</span> <span class="fu">suest</span>(clm_model, polr_model, <span class="at">model_names =</span> <span class="fu">c</span>(<span class="st">"clm"</span>, <span class="st">"polr"</span>))</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(ordinal_fit, <span class="at">variables =</span> <span class="st">"Cont"</span>, <span class="at">newdata =</span> housing)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ordinal)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>housing <span class="ot">&lt;-</span> MASS<span class="sc">::</span>housing[<span class="fu">rep</span>(<span class="fu">seq_len</span>(<span class="fu">nrow</span>(MASS<span class="sc">::</span>housing)), MASS<span class="sc">::</span>housing<span class="sc">$</span>Freq),</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>                         <span class="fu">c</span>(<span class="st">"Sat"</span>, <span class="st">"Infl"</span>, <span class="st">"Type"</span>, <span class="st">"Cont"</span>)]</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(housing) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>housing<span class="sc">$</span>Sat <span class="ot">&lt;-</span> <span class="fu">ordered</span>(housing<span class="sc">$</span>Sat, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Low"</span>, <span class="st">"Medium"</span>, <span class="st">"High"</span>))</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>clm_model <span class="ot">&lt;-</span> <span class="fu">clm</span>(Sat <span class="sc">~</span> Cont <span class="sc">+</span> Infl <span class="sc">+</span> Type, <span class="at">data =</span> housing, <span class="at">link =</span> <span class="st">"logit"</span>)</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>polr_model <span class="ot">&lt;-</span> MASS<span class="sc">::</span><span class="fu">polr</span>(Sat <span class="sc">~</span> Cont <span class="sc">+</span> Infl <span class="sc">+</span> Type, <span class="at">data =</span> housing,</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>                         <span class="at">method =</span> <span class="st">"logistic"</span>, <span class="at">Hess =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>ordinal_fit <span class="ot">&lt;-</span> <span class="fu">suest</span>(clm_model, polr_model, <span class="at">model_names =</span> <span class="fu">c</span>(<span class="st">"clm"</span>, <span class="st">"polr"</span>))</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(ordinal_fit, <span class="at">variables =</span> <span class="st">"Cont"</span>, <span class="at">newdata =</span> housing)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="r-output"><code>        Group Estimate Std. Error     z Pr(&gt;|z|)    S    2.5 %    97.5 %
  clm::Low     -0.07504    0.02010 -3.73   &lt;0.001 12.4 -0.11443 -0.035653
  clm::Medium  -0.00374    0.00176 -2.13    0.033  4.9 -0.00718 -0.000303

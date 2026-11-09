@@ -12,6 +12,106 @@ Linear models add an `lnvar` parameter (the log of the error variance) to the co
 
 For [`plm::plm()`](https://rdrr.io/pkg/plm/man/plm.html) models, comparisons of slopes and changes are supported. Confidence intervals and tests for average predicted levels at the estimation-sample means are not: their standard errors can be missing or near zero.
 
+## Constant-dispersion negative binomial
+
+- Stata’s `nbreg, dispersion(constant)` is `glmmTMB(y ~ x, family = nbinom1())`, and `menbreg, dispersion(constant)` adds random effects, as in `glmmTMB(y ~ x + (1 | id), family = nbinom1())`. The conditional variance is `mu*(1 + exp(log_phi))`, and `log_phi` is Stata’s `/lndelta`.
+- Stata’s default `nbreg` (mean dispersion) is [`MASS::glm.nb()`](https://rdrr.io/pkg/MASS/man/glm.nb.html), or `glmmTMB(family = nbinom2())` with random effects.
+
+## Population-averaged (GEE) models
+
+- `geeglm()` models can use independence, exchangeable, ar1, or unstructured working correlations. As in Stata, `suest` holds the working correlation at its estimate.
+- geepack and Stata estimate unstructured correlations the same way, so their results match. They estimate ar1 correlations differently, so ar1 coefficients and standard errors differ slightly. To reproduce R’s ar1 results in Stata, use `corr(fixed R)` (for example `xtlogit y x, pa corr(fixed R)`), where `R` has entries `alpha^|j - k|` and `alpha` is `model$geese$alpha`.
+- For ar1, give `geeglm()` the time variable, `waves = time`, so the correlation depends on the time between observations; without it, geepack uses each observation’s position in its panel. Stata leaves out panels whose times are unequally spaced unless you add `force`, which then uses the order of the observations.
+- Unstructured correlations need each panel’s waves to run 1, 2, …; panels can end early but cannot skip a wave. geepack cannot fit unstructured correlations with skipped waves (R stops with a memory error), although Stata can.
+
+## Parametric survival models
+
+- Predictions from `survreg()` and `svysurvreg()` models of survival time (Weibull, exponential, lognormal, log-logistic) are median survival times, as after `streg`. `predict(type = "response")` instead gives exp(linear predictor), which is the median for lognormal and log-logistic models but not for Weibull and exponential ones.
+- Stata’s log likelihood after `streg` leaves out the sum of log times over the failures, so it is higher than survreg’s and flexsurv’s by that amount. Estimates and standard errors are the same.
+
+## Gompertz and generalized gamma survival
+
+- Stata’s `streg, distribution(gompertz)` is `flexsurvreg(Surv(time, event) ~ x, dist = "gompertz")`, and `streg, distribution(ggamma)` is `dist = "gengamma"`. Stata’s `ancillary()` and `anc2()` are flexsurv’s `anc`, as in `anc = list(shape = ~ z)` for the Gompertz `gamma` or `anc = list(sigma = ~ z, Q = ~ z)` for the generalized gamma.
+- Delayed entry, `stset time, failure(event) enter(time entry)`, is `Surv(entry, time, event)`.
+- Predictions are median survival times, as after `streg`.
+- flexsurv’s optimizer can stop slightly short of the maximum, so estimates can differ from Stata’s in the fourth or fifth decimal place (up to about 1e-4 for a generalized gamma coefficient with flexsurv’s default settings).
+
+## Bivariate probit
+
+- Stata’s `biprobit (y1 = x z) (y2 = x w)` is `gjrm(list(y1 ~ x + z, y2 ~ x + w), margins = c("probit", "probit"), model = "B", data = d)`. Predictions are the probability that both outcomes equal 1, as after `biprobit`.
+- GJRM approximates the bivariate normal probabilities closely but not exactly, so its estimates can differ from Stata’s by about 1e-7.
+
+## Generalized ordered models
+
+- [`VGAM::vglm()`](https://rdrr.io/pkg/VGAM/man/vglm.html) with `cumulative(link = ..., reverse = TRUE)` is `gologit2` with the logit, probit, cloglog, or cauchit link (`"logitlink"`, `"probitlink"`, `"clogloglink"`, `"cauchitlink"`). `parallel = TRUE` is `gologit2, pl`, and `parallel = FALSE ~ x` frees `x` only, as in `gologit2, npl(x)`.
+- gologit2’s `link(loglog)` is `cumulative(link = "clogloglink", reverse = FALSE)`: the same model, with every coefficient’s sign reversed.
+
+## Zero-inflated models
+
+When every model in the system is a [`pscl::zeroinfl()`](https://rdrr.io/pkg/pscl/man/zeroinfl.html) model (Poisson or negative binomial), predictions and marginal effects take the same `type` values as zeroinfl:
+
+| `type` | Prediction | Stata `margins` after `zip` or `zinb` |
+|------------------------|------------------------|------------------------|
+| `"response"` (the default) | Expected count | `predict(n)` |
+| `"count"` | Mean of the count part | `expression(exp(predict(equation(depvar))))` |
+| `"zero"` | Probability of a structural zero | `predict(pr)` |
+| `"prob"` | `Pr(y = k)` for k = 0 to the largest observed count | `predict(pr(k))` |
+
+Here `depvar` is the name of the count outcome, which names the count equation. With `type = "prob"`, each count is a separate outcome, labeled `model::0`, `model::1`, and so on. Negative-binomial probabilities depend on the dispersion parameter, and their standard errors include its uncertainty. Standard errors use the exact observed information, as Stata does.
+
+::: {.r-run}
+```r
+library(suest)
+library(marginaleffects)
+data("bioChemists", package = "pscl")
+
+zip <- pscl::zeroinfl(art ~ fem + kid5 + ment | ment, data = bioChemists)
+zinb <- pscl::zeroinfl(art ~ fem + kid5 + ment | ment, data = bioChemists,
+                       dist = "negbin")
+zi_fit <- suest(zip, zinb, model_names = c("ZIP", "ZINB"))
+
+# Effect of mentor productivity on the probability of a structural zero,
+# and its difference across the two models
+avg_slopes(zi_fit, variables = "ment", type = "zero")
+```
+```{.r-output}
+ Group Estimate Std. Error     z Pr(>|z|)    S   2.5 %   97.5 %
+  ZIP   -0.0178    0.00679 -2.62  0.00877  6.8 -0.0311 -0.00449
+  ZINB  -0.0304    0.00791 -3.85  < 0.001 13.1 -0.0459 -0.01495
+
+Term: ment
+Type: zero
+Comparison: dY/dX
+```
+:::
+
+::: {.r-run}
+```r
+avg_slopes(zi_fit, variables = "ment", type = "zero", hypothesis = ~ pairwise)
+```
+```{.r-output}
+     Hypothesis Estimate Std. Error     z Pr(>|z|)   S   2.5 %  97.5 %
+ (ZINB) - (ZIP)  -0.0127     0.0074 -1.71   0.0872 3.5 -0.0272 0.00185
+
+Type: zero
+```
+:::
+
+::: {.r-run}
+```r
+# Predicted Pr(no articles) in each model
+p <- avg_predictions(zi_fit, type = "prob")
+p[p$group %in% c("ZIP::0", "ZINB::0"), ]
+```
+```{.r-output}
+   Group Estimate Std. Error    z Pr(>|z|)     S 2.5 % 97.5 %
+ ZIP::0     0.298     0.0154 19.4   <0.001 275.5 0.268  0.329
+ ZINB::0    0.313     0.0134 23.4   <0.001 400.2 0.287  0.339
+
+Type: prob
+```
+:::
+
 ## Mixed models fitted with glmmTMB
 
 - Predictions and marginal effects average over the random intercept, and over the random slope when there is one.
@@ -23,7 +123,7 @@ For [`plm::plm()`](https://rdrr.io/pkg/plm/man/plm.html) models, comparisons of 
 - `lmer()`, `glmer()`, `glmmTMB()`, and [`clmm()`](https://rdrr.io/pkg/ordinal/man/clmm.html) models can have several random slopes for the grouping variable, `(1 + x1 + x2 | school)`, and one level nested in it, `(1 + x1 | school) + (1 | school:class)` or `(1 | school/class)`. In Stata, these are `|| school: x1 x2, covariance(unstructured) || class:`. Independent terms, `(1 + x1 || school)`, and glmmTMB’s [`diag()`](https://rdrr.io/r/base/diag.html) are Stata’s `covariance(independent)`. Crossed random effects and a third grouping level are not supported.
 - Slopes must be numeric data columns. Make a numeric 0/1 version of a factor, and create transformed variables (such as squares) before fitting.
 - The variance parameters are each term’s log standard deviations, `log_sd_school_x1`, and Fisher z correlations, `atanh_rho_school_intercept_x1`, as in Stata’s `lns` and `atr`. A nested level is named with a dot: `log_sd_school.class_intercept`.
-- Nonlinear models with these structures use the Laplace approximation (lme4 allows adaptive quadrature only for a single random intercept). suest2 requires adaptive quadrature, so to check results in Stata, fit each model with `intmethod(laplace) vce(cluster school)`; its standard errors equal that model’s block of the [`suest()`](../reference/suest.html) covariance. Linear models agree with `mixed` exactly.
+- Nonlinear models with these structures use the Laplace approximation (lme4 allows adaptive quadrature only for a single random intercept), while suest2 requires adaptive quadrature. Stata’s `me` commands with `intmethod(laplace)` give the same estimates and log likelihood, but the standard errors they report for these fits can differ from the exact Laplace standard errors by a few percent. Linear models agree with `mixed` exactly.
 - Fits near a boundary, with a variance near zero or correlations near -1 or 1, are refused even when lme4 does not flag them as singular. Simplify the random-effects structure.
 
 ## Survey models
@@ -46,9 +146,8 @@ For these Stata models, `suest` supports a model that answers the same question.
 | `xtnbreg, re` | Random-intercept negative binomial, `glmmTMB()` | `menbreg` |
 | `xtnbreg, pa` | Population-averaged Poisson, [`geepack::geeglm()`](https://rdrr.io/pkg/geepack/man/geeglm.html) | `xtpoisson, pa vce(robust)` |
 | `mestreg` | `survreg()` clustered on the group | `streg, vce(cluster group)` |
-| `biprobit` with different predictors | Two probit models | Two `probit` models |
 
-Fixed-effects Poisson with robust standard errors is valid for overdispersed counts, and `xtnbreg, fe` is not a true fixed-effects model (Allison and Waterman 2002). The multinomial and survival stand-ins have no random effects, so they estimate effects averaged over people rather than for a given person. Two probit models estimate the same effects on each outcome as a bivariate probit, without the correlation between their errors.
+Fixed-effects Poisson with robust standard errors is valid for overdispersed counts, and `xtnbreg, fe` is not a true fixed-effects model (Allison and Waterman 2002). The multinomial and survival stand-ins have no random effects, so they estimate effects averaged over people rather than for a given person.
 
 Allison, P. D., & Waterman, R. P. (2002). Fixed-effects negative binomial regression models. *Sociological Methodology*, 32, 247-265.
 
