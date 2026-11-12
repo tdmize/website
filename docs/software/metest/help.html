@@ -1286,6 +1286,7 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
   <li><a href="#options" id="toc-options" class="nav-link" data-scroll-target="#options">Options</a>
   <ul class="collapse">
   <li><a href="#statistics" id="toc-statistics" class="nav-link" data-scroll-target="#statistics">Statistics</a></li>
+  <li><a href="#pairwise-comparisons" id="toc-pairwise-comparisons" class="nav-link" data-scroll-target="#pairwise-comparisons">Pairwise comparisons</a></li>
   <li><a href="#accumulating-results" id="toc-accumulating-results" class="nav-link" data-scroll-target="#accumulating-results">Accumulating results</a></li>
   <li><a href="#display" id="toc-display" class="nav-link" data-scroll-target="#display">Display</a></li>
   </ul></li>
@@ -1338,6 +1339,7 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 <section id="syntax" class="level2">
 <h2 class="anchored" data-anchor-id="syntax">Syntax</h2>
 <p><code>metest</code> [<em>exp</em>] [<code>,</code> <em>options</em>]</p>
+<p><code>metest</code> <em>list</em><code>,</code> <code>pwcompare</code> [<em>options</em>]</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 50%">
@@ -1367,52 +1369,64 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 <td style="text-align: left;">confidence level for <code>ll</code> and <code>ul</code></td>
 </tr>
 <tr class="odd">
+<td style="text-align: left;"><em>Pairwise comparisons</em></td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>pwcompare</code></td>
+<td style="text-align: left;">compare the listed marginal effects pairwise</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>mcompare(method)</code></td>
+<td style="text-align: left;">adjust p-values for multiple comparisons</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;"><em>Accumulating results</em></td>
 <td style="text-align: left;"></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;"><code>add</code></td>
 <td style="text-align: left;">add the result to the saved table</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;"><code>clear</code></td>
 <td style="text-align: left;">clear the saved table first</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;"><em>Display</em></td>
 <td style="text-align: left;"></td>
 </tr>
-<tr class="odd">
-<td style="text-align: left;"><code>rowname(string)</code></td>
-<td style="text-align: left;">label for the row</td>
-</tr>
 <tr class="even">
+<td style="text-align: left;"><code>rownames(string)</code></td>
+<td style="text-align: left;">label for the row; with <code>pwcompare</code>, one per effect</td>
+</tr>
+<tr class="odd">
 <td style="text-align: left;"><code>decimals(#)</code></td>
 <td style="text-align: left;">decimal places; default is 3</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;"><code>width(#)</code></td>
 <td style="text-align: left;">width of the statistics columns; default is 9</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;"><code>labwidth(#)</code></td>
 <td style="text-align: left;">width of the label column; at most 32</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;"><code>title(string)</code></td>
 <td style="text-align: left;">title above the table</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;"><code>notable</code></td>
 <td style="text-align: left;">suppress the table</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;"><code>details</code></td>
 <td style="text-align: left;">show the <code>nlcom</code> or <code>test</code> output</td>
 </tr>
 </tbody>
 </table>
-<p>where <em>exp</em> refers to the marginal effects either by the <em>ME #</em> shown in the <code>mecompare</code> table or by their coefficient names, combined with <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, parentheses, or <code>=</code>.</p>
+<p>where <em>exp</em> refers to the marginal effects either by the <em>ME #</em> shown in the <code>mecompare</code> table or by their coefficient names, combined with <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, parentheses, or <code>=</code>; and <em>list</em> lists the marginal effects to compare pairwise, by <em>ME #</em> (<code>1 2 3</code>), as a range (<code>1/3</code>), or by name.</p>
 </section>
 <section id="description" class="level2">
 <h2 class="anchored" data-anchor-id="description">Description</h2>
@@ -1421,8 +1435,8 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 <p>Anything that is not a number is read as a coefficient name, with or without the <code>_b[ ]</code> wrapper. Type <code>mecompare, coeflegend</code> to list the names.</p>
 <p>Results accumulate with <code>add</code>, and <code>metest</code> with <strong>no</strong> expression redisplays what has accumulated. A loop can therefore build a table quietly and show it once at the end:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>metest, <span class="kw">clear</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> metest 1, add rowname(raceWhite)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> metest 2, add rowname(raceBlack)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> metest 1, add <span class="ot">rownames</span>(raceWhite)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> metest 2, add <span class="ot">rownames</span>(raceBlack)</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>metest, <span class="bn">title</span>(<span class="st">"Marginal effects by race"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><code>metest</code> is written for <a href="../mecompare/help.html">mecompare</a> but is not restricted to it. A number is the <em>n</em>th non-omitted column of <code>e(b)</code>, which is well defined after any e-class command, so <code>metest</code> can also be used after margins, post or after a model fit directly – see <a href="help.html#other">Use after other commands</a>.</p>
 </section>
@@ -1434,6 +1448,11 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 <p><strong><code>allstats</code></strong> equivalent to <code>statistics(all)</code>.</p>
 <p><strong><code>level(#)</code></strong> confidence level for <code>ll</code> and <code>ul</code>.</p>
 </section>
+<section id="pairwise-comparisons" class="level3">
+<h3 class="anchored" data-anchor-id="pairwise-comparisons">Pairwise comparisons</h3>
+<p><strong><code>pwcompare</code></strong> compares the listed marginal effects pairwise: each later effect in the list minus each earlier one, in the order margins, pwcompare uses. List the effects by <em>ME #</em>, as a range, or by name: <code>metest 1 2 3, pwcompare</code> or <code>metest 1/3, pwcompare</code>. The rows are labeled <code>ME 2 vs ME 1</code> and so on, or from <code>rownames()</code>.</p>
+<p><strong><code>mcompare(method)</code></strong> adjusts the p-values (and confidence intervals, when shown) of the <code>pwcompare</code> rows for multiple comparisons; <em>method</em> is <code>bonferroni</code> or <code>sidak</code>.</p>
+</section>
 <section id="accumulating-results" class="level3">
 <h3 class="anchored" data-anchor-id="accumulating-results">Accumulating results</h3>
 <p><strong><code>add</code></strong> adds the result as another row of the saved table rather than starting a new one. <code>save</code> is a synonym.</p>
@@ -1441,7 +1460,7 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 </section>
 <section id="display" class="level3">
 <h3 class="anchored" data-anchor-id="display">Display</h3>
-<p><strong><code>rowname(string)</code></strong> labels the row. A <code>:</code> in the label puts what comes before it on a row of its own, with the rest indented underneath, which is how several rows are grouped under one heading: <code>rowname(raceBlack - White)</code>. By default the row is labeled with the test that was run – the expression with coefficient names substituted for the ME numbers – and whatever every term has in common becomes that heading: the variable when they come from one variable (<code>marriedm1 - m2</code>), otherwise the model (<code>m1:married - age</code>). When they share neither, the expression itself is used, e.g.&nbsp;<code>(1-2)-(4-5)</code>. <code>label()</code> is a synonym.</p>
+<p><strong><code>rownames(string)</code></strong> labels the row. A <code>:</code> in the label puts what comes before it on a row of its own, with the rest indented underneath, which is how several rows are grouped under one heading: <code>rownames(raceBlack - White)</code>. By default the row is labeled with the test that was run – the expression with coefficient names substituted for the ME numbers – and whatever every term has in common becomes that heading: the variable when they come from one variable (<code>marriedm1 - m2</code>), otherwise the model (<code>m1:married - age</code>). When they share neither, the expression itself is used, e.g.&nbsp;<code>(1-2)-(4-5)</code>. A label longer than 32 characters (after any heading) is shortened to 32. With <code>pwcompare</code>, give one label per listed effect, as in <code>rownames("age 35" "age 40" "age 45")</code>; e.g., one row will read <code>age 40 vs age 35</code>. Labels of up to 14 characters are shown in full, and longer ones are shortened so the row fits 32 characters. <code>label()</code> is a synonym.</p>
 <p><strong><code>decimals(#)</code></strong> decimal places; the default is 3.</p>
 <p><strong><code>width(#)</code></strong> width of each statistic column; the default is 9.</p>
 <p><strong><code>labwidth(#)</code></strong> width of the leftmost (label) column; the maximum is 32. By default it is sized so the table fits an 80-column line – 32 for the default three statistics, narrowing as more are shown. <code>twidth()</code> is a synonym.</p>
@@ -1452,9 +1471,9 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 </section>
 <section id="saved-results" class="level2">
 <h2 class="anchored" data-anchor-id="saved-results">Saved results</h2>
-<p>Estimates accumulate in the matrix <code>_metest</code> and equality tests in <code>_metest_test</code>. The two are displayed as separate tables because they report different statistics. Each row is named for the quantity it reports – by default the expression with coefficient names substituted for the ME numbers, or whatever <code>rowname()</code> was given. When no usable name can be formed from the expression, the row falls back to a counter that runs continuously across both matrices, so no two rows share a name within a session. Note that <code>metest</code> does not print a row-number column: the counter is a naming fallback, not a column you will see.</p>
+<p>Estimates accumulate in the matrix <code>_metest</code> and equality tests in <code>_metest_test</code>. The two are displayed as separate tables because they report different statistics. Each row is named for the quantity it reports – by default the expression with coefficient names substituted for the ME numbers, or whatever <code>rownames()</code> was given. When no usable name can be formed from the expression, the row falls back to a counter that runs continuously across both matrices, so no two rows share a name within a session. Note that <code>metest</code> does not print a row-number column: the counter is a naming fallback, not a column you will see.</p>
 <p>A call without <code>add</code> starts a fresh table. If the result is an estimate, <code>_metest</code> is replaced and <code>_metest_test</code> is dropped; if it is an equality test, the reverse. With <code>add</code> both matrices persist side by side. <code>metest, clear</code> drops both. <code>metest</code> with no expression redisplays them without changing either.</p>
-<p><code>metest</code> is r-class. After an expression it returns <code>r(estimate)</code>, <code>r(se)</code>, <code>r(zvalue)</code>, <code>r(pvalue)</code>, <code>r(ll)</code>, and <code>r(ul)</code>; after an equality test it returns <code>r(chi2)</code> (or <code>r(F)</code>), <code>r(df)</code>, and <code>r(pvalue)</code>. <code>r(label)</code> holds the row label used and <code>r(expression)</code> the expression.</p>
+<p><code>metest</code> is r-class. After an expression it returns <code>r(estimate)</code>, <code>r(se)</code>, <code>r(zvalue)</code>, <code>r(pvalue)</code>, <code>r(ll)</code>, and <code>r(ul)</code>; after an equality test it returns <code>r(chi2)</code> (or <code>r(F)</code>), <code>r(df)</code>, and <code>r(pvalue)</code>. <code>r(label)</code> holds the row label used and <code>r(expression)</code> the expression. After <code>pwcompare</code>, <code>r(table)</code> holds the rows of the comparisons.</p>
 </section>
 <section id="examples" class="level2">
 <h2 class="anchored" data-anchor-id="examples">Examples</h2>
@@ -1491,15 +1510,19 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>metest, <span class="bn">title</span>(<span class="st">"Age and marriage"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>All six statistics, and a label of your own:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>metest 1 - 2, stat(<span class="ot">all</span>)</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>metest 1 - 2, rowname(<span class="st">"Age effect, m1 vs m2"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>metest 1 - 2, <span class="ot">rownames</span>(<span class="st">"Age effect, m1 vs m2"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Pairwise comparisons – whether the effect of marriage differs across three ages:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>mecompare i.married, models(m1) covariates(age=(35 40 45))</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>metest 1 2 3, pwcompare</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>metest 1/3, pwcompare <span class="ot">rownames</span>(<span class="st">"age 35"</span> <span class="st">"age 40"</span> <span class="st">"age 45"</span>) mcompare(bonferroni)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><span id="other"></span></p>
 </section>
 <section id="use-after-other-commands" class="level2">
 <h2 class="anchored" data-anchor-id="use-after-other-commands">Use after other commands</h2>
 <p>Nothing in <code>metest</code> is specific to <code>mecompare</code>. After any e-class command, a bare number refers to the <em>n</em>th non-omitted coefficient of <code>e(b)</code>, in the order <code>matrix list e(b)</code> reports them, and coefficient names work as usual. Row labels fall back to the coefficient names themselves, abbreviated to fit.</p>
 <p>This makes <code>metest</code> usable wherever <code>mlincom</code> is, with the addition of multiplication, division, nonlinear functions, and equality tests:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">sysuse</span> nlsw88, <span class="kw">clear</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">regress</span> wage age ttl_exp grade</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">sysuse</span> nlsw88, <span class="kw">clear</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">regress</span> wage age ttl_exp grade</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><code>metest 1 - 2</code> the 1st minus the 2nd coefficient</p>
 <p><code>metest 1 / 2</code> their ratio</p>
 <p><code>metest 1 = 2 = 3</code> a joint test that the three are equal</p>
@@ -1507,11 +1530,11 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 <p><code>metest min(1,2)</code> the smaller of the two</p>
 <p><code>metest _b[age] * #10</code> by name, scaled by ten</p>
 <p>After margins, post, a number refers to a row of the <code>margins</code> table. E.g., the difference in two predicted probabilities, averaging over observed values, in the Health and Retirement Study 2020; this replicates <code>mecompare collegeB</code>:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> https:<span class="co">//tdmize.github.io/data/data/cda_hrs, clear</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">drop</span> <span class="kw">if</span> <span class="fu">missing</span>(cogB, marstatB, collegeB, woman, age)</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="kw">logit</span> cogB i.collegeB i.marstatB i.woman c.age</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>margins collegeB, <span class="kw">post</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>metest 2 - 1</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> https:<span class="co">//tdmize.github.io/data/data/cda_hrs, clear</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">drop</span> <span class="kw">if</span> <span class="fu">missing</span>(cogB, marstatB, collegeB, woman, age)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="kw">logit</span> cogB i.collegeB i.marstatB i.woman c.age</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>margins collegeB, <span class="kw">post</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>metest 2 - 1</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>For risk ratios, use the <code>rratios</code> option of <a href="../mecompare/help.html">mecompare</a>, which tests each ratio against 1. <code>metest</code> would test a risk ratio against a null of 0, which is not appropriate for risk ratios.</p>
 <p>Two things to keep in mind away from <code>mecompare</code>. Omitted (<code>o.</code>) coefficients are skipped when numbering, so a number may not match the position in the displayed regression table – check with <code>matrix list e(b)</code>. And after some commands <code>test</code> reports <em>F</em> rather than <em>chi2</em>; the two cannot be stacked in one accumulated table, so run <code>metest, clear</code> when switching between models of the two kinds.</p>
 </section>

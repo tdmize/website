@@ -1288,6 +1288,7 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
   <li><a href="#equality-tests-including-a-joint-test-and-two-constraints-at-once" id="toc-equality-tests-including-a-joint-test-and-two-constraints-at-once" class="nav-link" data-scroll-target="#equality-tests-including-a-joint-test-and-two-constraints-at-once">Equality tests, including a joint test and two constraints at once</a></li>
   <li><a href="#building-up-a-table" id="toc-building-up-a-table" class="nav-link" data-scroll-target="#building-up-a-table">Building up a table</a></li>
   <li><a href="#all-six-statistics-and-a-label-of-your-own" id="toc-all-six-statistics-and-a-label-of-your-own" class="nav-link" data-scroll-target="#all-six-statistics-and-a-label-of-your-own">All six statistics, and a label of your own</a></li>
+  <li><a href="#pairwise-comparisons-of-marginal-effects" id="toc-pairwise-comparisons-of-marginal-effects" class="nav-link" data-scroll-target="#pairwise-comparisons-of-marginal-effects">Pairwise comparisons of marginal effects</a></li>
   <li><a href="#options" id="toc-options" class="nav-link" data-scroll-target="#options">Options</a></li>
   <li><a href="#use-after-other-commands" id="toc-use-after-other-commands" class="nav-link" data-scroll-target="#use-after-other-commands">Use after other commands</a></li>
   </ul>
@@ -1316,8 +1317,9 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 </header>
 
 
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>metest [<span class="fu">exp</span>] [, options]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><em>exp</em> refers to marginal effects by the <code>#</code> shown in the <code>mecompare</code> table, or by their coefficient names, combined with <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, parentheses, or <code>=</code>. A bare number is always an ME number; a literal number is written with a leading <code>#</code> (<code>#2</code> is the number two, <code>2</code> is the second marginal effect). Non-whole numbers are always literals.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>metest [<span class="fu">exp</span>] [, options]</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>metest <span class="ot">list</span>, pwcompare [options]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>exp</em> refers to marginal effects by the <code>#</code> shown in the <code>mecompare</code> table, or by their coefficient names, combined with <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, parentheses, or <code>=</code>. A bare number is always an ME number; a literal number is written with a leading <code>#</code> (<code>#2</code> is the number two, <code>2</code> is the second marginal effect). Non-whole numbers are always literals. <em>list</em> lists the marginal effects to compare pairwise, by ME # (<code>1 2 3</code>), as a range (<code>1/3</code>), or by name.</p>
 <p>The examples below are the ones in the <a href="help.html">help file</a>, run in order.</p>
 <section id="setup-fit-and-store-two-models-then-calculate-the-marginal-effects" class="level2">
 <h2 class="anchored" data-anchor-id="setup-fit-and-store-two-models-then-calculate-the-marginal-effects">Setup: fit and store two models, then calculate the marginal effects</h2>
@@ -1548,10 +1550,41 @@ age                              |
 -------------+-----------------------------------------------------------------
 age          |                                                                 
      m1 - m2 |    -0.000      0.001     -0.401      0.689     -0.001      0.001 </code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>metest 1 - 2, rowname(<span class="st">"Age effect, m1 vs m2"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>metest 1 - 2, <span class="ot">rownames</span>(<span class="st">"Age effect, m1 vs m2"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>                                 |  estimate         se     pvalue 
 ---------------------------------+--------------------------------
             Age effect, m1 vs m2 |    -0.000      0.001      0.689 </code></pre>
+</div>
+</section>
+<section id="pairwise-comparisons-of-marginal-effects" class="level2">
+<h2 class="anchored" data-anchor-id="pairwise-comparisons-of-marginal-effects">Pairwise comparisons of marginal effects</h2>
+<p>Whether the effect of marriage differs across three ages:</p>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>mecompare i.married, models(m1) covariates(age=(35 40 45))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Predicting: Pr(union)
+Marginal effects (N_m1=1878)
+
+                                 |  ME #   Estimate  Robust SE      P&gt;|z|
+---------------------------------+---------------------------------------
+married                          |                                       
+            Married - Single     |                                       
+                          age=35 |     1     -0.032      0.021      0.127
+                          age=40 |     2     -0.033      0.022      0.126
+                          age=45 |     3     -0.034      0.022      0.126</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>metest 1 2 3, pwcompare</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>                                 |  estimate         se     pvalue 
+---------------------------------+--------------------------------
+                    ME 2 vs ME 1 |    -0.001      0.002      0.552 
+                    ME 3 vs ME 1 |    -0.002      0.003      0.550 
+                    ME 3 vs ME 2 |    -0.001      0.002      0.547 </code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb50"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>metest 1/3, pwcompare <span class="ot">rownames</span>(<span class="st">"age 35"</span> <span class="st">"age 40"</span> <span class="st">"age 45"</span>) mcompare(bonferroni)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>                                 |  estimate         se     pvalue 
+---------------------------------+--------------------------------
+                age 40 vs age 35 |    -0.001      0.002      1.000 
+                age 45 vs age 35 |    -0.002      0.003      1.000 
+                age 45 vs age 40 |    -0.001      0.002      1.000 
+
+NOTE: p-values (and CIs) are Bonferroni-adjusted for the 3 comparisons.</code></pre>
 </div>
 </section>
 <section id="options" class="level2">
@@ -1577,6 +1610,14 @@ age          |
 <td style="text-align: left;">Same as <code>statistics(all)</code>.</td>
 </tr>
 <tr class="odd">
+<td style="text-align: left;"><code>pwcompare</code></td>
+<td style="text-align: left;">Compares the listed marginal effects pairwise: each later effect in the list minus each earlier one, in the order <code>margins, pwcompare</code> uses. List the effects by ME #, as a range, or by name: <code>metest 1 2 3, pwcompare</code> or <code>metest 1/3, pwcompare</code>. The rows are labeled <code>ME 2 vs ME 1</code> and so on, or from <code>rownames()</code>.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>mcompare(method)</code></td>
+<td style="text-align: left;">Adjusts the p-values (and confidence intervals, when shown) of the <code>pwcompare</code> rows for multiple comparisons; <em>method</em> is <code>bonferroni</code> or <code>sidak</code>.</td>
+</tr>
+<tr class="odd">
 <td style="text-align: left;"><code>add</code></td>
 <td style="text-align: left;">Adds the result as another row of the saved table rather than starting a new one. <code>save</code> is a synonym.</td>
 </tr>
@@ -1585,8 +1626,8 @@ age          |
 <td style="text-align: left;">Clears the saved table before running; <code>metest, clear</code> on its own clears it without running anything.</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;"><code>rowname(string)</code></td>
-<td style="text-align: left;">Labels the row. A <code>:</code> in the label puts what comes before it on a row of its own, with the rest indented underneath, which is how several rows are grouped under one heading. <code>label()</code> is a synonym.</td>
+<td style="text-align: left;"><code>rownames(string)</code></td>
+<td style="text-align: left;">Labels the row. A <code>:</code> in the label puts what comes before it on a row of its own, with the rest indented underneath, which is how several rows are grouped under one heading. A label longer than 32 characters (after any heading) is shortened to 32. With <code>pwcompare</code>, give one label per listed effect, as in <code>rownames("age 35" "age 40" "age 45")</code>; e.g., one row will read <code>age 40 vs age 35</code>. Labels of up to 14 characters are shown in full, and longer ones are shortened so the row fits 32 characters. <code>label()</code> is a synonym.</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;"><code>decimals(#)</code></td>
@@ -1618,15 +1659,15 @@ age          |
 </tr>
 </tbody>
 </table>
-<p>Results accumulate in the matrix <code>_metest</code> (estimates) and <code>_metest_test</code> (equality tests). <code>metest</code> is r-class: after an expression it returns <code>r(estimate)</code>, <code>r(se)</code>, <code>r(zvalue)</code>, <code>r(pvalue)</code>, <code>r(ll)</code>, and <code>r(ul)</code>; after an equality test, <code>r(chi2)</code> (or <code>r(F)</code>), <code>r(df)</code>, and <code>r(pvalue)</code>.</p>
+<p>Results accumulate in the matrix <code>_metest</code> (estimates) and <code>_metest_test</code> (equality tests). <code>metest</code> is r-class: after an expression it returns <code>r(estimate)</code>, <code>r(se)</code>, <code>r(zvalue)</code>, <code>r(pvalue)</code>, <code>r(ll)</code>, and <code>r(ul)</code>; after an equality test, <code>r(chi2)</code> (or <code>r(F)</code>), <code>r(df)</code>, and <code>r(pvalue)</code>. After <code>pwcompare</code>, <code>r(table)</code> holds the rows of the comparisons.</p>
 </section>
 <section id="use-after-other-commands" class="level2">
 <h2 class="anchored" data-anchor-id="use-after-other-commands">Use after other commands</h2>
 <p><code>metest</code> also works after other estimation commands: a number refers to the <em>n</em>th coefficient in <code>e(b)</code>, in the order of <code>matrix list e(b)</code>, and coefficient names work as usual.</p>
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="kw">sysuse</span> nlsw88, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb52"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="kw">sysuse</span> nlsw88, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>(NLSW, 1988 extract)</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="kw">regress</span> wage age ttl_exp grade</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb54"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="kw">regress</span> wage age ttl_exp grade</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>      Source |       SS           df       MS      Number of obs   =     2,244
 -------------+----------------------------------   F(3, 2240)      =    132.71
        Model |  11221.4453         3  3740.48178   Prob &gt; F        =    0.0000
@@ -1642,40 +1683,40 @@ age          |
        grade |      0.641      0.045   14.106   0.000        0.552       0.730
        _cons |     -0.061      1.570   -0.039   0.969       -3.140       3.019
 ------------------------------------------------------------------------------</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb50"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>metest 1 - 2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb56"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>metest 1 - 2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>                                 |  estimate         se     pvalue 
 ---------------------------------+--------------------------------
                    age - ttl_exp |    -0.372      0.047      0.000 </code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb52"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>metest 1 / 2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb58"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>metest 1 / 2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>                                 |  estimate         se     pvalue 
 ---------------------------------+--------------------------------
                    age / ttl_exp |    -0.374      0.136      0.006 </code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb54"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>metest 1 = 2 = 3</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb60"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>metest 1 = 2 = 3</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Tests of equality
 
                                  |         F         df     pvalue 
 ---------------------------------+--------------------------------
            age = ttl_exp = grade |    88.241      2.000      0.000 </code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb56"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>metest <span class="fu">abs</span>(1) - <span class="fu">abs</span>(2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb62"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>metest <span class="fu">abs</span>(1) - <span class="fu">abs</span>(2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>                                 |  estimate         se     pvalue 
 ---------------------------------+--------------------------------
          abs(age) - abs(ttl_exp) |    -0.170      0.042      0.000 </code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb58"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>metest <span class="fu">min</span>(1,2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb64"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>metest <span class="fu">min</span>(1,2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>                                 |  estimate         se     pvalue 
 ---------------------------------+--------------------------------
                 min(age,ttl_exp) |    -0.101      0.037      0.006 </code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb60"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>metest _b[age] * #10</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb66"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a>metest _b[age] * #10</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>                                 |  estimate         se     pvalue 
 ---------------------------------+--------------------------------
                         age * 10 |    -1.011      0.370      0.006 </code></pre>
 </div>
 <p>After <code>margins, post</code>, a number refers to a row of the <code>margins</code> table. E.g., the difference in two predicted probabilities, averaging over observed values, in the Health and Retirement Study 2020; this replicates <code>mecompare collegeB</code>:</p>
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb62"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="st">"https://tdmize.github.io/data/data/cda_hrs"</span>, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb68"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="st">"https://tdmize.github.io/data/data/cda_hrs"</span>, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>(cda_hrs.dta | Health &amp; Retirement Study 2020)</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb64"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="kw">drop</span> <span class="kw">if</span> <span class="fu">missing</span>(cogB, marstatB, collegeB, woman, age)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb70"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="kw">drop</span> <span class="kw">if</span> <span class="fu">missing</span>(cogB, marstatB, collegeB, woman, age)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>(761 observations deleted)</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb66"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="kw">logit</span> cogB i.collegeB i.marstatB i.woman c.age</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb72"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="kw">logit</span> cogB i.collegeB i.marstatB i.woman c.age</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Iteration 0:  Log likelihood = -2466.5782  
 Iteration 1:  Log likelihood = -2311.9677  
 Iteration 2:  Log likelihood = -2282.8575  
@@ -1702,7 +1743,7 @@ bachelor's or higher  |     -1.458      0.157   -9.269   0.000       -1.766     
                   age |      0.048      0.004   12.085   0.000        0.040       0.056
                 _cons |     -5.926      0.310  -19.128   0.000       -6.533      -5.318
 ---------------------------------------------------------------------------------------</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb68"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a>margins collegeB, <span class="kw">post</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb74"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a>margins collegeB, <span class="kw">post</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Predictive margins                                      Number of obs = 14,962
 Model VCE: OIM
 
@@ -1716,7 +1757,7 @@ Expression: Pr(cogB), predict()
        no bachelor's  |      0.048      0.002   23.986   0.000        0.044       0.052
 bachelor's or higher  |      0.012      0.002    6.758   0.000        0.008       0.015
 ---------------------------------------------------------------------------------------</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb70"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>metest 2 - 1</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb76"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>metest 2 - 1</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>                                 |  estimate         se     pvalue 
 ---------------------------------+--------------------------------
        1_collegeB - 0bn_collegeB |    -0.036      0.003      0.000 </code></pre>
