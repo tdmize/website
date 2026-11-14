@@ -1462,14 +1462,31 @@ dy/dx wrt:  1.ins_unins
 ------------------------------------------------------------------------------
 Note: dy/dx for factor levels is the discrete change from the base level.</code></pre>
 </div>
-<p>Being uninsured lowers the probability of any expenditures by 24 percentage points, and the expected expenditures of someone who has any by about $2,480. Both are averaged over the whole sample.</p>
+<p>Being uninsured lowers the probability of any expenditures by 24 percentage points, and the expected expenditures of someone who has any by about $2,480. Both are averaged over the whole sample, so the two effects are for the same people. Adding <code>if any</code> averages the amount effect over only those with any expenditures, as the glm gives it on its own:</p>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>margins <span class="kw">if</span> any, <span class="kw">dydx</span>(ins_unins) <span class="kw">predict</span>(<span class="kw">model</span>(Amount))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Average marginal effects                                Number of obs = 15,946
+Model VCE: Robust
+
+Expression: Predicted mean, predict(model(Amount))
+dy/dx wrt:  1.ins_unins
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |      dy/dx   std. err.      z    P&gt;|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+ 1.ins_unins |  -2728.264    147.186  -18.536   0.000    -3016.742   -2439.785
+------------------------------------------------------------------------------
+Note: dy/dx for factor levels is the discrete change from the base level.</code></pre>
+</div>
+<p>Among those with any expenditures, being uninsured lowers expected expenditures by about $2,730. This describes the people who spend, but it is averaged over different people than the first part’s effect, so the two can differ partly because the people differ.</p>
 </section>
 <section id="comparing-groups" class="level2">
 <h2 class="anchored" data-anchor-id="comparing-groups">Comparing groups</h2>
 <p><code>over()</code> gives the effect within each group, and <code>over(r.)</code> the difference between the groups, with its test:</p>
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">local</span> twopart <span class="st">"predict(model(Any)) * predict(model(Amount))"</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(ins_unins) <span class="bn">over</span>(female) expression(<span class="ot">`twopart'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">local</span> twopart <span class="st">"predict(model(Any)) * predict(model(Amount))"</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(ins_unins) <span class="bn">over</span>(female) expression(<span class="ot">`twopart'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Average marginal effects                                Number of obs = 19,386
 Model VCE: Robust
 
@@ -1489,7 +1506,7 @@ Over:       female
           1  |  -2976.536    139.569  -21.327   0.000    -3250.086   -2702.986
 ------------------------------------------------------------------------------
 Note: dy/dx for factor levels is the discrete change from the base level.</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(ins_unins) <span class="bn">over</span>(<span class="fu">r</span>.female) expression(<span class="ot">`twopart'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(ins_unins) <span class="bn">over</span>(<span class="fu">r</span>.female) expression(<span class="ot">`twopart'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Contrasts of average marginal effects                   Number of obs = 19,386
 Model VCE: Robust
 
@@ -1526,11 +1543,11 @@ Note: dy/dx for factor levels is the discrete change from the
 <h2 class="anchored" data-anchor-id="other-models-for-the-second-part">Other models for the second part</h2>
 <p><strong>A linear second part.</strong> Fit <code>regress</code> among the people with any expenditures, and use its prediction in place of the <code>glm</code> one:</p>
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">local</span> x <span class="st">"c.age i.female c.lninc c.pcs12 c.mcs12 i.ins_unins i.anylim"</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> <span class="kw">regress</span> exp_tot <span class="ot">`x'</span> <span class="kw">if</span> any, <span class="kw">vce</span>(<span class="kw">cluster</span> duid)</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> Linear</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> suest2 Any Linear</span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(ins_unins) expression(<span class="kw">predict</span>(<span class="kw">model</span>(Any)) * <span class="kw">predict</span>(<span class="kw">model</span>(Linear)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">local</span> x <span class="st">"c.age i.female c.lninc c.pcs12 c.mcs12 i.ins_unins i.anylim"</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> <span class="kw">regress</span> exp_tot <span class="ot">`x'</span> <span class="kw">if</span> any, <span class="kw">vce</span>(<span class="kw">cluster</span> duid)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> Linear</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> suest2 Any Linear</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(ins_unins) expression(<span class="kw">predict</span>(<span class="kw">model</span>(Any)) * <span class="kw">predict</span>(<span class="kw">model</span>(Linear)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Average marginal effects                                Number of obs = 19,386
 Model VCE: Robust
 
@@ -1547,23 +1564,23 @@ Note: dy/dx for factor levels is the discrete change from the base level.</code>
 </div>
 <p><strong>A regression of log expenditures.</strong> When the second part is a regression of the log of the outcome, its prediction is on the log scale. Exponentiating it gives exp(<em>xb</em>), which understates the mean; the expected outcome is exp(<em>xb</em>) times the mean of the exponentiated errors. Two estimates of that constant are common: Duan’s (1983) smearing estimate, the mean of the exponentiated residuals, and, if the errors are normal, exp(<em>s</em>²/2), where <em>s</em>² is the residual variance. Compute either one from the stored regression and include it in <code>expression()</code>:</p>
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">local</span> x <span class="st">"c.age i.female c.lninc c.pcs12 c.mcs12 i.ins_unins i.anylim"</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="kw">generate</span> <span class="kw">double</span> lnexp = <span class="fu">ln</span>(exp_tot) <span class="kw">if</span> any</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">local</span> x <span class="st">"c.age i.female c.lninc c.pcs12 c.mcs12 i.ins_unins i.anylim"</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="kw">generate</span> <span class="kw">double</span> lnexp = <span class="fu">ln</span>(exp_tot) <span class="kw">if</span> any</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>(3,440 missing values generated)</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> <span class="kw">regress</span> lnexp <span class="ot">`x'</span> <span class="kw">if</span> any, <span class="kw">vce</span>(<span class="kw">cluster</span> duid)</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> LnAmount</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="kw">local</span> s2 = <span class="fu">e</span>(rss) / <span class="fu">e</span>(<span class="kw">N</span>)</span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="kw">predict</span> <span class="kw">double</span> res <span class="kw">if</span> <span class="fu">e</span>(<span class="kw">sample</span>), residuals</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> <span class="kw">regress</span> lnexp <span class="ot">`x'</span> <span class="kw">if</span> any, <span class="kw">vce</span>(<span class="kw">cluster</span> duid)</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> LnAmount</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="kw">local</span> s2 = <span class="fu">e</span>(rss) / <span class="fu">e</span>(<span class="kw">N</span>)</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="kw">predict</span> <span class="kw">double</span> res <span class="kw">if</span> <span class="fu">e</span>(<span class="kw">sample</span>), residuals</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>(3,440 missing values generated)</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">generate</span> <span class="kw">double</span> expres = <span class="fu">exp</span>(res)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">generate</span> <span class="kw">double</span> expres = <span class="fu">exp</span>(res)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>(3,440 missing values generated)</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">summarize</span> expres, <span class="kw">meanonly</span></span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="kw">local</span> duan = <span class="fu">r</span>(<span class="kw">mean</span>)</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="kw">display</span> <span class="st">"Smearing constant: "</span> %5.3f <span class="ot">`duan'</span> <span class="dt">_n</span> <span class="st">"Normal constant:   "</span> %5.3f <span class="fu">exp</span>(<span class="ot">`s2'</span> / 2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">summarize</span> expres, <span class="kw">meanonly</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="kw">local</span> duan = <span class="fu">r</span>(<span class="kw">mean</span>)</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="kw">display</span> <span class="st">"Smearing constant: "</span> %5.3f <span class="ot">`duan'</span> <span class="dt">_n</span> <span class="st">"Normal constant:   "</span> %5.3f <span class="fu">exp</span>(<span class="ot">`s2'</span> / 2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Smearing constant: 2.401
 Normal constant:   2.586</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> suest2 Any LnAmount</span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(ins_unins) expression(<span class="kw">predict</span>(<span class="kw">model</span>(Any)) * <span class="fu">exp</span>(<span class="kw">predict</span>(<span class="kw">model</span>(LnAmount))) * <span class="ot">`duan'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> suest2 Any LnAmount</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(ins_unins) expression(<span class="kw">predict</span>(<span class="kw">model</span>(Any)) * <span class="fu">exp</span>(<span class="kw">predict</span>(<span class="kw">model</span>(LnAmount))) * <span class="ot">`duan'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Average marginal effects                                Number of obs = 19,386
 Model VCE: Robust
 
@@ -1577,8 +1594,8 @@ dy/dx wrt:  1.ins_unins
  1.ins_unins |  -3110.501     79.897  -38.931   0.000    -3267.096   -2953.906
 ------------------------------------------------------------------------------
 Note: dy/dx for factor levels is the discrete change from the base level.</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(ins_unins) expression(<span class="kw">predict</span>(<span class="kw">model</span>(Any)) * <span class="fu">exp</span>(<span class="kw">predict</span>(<span class="kw">model</span>(LnAmount)) + <span class="ot">`s2'</span> / 2)</span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(ins_unins) expression(<span class="kw">predict</span>(<span class="kw">model</span>(Any)) * <span class="fu">exp</span>(<span class="kw">predict</span>(<span class="kw">model</span>(LnAmount)) + <span class="ot">`s2'</span> / 2)</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Average marginal effects                                Number of obs = 19,386
 Model VCE: Robust
 
@@ -1599,13 +1616,13 @@ Note: dy/dx for factor levels is the discrete change from the base level.</code>
 <h2 class="anchored" data-anchor-id="weights-and-survey-data">Weights and survey data</h2>
 <p><strong>Sampling weights.</strong> Fit each part with the weights but without <code>vce()</code>, and give the clustering to <code>suest2</code> with <code>cluster()</code>:</p>
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">local</span> x <span class="st">"c.age i.female c.lninc c.pcs12 c.mcs12 i.ins_unins i.anylim"</span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> <span class="kw">logit</span> any <span class="ot">`x'</span> [pw = wtdper]</span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> AnyW</span>
-<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> <span class="kw">glm</span> exp_tot <span class="ot">`x'</span> <span class="kw">if</span> any [pw = wtdper], <span class="kw">family</span>(<span class="kw">gamma</span>) <span class="kw">link</span>(<span class="fu">log</span>)</span>
-<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> AmountW</span>
-<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> suest2 AnyW AmountW, <span class="kw">cluster</span>(duid)</span>
-<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(ins_unins) expression(<span class="kw">predict</span>(<span class="kw">model</span>(AnyW)) * <span class="kw">predict</span>(<span class="kw">model</span>(AmountW)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">local</span> x <span class="st">"c.age i.female c.lninc c.pcs12 c.mcs12 i.ins_unins i.anylim"</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> <span class="kw">logit</span> any <span class="ot">`x'</span> [pw = wtdper]</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> AnyW</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> <span class="kw">glm</span> exp_tot <span class="ot">`x'</span> <span class="kw">if</span> any [pw = wtdper], <span class="kw">family</span>(<span class="kw">gamma</span>) <span class="kw">link</span>(<span class="fu">log</span>)</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> AmountW</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> suest2 AnyW AmountW, <span class="kw">cluster</span>(duid)</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(ins_unins) expression(<span class="kw">predict</span>(<span class="kw">model</span>(AnyW)) * <span class="kw">predict</span>(<span class="kw">model</span>(AmountW)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Average marginal effects                                Number of obs = 19,386
 Model VCE: Robust
 
@@ -1622,8 +1639,8 @@ Note: dy/dx for factor levels is the discrete change from the base level.</code>
 </div>
 <p><strong>Survey data.</strong> <code>svyset</code> the data and fit each part with <code>svy:</code>. Fit the second part with <code>if any</code>, as above, not with <code>subpop()</code>; <code>suest2</code> computes the standard errors from the full survey design.</p>
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">local</span> x <span class="st">"c.age i.female c.lninc c.pcs12 c.mcs12 i.ins_unins i.anylim"</span></span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="kw">svyset</span> duid [pw = wtdper]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">local</span> x <span class="st">"c.age i.female c.lninc c.pcs12 c.mcs12 i.ins_unins i.anylim"</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="kw">svyset</span> duid [pw = wtdper]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Sampling weights: wtdper
              VCE: linearized
       Subpop. df: off
@@ -1631,12 +1648,12 @@ Note: dy/dx for factor levels is the discrete change from the base level.</code>
         Strata 1: &lt;one&gt;
  Sampling unit 1: duid
            FPC 1: &lt;zero&gt;</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> <span class="kw">svy</span>: <span class="kw">logit</span> any <span class="ot">`x'</span></span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> AnyS</span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> <span class="kw">svy</span>: <span class="kw">glm</span> exp_tot <span class="ot">`x'</span> <span class="kw">if</span> any, <span class="kw">family</span>(<span class="kw">gamma</span>) <span class="kw">link</span>(<span class="fu">log</span>)</span>
-<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> AmountS</span>
-<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> suest2 AnyS AmountS</span>
-<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(ins_unins) expression(<span class="kw">predict</span>(<span class="kw">model</span>(AnyS)) * <span class="kw">predict</span>(<span class="kw">model</span>(AmountS)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> <span class="kw">svy</span>: <span class="kw">logit</span> any <span class="ot">`x'</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> AnyS</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> <span class="kw">svy</span>: <span class="kw">glm</span> exp_tot <span class="ot">`x'</span> <span class="kw">if</span> any, <span class="kw">family</span>(<span class="kw">gamma</span>) <span class="kw">link</span>(<span class="fu">log</span>)</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> AmountS</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> suest2 AnyS AmountS</span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(ins_unins) expression(<span class="kw">predict</span>(<span class="kw">model</span>(AnyS)) * <span class="kw">predict</span>(<span class="kw">model</span>(AmountS)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Average marginal effects
 
 Number of strata =      1                        Number of obs   =      19,386
@@ -1659,15 +1676,15 @@ Note: dy/dx for factor levels is the discrete change from the base level.</code>
 <h2 class="anchored" data-anchor-id="comparing-two-two-part-models">Comparing two two-part models</h2>
 <p><code>suest2</code> can combine more than one two-part model. Here a two-part model without the health measures (<code>pcs12</code>, <code>mcs12</code>, and <code>anylim</code>) is combined with the full one, to ask how much the effect of being uninsured changes when health is held constant. The difference between the two expected outcomes goes in one <code>expression()</code>:</p>
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">local</span> x1 <span class="st">"c.age i.female c.lninc i.ins_unins"</span></span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> <span class="kw">logit</span> any <span class="ot">`x1'</span>, <span class="kw">vce</span>(<span class="kw">cluster</span> duid)</span>
-<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> Any1</span>
-<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> <span class="kw">glm</span> exp_tot <span class="ot">`x1'</span> <span class="kw">if</span> any, <span class="kw">family</span>(<span class="kw">gamma</span>) <span class="kw">link</span>(<span class="fu">log</span>) <span class="kw">vce</span>(<span class="kw">cluster</span> duid)</span>
-<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> Amount1</span>
-<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> suest2 Any1 Amount1 Any Amount</span>
-<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a><span class="kw">local</span> tp1 <span class="st">"predict(model(Any1)) * predict(model(Amount1))"</span></span>
-<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a><span class="kw">local</span> tp2 <span class="st">"predict(model(Any)) * predict(model(Amount))"</span></span>
-<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(ins_unins) expression(<span class="ot">`tp1'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="kw">local</span> x1 <span class="st">"c.age i.female c.lninc i.ins_unins"</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> <span class="kw">logit</span> any <span class="ot">`x1'</span>, <span class="kw">vce</span>(<span class="kw">cluster</span> duid)</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> Any1</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> <span class="kw">glm</span> exp_tot <span class="ot">`x1'</span> <span class="kw">if</span> any, <span class="kw">family</span>(<span class="kw">gamma</span>) <span class="kw">link</span>(<span class="fu">log</span>) <span class="kw">vce</span>(<span class="kw">cluster</span> duid)</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> Amount1</span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> suest2 Any1 Amount1 Any Amount</span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a><span class="kw">local</span> tp1 <span class="st">"predict(model(Any1)) * predict(model(Amount1))"</span></span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a><span class="kw">local</span> tp2 <span class="st">"predict(model(Any)) * predict(model(Amount))"</span></span>
+<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(ins_unins) expression(<span class="ot">`tp1'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Average marginal effects                                Number of obs = 19,386
 Model VCE: Robust
 
@@ -1681,7 +1698,7 @@ dy/dx wrt:  1.ins_unins
  1.ins_unins |  -2842.902    119.446  -23.801   0.000    -3077.013   -2608.792
 ------------------------------------------------------------------------------
 Note: dy/dx for factor levels is the discrete change from the base level.</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(ins_unins) expression(<span class="ot">`tp2'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(ins_unins) expression(<span class="ot">`tp2'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Average marginal effects                                Number of obs = 19,386
 Model VCE: Robust
 
@@ -1695,7 +1712,7 @@ dy/dx wrt:  1.ins_unins
  1.ins_unins |  -2613.180    111.904  -23.352   0.000    -2832.508   -2393.852
 ------------------------------------------------------------------------------
 Note: dy/dx for factor levels is the discrete change from the base level.</code></pre>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(ins_unins) expression(<span class="ot">`tp1'</span> - <span class="ot">`tp2'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(ins_unins) expression(<span class="ot">`tp1'</span> - <span class="ot">`tp2'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="stata-output"><code>Average marginal effects                                Number of obs = 19,386
 Model VCE: Robust
 
