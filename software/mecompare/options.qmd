@@ -4,7 +4,7 @@ subtitle: "Every mecompare option, with an example of each"
 ---
 
 This page runs each option of `mecompare` on Stata's `nlsw88` data (the
-`rratios` example uses the Health and Retirement Study 2020), in the order of
+`rratios`, `twopart`, and `time()` examples use other data), in the order of
 the [help file](help.html). The [Getting
 started](getting-started.html) page explains how to read the table.
 
@@ -153,8 +153,8 @@ the [help file](help.html#estimators)).
 `regress`; `logit` and `logistic`; `probit`; `poisson`; `nbreg`; `ologit`;
 `oprobit`; and `mlogit`.
 
-`glm`; `cloglog`; `tobit`; `intreg`; maximum-likelihood `heckman`; and
-parametric `streg`, all parametric distributions.
+`glm`; `cloglog`; `tobit`; `intreg`; maximum-likelihood `heckman`;
+parametric `streg`, all parametric distributions; and `stcox`, with `time()`.
 
 `gologit2`, all forms.
 
@@ -198,7 +198,10 @@ problems, especially for categorical outcomes; the help file's section on
 After `streg` and `mestreg` the marginal effects are changes in a predicted
 survival time -- the median after `streg`, the mean after `mestreg` -- and a
 note under the table says which; see [Survival models](help.html#survival)
-in the help file.
+in the help file. With [`time(#)`](#time-the-probability-of-the-event-by-a-chosen-time),
+the marginal effects of `streg` and `stcox` models are changes in the probability
+that the event has happened by time *#*; see the [Survival models](examples/survival.html)
+example.
 
 ### Which models can be compared
 
@@ -217,6 +220,61 @@ Models may be fit with the `svy:`, `mi estimate, post:`, or
 instead be applied on the stored models (`logit y x [pw=w]`, the same weight
 on every model), and multilevel models need a stage weight as well. The
 [help file](help.html#svy_mi) has the details.
+
+## `twopart` -- two-part models
+
+`twopart` compares two-part models. A two-part model is two stored models: a
+`logit` or `probit` model of whether the outcome is positive, and a `glm` or
+`regress` model of the outcome where it is positive. `models()` lists each
+first part, then its second part, and each pair is one model in the table,
+labeled by its two names (e.g. `Any+Amount`). The effects are on the expected
+outcome, the first part's probability times the second part's mean. With a
+`regress` model of the log of the outcome as each second part, `twopart(duan)`
+uses Duan's smearing estimate and `twopart(normal)` the normal-theory
+retransformation. The `suest2` [Two-part models](../suest2/two-part.html) page
+shows the same predictions with `margins`.
+
+E.g., medical expenditures in the 2004 Medical Expenditure Panel Survey, with
+and without a measure of physical health (`pcs12`):
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/meps", clear
+(MEPS 2004 adults, total medical expenditures (from R package twopartm))
+
+. generate byte any = exp_tot > 0
+
+. 
+. quietly logit any c.age i.female i.ins_unins, vce(robust)
+
+. estimates store Any
+
+. quietly glm exp_tot c.age i.female i.ins_unins if any, family(gamma) link(log) vce(robust)
+
+. estimates store Amount
+
+. quietly logit any c.age i.female i.ins_unins c.pcs12, vce(robust)
+
+. estimates store Any2
+
+. quietly glm exp_tot c.age i.female i.ins_unins c.pcs12 if any, family(gamma) link(log) vce(robust)
+
+. estimates store Amount2
+
+. 
+. mecompare ins_unins, models(Any Amount Any2 Amount2) twopart
+
+Predicting: Two-part mean of exp_tot
+Marginal effects and cross-model differences (N_Any+Amount=19386) (N_Any2+Amount2=19386)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+ins unins                        |                                       
+                       1 - 0     |                                       
+                      Any+Amount |     1  -2799.904    110.966      0.000
+                    Any2+Amount2 |     2  -2715.115    104.526      0.000
+                      Difference |     3    -84.789     56.018      0.130
+
+```
 
 ## `statistics()` -- which columns to show
 
@@ -857,6 +915,46 @@ each model averaged over its own sample:
 
 ```
 
+## `ownsample` -- each model averaged over its own sample
+
+`ownsample` averages each model's marginal effects over its own estimation
+sample. By default every model is averaged over the same observations, those in
+any model's sample, so the models are compared for the same people. With
+`ownsample` each model's effects are the ones it gives on its own, as for models
+of the stages of a process, such as entering college and then graduating among
+those who entered; differences across the models can then also reflect their
+different observations.
+
+```{.stata-run}
+. generate byte entered = grade > 12 if grade < .
+
+. quietly logit entered i.south i.race c.age, vce(robust)
+
+. estimates store Enter
+
+. quietly logit collgrad i.south i.race c.age if entered == 1, vce(robust)
+
+. estimates store Grad
+
+. 
+. mecompare south, models(Enter Grad) ownsample
+
+Sample size varies across the models: N_Enter=1875 ; N_Grad=831. With ownsample, each model's margin
+> al effects are averaged over its own estimation sample.
+
+Predicting: Pr(entered) (Enter), Pr(collgrad) (Grad)
+Marginal effects and cross-model differences (N_Enter=1875) (N_Grad=831)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+south                            |                                       
+           South - Not south     |                                       
+                           Enter |     1     -0.065      0.024      0.007
+                            Grad |     2      0.126      0.036      0.000
+                      Difference |     3     -0.190      0.043      0.000
+
+```
+
 ## `predict()` -- which prediction
 
 With one model any prediction that `margins` accepts after that command can be
@@ -902,6 +1000,62 @@ collgrad                         |
                              cnt |     2     -0.000      0.000      0.232
 
 ```
+
+## `time()` -- the probability of the event by a chosen time
+
+For `stcox` and `streg` models, `time(#)` makes the marginal effects changes in
+the probability that the event has happened by time *#*. It is required with
+`stcox`. E.g., the effects of two drugs on the probability of death by month 10,
+in Stata's `cancer` data:
+
+```{.stata-run}
+. sysuse cancer, clear
+(Patient survival in drug trial)
+
+. stset studytime, failure(died)
+
+Survival-time data settings
+
+         Failure event: died!=0 & died<.
+Observed time interval: (0, studytime]
+     Exit on or before: failure
+
+--------------------------------------------------------------------------
+         48  total observations
+          0  exclusions
+--------------------------------------------------------------------------
+         48  observations remaining, representing
+         31  failures in single-record/single-failure data
+        744  total analysis time at risk and under observation
+                                                At risk from t =         0
+                                     Earliest observed entry t =         0
+                                          Last observed exit t =        39
+
+. quietly stcox age i.drug, vce(robust)
+
+. estimates store cox1
+
+. 
+. mecompare drug, models(cox1) time(10)
+
+Predicting: Pr(event by t=10)
+Marginal effects (N_cox1=48)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+drug                             |                                       
+             Other - Placebo     |                                       
+                            cox1 |     1     -0.419      0.089      0.000
+                NA - Placebo     |                                       
+                            cox1 |     2     -0.538      0.081      0.000
+
+NOTE: the marginal effects are changes in the probability that the event has happened by time 10. Se
+> e mecompare##survival.
+
+```
+
+The [Survival models](examples/survival.html) example compares a Cox model with
+a Weibull model and with a logit.
 
 ## `marginsopt()` -- anything else margins should be told
 

@@ -1,11 +1,10 @@
 ---
 title: "Examples from the help file"
-subtitle: "Single-level, panel, multilevel, and instrumental-variable systems"
+subtitle: "Single-level, panel, multilevel, instrumental-variable, two-part, and Cox systems"
 ---
 
-The four examples at the end of the [help file](help.html), run in full.
-Each combines two models of one family and then calls `margins` on the
-combined system.
+The six examples at the end of the [help file](help.html), run in full.
+Each combines two models and then calls `margins` on the combined system.
 
 ## Ordinary single-level models
 
@@ -530,6 +529,272 @@ iv1          |
 -------------+----------------------------------------------------------------
 iv2          |
     pcturban |      0.082      0.445    0.183   0.855       -0.790       0.953
+------------------------------------------------------------------------------
+
+```
+
+## Two-part models
+
+```{.stata-run}
+. use https://tdmize.github.io/data/data/meps, clear
+(MEPS 2004 adults, total medical expenditures (from R package twopartm))
+
+. generate byte any = exp_tot > 0
+
+. logit any c.age i.female i.ins_unins, vce(robust)
+
+Iteration 0:  Log pseudolikelihood = -9062.9759  
+Iteration 1:  Log pseudolikelihood = -7562.0191  
+Iteration 2:  Log pseudolikelihood = -7321.3926  
+Iteration 3:  Log pseudolikelihood = -7317.8165  
+Iteration 4:  Log pseudolikelihood = -7317.8112  
+Iteration 5:  Log pseudolikelihood = -7317.8112  
+
+Logistic regression                                    Number of obs =  19,386
+                                                       Wald chi2(3)  = 2770.39
+                                                       Prob > chi2   =  0.0000
+Log pseudolikelihood = -7317.8112                      Pseudo R2     =  0.1926
+
+------------------------------------------------------------------------------
+             |               Robust
+         any | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         age |      0.040      0.001   28.397   0.000        0.038       0.043
+    1.female |      0.960      0.043   22.282   0.000        0.875       1.044
+ 1.ins_unins |     -1.732      0.045  -38.282   0.000       -1.821      -1.644
+       _cons |     -0.114      0.066   -1.738   0.082       -0.243       0.015
+------------------------------------------------------------------------------
+
+. estimates store Any
+
+. glm exp_tot c.age i.female i.ins_unins if any, family(gamma) link(log) vce(robust)
+
+Iteration 0:  Log pseudolikelihood = -149636.59  
+Iteration 1:  Log pseudolikelihood = -147579.04  
+Iteration 2:  Log pseudolikelihood = -147566.91  
+Iteration 3:  Log pseudolikelihood =  -147566.9  
+
+Generalized linear models                         Number of obs   =     15,946
+Optimization     : ML                             Residual df     =     15,942
+                                                  Scale parameter =   6.452972
+Deviance         =  32516.43228                   (1/df) Deviance =   2.039671
+Pearson          =  102873.2794                   (1/df) Pearson  =   6.452972
+
+Variance function: V(u) = u^2                     [Gamma]
+Link function    : g(u) = ln(u)                   [Log]
+
+                                                  AIC             =   18.50883
+Log pseudolikelihood = -147566.9027               BIC             =  -121753.7
+
+------------------------------------------------------------------------------
+             |               Robust
+     exp_tot | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         age |      0.026      0.001   21.899   0.000        0.024       0.029
+    1.female |      0.198      0.046    4.341   0.000        0.108       0.287
+ 1.ins_unins |     -0.874      0.060  -14.567   0.000       -0.991      -0.756
+       _cons |      6.994      0.085   82.069   0.000        6.827       7.161
+------------------------------------------------------------------------------
+
+. estimates store Amount
+
+. suest2 Any Amount
+
+Simultaneous results for Any, Amount                    Number of obs = 19,386
+
+--------------------------------------------------------------------------------
+               |               Robust
+               | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+---------------+----------------------------------------------------------------
+Any_any        |
+           age |      0.040      0.001   28.397   0.000        0.038       0.043
+      1.female |      0.960      0.043   22.282   0.000        0.875       1.044
+   1.ins_unins |     -1.732      0.045  -38.282   0.000       -1.821      -1.644
+         _cons |     -0.114      0.066   -1.738   0.082       -0.243       0.015
+---------------+----------------------------------------------------------------
+Amount_exp_tot |
+           age |      0.026      0.001   21.855   0.000        0.024       0.029
+      1.female |      0.198      0.046    4.332   0.000        0.108       0.287
+   1.ins_unins |     -0.874      0.060  -14.537   0.000       -0.991      -0.756
+         _cons |      6.994      0.085   81.902   0.000        6.826       7.161
+--------------------------------------------------------------------------------
+
+. margins, dydx(ins_unins) predict(twopart(Any Amount))
+
+Average marginal effects                                Number of obs = 19,386
+Model VCE: Robust
+
+Expression: Two-part prediction, predict(twopart(Any Amount))
+dy/dx wrt:  1.ins_unins
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |      dy/dx   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+ 1.ins_unins |  -2799.904    110.966  -25.232   0.000    -3017.393   -2582.415
+------------------------------------------------------------------------------
+Note: dy/dx for factor levels is the discrete change from the base level.
+
+```
+
+## Cox models
+
+```{.stata-run}
+. sysuse cancer, clear
+(Patient survival in drug trial)
+
+. stset studytime, failure(died)
+
+Survival-time data settings
+
+         Failure event: died!=0 & died<.
+Observed time interval: (0, studytime]
+     Exit on or before: failure
+
+--------------------------------------------------------------------------
+         48  total observations
+          0  exclusions
+--------------------------------------------------------------------------
+         48  observations remaining, representing
+         31  failures in single-record/single-failure data
+        744  total analysis time at risk and under observation
+                                                At risk from t =         0
+                                     Earliest observed entry t =         0
+                                          Last observed exit t =        39
+
+. stcox age i.drug, vce(robust)
+
+        Failure _d: died
+  Analysis time _t: studytime
+
+Iteration 0:  Log pseudolikelihood = -99.911448
+Iteration 1:  Log pseudolikelihood = -82.331523
+Iteration 2:  Log pseudolikelihood = -81.676487
+Iteration 3:  Log pseudolikelihood = -81.652584
+Iteration 4:  Log pseudolikelihood = -81.652567
+Refining estimates:
+Iteration 0:  Log pseudolikelihood = -81.652567
+
+Cox regression with Breslow method for ties
+
+No. of subjects =  48                                   Number of obs =     48
+No. of failures =  31
+Time at risk    = 744
+                                                        Wald chi2(3)  =  32.39
+Log pseudolikelihood = -81.652567                       Prob > chi2   = 0.0000
+
+------------------------------------------------------------------------------
+             |               Robust
+          _t | Haz. ratio   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         age |      1.118      0.033    3.817   0.000        1.056       1.184
+             |
+        drug |
+      Other  |      0.181      0.077   -3.995   0.000        0.078       0.418
+         NA  |      0.052      0.035   -4.403   0.000        0.014       0.194
+------------------------------------------------------------------------------
+
+. estimates store cox1
+
+. streg age i.drug, distribution(weibull) vce(robust)
+
+        Failure _d: died
+  Analysis time _t: studytime
+
+Fitting constant-only model:
+Iteration 0:  Log pseudolikelihood = -61.342985
+Iteration 1:  Log pseudolikelihood =   -60.6269
+Iteration 2:  Log pseudolikelihood = -60.624022
+Iteration 3:  Log pseudolikelihood = -60.624022
+
+Fitting full model:
+Iteration 0:  Log pseudolikelihood = -60.624022  
+Iteration 1:  Log pseudolikelihood = -53.956776  
+Iteration 2:  Log pseudolikelihood = -42.173112  
+Iteration 3:  Log pseudolikelihood = -42.090795  
+Iteration 4:  Log pseudolikelihood = -42.090672  
+Iteration 5:  Log pseudolikelihood = -42.090672  
+
+Weibull PH regression
+
+No. of subjects =  48                                   Number of obs =     48
+No. of failures =  31
+Time at risk    = 744
+                                                        Wald chi2(3)  =  33.86
+Log pseudolikelihood = -42.090672                       Prob > chi2   = 0.0000
+
+------------------------------------------------------------------------------
+             |               Robust
+          _t | Haz. ratio   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         age |      1.124      0.034    3.872   0.000        1.060       1.193
+             |
+        drug |
+      Other  |      0.171      0.076   -3.970   0.000        0.071       0.408
+         NA  |      0.078      0.041   -4.898   0.000        0.028       0.217
+             |
+       _cons |      0.000      0.000   -5.832   0.000        0.000       0.001
+-------------+----------------------------------------------------------------
+       /ln_p |      0.557      0.136    4.100   0.000        0.291       0.824
+-------------+----------------------------------------------------------------
+           p |      1.746      0.237                         1.338       2.279
+         1/p |      0.573      0.078                         0.439       0.748
+------------------------------------------------------------------------------
+Note: _cons estimates baseline hazard.
+
+. estimates store wei1
+
+. suest2 cox1 wei1, time(10)
+Simultaneous results for cox1 wei1
+------------------------------------------------------------------------------
+             |               Robust
+             | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+cox1__t      |
+         age |      0.112      0.029    3.817   0.000        0.054       0.169
+             |
+        drug |
+      Other  |     -1.712      0.428   -3.995   0.000       -2.551      -0.872
+         NA  |     -2.956      0.672   -4.403   0.000       -4.273      -1.640
+             |
+       _cons |     -6.354      1.649   -3.853   0.000       -9.586      -3.122
+-------------+----------------------------------------------------------------
+wei1__t      |
+         age |      0.117      0.030    3.872   0.000        0.058       0.177
+             |
+        drug |
+      Other  |     -1.769      0.445   -3.970   0.000       -2.642      -0.896
+         NA  |     -2.548      0.520   -4.898   0.000       -3.567      -1.528
+             |
+       _cons |    -10.582      1.814   -5.832   0.000      -14.138      -7.026
+-------------+----------------------------------------------------------------
+/wei1        |
+        ln_p |      0.557      0.136    4.100   0.000        0.291       0.824
+------------------------------------------------------------------------------
+
+. margins, predict(model(cox1) pr) predict(model(wei1) pr) at(drug=(1 2 3))
+
+Predictive margins                                          Number of obs = 48
+Model VCE: Robust
+
+1._predict: Pr(event by t=10), predict(model(cox1) pr)
+2._predict: Pr(event by t=10), predict(model(wei1) pr)
+
+1._at: drug = 1
+2._at: drug = 2
+3._at: drug = 3
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |     Margin   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+_predict#_at |
+        1 1  |      0.593      0.094    6.339   0.000        0.409       0.776
+        1 2  |      0.173      0.063    2.765   0.006        0.050       0.296
+        1 3  |      0.055      0.040    1.384   0.166       -0.023       0.133
+        2 1  |      0.621      0.081    7.632   0.000        0.462       0.781
+        2 2  |      0.182      0.052    3.515   0.000        0.080       0.283
+        2 3  |      0.090      0.040    2.252   0.024        0.012       0.169
 ------------------------------------------------------------------------------
 
 ```

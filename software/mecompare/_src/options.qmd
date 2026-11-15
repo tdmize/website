@@ -5,7 +5,7 @@ subtitle: "Every mecompare option, with an example of each"
 <<dd_version: 2>>
 
 This page runs each option of `mecompare` on Stata's `nlsw88` data (the
-`rratios` example uses the Health and Retirement Study 2020), in the order of
+`rratios`, `twopart`, and `time()` examples use other data), in the order of
 the [help file](help.html). The [Getting
 started](getting-started.html) page explains how to read the table.
 
@@ -76,8 +76,8 @@ the [help file](help.html#estimators)).
 `regress`; `logit` and `logistic`; `probit`; `poisson`; `nbreg`; `ologit`;
 `oprobit`; and `mlogit`.
 
-`glm`; `cloglog`; `tobit`; `intreg`; maximum-likelihood `heckman`; and
-parametric `streg`, all parametric distributions.
+`glm`; `cloglog`; `tobit`; `intreg`; maximum-likelihood `heckman`;
+parametric `streg`, all parametric distributions; and `stcox`, with `time()`.
 
 `gologit2`, all forms.
 
@@ -121,7 +121,10 @@ problems, especially for categorical outcomes; the help file's section on
 After `streg` and `mestreg` the marginal effects are changes in a predicted
 survival time -- the median after `streg`, the mean after `mestreg` -- and a
 note under the table says which; see [Survival models](help.html#survival)
-in the help file.
+in the help file. With [`time(#)`](#time-the-probability-of-the-event-by-a-chosen-time),
+the marginal effects of `streg` and `stcox` models are changes in the probability
+that the event has happened by time *#*; see the [Survival models](examples/survival.html)
+example.
 
 ### Which models can be compared
 
@@ -140,6 +143,48 @@ Models may be fit with the `svy:`, `mi estimate, post:`, or
 instead be applied on the stored models (`logit y x [pw=w]`, the same weight
 on every model), and multilevel models need a stage weight as well. The
 [help file](help.html#svy_mi) has the details.
+
+## `twopart` -- two-part models
+
+`twopart` compares two-part models. A two-part model is two stored models: a
+`logit` or `probit` model of whether the outcome is positive, and a `glm` or
+`regress` model of the outcome where it is positive. `models()` lists each
+first part, then its second part, and each pair is one model in the table,
+labeled by its two names (e.g. `Any+Amount`). The effects are on the expected
+outcome, the first part's probability times the second part's mean. With a
+`regress` model of the log of the outcome as each second part, `twopart(duan)`
+uses Duan's smearing estimate and `twopart(normal)` the normal-theory
+retransformation. The `suest2` [Two-part models](../suest2/two-part.html) page
+shows the same predictions with `margins`.
+
+E.g., medical expenditures in the 2004 Medical Expenditure Panel Survey, with
+and without a measure of physical health (`pcs12`):
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/meps", clear
+generate byte any = exp_tot > 0
+
+quietly logit any c.age i.female i.ins_unins, vce(robust)
+estimates store Any
+quietly glm exp_tot c.age i.female i.ins_unins if any, family(gamma) link(log) vce(robust)
+estimates store Amount
+quietly logit any c.age i.female i.ins_unins c.pcs12, vce(robust)
+estimates store Any2
+quietly glm exp_tot c.age i.female i.ins_unins c.pcs12 if any, family(gamma) link(log) vce(robust)
+estimates store Amount2
+
+mecompare ins_unins, models(Any Amount Any2 Amount2) twopart
+<</dd_do>>
+<<dd_do: quietly>>
+sysuse nlsw88, clear
+drop if missing(union, married, age, race, hours, collgrad, ttl_exp, grade, wage)
+quietly logit union i.married age i.race hours i.collgrad, vce(robust)
+estimates store m1
+quietly logit union i.married age i.race hours i.collgrad wage grade, vce(robust)
+estimates store m2
+<</dd_do>>
+```
 
 ## `statistics()` -- which columns to show
 
@@ -436,6 +481,28 @@ mecompare age hours collgrad, models(msouth mnonsouth) groups groupnames(South N
 <</dd_do>>
 ```
 
+## `ownsample` -- each model averaged over its own sample
+
+`ownsample` averages each model's marginal effects over its own estimation
+sample. By default every model is averaged over the same observations, those in
+any model's sample, so the models are compared for the same people. With
+`ownsample` each model's effects are the ones it gives on its own, as for models
+of the stages of a process, such as entering college and then graduating among
+those who entered; differences across the models can then also reflect their
+different observations.
+
+```{.stata-run}
+<<dd_do>>
+generate byte entered = grade > 12 if grade < .
+quietly logit entered i.south i.race c.age, vce(robust)
+estimates store Enter
+quietly logit collgrad i.south i.race c.age if entered == 1, vce(robust)
+estimates store Grad
+
+mecompare south, models(Enter Grad) ownsample
+<</dd_do>>
+```
+
 ## `predict()` -- which prediction
 
 With one model any prediction that `margins` accepts after that command can be
@@ -457,6 +524,35 @@ mecompare age collgrad, models(cnt)
 mecompare age collgrad, models(cnt) predict(pr(0))
 <</dd_do>>
 ```
+
+## `time()` -- the probability of the event by a chosen time
+
+For `stcox` and `streg` models, `time(#)` makes the marginal effects changes in
+the probability that the event has happened by time *#*. It is required with
+`stcox`. E.g., the effects of two drugs on the probability of death by month 10,
+in Stata's `cancer` data:
+
+```{.stata-run}
+<<dd_do>>
+sysuse cancer, clear
+stset studytime, failure(died)
+quietly stcox age i.drug, vce(robust)
+estimates store cox1
+
+mecompare drug, models(cox1) time(10)
+<</dd_do>>
+<<dd_do: quietly>>
+sysuse nlsw88, clear
+drop if missing(union, married, age, race, hours, collgrad, ttl_exp, grade, wage)
+quietly logit union i.married age i.race hours i.collgrad, vce(robust)
+estimates store m1
+quietly logit union i.married age i.race hours i.collgrad wage grade, vce(robust)
+estimates store m2
+<</dd_do>>
+```
+
+The [Survival models](examples/survival.html) example compares a Cox model with
+a Weibull model and with a logit.
 
 ## `marginsopt()` -- anything else margins should be told
 

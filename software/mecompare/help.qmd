@@ -25,6 +25,8 @@ To read the help file in Stata, type `help mecompare`.
 | `groupnames(name1 name2 ...)` | labels for the groups |
 | `groupme` | outcome difference between the two groups |
 | `groupsd` | each group's own SD for `amount(sd)` |
+| `ownsample` | average each model over its own sample |
+| `twopart`[`(`*type*`)`] | two-part models, listed in `models( )` in pairs |
 | *Amount of change* | |
 | `amount(list)` | change for continuous variables; default is **one** |
 | `centered` | centered change; the default |
@@ -45,6 +47,7 @@ To read the help file in Stata, type `help mecompare`.
 | `totalme`[`(`*type*`)`] | Total ME summary |
 | *Prediction* | |
 | `predict(pred)` | the prediction `margins` should compute |
+| `time(#)` | effects on the probability of the event by time *#*, for `stcox` and `streg` |
 | `marginsopt(string)` | options passed to `margins` as typed |
 | *Reporting* | |
 | `statistics(list)` | statistics to display; default is estimate, se, pvalue |
@@ -121,7 +124,7 @@ For additional tests of the marginal effects beyond those given by default, use 
 
 `regress`; `logit` and `logistic`; `probit`; `poisson`; `nbreg`; `ologit`; `oprobit`; and `mlogit`.
 
-`glm`; `cloglog`; `tobit`; `intreg`; maximum-likelihood `heckman`; and parametric `streg`, all parametric distributions.
+`glm`; `cloglog`; `tobit`; `intreg`; maximum-likelihood `heckman`; parametric `streg`, all parametric distributions; and `stcox`, with `time()`.
 
 `gologit2`, all forms.
 
@@ -173,6 +176,10 @@ o If [suest2](../suest2/help.html) was just run, the models of that system are u
 
 o Otherwise the single model in e() is used, and it is labelled `m1` in the table and in `store()` names. It does not need to have been stored.
 
+<span id="twopart"></span>
+
+**`twopart`[`(`*type*`)`]** compares two-part models. A two-part model is two stored models: a `logit` or `probit` model of whether the outcome is positive, and a `glm` or `regress` model of the outcome where it is positive. `models( )` lists each first part, then its second part, and each pair is one model in the table, labeled by its two names (e.g. `Any+Amount`). The effects are on the expected outcome, the first part's probability times the second part's mean. With a `regress` model of the log of the outcome as each second part, `twopart(duan)` uses Duan's smearing estimate and `twopart(normal)` the normal-theory retransformation.
+
 <span id="groups"></span>
 
 **`groups`** specifies that the models in `models( )` were fit on distinct (non-overlapping) samples -- one model per group -- and that `mecompare` should compare marginal effects across the groups. Each model's estimation sample defines its group; the samples must not overlap. With two groups the cross-group differences are reported; with three or more, each group's marginal effects are listed and [metest](../metest/help.html) can be used to test the differences. `group(varname)`, the syntax of earlier versions, is also accepted; *varname* must take one value in each model's sample and a different value in each model.
@@ -182,6 +189,10 @@ o Otherwise the single model in e() is used, and it is labelled `m1` in the tabl
 **`groupme`** reports the average conditional difference in the outcome across the two groups, shown beneath the table. With a multi-category outcome one difference is reported for each outcome category, labeled Pr(category). Requires the `groups` option and exactly two models.
 
 **`groupsd`** with `groups` and `amount(sd)`, each +SD change is calculated using that group's own standard deviation rather than the pooled SD used by default. Not recommended for most applications: effects can differ only because the groups' SDs differ.
+
+<span id="ownsample"></span>
+
+**`ownsample`** averages each model's marginal effects over its own estimation sample. By default every model is averaged over the same observations, those in any model's sample, so the models are compared for the same people. With `ownsample` each model's effects are the ones it gives on its own, as for models of the stages of a process, such as entering college and then graduating among those who entered; differences across the models can then also reflect their different observations.
 
 <span id="amount"></span>
 
@@ -272,6 +283,8 @@ With `groups`, each model's contrasts are weighted by its own sample's shares; s
 
 **`predict(pred)`** the prediction `margins` should compute if you want something other than the default for that model type; see [specifying the prediction](help.html#predictopt) below.
 
+**`time(#)`** for `stcox` and `streg` models, the marginal effects are changes in the probability that the event has happened by time *#*. Required with `stcox`. See [Survival models](help.html#survival).
+
 **`marginsopt(string)`** passes *string* to `margins` exactly as typed. Options `mecompare` sets itself (`at()`, `over()`, `predict()`, `post`, `atmeans`, and the derivative and contrast options) are refused. `expression()` is allowed with one model and no `predict()`: the marginal effects are then changes in the expression, e.g. `marginsopt(expression(100*predict(pr)))` for effects in percentage points. `marginsopt(vce(unconditional))` requests standard errors that treat the covariates as sampled. Use with caution; the result is not checked so the user should verify results; use `commands` to see the `margins` line and `details` to see the `margins` output.
 
 <span id="predictopt"></span>
@@ -330,7 +343,9 @@ When the models have a multi-category outcome, the outcome categories are matche
 
 ### Survival models
 
-For the parametric survival models (`streg` and `mestreg`) the marginal effects are changes in a predicted survival time, and the default prediction of `margins` differs by command: after `streg` it is the predicted *median* survival time; after `mestreg` it is the predicted *mean* survival time (integrating over the random effects). `mecompare` uses those defaults unless `predict()` asks for another prediction (e.g. `predict(mean time)` after `streg`), and prints a note under the table saying which quantity the rows are on. Predicted survival times are model-based extrapolations: when spells are censored they can run well past the observed follow-up, and the mean and the median differ. Jones and Metzger (2019) and Metzger and Jones (2022) recommend interpreting duration models through survival (or transition) probabilities at chosen times instead; `mecompare` does not compute those.
+For the parametric survival models (`streg` and `mestreg`) the marginal effects are changes in a predicted survival time, and the default prediction of `margins` differs by command: after `streg` it is the predicted *median* survival time; after `mestreg` it is the predicted *mean* survival time (integrating over the random effects). `mecompare` uses those defaults unless `predict()` asks for another prediction (e.g. `predict(mean time)` after `streg`), and prints a note under the table saying which quantity the rows are on. Predicted survival times are model-based extrapolations: when spells are censored they can run well past the observed follow-up, and the mean and the median differ. Jones and Metzger (2019) and Metzger and Jones (2022) recommend interpreting duration models through survival (or transition) probabilities at chosen times instead.
+
+With `time(#)`, the marginal effects of `streg` and Cox (`stcox`) models are changes in the probability that the event has happened by time *#*, one minus the survival probability. Other models in `models( )`, such as a `logit` of the same event, keep their default prediction. A Cox model needs `time()`, and it must be fit with Breslow ties (the default), one record per subject, no delayed entry, and no weights, `svy`, `strata()`, or `tvc()`. `time()` cannot be combined with `predict()`, `mestreg`, or multilevel, panel, or `ivregress` models; fit weighted models with the `svy` prefix.
 
 <span id="svy_mi"></span>
 
@@ -590,6 +605,17 @@ est store mnonsouth
 mecompare age hours collgrad, models(msouth mnonsouth) groups groupnames(South NonSouth)
 ```
 
+*Comparing models whose samples overlap, each averaged over its own sample:*
+
+```stata
+generate byte entered = grade > 12 if grade < .
+logit entered i.south i.race c.age, vce(robust)
+est store Enter
+logit collgrad i.south i.race c.age if entered == 1, vce(robust)
+est store Grad
+mecompare south, models(Enter Grad) ownsample
+```
+
 *Cross-family comparison (same number of predictions):*
 
 ```stata
@@ -649,6 +675,34 @@ mecompare college, models(m1 m2 m3 m4)
 metest 1 - 2
 metest 2 - 3, add
 metest 3 - 4, add
+```
+
+*Two two-part models: whether the outcome is positive, then its amount where it is positive*
+
+```stata
+use https://tdmize.github.io/data/data/meps, clear
+generate byte any = exp_tot > 0
+logit any c.age i.female i.ins_unins, vce(robust)
+estimates store Any
+glm exp_tot c.age i.female i.ins_unins if any, family(gamma) link(log) vce(robust)
+estimates store Amount
+logit any c.age i.female i.ins_unins c.pcs12, vce(robust)
+estimates store Any2
+glm exp_tot c.age i.female i.ins_unins c.pcs12 if any, family(gamma) link(log) vce(robust)
+estimates store Amount2
+mecompare ins_unins, models(Any Amount Any2 Amount2) twopart
+```
+
+*A Cox model and a Weibull model: effects on the probability of death by month 10*
+
+```stata
+sysuse cancer, clear
+stset studytime, failure(died)
+stcox age i.drug, vce(robust)
+estimates store cox1
+streg age i.drug, distribution(weibull) vce(robust)
+estimates store wei1
+mecompare drug age, models(cox1 wei1) time(10)
 ```
 
 ## Comments

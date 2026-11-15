@@ -64,6 +64,15 @@ margins, dydx(age female ins_unins anylim) expression(`twopart')
 Expected expenditures average about $3,760 a year. Being uninsured lowers them
 by about $2,610, and each year of age raises them by about $63.
 
+`predict(twopart(Any Amount))` is a shorter way to give `margins` the same
+product:
+
+```{.stata-run}
+<<dd_do>>
+margins, dydx(ins_unins) predict(twopart(Any Amount))
+<</dd_do>>
+```
+
 ## Effects in each part
 
 Naming one model in `predict()` gives the effect in that part alone:
@@ -158,7 +167,9 @@ margins, dydx(ins_unins) expression(predict(model(Any)) * exp(predict(model(LnAm
 ```
 
 `margins` treats the constant as known, so the standard errors do not include
-the uncertainty in estimating it.
+the uncertainty in estimating it. `predict(twopart(Any LnAmount) duan)` and
+`predict(twopart(Any LnAmount) normal)` compute the constants from the stored
+regression.
 
 ## Weights and survey data
 
@@ -233,6 +244,14 @@ margins, dydx(ins_unins) expression(`tp1' - `tp2')
 Without the health measures, being uninsured lowers expected expenditures by
 about $2,840; with them, by about $2,610. The difference, about $230, is
 significant.
+
+`mecompare` with its `twopart` option gives the same comparison in one call:
+
+```{.stata-run}
+<<dd_do>>
+mecompare ins_unins, models(Any1 Amount1 Any Amount) twopart
+<</dd_do>>
+```
 
 ## References
 

@@ -1,0 +1,144 @@
+---
+title: "Survival models"
+subtitle: "Effects on the probability of the event by a chosen time"
+---
+
+After `streg`, the marginal effects are changes in the predicted median
+survival time by default (the mean after `mestreg`). Predicted survival times
+extrapolate beyond the observed follow-up when spells are censored, and Jones
+and Metzger (2019) and Metzger and Jones (2022) recommend interpreting
+duration models through the probability of the event by a chosen time instead.
+With `time(#)`, the marginal effects of `stcox` and `streg` models are changes
+in the probability that the event has happened by time *#*, one minus the
+survival probability. A Cox model (`stcox`) needs `time()`.
+
+The examples use Stata's `cancer` data: 48 patients in a drug trial, followed
+for up to 39 months. `died` records a death, and `drug` is the placebo or one
+of two drugs, Other and NA.
+
+```{.stata-run}
+. sysuse cancer, clear
+(Patient survival in drug trial)
+
+. stset studytime, failure(died)
+
+Survival-time data settings
+
+         Failure event: died!=0 & died<.
+Observed time interval: (0, studytime]
+     Exit on or before: failure
+
+--------------------------------------------------------------------------
+         48  total observations
+          0  exclusions
+--------------------------------------------------------------------------
+         48  observations remaining, representing
+         31  failures in single-record/single-failure data
+        744  total analysis time at risk and under observation
+                                                At risk from t =         0
+                                     Earliest observed entry t =         0
+                                          Last observed exit t =        39
+
+```
+
+## A Cox model and a Weibull model
+
+The effects of the drugs and of age on the probability of death by month 10,
+in a Cox model and a Weibull model:
+
+```{.stata-run}
+. quietly stcox age i.drug, vce(robust)
+
+. estimates store cox1
+
+. quietly streg age i.drug, distribution(weibull) vce(robust)
+
+. estimates store wei1
+
+. 
+. mecompare drug age, models(cox1 wei1) time(10)
+
+Predicting: Pr(event by t=10)
+Marginal effects and cross-model differences (N_cox1=48) (N_wei1=48)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+drug                             |                                       
+             Other - Placebo     |                                       
+                            cox1 |     1     -0.419      0.089      0.000
+                            wei1 |     2     -0.439      0.093      0.000
+                      Difference |     3      0.020      0.032      0.528
+                NA - Placebo     |                                       
+                            cox1 |     4     -0.538      0.081      0.000
+                            wei1 |     5     -0.531      0.085      0.000
+                      Difference |     6     -0.007      0.050      0.894
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                            cox1 |     7      0.021      0.004      0.000
+                            wei1 |     8      0.023      0.005      0.000
+                      Difference |     9     -0.002      0.002      0.234
+
+NOTE: the stcox and streg rows are changes in the probability that the event has happened by time 10
+> . See mecompare##survival.
+
+```
+
+Compared with the placebo, the Other drug lowers the probability of death by
+month 10 by 0.42 in the Cox model and by 0.44 in the Weibull model; the two
+models do not differ significantly (Difference 0.020, p = .528).
+
+## A Cox model and a logit
+
+Other models in `models()` keep their default prediction. A logit of whether a
+patient died during the study can be compared with the Cox model, here at
+month 20:
+
+```{.stata-run}
+. quietly logit died age i.drug, vce(robust)
+
+. estimates store lg1
+
+. 
+. mecompare drug, models(lg1 cox1) time(20)
+
+Predicting: Pr(died) (lg1), Pr(event by t=20) (cox1)
+Marginal effects and cross-model differences (N_lg1=48) (N_cox1=48)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+drug                             |                                       
+             Other - Placebo     |                                       
+                             lg1 |     1     -0.551      0.139      0.000
+                            cox1 |     2     -0.484      0.096      0.000
+                      Difference |     3     -0.066      0.108      0.537
+                NA - Placebo     |                                       
+                             lg1 |     4     -0.484      0.136      0.000
+                            cox1 |     5     -0.719      0.092      0.000
+                      Difference |     6      0.235      0.127      0.065
+
+NOTE: the stcox rows are changes in the probability that the event has happened by time 20. See meco
+> mpare##survival.
+
+```
+
+The logit's rows are changes in the probability of dying during the study, and
+the Cox model's in the probability of dying by month 20. The logit counts every
+patient alive at their last follow-up as a survivor, however short their
+follow-up; the Cox model takes each patient's follow-up time into account.
+
+## Choosing the time
+
+The time is in the units of the analysis time set by `stset`, here months.
+With a Cox model, a time later than the last analysis time, or earlier than the
+first event, is refused.
+
+## References
+
+> Jones, Benjamin T., and Shawna K. Metzger. 2019. "Different Words, Same
+> Song: Advice for Substantively Interpreting Duration Models." *PS: Political
+> Science & Politics* 52(4): 691--695.
+> <https://doi.org/10.1017/S104909651900060X>
+
+> Metzger, Shawna K., and Benjamin T. Jones. 2022. "Getting Time Right: Using
+> Cox Models and Probabilities to Interpret Binary Panel Data." *Political
+> Analysis* 30(2): 151--166. <https://doi.org/10.1017/pan.2021.14>

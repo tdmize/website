@@ -1,12 +1,11 @@
 ---
 title: "Examples from the help file"
-subtitle: "Single-level, panel, multilevel, and instrumental-variable systems"
+subtitle: "Single-level, panel, multilevel, instrumental-variable, two-part, and Cox systems"
 ---
 <<dd_version: 2>>
 
-The four examples at the end of the [help file](help.html), run in full.
-Each combines two models of one family and then calls `margins` on the
-combined system.
+The six examples at the end of the [help file](help.html), run in full.
+Each combines two models and then calls `margins` on the combined system.
 
 ## Ordinary single-level models
 
@@ -73,5 +72,35 @@ ivregress 2sls rent pcturban (hsngval = faminc i.region)
 estimates store iv2
 suest2 iv1 iv2
 margins, dydx(pcturban)
+<</dd_do>>
+```
+
+## Two-part models
+
+```{.stata-run}
+<<dd_do>>
+use https://tdmize.github.io/data/data/meps, clear
+generate byte any = exp_tot > 0
+logit any c.age i.female i.ins_unins, vce(robust)
+estimates store Any
+glm exp_tot c.age i.female i.ins_unins if any, family(gamma) link(log) vce(robust)
+estimates store Amount
+suest2 Any Amount
+margins, dydx(ins_unins) predict(twopart(Any Amount))
+<</dd_do>>
+```
+
+## Cox models
+
+```{.stata-run}
+<<dd_do>>
+sysuse cancer, clear
+stset studytime, failure(died)
+stcox age i.drug, vce(robust)
+estimates store cox1
+streg age i.drug, distribution(weibull) vce(robust)
+estimates store wei1
+suest2 cox1 wei1, time(10)
+margins, predict(model(cox1) pr) predict(model(wei1) pr) at(drug=(1 2 3))
 <</dd_do>>
 ```

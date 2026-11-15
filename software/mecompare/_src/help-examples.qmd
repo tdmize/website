@@ -5,7 +5,7 @@ subtitle: "The examples at the end of help mecompare, run in full"
 <<dd_version: 2>>
 
 These are the examples from the end of the [help file](help.html), in the
-same order, with their output. They use Stata's `nlsw88` data; every line can
+same order, with their output. Most use Stata's `nlsw88` data; every line can
 be pasted into Stata as is.
 
 ## Fit and store the models, then compare marginal effects
@@ -139,6 +139,20 @@ mecompare age hours collgrad, models(msouth mnonsouth) groups groupnames(South N
 <</dd_do>>
 ```
 
+## Comparing models whose samples overlap, each averaged over its own sample
+
+```{.stata-run}
+<<dd_do>>
+generate byte entered = grade > 12 if grade < .
+logit entered i.south i.race c.age, vce(robust)
+est store Enter
+logit collgrad i.south i.race c.age if entered == 1, vce(robust)
+est store Grad
+
+mecompare south, models(Enter Grad) ownsample
+<</dd_do>>
+```
+
 ## Cross-family comparison (same number of predictions)
 
 ```{.stata-run}
@@ -217,5 +231,39 @@ diminishes in each subsequent model.
 metest 1 - 2
 metest 2 - 3, add
 metest 3 - 4, add
+<</dd_do>>
+```
+
+## Two two-part models: whether the outcome is positive, then its amount where it is positive
+
+```{.stata-run}
+<<dd_do>>
+use https://tdmize.github.io/data/data/meps, clear
+generate byte any = exp_tot > 0
+logit any c.age i.female i.ins_unins, vce(robust)
+estimates store Any
+glm exp_tot c.age i.female i.ins_unins if any, family(gamma) link(log) vce(robust)
+estimates store Amount
+logit any c.age i.female i.ins_unins c.pcs12, vce(robust)
+estimates store Any2
+glm exp_tot c.age i.female i.ins_unins c.pcs12 if any, family(gamma) link(log) vce(robust)
+estimates store Amount2
+
+mecompare ins_unins, models(Any Amount Any2 Amount2) twopart
+<</dd_do>>
+```
+
+## A Cox model and a Weibull model: effects on the probability of death by month 10
+
+```{.stata-run}
+<<dd_do>>
+sysuse cancer, clear
+stset studytime, failure(died)
+stcox age i.drug, vce(robust)
+estimates store cox1
+streg age i.drug, distribution(weibull) vce(robust)
+estimates store wei1
+
+mecompare drug age, models(cox1 wei1) time(10)
 <</dd_do>>
 ```

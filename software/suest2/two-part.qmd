@@ -136,6 +136,28 @@ Note: dy/dx for factor levels is the discrete change from the base level.
 Expected expenditures average about $3,760 a year. Being uninsured lowers them
 by about $2,610, and each year of age raises them by about $63.
 
+`predict(twopart(Any Amount))` is a shorter way to give `margins` the same
+product:
+
+```{.stata-run}
+. margins, dydx(ins_unins) predict(twopart(Any Amount))
+
+Average marginal effects                                Number of obs = 19,386
+Model VCE: Robust
+
+Expression: Two-part prediction, predict(twopart(Any Amount))
+dy/dx wrt:  1.ins_unins
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |      dy/dx   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+ 1.ins_unins |  -2613.180    111.897  -23.353   0.000    -2832.494   -2393.866
+------------------------------------------------------------------------------
+Note: dy/dx for factor levels is the discrete change from the base level.
+
+```
+
 ## Effects in each part
 
 Naming one model in `predict()` gives the effect in that part alone:
@@ -380,7 +402,9 @@ Note: dy/dx for factor levels is the discrete change from the base level.
 ```
 
 `margins` treats the constant as known, so the standard errors do not include
-the uncertainty in estimating it.
+the uncertainty in estimating it. `predict(twopart(Any LnAmount) duan)` and
+`predict(twopart(Any LnAmount) normal)` compute the constants from the stored
+regression.
 
 ## Weights and survey data
 
@@ -557,6 +581,24 @@ Note: dy/dx for factor levels is the discrete change from the base level.
 Without the health measures, being uninsured lowers expected expenditures by
 about $2,840; with them, by about $2,610. The difference, about $230, is
 significant.
+
+`mecompare` with its `twopart` option gives the same comparison in one call:
+
+```{.stata-run}
+. mecompare ins_unins, models(Any1 Amount1 Any Amount) twopart
+
+Predicting: Two-part mean of exp_tot
+Marginal effects and cross-model differences (N_Any1+Amount1=19386) (N_Any+Amount=19386)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+ins unins                        |                                       
+                       1 - 0     |                                       
+                    Any1+Amount1 |     1  -2842.902    119.446      0.000
+                      Any+Amount |     2  -2613.180    111.897      0.000
+                      Difference |     3   -229.722     65.246      0.000
+
+```
 
 ## References
 

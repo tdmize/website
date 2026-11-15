@@ -78,6 +78,10 @@ The following model families are supported.
 
 `betareg` with links: logit, probit, cloglog, loglog. `truncreg`. `hetprobit`. `biprobit`. `ivprobit`. `ivtobit`.
 
+### Cox models
+
+`stcox` with Breslow ties (the default), one record per subject, and no delayed entry, weights, `strata()`, `tvc()`, `shared()`, or `vce(cluster)`, alone or with the ordinary single-level models above, including `mi estimate` results. Specify `time(`*#*`)`: the Cox model's block holds its coefficients and, as `_cons`, the log of the baseline cumulative hazard at that time, and `predict(pr)` is the probability of the event by that time. With `time()`, `predict(pr)` after `streg` is the same probability.
+
 ### Panel models
 
 `xtreg` with estimators: re, fe, be, mle, pa.
@@ -163,6 +167,21 @@ margins, dydx(x) predict(model(me1) mu fixedonly)
 
 Options `at()`, `dydx()`, `over()`, `post`, and other standard `margins` options are supported when the constituent command supports the requested prediction. Inference uses the complete joint `suest2` covariance matrix, including the cross-model covariance.
 
+For a two-part model, fit the two parts as separate models: a `logit` or `probit` model of whether the outcome is positive, and a `glm` or `regress` model of the outcome where it is positive. `twopart(`*first* *second*`)` predicts the first model's probability times the second model's mean. With a `regress` model of the log of the outcome, add `duan` for Duan's smearing estimate or `normal` for the normal-theory retransformation:
+
+```stata
+margins, dydx(x) predict(twopart(Any Amount))
+margins, dydx(x) predict(twopart(Any LnAmount) duan)
+```
+
+Every prediction is averaged over the `suest2` estimation sample, the observations in any model's sample. To average over one model's sample instead, add an `if` qualifier:
+
+```stata
+margins if any, dydx(x) predict(model(Amount))
+```
+
+With `over()`, multilevel and some other models are averaged over each model's own sample within each group. An `xtreg, cre` model is always averaged over its own sample, because its predictions use panel means computed only there.
+
 <span id="options"></span>
 
 ## Options for suest2
@@ -182,6 +201,7 @@ For most applications, `vce(robust)` or `vce(cluster *varname*)` should be used 
 | `regressml` | use the official `suest` ML-regression convention when supported |
 | `svy` | pass through the official `suest` survey option when supported |
 | `nowarn` | suppress the note printed when a model was not fit with `vce(robust)` |
+| `time(#)` | time at which `stcox` and `streg` models give the probability of the event, `predict(pr)`; required with `stcox` |
 
 Specify only one of `cluster()`, `vce()`, and `robust`. Options `minus`, `regressml`, and `svy` apply only to routes that use official `suest`; specialized panel, multilevel, and IV routes reject them when they are not meaningful. Option `svy` does not replace estimating each survey constituent with the `svy:` prefix.
 
@@ -197,6 +217,7 @@ Panel models cluster at the panel identifier by default. Multilevel models clust
 |:--|:--|
 | `e(suest2_version)` | installed `suest2` version |
 | `e(suest2_nmodels)` | number of constituent models |
+| `e(suest2_time)` | the time given in `time()`, or missing |
 | `e(suest2_model#)` | user-facing name of constituent model # |
 | `e(suest2_hold#)` | private stored-estimate name for model # |
 | `e(suest2_start#)` | first column of model # in `e(b)` |
@@ -205,6 +226,8 @@ Panel models cluster at the panel identifier by default. Multilevel models clust
 | `e(suest2_family#)` | constituent response family, when defined |
 | `e(suest2_link#)` | constituent link, when defined |
 | `e(suest2_power#)` | power of a `glm` power or odds-power link |
+| `e(suest2_duan#)` | smearing constant of a `regress` model, the mean of the exponentiated residuals |
+| `e(suest2_resvar#)` | residual variance of a `regress` model, the mean squared residual |
 | `e(suest2_systempred#)` | whether active-system prediction is available |
 | `e(suest2_pweight)` | whether the pweight route was used |
 | `e(suest2_svy)` | whether the linearized survey route was used |
@@ -281,6 +304,32 @@ ivregress 2sls rent pcturban (hsngval = faminc i.region)
 estimates store iv2
 suest2 iv1 iv2
 margins, dydx(pcturban)
+```
+
+### Two-part models
+
+```stata
+use https://tdmize.github.io/data/data/meps, clear
+generate byte any = exp_tot > 0
+logit any c.age i.female i.ins_unins, vce(robust)
+estimates store Any
+glm exp_tot c.age i.female i.ins_unins if any, family(gamma) link(log) vce(robust)
+estimates store Amount
+suest2 Any Amount
+margins, dydx(ins_unins) predict(twopart(Any Amount))
+```
+
+### Cox models
+
+```stata
+sysuse cancer, clear
+stset studytime, failure(died)
+stcox age i.drug, vce(robust)
+estimates store cox1
+streg age i.drug, distribution(weibull) vce(robust)
+estimates store wei1
+suest2 cox1 wei1, time(10)
+margins, predict(model(cox1) pr) predict(model(wei1) pr) at(drug=(1 2 3))
 ```
 
 <span id="companions"></span>

@@ -89,6 +89,7 @@ mecompare age
 | `regressml` | The official `suest` ML-regression convention when supported. |
 | `svy` | Pass through the official `suest` survey option when supported. Does not replace fitting each survey model with the `svy:` prefix. |
 | `nowarn` | Suppress the note printed when a model was not fit with `vce(robust)`. |
+| `time(#)` | The time at which `stcox` and `streg` models give the probability of the event, `predict(pr)`; required with `stcox`. |
 
 Specify only one of `cluster()`, `vce()`, and `robust`. Panel models cluster
 at the panel identifier by default and multilevel models at the common
@@ -146,6 +147,17 @@ estimates under one active survey design.
 
 `betareg` with links logit, probit, cloglog, and loglog. `truncreg`.
 `hetprobit`. `biprobit`. `ivprobit`. `ivtobit`.
+
+### Cox models
+
+`stcox` with Breslow ties (the default), one record per subject, and no delayed
+entry, weights, `strata()`, `tvc()`, `shared()`, or `vce(cluster)`, alone or
+with the ordinary single-level models above, including `mi estimate` results.
+Specify `time(#)`: the Cox model's block holds its coefficients and, as
+`_cons`, the log of the baseline cumulative hazard at that time, and
+`predict(pr)` is the probability of the event by that time. With `time()`,
+`predict(pr)` after `streg` is the same probability; see
+[The probability of the event by a chosen time](#the-probability-of-the-event-by-a-chosen-time).
 
 ### Panel models
 
@@ -236,3 +248,26 @@ test [m1_vhappy]1.college = [m2_vhappy]1.college
 
 The marginal-effects version is `mecompare college, models(m1 m2 m3 m4)`
 followed by [`metest`](../metest/many-models.html).
+
+## The probability of the event by a chosen time
+
+With `time(#)`, `predict(pr)` after `stcox` and `streg` is the probability that
+the event has happened by time *#*. Here a Cox model and a Weibull model of
+death in Stata's `cancer` data, at month 10:
+
+```{.stata-run}
+<<dd_do>>
+sysuse cancer, clear
+stset studytime, failure(died)
+quietly stcox age i.drug, vce(robust)
+estimates store cox1
+quietly streg age i.drug, distribution(weibull) vce(robust)
+estimates store wei1
+
+suest2 cox1 wei1, time(10)
+margins, predict(model(cox1) pr) predict(model(wei1) pr) at(drug=(1 2 3))
+<</dd_do>>
+```
+
+`mecompare` gives the effects of the drugs in each model and their difference;
+see its [Survival models](../mecompare/examples/survival.html) example.

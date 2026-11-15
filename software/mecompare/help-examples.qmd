@@ -4,7 +4,7 @@ subtitle: "The examples at the end of help mecompare, run in full"
 ---
 
 These are the examples from the end of the [help file](help.html), in the
-same order, with their output. They use Stata's `nlsw88` data; every line can
+same order, with their output. Most use Stata's `nlsw88` data; every line can
 be pasted into Stata as is.
 
 ## Fit and store the models, then compare marginal effects
@@ -814,6 +814,89 @@ collgrad                         |
 
 ```
 
+## Comparing models whose samples overlap, each averaged over its own sample
+
+```{.stata-run}
+. generate byte entered = grade > 12 if grade < .
+(2 missing values generated)
+
+. logit entered i.south i.race c.age, vce(robust)
+
+Iteration 0:  Log pseudolikelihood =  -1533.941  
+Iteration 1:  Log pseudolikelihood = -1512.6429  
+Iteration 2:  Log pseudolikelihood =  -1512.616  
+Iteration 3:  Log pseudolikelihood =  -1512.616  
+
+Logistic regression                                     Number of obs =  2,244
+                                                        Wald chi2(4)  =  41.95
+                                                        Prob > chi2   = 0.0000
+Log pseudolikelihood = -1512.616                        Pseudo R2     = 0.0139
+
+------------------------------------------------------------------------------
+             |               Robust
+     entered | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+       south |
+      South  |     -0.237      0.091   -2.610   0.009       -0.416      -0.059
+             |
+        race |
+      Black  |     -0.426      0.104   -4.089   0.000       -0.630      -0.222
+      Other  |      1.117      0.436    2.560   0.010        0.262       1.973
+             |
+         age |     -0.020      0.014   -1.403   0.161       -0.047       0.008
+       _cons |      0.688      0.555    1.239   0.215       -0.400       1.775
+------------------------------------------------------------------------------
+
+. est store Enter
+
+. logit collgrad i.south i.race c.age if entered == 1, vce(robust)
+
+Iteration 0:  Log pseudolikelihood = -665.40009  
+Iteration 1:  Log pseudolikelihood = -659.98522  
+Iteration 2:  Log pseudolikelihood = -659.98364  
+Iteration 3:  Log pseudolikelihood = -659.98364  
+
+Logistic regression                                     Number of obs =    967
+                                                        Wald chi2(4)  =  10.65
+                                                        Prob > chi2   = 0.0308
+Log pseudolikelihood = -659.98364                       Pseudo R2     = 0.0081
+
+------------------------------------------------------------------------------
+             |               Robust
+    collgrad | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+       south |
+      South  |      0.418      0.140    2.991   0.003        0.144       0.692
+             |
+        race |
+      Black  |     -0.279      0.166   -1.684   0.092       -0.605       0.046
+      Other  |     -0.233      0.472   -0.494   0.621       -1.157       0.691
+             |
+         age |      0.008      0.022    0.352   0.725       -0.035       0.050
+       _cons |     -0.189      0.859   -0.220   0.826       -1.872       1.494
+------------------------------------------------------------------------------
+
+. est store Grad
+
+. 
+. mecompare south, models(Enter Grad) ownsample
+
+Sample size varies across the models: N_Enter=2244 ; N_Grad=967. With ownsample, each model's margin
+> al effects are averaged over its own estimation sample.
+
+Predicting: Pr(entered) (Enter), Pr(collgrad) (Grad)
+Marginal effects and cross-model differences (N_Enter=2244) (N_Grad=967)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+south                            |                                       
+           South - Not south     |                                       
+                           Enter |     1     -0.057      0.022      0.009
+                            Grad |     2      0.102      0.034      0.002
+                      Difference |     3     -0.159      0.040      0.000
+
+```
+
 ## Cross-family comparison (same number of predictions)
 
 ```{.stata-run}
@@ -1413,5 +1496,280 @@ college                          |
                          m1 - m2 |     0.012      0.004      0.003 
                          m2 - m3 |     0.024      0.004      0.000 
                          m3 - m4 |     0.017      0.004      0.000 
+
+```
+
+## Two two-part models: whether the outcome is positive, then its amount where it is positive
+
+```{.stata-run}
+. use https://tdmize.github.io/data/data/meps, clear
+(MEPS 2004 adults, total medical expenditures (from R package twopartm))
+
+. generate byte any = exp_tot > 0
+
+. logit any c.age i.female i.ins_unins, vce(robust)
+
+Iteration 0:  Log pseudolikelihood = -9062.9759  
+Iteration 1:  Log pseudolikelihood = -7562.0191  
+Iteration 2:  Log pseudolikelihood = -7321.3926  
+Iteration 3:  Log pseudolikelihood = -7317.8165  
+Iteration 4:  Log pseudolikelihood = -7317.8112  
+Iteration 5:  Log pseudolikelihood = -7317.8112  
+
+Logistic regression                                    Number of obs =  19,386
+                                                       Wald chi2(3)  = 2770.39
+                                                       Prob > chi2   =  0.0000
+Log pseudolikelihood = -7317.8112                      Pseudo R2     =  0.1926
+
+------------------------------------------------------------------------------
+             |               Robust
+         any | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         age |      0.040      0.001   28.397   0.000        0.038       0.043
+    1.female |      0.960      0.043   22.282   0.000        0.875       1.044
+ 1.ins_unins |     -1.732      0.045  -38.282   0.000       -1.821      -1.644
+       _cons |     -0.114      0.066   -1.738   0.082       -0.243       0.015
+------------------------------------------------------------------------------
+
+. estimates store Any
+
+. glm exp_tot c.age i.female i.ins_unins if any, family(gamma) link(log) vce(robust)
+
+Iteration 0:  Log pseudolikelihood = -149636.59  
+Iteration 1:  Log pseudolikelihood = -147579.04  
+Iteration 2:  Log pseudolikelihood = -147566.91  
+Iteration 3:  Log pseudolikelihood =  -147566.9  
+
+Generalized linear models                         Number of obs   =     15,946
+Optimization     : ML                             Residual df     =     15,942
+                                                  Scale parameter =   6.452972
+Deviance         =  32516.43228                   (1/df) Deviance =   2.039671
+Pearson          =  102873.2794                   (1/df) Pearson  =   6.452972
+
+Variance function: V(u) = u^2                     [Gamma]
+Link function    : g(u) = ln(u)                   [Log]
+
+                                                  AIC             =   18.50883
+Log pseudolikelihood = -147566.9027               BIC             =  -121753.7
+
+------------------------------------------------------------------------------
+             |               Robust
+     exp_tot | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         age |      0.026      0.001   21.899   0.000        0.024       0.029
+    1.female |      0.198      0.046    4.341   0.000        0.108       0.287
+ 1.ins_unins |     -0.874      0.060  -14.567   0.000       -0.991      -0.756
+       _cons |      6.994      0.085   82.069   0.000        6.827       7.161
+------------------------------------------------------------------------------
+
+. estimates store Amount
+
+. logit any c.age i.female i.ins_unins c.pcs12, vce(robust)
+
+Iteration 0:  Log pseudolikelihood = -9062.9759  
+Iteration 1:  Log pseudolikelihood = -7465.1862  
+Iteration 2:  Log pseudolikelihood = -7180.0095  
+Iteration 3:  Log pseudolikelihood = -7173.7917  
+Iteration 4:  Log pseudolikelihood = -7173.7809  
+Iteration 5:  Log pseudolikelihood = -7173.7809  
+
+Logistic regression                                    Number of obs =  19,386
+                                                       Wald chi2(4)  = 2824.58
+                                                       Prob > chi2   =  0.0000
+Log pseudolikelihood = -7173.7809                      Pseudo R2     =  0.2085
+
+------------------------------------------------------------------------------
+             |               Robust
+         any | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         age |      0.032      0.002   20.768   0.000        0.029       0.035
+    1.female |      0.928      0.043   21.348   0.000        0.843       1.013
+ 1.ins_unins |     -1.779      0.046  -38.700   0.000       -1.869      -1.689
+       pcs12 |     -0.045      0.003  -16.447   0.000       -0.050      -0.039
+       _cons |      2.573      0.176   14.644   0.000        2.229       2.917
+------------------------------------------------------------------------------
+
+. estimates store Any2
+
+. glm exp_tot c.age i.female i.ins_unins c.pcs12 if any, family(gamma) link(log) vce(robust)
+
+Iteration 0:  Log pseudolikelihood = -146675.96  
+Iteration 1:  Log pseudolikelihood = -145449.44  
+Iteration 2:  Log pseudolikelihood = -145435.05  
+Iteration 3:  Log pseudolikelihood = -145435.04  
+
+Generalized linear models                         Number of obs   =     15,946
+Optimization     : ML                             Residual df     =     15,941
+                                                  Scale parameter =   3.605163
+Deviance         =  28252.71576                   (1/df) Deviance =    1.77233
+Pearson          =  57469.90847                   (1/df) Pearson  =   3.605163
+
+Variance function: V(u) = u^2                     [Gamma]
+Link function    : g(u) = ln(u)                   [Log]
+
+                                                  AIC             =   18.24157
+Log pseudolikelihood = -145435.0445               BIC             =  -126007.8
+
+------------------------------------------------------------------------------
+             |               Robust
+     exp_tot | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         age |      0.015      0.001   15.549   0.000        0.013       0.016
+    1.female |      0.179      0.032    5.526   0.000        0.115       0.242
+ 1.ins_unins |     -0.855      0.058  -14.851   0.000       -0.968      -0.742
+       pcs12 |     -0.045      0.001  -31.129   0.000       -0.048      -0.042
+       _cons |      9.572      0.105   90.888   0.000        9.365       9.778
+------------------------------------------------------------------------------
+
+. estimates store Amount2
+
+. 
+. mecompare ins_unins, models(Any Amount Any2 Amount2) twopart
+
+Predicting: Two-part mean of exp_tot
+Marginal effects and cross-model differences (N_Any+Amount=19386) (N_Any2+Amount2=19386)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+ins unins                        |                                       
+                       1 - 0     |                                       
+                      Any+Amount |     1  -2799.904    110.966      0.000
+                    Any2+Amount2 |     2  -2715.115    104.526      0.000
+                      Difference |     3    -84.789     56.018      0.130
+
+```
+
+## A Cox model and a Weibull model: effects on the probability of death by month 10
+
+```{.stata-run}
+. sysuse cancer, clear
+(Patient survival in drug trial)
+
+. stset studytime, failure(died)
+
+Survival-time data settings
+
+         Failure event: died!=0 & died<.
+Observed time interval: (0, studytime]
+     Exit on or before: failure
+
+--------------------------------------------------------------------------
+         48  total observations
+          0  exclusions
+--------------------------------------------------------------------------
+         48  observations remaining, representing
+         31  failures in single-record/single-failure data
+        744  total analysis time at risk and under observation
+                                                At risk from t =         0
+                                     Earliest observed entry t =         0
+                                          Last observed exit t =        39
+
+. stcox age i.drug, vce(robust)
+
+        Failure _d: died
+  Analysis time _t: studytime
+
+Iteration 0:  Log pseudolikelihood = -99.911448
+Iteration 1:  Log pseudolikelihood = -82.331523
+Iteration 2:  Log pseudolikelihood = -81.676487
+Iteration 3:  Log pseudolikelihood = -81.652584
+Iteration 4:  Log pseudolikelihood = -81.652567
+Refining estimates:
+Iteration 0:  Log pseudolikelihood = -81.652567
+
+Cox regression with Breslow method for ties
+
+No. of subjects =  48                                   Number of obs =     48
+No. of failures =  31
+Time at risk    = 744
+                                                        Wald chi2(3)  =  32.39
+Log pseudolikelihood = -81.652567                       Prob > chi2   = 0.0000
+
+------------------------------------------------------------------------------
+             |               Robust
+          _t | Haz. ratio   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         age |      1.118      0.033    3.817   0.000        1.056       1.184
+             |
+        drug |
+      Other  |      0.181      0.077   -3.995   0.000        0.078       0.418
+         NA  |      0.052      0.035   -4.403   0.000        0.014       0.194
+------------------------------------------------------------------------------
+
+. estimates store cox1
+
+. streg age i.drug, distribution(weibull) vce(robust)
+
+        Failure _d: died
+  Analysis time _t: studytime
+
+Fitting constant-only model:
+Iteration 0:  Log pseudolikelihood = -61.342985
+Iteration 1:  Log pseudolikelihood =   -60.6269
+Iteration 2:  Log pseudolikelihood = -60.624022
+Iteration 3:  Log pseudolikelihood = -60.624022
+
+Fitting full model:
+Iteration 0:  Log pseudolikelihood = -60.624022  
+Iteration 1:  Log pseudolikelihood = -53.956776  
+Iteration 2:  Log pseudolikelihood = -42.173112  
+Iteration 3:  Log pseudolikelihood = -42.090795  
+Iteration 4:  Log pseudolikelihood = -42.090672  
+Iteration 5:  Log pseudolikelihood = -42.090672  
+
+Weibull PH regression
+
+No. of subjects =  48                                   Number of obs =     48
+No. of failures =  31
+Time at risk    = 744
+                                                        Wald chi2(3)  =  33.86
+Log pseudolikelihood = -42.090672                       Prob > chi2   = 0.0000
+
+------------------------------------------------------------------------------
+             |               Robust
+          _t | Haz. ratio   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         age |      1.124      0.034    3.872   0.000        1.060       1.193
+             |
+        drug |
+      Other  |      0.171      0.076   -3.970   0.000        0.071       0.408
+         NA  |      0.078      0.041   -4.898   0.000        0.028       0.217
+             |
+       _cons |      0.000      0.000   -5.832   0.000        0.000       0.001
+-------------+----------------------------------------------------------------
+       /ln_p |      0.557      0.136    4.100   0.000        0.291       0.824
+-------------+----------------------------------------------------------------
+           p |      1.746      0.237                         1.338       2.279
+         1/p |      0.573      0.078                         0.439       0.748
+------------------------------------------------------------------------------
+Note: _cons estimates baseline hazard.
+
+. estimates store wei1
+
+. 
+. mecompare drug age, models(cox1 wei1) time(10)
+
+Predicting: Pr(event by t=10)
+Marginal effects and cross-model differences (N_cox1=48) (N_wei1=48)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+drug                             |                                       
+             Other - Placebo     |                                       
+                            cox1 |     1     -0.419      0.089      0.000
+                            wei1 |     2     -0.439      0.093      0.000
+                      Difference |     3      0.020      0.032      0.528
+                NA - Placebo     |                                       
+                            cox1 |     4     -0.538      0.081      0.000
+                            wei1 |     5     -0.531      0.085      0.000
+                      Difference |     6     -0.007      0.050      0.894
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                            cox1 |     7      0.021      0.004      0.000
+                            wei1 |     8      0.023      0.005      0.000
+                      Difference |     9     -0.002      0.002      0.234
+
+NOTE: the stcox and streg rows are changes in the probability that the event has happened by time 10
+> . See mecompare##survival.
 
 ```
