@@ -26,6 +26,9 @@ JOURNAL_HOSTS = ("doi.org", "journals.sagepub.com", "onlinelibrary.wiley.com",
                  "sciencedirect.com", "tandfonline.com", "academic.oup.com",
                  "jstor.org", "cambridge.org", "link.springer.com",
                  "psycnet.apa.org", "doi.apa.org")
+# sites that refuse scripts but open in a browser (checked by hand 2026-11-16)
+BROWSER_ONLY = ("britannica.com", "mindyourdecisions.com", "statalist.org",
+                "electionstudies.org", "hrs.isr.umich.edu", "worldvaluessurvey.org")
 
 files = [f for f in glob.glob(os.path.join(ROOT, "**", "*.qmd"), recursive=True)
          if "_src" in f.replace("\\", "/").split("/") or
@@ -53,7 +56,9 @@ def host(u):
 def check(u):
     test = u
     # Stata adds .dta to dataset addresses given without one
-    if host(u) == "tdmize.github.io" and not os.path.splitext(urlparse(u).path)[1]:
+    path = urlparse(u).path
+    if host(u) == "tdmize.github.io" and path.startswith("/data/data/") and \
+            not path.endswith("/") and not os.path.splitext(path)[1]:
         test = u + ".dta"
     for method in ("HEAD", "GET"):
         req = urllib.request.Request(test, method=method, headers={"User-Agent": UA})
@@ -73,9 +78,11 @@ def check(u):
 with concurrent.futures.ThreadPoolExecutor(max_workers=16) as ex:
     results = list(ex.map(check, sorted(where)))
 
-broken, moved, refused, journals = [], [], [], 0
+broken, moved, refused, journals, by_hand = [], [], [], 0, 0
 for u, code, final, err in results:
-    if code is None or code in (404, 410):
+    if any(host(u).endswith(h) for h in BROWSER_ONLY) and code not in (404, 410):
+        by_hand += 1
+    elif code is None or code in (404, 410):
         broken.append((u, code or err))
     elif code in (401, 403, 405, 406, 429) or code >= 500:
         if any(host(u).endswith(h) for h in JOURNAL_HOSTS):
@@ -98,4 +105,5 @@ show("BROKEN", broken, lambda r: f"{r[0]}  [{r[1]}]")
 show("REDIRECTS TO A DIFFERENT SITE", moved, lambda r: f"{r[0]}\n      -> {r[1]}")
 show("SITE REFUSED THE CHECK (open by hand)", refused, lambda r: f"{r[0]}  [{r[1]}]")
 print(f"\n{journals} journal links refused the check (normal for journal sites).")
+print(f"{by_hand} links on sites checked by hand (they refuse scripts).")
 print(f"Checked {len(where)} addresses in {len(files)} pages under {ROOT}.")
