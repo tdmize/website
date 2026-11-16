@@ -516,12 +516,6 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
  <span class="menu-text">Plotting and tabulating results</span></a>
   </div>
 </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../software/mecompare/generalized.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Generalized marginal effects</span></a>
-  </div>
-</li>
           <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../../software/mecompare/examples/mediation.html" class="sidebar-item-text sidebar-link">
@@ -665,6 +659,12 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 </li>
       </ul>
   </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../software/mecompare/examples/survival.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Survival models</span></a>
+  </div>
+</li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -714,6 +714,12 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 </li>
       </ul>
   </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../software/mecompare/generalized.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Generalized marginal effects</span></a>
+  </div>
+</li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../software/mecompare/help-examples.html" class="sidebar-item-text sidebar-link">
@@ -1288,11 +1294,13 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
   <li><a href="#supported-estimators" id="toc-supported-estimators" class="nav-link" data-scroll-target="#supported-estimators">Supported estimators</a>
   <ul class="collapse">
   <li><a href="#ordinary-single-level-models" id="toc-ordinary-single-level-models" class="nav-link" data-scroll-target="#ordinary-single-level-models">Ordinary single-level models</a></li>
+  <li><a href="#cox-models" id="toc-cox-models" class="nav-link" data-scroll-target="#cox-models">Cox models</a></li>
   <li><a href="#panel-models" id="toc-panel-models" class="nav-link" data-scroll-target="#panel-models">Panel models</a></li>
   <li><a href="#multilevel-models" id="toc-multilevel-models" class="nav-link" data-scroll-target="#multilevel-models">Multilevel models</a></li>
   </ul></li>
   <li><a href="#fixed-effects-and-correlated-random-effects" id="toc-fixed-effects-and-correlated-random-effects" class="nav-link" data-scroll-target="#fixed-effects-and-correlated-random-effects">Fixed effects and correlated random effects</a></li>
   <li><a href="#more-than-two-models" id="toc-more-than-two-models" class="nav-link" data-scroll-target="#more-than-two-models">More than two models</a></li>
+  <li><a href="#the-probability-of-the-event-by-a-chosen-time" id="toc-the-probability-of-the-event-by-a-chosen-time" class="nav-link" data-scroll-target="#the-probability-of-the-event-by-a-chosen-time">The probability of the event by a chosen time</a></li>
   </ul>
 </nav>
     </div>
@@ -1480,6 +1488,10 @@ age + 1 (centered)               |
 <td style="text-align: left;"><code>nowarn</code></td>
 <td style="text-align: left;">Suppress the note printed when a model was not fit with <code>vce(robust)</code>.</td>
 </tr>
+<tr class="odd">
+<td style="text-align: left;"><code>time(#)</code></td>
+<td style="text-align: left;">The time at which <code>stcox</code> and <code>streg</code> models give the probability of the event, <code>predict(pr)</code>; required with <code>stcox</code>.</td>
+</tr>
 </tbody>
 </table>
 <p>Specify only one of <code>cluster()</code>, <code>vce()</code>, and <code>robust</code>. Panel models cluster at the panel identifier by default and multilevel models at the common highest-level grouping variable; a larger cluster may be requested only when the panels or groups are nested within it.</p>
@@ -1524,7 +1536,7 @@ collgrad#c.age |
 <section id="weights-survey-data-and-multiple-imputation" class="level2">
 <h2 class="anchored" data-anchor-id="weights-survey-data-and-multiple-imputation">Weights, survey data, and multiple imputation</h2>
 <p><strong>Survey data.</strong> For weighted analyses and complex samples, <code>svyset</code> the data and fit each model with the <code>svy:</code> prefix, then pass the stored names to <code>suest2</code> without a prefix. The design comes from <code>svyset</code>; do not specify <code>cluster()</code>, <code>vce()</code>, or <code>robust</code> on <code>suest2</code>. All models must use the same subpopulation specification, and replicate-weight VCEs are not supported.</p>
-<p><strong>Pweights.</strong> Pweighted systems support <code>regress</code>, <code>logit</code>/<code>logistic</code>, <code>probit</code>, <code>poisson</code>, <code>nbreg</code>, <code>glm</code>, <code>ologit</code>, <code>oprobit</code>, and <code>mlogit</code>, which may be combined. The weights must agree on observations shared by the estimation samples. Request system clustering with <code>cluster()</code> on <code>suest2</code>.</p>
+<p><strong>Pweights.</strong> Pweighted systems support <code>regress</code>, <code>logit</code>/<code>logistic</code>, <code>probit</code>, <code>poisson</code>, <code>nbreg</code>, <code>glm</code>, <code>ologit</code>, <code>oprobit</code>, <code>mlogit</code>, and <code>streg</code>, whose weight is set by <code>stset</code>. These may be combined. The weights must agree on observations shared by the estimation samples. Request system clustering with <code>cluster()</code> on <code>suest2</code>.</p>
 <p><strong>Multiple imputation.</strong> Fit and store each model with <code>mi estimate, post:</code>, then pass the stored names to <code>suest2</code>. It combines the models within each imputation and pools the results with Rubin’s rules; the MI data must not change in between. Use <code>mimrgns</code> or <code>mecompare</code> for post-estimation; ordinary <code>predict</code> and <code>margins</code> are not available after MI pooling. The supported families are listed in the <a href="help.html#weights">help file</a>.</p>
 </section>
 <section id="supported-estimators" class="level2">
@@ -1537,6 +1549,10 @@ collgrad#c.age |
 <p><code>gologit2</code>, including proportional-odds, partial proportional-odds, unrestricted, alternative-link, and <code>autofit()</code> results.</p>
 <p><code>ivregress 2sls</code>. <code>fracreg</code> with estimators logit and probit. Every model in an instrumental-variables system must use the same estimation mode: either unweighted conventional estimates, or linearized <code>svy: ivregress 2sls</code> estimates under one active survey design.</p>
 <p><code>betareg</code> with links logit, probit, cloglog, and loglog. <code>truncreg</code>. <code>hetprobit</code>. <code>biprobit</code>. <code>ivprobit</code>. <code>ivtobit</code>.</p>
+</section>
+<section id="cox-models" class="level3">
+<h3 class="anchored" data-anchor-id="cox-models">Cox models</h3>
+<p><code>stcox</code> with Breslow ties (the default), one record per subject, and no delayed entry, weights, <code>strata()</code>, <code>tvc()</code>, <code>shared()</code>, or <code>vce(cluster)</code>, alone or with the ordinary single-level models above, including <code>mi estimate</code> results. Specify <code>time(#)</code>: the Cox model’s block holds its coefficients and, as <code>_cons</code>, the log of the baseline cumulative hazard at that time, and <code>predict(pr)</code> is the probability of the event by that time. With <code>time()</code>, <code>predict(pr)</code> after <code>streg</code> is the same probability; see <a href="#the-probability-of-the-event-by-a-chosen-time">The probability of the event by a chosen time</a>.</p>
 </section>
 <section id="panel-models" class="level3">
 <h3 class="anchored" data-anchor-id="panel-models">Panel models</h3>
@@ -1594,6 +1610,86 @@ collgrad#c.age |
          Prob &gt; chi2 =    0.0499</code></pre>
 </div>
 <p>The marginal-effects version is <code>mecompare college, models(m1 m2 m3 m4)</code> followed by <a href="../metest/many-models.html"><code>metest</code></a>.</p>
+</section>
+<section id="the-probability-of-the-event-by-a-chosen-time" class="level2">
+<h2 class="anchored" data-anchor-id="the-probability-of-the-event-by-a-chosen-time">The probability of the event by a chosen time</h2>
+<p>With <code>time(#)</code>, <code>predict(pr)</code> after <code>stcox</code> and <code>streg</code> is the probability that the event has happened by time <em>#</em>. Here a Cox model and a Weibull model of death in Stata’s <code>cancer</code> data, at month 10:</p>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">sysuse</span> cancer, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(Patient survival in drug trial)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">stset</span> studytime, failure(died)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Survival-time data settings
+
+         Failure event: died!=0 &amp; died&lt;.
+Observed time interval: (0, studytime]
+     Exit on or before: failure
+
+--------------------------------------------------------------------------
+         48  total observations
+          0  exclusions
+--------------------------------------------------------------------------
+         48  observations remaining, representing
+         31  failures in single-record/single-failure data
+        744  total analysis time at risk and under observation
+                                                At risk from t =         0
+                                     Earliest observed entry t =         0
+                                          Last observed exit t =        39</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> <span class="kw">stcox</span> age i.drug, <span class="kw">vce</span>(<span class="kw">robust</span>)</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> cox1</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="kw">quietly</span> <span class="kw">streg</span> age i.drug, distribution(<span class="kw">weibull</span>) <span class="kw">vce</span>(<span class="kw">robust</span>)</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> wei1</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>suest2 cox1 wei1, time(10)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Simultaneous results for cox1 wei1
+------------------------------------------------------------------------------
+             |               Robust
+             | Coefficient  std. err.      z    P&gt;|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+cox1__t      |
+         age |      0.112      0.029    3.817   0.000        0.054       0.169
+             |
+        drug |
+      Other  |     -1.712      0.428   -3.995   0.000       -2.551      -0.872
+         NA  |     -2.956      0.672   -4.403   0.000       -4.273      -1.640
+             |
+       _cons |     -6.354      1.649   -3.853   0.000       -9.586      -3.122
+-------------+----------------------------------------------------------------
+wei1__t      |
+         age |      0.117      0.030    3.872   0.000        0.058       0.177
+             |
+        drug |
+      Other  |     -1.769      0.445   -3.970   0.000       -2.642      -0.896
+         NA  |     -2.548      0.520   -4.898   0.000       -3.567      -1.528
+             |
+       _cons |    -10.582      1.814   -5.832   0.000      -14.138      -7.026
+-------------+----------------------------------------------------------------
+/wei1        |
+        ln_p |      0.557      0.136    4.100   0.000        0.291       0.824
+------------------------------------------------------------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">predict</span>(<span class="kw">model</span>(cox1) pr) <span class="kw">predict</span>(<span class="kw">model</span>(wei1) pr) <span class="fu">at</span>(drug=(1 2 3))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Predictive margins                                          Number of obs = 48
+Model VCE: Robust
+
+1._predict: Pr(event by t=10), predict(model(cox1) pr)
+2._predict: Pr(event by t=10), predict(model(wei1) pr)
+
+1._at: drug = 1
+2._at: drug = 2
+3._at: drug = 3
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |     Margin   std. err.      z    P&gt;|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+_predict#_at |
+        1 1  |      0.593      0.094    6.339   0.000        0.409       0.776
+        1 2  |      0.173      0.063    2.765   0.006        0.050       0.296
+        1 3  |      0.055      0.040    1.384   0.166       -0.023       0.133
+        2 1  |      0.621      0.081    7.632   0.000        0.462       0.781
+        2 2  |      0.182      0.052    3.515   0.000        0.080       0.283
+        2 3  |      0.090      0.040    2.252   0.024        0.012       0.169
+------------------------------------------------------------------------------</code></pre>
+</div>
+<p><code>mecompare</code> gives the effects of the drugs in each model and their difference; see its <a href="../mecompare/examples/survival.html">Survival models</a> example.</p>
 
 
 </section>

@@ -17,7 +17,7 @@ To read the help file in Stata, type `help metest`.
 
 `metest` [*exp*] [`,` *options*]
 
-`metest` *list*`,` `pwcompare` [*options*]
+`metest` *list*`,` `pwcompare`|`sequential`|`reference` [*options*]
 
 | Option | Description |
 |:--|:--|
@@ -27,12 +27,15 @@ To read the help file in Stata, type `help metest`.
 | `level(#)` | confidence level for `ll` and `ul` |
 | *Pairwise comparisons* | |
 | `pwcompare` | compare the listed marginal effects pairwise |
+| `sequential` | compare each listed effect with the one before it |
+| `reference` | compare each listed effect with the first |
+| `reverse` | reverse the direction of the comparisons |
 | `mcompare(method)` | adjust p-values for multiple comparisons |
 | *Accumulating results* | |
 | `add` | add the result to the saved table |
 | `clear` | clear the saved table first |
 | *Display* | |
-| `rownames(string)` | label for the row; with `pwcompare`, one per effect |
+| `rownames(string)` | label for the row; with *list*, one per effect |
 | `decimals(#)` | decimal places; default is 3 |
 | `width(#)` | width of the statistics columns; default is 9 |
 | `labwidth(#)` | width of the label column; at most 32 |
@@ -40,7 +43,7 @@ To read the help file in Stata, type `help metest`.
 | `notable` | suppress the table |
 | `details` | show the `nlcom` or `test` output |
 
-where *exp* refers to the marginal effects either by the *ME #* shown in the `mecompare` table or by their coefficient names, combined with `+`, `-`, `*`, `/`, parentheses, or `=`; and *list* lists the marginal effects to compare pairwise, by *ME #* (`1 2 3`), as a range (`1/3`), or by name.
+where *exp* refers to the marginal effects either by the *ME #* shown in the `mecompare` table or by their coefficient names, combined with `+`, `-`, `*`, `/`, parentheses, or `=`; and *list* lists the marginal effects to compare, by *ME #* (`1 2 3`), as a range (`1/3`), or by name.
 
 ## Description
 
@@ -75,7 +78,13 @@ metest, title("Marginal effects by race")
 
 **`pwcompare`** compares the listed marginal effects pairwise: each later effect in the list minus each earlier one, in the order margins, pwcompare uses. List the effects by *ME #*, as a range, or by name: `metest 1 2 3, pwcompare` or `metest 1/3, pwcompare`. The rows are labeled `ME 2 vs ME 1` and so on, or from `rownames()`.
 
-**`mcompare(method)`** adjusts the p-values (and confidence intervals, when shown) of the `pwcompare` rows for multiple comparisons; *method* is `bonferroni` or `sidak`.
+**`sequential`** compares each listed marginal effect with the one before it: `metest 1 2 3, sequential` reports `ME 2 vs ME 1` and `ME 3 vs ME 2`.
+
+**`reference`** compares each listed marginal effect with the first one listed: `metest 1 2 3, reference` reports `ME 2 vs ME 1` and `ME 3 vs ME 1`. List another effect first to make it the reference, e.g., `metest 3 1 2, reference`.
+
+**`reverse`** reverses the direction of the comparisons of `pwcompare`, `sequential`, or `reference`: each earlier effect minus the later one, e.g., `ME 1 vs ME 2`.
+
+**`mcompare(method)`** adjusts the p-values (and confidence intervals, when shown) of the `pwcompare`, `sequential`, or `reference` rows for multiple comparisons; *method* is `bonferroni` or `sidak`.
 
 ### Accumulating results
 
@@ -85,7 +94,7 @@ metest, title("Marginal effects by race")
 
 ### Display
 
-**`rownames(string)`** labels the row. A `:` in the label puts what comes before it on a row of its own, with the rest indented underneath, which is how several rows are grouped under one heading: `rownames(raceBlack - White)`. By default the row is labeled with the test that was run -- the expression with coefficient names substituted for the ME numbers -- and whatever every term has in common becomes that heading: the variable when they come from one variable (`marriedm1 - m2`), otherwise the model (`m1:married - age`). When they share neither, the expression itself is used, e.g. `(1-2)-(4-5)`. A label longer than 32 characters (after any heading) is shortened to 32. With `pwcompare`, give one label per listed effect, as in `rownames("age 35" "age 40" "age 45")`; e.g., one row will read `age 40 vs age 35`. Labels of up to 14 characters are shown in full, and longer ones are shortened so the row fits 32 characters. `label()` is a synonym.
+**`rownames(string)`** labels the row. A `:` in the label puts what comes before it on a row of its own, with the rest indented underneath, which is how several rows are grouped under one heading: `rownames(raceBlack - White)`. By default the row is labeled with the test that was run -- the expression with coefficient names substituted for the ME numbers -- and whatever every term has in common becomes that heading: the variable when they come from one variable (`marriedm1 - m2`), otherwise the model (`m1:married - age`). When they share neither, the expression itself is used, e.g. `(1-2)-(4-5)`. A label longer than 32 characters (after any heading) is shortened to 32. With `pwcompare`, `sequential`, or `reference`, give one label per listed effect, as in `rownames("age 35" "age 40" "age 45")`; e.g., one row will read `age 40 vs age 35`. Labels of up to 14 characters are shown in full, and longer ones are shortened so the row fits 32 characters. `label()` is a synonym.
 
 **`decimals(#)`** decimal places; the default is 3.
 
@@ -105,7 +114,7 @@ Estimates accumulate in the matrix `_metest` and equality tests in `_metest_test
 
 A call without `add` starts a fresh table. If the result is an estimate, `_metest` is replaced and `_metest_test` is dropped; if it is an equality test, the reverse. With `add` both matrices persist side by side. `metest, clear` drops both. `metest` with no expression redisplays them without changing either.
 
-`metest` is r-class. After an expression it returns `r(estimate)`, `r(se)`, `r(zvalue)`, `r(pvalue)`, `r(ll)`, and `r(ul)`; after an equality test it returns `r(chi2)` (or `r(F)`), `r(df)`, and `r(pvalue)`. `r(label)` holds the row label used and `r(expression)` the expression. After `pwcompare`, `r(table)` holds the rows of the comparisons.
+`metest` is r-class. After an expression it returns `r(estimate)`, `r(se)`, `r(zvalue)`, `r(pvalue)`, `r(ll)`, and `r(ul)`; after an equality test it returns `r(chi2)` (or `r(F)`), `r(df)`, and `r(pvalue)`. `r(label)` holds the row label used and `r(expression)` the expression. After `pwcompare`, `sequential`, or `reference`, `r(table)` holds the rows of the comparisons.
 
 ## Examples
 
@@ -185,6 +194,8 @@ Pairwise comparisons -- whether the effect of marriage differs across three ages
 mecompare i.married, models(m1) covariates(age=(35 40 45))
 metest 1 2 3, pwcompare
 metest 1/3, pwcompare rownames("age 35" "age 40" "age 45") mcompare(bonferroni)
+metest 1 2 3, sequential
+metest 2 1 3, reference
 ```
 
 <span id="other"></span>

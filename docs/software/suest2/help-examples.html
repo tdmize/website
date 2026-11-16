@@ -516,12 +516,6 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
  <span class="menu-text">Plotting and tabulating results</span></a>
   </div>
 </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../software/mecompare/generalized.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Generalized marginal effects</span></a>
-  </div>
-</li>
           <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../../software/mecompare/examples/mediation.html" class="sidebar-item-text sidebar-link">
@@ -665,6 +659,12 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 </li>
       </ul>
   </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../software/mecompare/examples/survival.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Survival models</span></a>
+  </div>
+</li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -714,6 +714,12 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 </li>
       </ul>
   </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../software/mecompare/generalized.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Generalized marginal effects</span></a>
+  </div>
+</li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../software/mecompare/help-examples.html" class="sidebar-item-text sidebar-link">
@@ -1284,6 +1290,8 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
   <li><a href="#panel-models" id="toc-panel-models" class="nav-link" data-scroll-target="#panel-models">Panel models</a></li>
   <li><a href="#mixed-models" id="toc-mixed-models" class="nav-link" data-scroll-target="#mixed-models">Mixed models</a></li>
   <li><a href="#instrumental-variables" id="toc-instrumental-variables" class="nav-link" data-scroll-target="#instrumental-variables">Instrumental variables</a></li>
+  <li><a href="#two-part-models" id="toc-two-part-models" class="nav-link" data-scroll-target="#two-part-models">Two-part models</a></li>
+  <li><a href="#cox-models" id="toc-cox-models" class="nav-link" data-scroll-target="#cox-models">Cox models</a></li>
   </ul>
 </nav>
     </div>
@@ -1293,7 +1301,7 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 <header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../software/suest2/index.html">suest2</a></li><li class="breadcrumb-item"><a href="../../software/suest2/help-examples.html">Examples from the help file</a></li></ol></nav>
 <div class="quarto-title">
 <h1 class="title">Examples from the help file</h1>
-<p class="subtitle lead">Single-level, panel, multilevel, and instrumental-variable systems</p>
+<p class="subtitle lead">Single-level, panel, multilevel, instrumental-variable, two-part, and Cox systems</p>
 </div>
 
 
@@ -1310,7 +1318,7 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 </header>
 
 
-<p>The four examples at the end of the <a href="help.html">help file</a>, run in full. Each combines two models of one family and then calls <code>margins</code> on the combined system.</p>
+<p>The six examples at the end of the <a href="help.html">help file</a>, run in full. Each combines two models and then calls <code>margins</code> on the combined system.</p>
 <section id="ordinary-single-level-models" class="level2">
 <h2 class="anchored" data-anchor-id="ordinary-single-level-models">Ordinary single-level models</h2>
 <div class="stata-run">
@@ -1783,6 +1791,248 @@ iv1          |
 -------------+----------------------------------------------------------------
 iv2          |
     pcturban |      0.082      0.445    0.183   0.855       -0.790       0.953
+------------------------------------------------------------------------------</code></pre>
+</div>
+</section>
+<section id="two-part-models" class="level2">
+<h2 class="anchored" data-anchor-id="two-part-models">Two-part models</h2>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> https:<span class="co">//tdmize.github.io/data/data/meps, clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(MEPS 2004 adults, total medical expenditures (from R package twopartm))</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb47"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="kw">generate</span> <span class="kw">byte</span> any = exp_tot &gt; 0</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="kw">logit</span> any c.age i.female i.ins_unins, <span class="kw">vce</span>(<span class="kw">robust</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Iteration 0:  Log pseudolikelihood = -9062.9759  
+Iteration 1:  Log pseudolikelihood = -7562.0191  
+Iteration 2:  Log pseudolikelihood = -7321.3926  
+Iteration 3:  Log pseudolikelihood = -7317.8165  
+Iteration 4:  Log pseudolikelihood = -7317.8112  
+Iteration 5:  Log pseudolikelihood = -7317.8112  
+
+Logistic regression                                    Number of obs =  19,386
+                                                       Wald chi2(3)  = 2770.39
+                                                       Prob &gt; chi2   =  0.0000
+Log pseudolikelihood = -7317.8112                      Pseudo R2     =  0.1926
+
+------------------------------------------------------------------------------
+             |               Robust
+         any | Coefficient  std. err.      z    P&gt;|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         age |      0.040      0.001   28.397   0.000        0.038       0.043
+    1.female |      0.960      0.043   22.282   0.000        0.875       1.044
+ 1.ins_unins |     -1.732      0.045  -38.282   0.000       -1.821      -1.644
+       _cons |     -0.114      0.066   -1.738   0.082       -0.243       0.015
+------------------------------------------------------------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb49"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> Any</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a><span class="kw">glm</span> exp_tot c.age i.female i.ins_unins <span class="kw">if</span> any, <span class="kw">family</span>(<span class="kw">gamma</span>) <span class="kw">link</span>(<span class="fu">log</span>) <span class="kw">vce</span>(<span class="kw">robust</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Iteration 0:  Log pseudolikelihood = -149636.59  
+Iteration 1:  Log pseudolikelihood = -147579.04  
+Iteration 2:  Log pseudolikelihood = -147566.91  
+Iteration 3:  Log pseudolikelihood =  -147566.9  
+
+Generalized linear models                         Number of obs   =     15,946
+Optimization     : ML                             Residual df     =     15,942
+                                                  Scale parameter =   6.452972
+Deviance         =  32516.43228                   (1/df) Deviance =   2.039671
+Pearson          =  102873.2794                   (1/df) Pearson  =   6.452972
+
+Variance function: V(u) = u^2                     [Gamma]
+Link function    : g(u) = ln(u)                   [Log]
+
+                                                  AIC             =   18.50883
+Log pseudolikelihood = -147566.9027               BIC             =  -121753.7
+
+------------------------------------------------------------------------------
+             |               Robust
+     exp_tot | Coefficient  std. err.      z    P&gt;|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         age |      0.026      0.001   21.899   0.000        0.024       0.029
+    1.female |      0.198      0.046    4.341   0.000        0.108       0.287
+ 1.ins_unins |     -0.874      0.060  -14.567   0.000       -0.991      -0.756
+       _cons |      6.994      0.085   82.069   0.000        6.827       7.161
+------------------------------------------------------------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb51"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> Amount</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>suest2 Any Amount</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Simultaneous results for Any, Amount                    Number of obs = 19,386
+
+--------------------------------------------------------------------------------
+               |               Robust
+               | Coefficient  std. err.      z    P&gt;|z|     [95% conf. interval]
+---------------+----------------------------------------------------------------
+Any_any        |
+           age |      0.040      0.001   28.397   0.000        0.038       0.043
+      1.female |      0.960      0.043   22.282   0.000        0.875       1.044
+   1.ins_unins |     -1.732      0.045  -38.282   0.000       -1.821      -1.644
+         _cons |     -0.114      0.066   -1.738   0.082       -0.243       0.015
+---------------+----------------------------------------------------------------
+Amount_exp_tot |
+           age |      0.026      0.001   21.855   0.000        0.024       0.029
+      1.female |      0.198      0.046    4.332   0.000        0.108       0.287
+   1.ins_unins |     -0.874      0.060  -14.537   0.000       -0.991      -0.756
+         _cons |      6.994      0.085   81.902   0.000        6.826       7.161
+--------------------------------------------------------------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb53"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(ins_unins) <span class="kw">predict</span>(twopart(Any Amount))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Average marginal effects                                Number of obs = 19,386
+Model VCE: Robust
+
+Expression: Two-part prediction, predict(twopart(Any Amount))
+dy/dx wrt:  1.ins_unins
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |      dy/dx   std. err.      z    P&gt;|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+ 1.ins_unins |  -2799.904    110.966  -25.232   0.000    -3017.393   -2582.415
+------------------------------------------------------------------------------
+Note: dy/dx for factor levels is the discrete change from the base level.</code></pre>
+</div>
+</section>
+<section id="cox-models" class="level2">
+<h2 class="anchored" data-anchor-id="cox-models">Cox models</h2>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb55"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="kw">sysuse</span> cancer, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(Patient survival in drug trial)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb57"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="kw">stset</span> studytime, failure(died)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Survival-time data settings
+
+         Failure event: died!=0 &amp; died&lt;.
+Observed time interval: (0, studytime]
+     Exit on or before: failure
+
+--------------------------------------------------------------------------
+         48  total observations
+          0  exclusions
+--------------------------------------------------------------------------
+         48  observations remaining, representing
+         31  failures in single-record/single-failure data
+        744  total analysis time at risk and under observation
+                                                At risk from t =         0
+                                     Earliest observed entry t =         0
+                                          Last observed exit t =        39</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb59"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="kw">stcox</span> age i.drug, <span class="kw">vce</span>(<span class="kw">robust</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>        Failure _d: died
+  Analysis time _t: studytime
+
+Iteration 0:  Log pseudolikelihood = -99.911448
+Iteration 1:  Log pseudolikelihood = -82.331523
+Iteration 2:  Log pseudolikelihood = -81.676487
+Iteration 3:  Log pseudolikelihood = -81.652584
+Iteration 4:  Log pseudolikelihood = -81.652567
+Refining estimates:
+Iteration 0:  Log pseudolikelihood = -81.652567
+
+Cox regression with Breslow method for ties
+
+No. of subjects =  48                                   Number of obs =     48
+No. of failures =  31
+Time at risk    = 744
+                                                        Wald chi2(3)  =  32.39
+Log pseudolikelihood = -81.652567                       Prob &gt; chi2   = 0.0000
+
+------------------------------------------------------------------------------
+             |               Robust
+          _t | Haz. ratio   std. err.      z    P&gt;|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         age |      1.118      0.033    3.817   0.000        1.056       1.184
+             |
+        drug |
+      Other  |      0.181      0.077   -3.995   0.000        0.078       0.418
+         NA  |      0.052      0.035   -4.403   0.000        0.014       0.194
+------------------------------------------------------------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb61"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> cox1</span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a><span class="kw">streg</span> age i.drug, distribution(<span class="kw">weibull</span>) <span class="kw">vce</span>(<span class="kw">robust</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>        Failure _d: died
+  Analysis time _t: studytime
+
+Fitting constant-only model:
+Iteration 0:  Log pseudolikelihood = -61.342985
+Iteration 1:  Log pseudolikelihood =   -60.6269
+Iteration 2:  Log pseudolikelihood = -60.624022
+Iteration 3:  Log pseudolikelihood = -60.624022
+
+Fitting full model:
+Iteration 0:  Log pseudolikelihood = -60.624022  
+Iteration 1:  Log pseudolikelihood = -53.956776  
+Iteration 2:  Log pseudolikelihood = -42.173112  
+Iteration 3:  Log pseudolikelihood = -42.090795  
+Iteration 4:  Log pseudolikelihood = -42.090672  
+Iteration 5:  Log pseudolikelihood = -42.090672  
+
+Weibull PH regression
+
+No. of subjects =  48                                   Number of obs =     48
+No. of failures =  31
+Time at risk    = 744
+                                                        Wald chi2(3)  =  33.86
+Log pseudolikelihood = -42.090672                       Prob &gt; chi2   = 0.0000
+
+------------------------------------------------------------------------------
+             |               Robust
+          _t | Haz. ratio   std. err.      z    P&gt;|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         age |      1.124      0.034    3.872   0.000        1.060       1.193
+             |
+        drug |
+      Other  |      0.171      0.076   -3.970   0.000        0.071       0.408
+         NA  |      0.078      0.041   -4.898   0.000        0.028       0.217
+             |
+       _cons |      0.000      0.000   -5.832   0.000        0.000       0.001
+-------------+----------------------------------------------------------------
+       /ln_p |      0.557      0.136    4.100   0.000        0.291       0.824
+-------------+----------------------------------------------------------------
+           p |      1.746      0.237                         1.338       2.279
+         1/p |      0.573      0.078                         0.439       0.748
+------------------------------------------------------------------------------
+Note: _cons estimates baseline hazard.</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb63"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> wei1</span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>suest2 cox1 wei1, time(10)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Simultaneous results for cox1 wei1
+------------------------------------------------------------------------------
+             |               Robust
+             | Coefficient  std. err.      z    P&gt;|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+cox1__t      |
+         age |      0.112      0.029    3.817   0.000        0.054       0.169
+             |
+        drug |
+      Other  |     -1.712      0.428   -3.995   0.000       -2.551      -0.872
+         NA  |     -2.956      0.672   -4.403   0.000       -4.273      -1.640
+             |
+       _cons |     -6.354      1.649   -3.853   0.000       -9.586      -3.122
+-------------+----------------------------------------------------------------
+wei1__t      |
+         age |      0.117      0.030    3.872   0.000        0.058       0.177
+             |
+        drug |
+      Other  |     -1.769      0.445   -3.970   0.000       -2.642      -0.896
+         NA  |     -2.548      0.520   -4.898   0.000       -3.567      -1.528
+             |
+       _cons |    -10.582      1.814   -5.832   0.000      -14.138      -7.026
+-------------+----------------------------------------------------------------
+/wei1        |
+        ln_p |      0.557      0.136    4.100   0.000        0.291       0.824
+------------------------------------------------------------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb65"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">predict</span>(<span class="kw">model</span>(cox1) pr) <span class="kw">predict</span>(<span class="kw">model</span>(wei1) pr) <span class="fu">at</span>(drug=(1 2 3))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Predictive margins                                          Number of obs = 48
+Model VCE: Robust
+
+1._predict: Pr(event by t=10), predict(model(cox1) pr)
+2._predict: Pr(event by t=10), predict(model(wei1) pr)
+
+1._at: drug = 1
+2._at: drug = 2
+3._at: drug = 3
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |     Margin   std. err.      z    P&gt;|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+_predict#_at |
+        1 1  |      0.593      0.094    6.339   0.000        0.409       0.776
+        1 2  |      0.173      0.063    2.765   0.006        0.050       0.296
+        1 3  |      0.055      0.040    1.384   0.166       -0.023       0.133
+        2 1  |      0.621      0.081    7.632   0.000        0.462       0.781
+        2 2  |      0.182      0.052    3.515   0.000        0.080       0.283
+        2 3  |      0.090      0.040    2.252   0.024        0.012       0.169
 ------------------------------------------------------------------------------</code></pre>
 </div>
 
