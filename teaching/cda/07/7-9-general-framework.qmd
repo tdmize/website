@@ -512,6 +512,130 @@ sexident                         |
 
 ```
 
+```{.stata-run}
+. *To compare predictions, use suest2 and then margins
+. suest2 behavior identity
+
+Simultaneous results for behavior, identity              Number of obs = 4,921
+
+-------------------------------------------------------------------------------
+              |               Robust
+              | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+behavior_sa~B |
+     sexbehav |
+    Bisexual  |     -0.441      0.108   -4.096   0.000       -0.652      -0.230
+         Gay  |     -1.905      0.290   -6.561   0.000       -2.475      -1.336
+              |
+        woman |
+       Women  |     -0.427      0.062   -6.894   0.000       -0.549      -0.306
+              |
+      college |
+College De..  |     -0.870      0.068  -12.863   0.000       -1.002      -0.737
+          age |      0.030      0.002   15.541   0.000        0.026       0.034
+              |
+         race |
+       black  |      0.936      0.094    9.924   0.000        0.751       1.121
+       other  |      0.377      0.108    3.495   0.000        0.166       0.589
+              |
+         year |
+        2010  |     -0.203      0.098   -2.075   0.038       -0.394      -0.011
+        2012  |     -0.370      0.098   -3.782   0.000       -0.561      -0.178
+        2014  |     -0.560      0.089   -6.277   0.000       -0.735      -0.385
+        2016  |     -0.754      0.105   -7.185   0.000       -0.960      -0.549
+              |
+        _cons |     -0.540      0.118   -4.593   0.000       -0.770      -0.309
+--------------+----------------------------------------------------------------
+identity_sa~B |
+     sexident |
+    Bisexual  |     -1.328      0.237   -5.593   0.000       -1.794      -0.863
+         Gay  |     -2.513      0.377   -6.659   0.000       -3.252      -1.773
+              |
+        woman |
+       Women  |     -0.419      0.062   -6.727   0.000       -0.541      -0.297
+              |
+      college |
+College De..  |     -0.851      0.068  -12.566   0.000       -0.984      -0.718
+          age |      0.029      0.002   15.160   0.000        0.026       0.033
+              |
+         race |
+       black  |      0.958      0.095   10.051   0.000        0.771       1.145
+       other  |      0.382      0.109    3.518   0.000        0.169       0.595
+              |
+         year |
+        2010  |     -0.213      0.098   -2.185   0.029       -0.405      -0.022
+        2012  |     -0.368      0.098   -3.739   0.000       -0.561      -0.175
+        2014  |     -0.563      0.090   -6.264   0.000       -0.739      -0.387
+        2016  |     -0.744      0.106   -7.039   0.000       -0.952      -0.537
+              |
+        _cons |     -0.535      0.117   -4.554   0.000       -0.765      -0.305
+-------------------------------------------------------------------------------
+
+. 
+. *make predictions with margins, post; be careful to match up IV with model
+. margins sexbehav sexident, post
+
+Predictive margins                                       Number of obs = 4,921
+Model VCE: Robust
+
+1._predict: Pr(samesexB), predict(model(behavior))
+2._predict: Pr(samesexB), predict(model(identity))
+
+-------------------------------------------------------------------------------
+              |            Delta-method
+              |     Margin   std. err.      z    P>|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+     _predict#|
+     sexbehav |
+           1 #|
+Heterosexual  |      0.533      0.007   75.067   0.000        0.519       0.547
+  1#Bisexual  |      0.436      0.022   19.487   0.000        0.392       0.480
+       1#Gay  |      0.171      0.038    4.534   0.000        0.097       0.245
+              |
+     _predict#|
+     sexident |
+           1 #|
+Heterosexual  |      0.517      0.007   77.817   0.000        0.504       0.530
+  1#Bisexual  |      0.517      0.007   77.817   0.000        0.504       0.530
+       1#Gay  |      0.517      0.007   77.817   0.000        0.504       0.530
+              |
+     _predict#|
+     sexbehav |
+           2 #|
+Heterosexual  |      0.517      0.007   78.009   0.000        0.504       0.530
+  2#Bisexual  |      0.517      0.007   78.009   0.000        0.504       0.530
+       2#Gay  |      0.517      0.007   78.009   0.000        0.504       0.530
+              |
+     _predict#|
+     sexident |
+           2 #|
+Heterosexual  |      0.531      0.007   77.364   0.000        0.518       0.545
+  2#Bisexual  |      0.257      0.041    6.291   0.000        0.177       0.337
+       2#Gay  |      0.104      0.033    3.136   0.002        0.039       0.168
+-------------------------------------------------------------------------------
+
+. 
+. *when margins, post is used -- metest can be used to refer to prediction #
+. qui metest, clear
+
+. qui metest 1 - 10, add rowname("hetero")
+
+. qui metest 2 - 11, add rowname("bisexual")
+
+. qui metest 3 - 12, add rowname("gay-lesb")
+
+. metest, title("Difference in pr(): behavior - identity")
+
+Difference in pr(): behavior - identity
+
+                                 |  estimate         se     pvalue 
+---------------------------------+--------------------------------
+                          hetero |     0.002      0.002      0.319 
+                        bisexual |     0.179      0.041      0.000 
+                        gay-lesb |     0.067      0.040      0.093 
+
+```
+
 ## R
 
 ```{r}
@@ -549,6 +673,28 @@ alternative_predictor_hypothesis <- function(x) {
 avg_comparisons(fit63,
   variables = list(sexbehav = "reference", sexident = "reference"),
   newdata = dat63, hypothesis = alternative_predictor_hypothesis)
+```
+
+```{r}
+# Predictions from each model, with both measures set to the same category
+orientation <- levels(dat63$sexident)
+pred63 <- avg_predictions(fit63,
+  variables = list(sexbehav = orientation, sexident = orientation),
+  newdata = dat63)
+pred63[pred63$sexbehav == pred63$sexident, ]
+
+# Difference in predictions across models: behavior - identity
+orientation_differences <- function(x) {
+  same <- x$sexbehav == x$sexident
+  data.frame(
+    term = c("Heterosexual", "Bisexual", "Gay/Lesbian"),
+    estimate = x$estimate[same & x$group == "Behavior"] -
+      x$estimate[same & x$group == "Identity"])
+}
+
+avg_predictions(fit63,
+  variables = list(sexbehav = orientation, sexident = orientation),
+  newdata = dat63, hypothesis = orientation_differences)
 ```
 
 :::

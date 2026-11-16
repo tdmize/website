@@ -49,3 +49,27 @@ metest 2 - 4
 Both marginal effects are negative, so a positive difference means the effect
 is smaller in magnitude when orientation is measured by behavior than when it
 is measured by identity.
+
+The article's Table 4 also compares the predicted probabilities from the two
+models. [`suest2`](../../suest2/index.html) combines the models, and
+`margins, post` makes the predictions from each model. Rows 1 to 3 are the
+behavior model's predictions for each category of `sexbehav`, and rows 10 to
+12 are the identity model's predictions for each category of `sexident`, so
+`metest` tests the difference between the two models in each category:
+
+```{.stata-run}
+<<dd_do>>
+*To compare predictions, use suest2 and then margins
+suest2 behavior identity
+
+*make predictions with margins, post; be careful to match up IV with model
+margins sexbehav sexident, post
+
+*when margins, post is used -- metest can be used to refer to prediction #
+qui metest, clear
+qui metest 1 - 10, add rowname("hetero")
+qui metest 2 - 11, add rowname("bisexual")
+qui metest 3 - 12, add rowname("gay-lesb")
+metest, title("Difference in pr(): behavior - identity")
+<</dd_do>>
+```

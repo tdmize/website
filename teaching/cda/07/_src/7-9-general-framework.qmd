@@ -415,6 +415,23 @@ metest 2 - 4
 <</dd_do>>
 ```
 
+```{.stata-run}
+<<dd_do>>
+*To compare predictions, use suest2 and then margins
+suest2 behavior identity
+
+*make predictions with margins, post; be careful to match up IV with model
+margins sexbehav sexident, post
+
+*when margins, post is used -- metest can be used to refer to prediction #
+qui metest, clear
+qui metest 1 - 10, add rowname("hetero")
+qui metest 2 - 11, add rowname("bisexual")
+qui metest 3 - 12, add rowname("gay-lesb")
+metest, title("Difference in pr(): behavior - identity")
+<</dd_do>>
+```
+
 ## R
 
 ```{r}
@@ -452,6 +469,28 @@ alternative_predictor_hypothesis <- function(x) {
 avg_comparisons(fit63,
   variables = list(sexbehav = "reference", sexident = "reference"),
   newdata = dat63, hypothesis = alternative_predictor_hypothesis)
+```
+
+```{r}
+# Predictions from each model, with both measures set to the same category
+orientation <- levels(dat63$sexident)
+pred63 <- avg_predictions(fit63,
+  variables = list(sexbehav = orientation, sexident = orientation),
+  newdata = dat63)
+pred63[pred63$sexbehav == pred63$sexident, ]
+
+# Difference in predictions across models: behavior - identity
+orientation_differences <- function(x) {
+  same <- x$sexbehav == x$sexident
+  data.frame(
+    term = c("Heterosexual", "Bisexual", "Gay/Lesbian"),
+    estimate = x$estimate[same & x$group == "Behavior"] -
+      x$estimate[same & x$group == "Identity"])
+}
+
+avg_predictions(fit63,
+  variables = list(sexbehav = orientation, sexident = orientation),
+  newdata = dat63, hypothesis = orientation_differences)
 ```
 
 :::
