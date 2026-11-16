@@ -1,0 +1,599 @@
+---
+title: "7.5 Continuous X Continuous Interactions"
+---
+<<dd_version: 2>>
+
+- Interactions with two continuous variables are the most difficult to interpret and present. However, there are visual tools that greatly simplify interpretation
+  - Figures are ***always*** necessary to convey the needed information. Three options:
+    1. Choose "ideal types" of one continuous IV and plot as you would for a continuous \* nominal interaction
+    2. Plot marginal effect of one continuous IV over the range of the other IV
+       - Separately, for both IVs
+    3. Three-dimensions in 2D via contour plots
+- Following examples from GSS 1973 -- 2024:
+  - Pr(Think Same-Sex Relationships are Acceptable) tracked over time, and based on political views + controls
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*GSS 1972 - 2024
+use "https://tdmize.github.io/data/data/cda_gss24", clear
+
+*Drop any missing data on model vars
+drop if missing(sameokB, year1972, conviewSS, age, race3, ///
+    woman, faminc, married, college)
+
+fre sameokB
+<</dd_do>>
+```
+
+## R
+
+```{r}
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(ggplot2)         # graphs
+library(sjmisc)          # frequency tables
+library(marginaleffects) # predictions and marginal effects
+library(cleanplots)      # graph scheme
+cleanplots_defaults()
+
+# GSS 1972 - 2024
+gss <- read_dta("https://tdmize.github.io/data/data/cda_gss24.dta")
+
+# Keep model variables; drop any missing data
+gss <- gss[c("sameokB", "year1972", "conviewSS", "age", "race3", "woman", "faminc",
+  "married", "college")]
+gss <- gss[complete.cases(gss), ]
+
+frq(gss, sameokB)
+```
+
+:::
+
+## Ideal types
+
+- Earlier in the class, we defined ideal types by clusters of multiple IVs
+- Can also think of ideal typical values for specific IVs
+- E.g., Say you were in charge of casting for a movie and the script calls for a "young person", a "middle aged person", and an "older person"
+  - What age would you target for each role?
+    - This is your ideal type / prototypical value
+
+![](images/ideal-types.jpeg){width=50% fig-alt="Cartoon faces of people of many ages, from babies and children to young adults and gray-haired older adults."}
+
+#### Ideal types example
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+fre conviewSS
+<</dd_do>>
+```
+
+## R
+
+```{r}
+frq(gss, conviewSS)
+```
+
+:::
+
+- I chose 2.5 (mainstream liberal) and 5.5 (mainstream conservative) as **ideal types**
+  - But any theoretically interesting values could be used
+
+### Ideal type plots in Stata and R
+
+::: {.panel-tabset group="language"}
+## Stata
+
+- **In Stata**, use **margins** and **marginsplot** as normal, but specify only the ideal typical values of the moderating IV
+
+```{.stata-run}
+<<dd_do>>
+qui logit sameokB c.year1972##c.year1972##c.conviewSS c.age i.race3 ///
+    i.woman c.faminc i.married i.college, nolog or
+est store samemod
+
+//#7.5.a - Plots of ideal types
+qui margins, at(conviewSS=(2.5 5.5) year1972=(1(1)52))
+
+marginsplot, ///
+    x(year1972) recastci(rline) ciopts(lpat(dash) col(gs12)) ylab(0(0.2)1, format(%2.1f)) ///
+    plot1opts(lcolor(blue*1.4) lwid(*1.5) lpat(dash) msymbol(none)) ///
+    plot2opts(lcolor(red*.8) lwid(*1.5) msymbol(none)) ///
+    xlabel(2 "1974" 8 "1980" 18 "1990" 28 "2000" 38 "2010" 48 "2020", labsize(2.5)) ///
+    xtitle("GSS Survey Year") ytitle("Pr(Same-Sex Relationships OK)") ///
+    legend(order(3 "Liberal" 4 "Conservative")) ///
+    title("[7.5.a] Probability of thinking same-sex relationships are acceptable", size(medlarge)) ///
+    subtitle("Interaction effect: survey year X political views")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-07_05_a-conXcon.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-07_05_a-conXcon.png){width=80% fig-alt="[7.5.a] Predicted probability of thinking same-sex relationships are acceptable by GSS survey year (1973 to 2024) for mainstream liberals (dashed blue) and mainstream conservatives (solid red). Both rise over time, slowly at first and then faster: liberals from about 0.15 to about 0.80, conservatives from about 0.09 to about 0.48, so the gap between them grows over time."}
+
+## R
+
+- **In R**, use **plot_predictions** as normal, but specify only ideal typical values in the **newdata** statement
+
+```{r}
+#| fig-alt: "[7.5.a] Predicted probability of thinking same-sex relationships are acceptable by GSS survey year (1973 to 2024) for mainstream liberals (dashed blue) and mainstream conservatives (solid red). Both rise over time, slowly at first and then faster: liberals from about 0.15 to about 0.80, conservatives from about 0.09 to about 0.48, so the gap between them grows over time."
+# Treat binary/nominal variables as factors
+gss <- gss |>
+  mutate(across(c(race3, woman, married, college), as_factor)) |>
+  droplevels()
+
+samemod <- glm(sameokB ~ poly(year1972, 2, raw = TRUE) * conviewSS + age + race3 +
+  woman + faminc + married + college, data = gss, family = binomial(link = "logit"))
+
+# 7.5.a - Plots of ideal types
+plot_predictions(samemod, by = c("year1972", "conviewSS"),
+  newdata = datagrid(year1972 = 1:52, conviewSS = c(2.5, 5.5), grid_type = "counterfactual")) +
+  scale_color_manual(values = c("blue", "red"), labels = c("Liberal", "Conservative")) +
+  scale_fill_manual(values = c("blue", "red"), labels = c("Liberal", "Conservative")) +
+  scale_x_continuous(breaks = c(2, 8, 18, 28, 38, 48),
+    labels = c(1974, 1980, 1990, 2000, 2010, 2020)) +
+  scale_y_continuous(breaks = seq(0, 1, .2), limits = c(0, 1)) +
+  labs(title = "[7.5.a] Probability of thinking same-sex relationships are acceptable",
+    subtitle = "Interaction effect: survey year X political views",
+    x = "GSS Survey Year", y = "Pr(Same-Sex Relationships OK)", color = NULL, fill = NULL)
+```
+
+:::
+
+::: {.callout-note icon="false" appearance="simple"}
+In exploratory models, I found very strong evidence to prefer a model with *year* and *year^2^* over a model with only *year* (∆~BIC~ = 64)
+:::
+
+### Limitations of ideal type approach; tests of 2^nd^ difference
+
+- *"Although I find \[the ideal type figure\] a clear, intuitive, and helpful way to summarize these effects, it is also important to substantiate these intuitions with additional analyses and tests of statistical significance." ([Mize 2019 p.108-109](https://sociologicalscience.com/articles-v6-4-81/))*
+- The interaction effect is not directly tested in the ideal type figure
+  - Always provide a statistical test for the interaction as well as the figure
+- If choosing substantive ideal types, test the ME of the focal IV across those values
+  - 2^nd^ difference is test of interaction
+- Absent theoretically informed values, I generally test the ME of the focal IV at:
+  - The 5^th^ (or 10^th^) percentile as a "low" ideal type\*
+  - The 50^th^ percentile (median) as an "average" ideal type
+  - The 95^th^ (or 90^th^) percentile as a "high" ideal type\*
+    - And then all 2^nd^ differences across these three ideal types
+
+\*I generally like 5^th^ and 95^th^ to represent truly low and high values; but with small samples or highly skewed distributions, I would use 10^th^ and 90^th^ percentiles
+
+#### Tests of 2^nd^ differences across ideal types
+
+- Using our two theoretical ideal types of "mainstream liberal" and "mainstream conservative"
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+// Tests of interaction (2nd diff) //
+*Across theoretical ideal typical values
+mecompare year1972, covariates(conviewSS=(2.5 5.5)) amount(sd) model(samemod)
+<</dd_do>>
+```
+
+```{.stata-run}
+<<dd_do>>
+*2nd diff
+metest 1 - 2
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# Changes in continuous IVs centered on the observed values, like mecompare
+options(marginaleffects_contrast_direction = "center")
+
+# Tests of interaction (2nd diff)
+# Across theoretical ideal typical values
+mes <- avg_comparisons(samemod, variables = list(year1972 = sd(gss$year1972)),
+  by = "conviewSS",
+  newdata = datagrid(conviewSS = c(2.5, 5.5), grid_type = "counterfactual"))
+mes
+
+# 2nd diff
+hypotheses(mes, hypothesis = "b1 - b2 = 0")
+```
+
+:::
+
+> *Time has had a larger effect on mainstream liberals' opinions of same-sex relationships than on mainstream conservatives' opinions (2^nd^ difference p \< .001)*
+
+#### Tests of 2^nd^ differences across empirical ideal types
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*Across 5th, 50th, and 95th percentiles
+sum conviewSS, d
+mecompare year1972, covariates(conviewSS=(1.5 4 6.5)) amount(sd) model(samemod)
+<</dd_do>>
+```
+
+```{.stata-run}
+<<dd_do>>
+*All 2nd diffs via the pwcompare option of metest
+metest 1 2 3, pwcompare rowname("liberal" "moderate" "conservative")
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# Across 5th, 50th, and 95th percentiles
+quantile(gss$conviewSS, c(.05, .5, .95))
+me <- avg_comparisons(samemod, variables = list(year1972 = sd(gss$year1972)),
+  by = "conviewSS",
+  newdata = datagrid(conviewSS = c(1.5, 4, 6.5), grid_type = "counterfactual"))
+me
+
+# All 2nd diffs
+hypotheses(me, hypothesis = ~ pairwise)
+```
+
+:::
+
+::: {.callout-note icon="false" appearance="simple"}
+Effect of *year* at 5^th^, 50^th^, and 95^th^ percentiles of political views; and all 2^nd^ differences
+:::
+
+#### Published example
+
+![](images/mize-kincaid-2025-fig.png){width=70% fig-alt="Figure from Mize and Kincaid (2025): mental health and well-being by number of obligatory roles held (0 to 7), at ages 20, 46, and 78, with confidence intervals. At age 20, mental health rises with more roles; at age 46 it rises and then flattens; at age 78 it is nearly flat or declines slightly."}
+
+\*Ex from [Mize and Kincaid 2025](/research/mize_kincaid_asr_2025.qmd)
+
+![](images/mize-kincaid-2025-table4.png){width=70% fig-alt="Table 4 from Mize and Kincaid (2025): average marginal effects of social role-occupancy on mental health at ideal types of age (20, 46, and 78), for obligatory and voluntary roles, with columns for the AMEs and for differences from the AME at age 20 and at age 46. For example, the obligatory-role AME is .696 at age 20, .856 at age 46, and -.159 at age 78."}
+
+\*Ex from [Mize and Kincaid 2025](/research/mize_kincaid_asr_2025.qmd)
+
+## Marginal effects plots
+
+- Marginal effects plots are an effective way to present a more direct test of the interaction
+- Plot the ME of one continuous IV across the range of the other IV
+  - A flat line suggests no interaction: size of ME of focal IV is similar across range of moderating IV
+  - Non-flat lines suggest interaction: size of ME of focal IV differs across range
+- Can make two plots; one for each IV's ME
+  - But, sometimes strong theory to just show ME of focal IV across (trimmed) range of moderating IV
+
+#### Marginal effects plots in Stata and R
+
+::: {.panel-tabset group="language"}
+## Stata
+
+- **In Stata**, calculate ME of focal continuous IV using **margins, dydx**( ) for the instantaneous rate of change; or [**mecompare** with the **store()** option](/software/mecompare/interactions/continuous-by-continuous.qmd) for a discrete change (e.g. +1, +SD)
+  - Plot with **marginsplot** or **coefplot**
+
+```stata
+margins, dydx(conviewSS) at(year1972=(1(1)52))
+
+marginsplot, yline(0) …
+```
+
+```{.stata-run}
+<<dd_do>>
+//#7.5.b & 7.5.c - Plots of marginal effects of one var across range of other //
+**7.5.b Marginal effect of Political Views across range of year
+*mecompare can be used for discrete change ME (e.g. +1 or +SD)
+qui mecompare conviewSS, models(samemod) covariates(year1972=(1(1)52)) amount(sd) store(pv)
+
+coefplot pv_samemod, vertical recast(connected) color(black) lwid(*1.5) msym(none) ///
+    ciopts(recast(rline) lpattern(dash) color(gs12)) yline(0) ///
+    ylabel(-0.25(0.05)0.05) xtitle("GSS survey year") ///
+    xlabel(2 "1974" 8 "1980" 18 "1990" 28 "2000" 38 "2010" 48 "2020", labsize(2.5)) ///
+    ytitle("AME of +SD cons. political views") ///
+    title("[7.5.b] AME of political views (lib to cons.) by survey year") ///
+    note("Negative effects indicate conservatives are less supportive of same-sex relationships")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-07_05_b-02-conXcon.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-07_05_b-02-conXcon.png){width=80% fig-alt="[7.5.b] Average marginal effect of a standard deviation increase in conservative political views on the probability of thinking same-sex relationships are acceptable, by GSS survey year, with confidence intervals and a line at zero. The effect is negative in every year and grows stronger over time, from about -0.03 in 1973 to about -0.15 by the late 2010s, then levels off."}
+
+## R
+
+- **In R**, use [**plot_comparisons**](https://marginaleffects.com/man/python/plot_comparisons.html)
+
+```{r}
+#| fig-alt: "[7.5.b] Average marginal effect of a standard deviation increase in conservative political views on the probability of thinking same-sex relationships are acceptable, by GSS survey year, with confidence intervals and a line at zero. The effect is negative in every year and grows stronger over time, from about -0.03 in 1973 to about -0.15 by the late 2010s, then levels off."
+# 7.5.b Marginal effect of Political Views across range of year
+plot_comparisons(samemod, variables = list(conviewSS = sd(gss$conviewSS)),
+  by = "year1972",
+  newdata = datagrid(year1972 = 1:52, grid_type = "counterfactual")) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  scale_x_continuous(breaks = c(2, 8, 18, 28, 38, 48),
+    labels = c(1974, 1980, 1990, 2000, 2010, 2020)) +
+  scale_y_continuous(breaks = seq(-.25, .05, .05), limits = c(-.25, .05)) +
+  labs(title = "[7.5.b] AME of political views (lib to cons.) by survey year",
+    caption = "Negative effects indicate conservatives are less supportive of same-sex relationships",
+    x = "GSS survey year", y = "AME of +SD cons. political views")
+```
+
+:::
+
+::: {.callout-note icon="false" appearance="simple"}
+Always include a line at zero indicating a null effect
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+**7.5.c - Marginal effect of Year (time) across range of political views //
+*mecompare can be used for discrete change ME (e.g. +1 or +SD)
+qui mecompare year1972, models(samemod) covariates(conviewSS=(1(.5)7)) amount(sd) store(mes)
+
+coefplot mes_samemod, vertical recast(connected) color(purple) lwid(*1.5) msym(none) ///
+    ciopts(recast(rline) lpattern(dash) color(purple*.5)) yline(0) ///
+    ylabel(-0.05(0.05)0.25) xtitle("Political views") ///
+    xlabel(1 `""1" "Most liberal""' 3 "2" 5 "3" 7 `""4" "Middle""' ///
+        9 "5" 11 "6" 13 `""7" "Most conservative""', labsize(2.5)) ///
+    ytitle("AME of +SD elapsed years") ///
+    title("[7.5.c] AME of survey year (passage of time) by political views") ///
+    note("Positive effects = group has become more supportive of same-sex relationships over time")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-07_05_c-02-conXcon.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-07_05_c-02-conXcon.png){width=80% fig-alt="[7.5.c] Average marginal effect of a standard deviation increase in survey year (the passage of time) on the probability of thinking same-sex relationships are acceptable, across political views from most liberal (1) to most conservative (7), with confidence intervals and a line at zero. The effect is positive everywhere and declines steadily from about 0.21 for the most liberal to about 0.09 for the most conservative."}
+
+## R
+
+```{r}
+#| fig-alt: "[7.5.c] Average marginal effect of a standard deviation increase in survey year (the passage of time) on the probability of thinking same-sex relationships are acceptable, across political views from most liberal (1) to most conservative (7), with confidence intervals and a line at zero. The effect is positive everywhere and declines steadily from about 0.21 for the most liberal to about 0.09 for the most conservative."
+# 7.5.c - Marginal effect of Year (time) across range of political views
+plot_comparisons(samemod, variables = list(year1972 = sd(gss$year1972)),
+  by = "conviewSS",
+  newdata = datagrid(conviewSS = seq(1, 7, .5), grid_type = "counterfactual")) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  scale_x_continuous(breaks = 1:7, labels = c("1\nMost liberal", "2", "3", "4\nMiddle",
+    "5", "6", "7\nMost\nconservative")) +
+  scale_y_continuous(breaks = seq(-.05, .25, .05), limits = c(-.05, .25)) +
+  labs(title = "[7.5.c] AME of survey year (passage of time) by political views",
+    caption = "Positive effects = group has become more supportive of same-sex relationships over time",
+    x = "Political views", y = "AME of +SD elapsed years")
+```
+
+:::
+
+### Second difference tests
+
+- The recommended tests of second differences are the same regardless as to whether you use an ideal types or marginal effects plot
+  - Tests above at ideal typical values of moderator, or at 5^th^, 50^th^, and 95^th^ percentile of moderating IV are appropriate
+- Here, flipping the focal and moderating IVs, just for illustration
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+// Ex 2nd difference flipping focal and moderating IV //
+mecompare conviewSS, models(samemod) covariates(year1972=(1 52)) amount(sd)
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# Ex 2nd difference flipping focal and moderating IV
+me <- avg_comparisons(samemod, variables = list(conviewSS = sd(gss$conviewSS)),
+  by = "year1972",
+  newdata = datagrid(year1972 = c(1, 52), grid_type = "counterfactual"))
+me
+```
+
+:::
+
+#### Example write-up
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+metest 2 - 1
+<</dd_do>>
+```
+
+## R
+
+```{r}
+hypotheses(me, hypothesis = "b2 - b1 = 0")
+```
+
+:::
+
+> *Figure \# illustrates that conservative political views are consistently associated with less support for same-sex relationships, across all years of the GSS. But there is variation over time: the effect of political views in more recent years is much stronger than the effect of political views in the earliest surveys in the 1970s. For illustration, consider the earliest and latest year in the GSS: in 1973 a standard deviation increase in conservatism predicted only a 3 percentage point decline in support for same-sex relationships; that same +SD change in 2024 predicts a 15 percentage point decline (2^nd^ difference = -0.116, p \< .001).*
+
+## Contour plots
+
+- One of the primary difficulties of interpreting continuous X continuous interactions is thinking in two dimensions
+- Contour plots present the Pr(*y* = 1) at the intersection of the two continuous variables included in the interaction
+  - Each IV makes up an axis (one on *x*; one on *y*)
+  - Color is used to present the information on the Pr(*y* = 1)
+- These work best when you can use color so you can easily distinguish the different Pr(*y* = 1)
+  - So, works well in a talk or a journal that allows color
+
+\*These plots are made in a different way in Stata than other plots I've shown. See [Appendix A7.5](appendix-a7-stata.qmd#a7.5-continuous-x-continuous-interactions) for the full details
+
+### Contour plots in Stata and R
+
+::: {.panel-tabset group="language"}
+## Stata
+
+- **In Stata**, use **margins** to make predictions at all combinations across the (trimmed) ranges of both continuous IVs
+  - Make the plot\* using [**twoway contour**](https://www.stata.com/manuals/g-2graphtwowaycontour.pdf)
+    - Syntax: (1) variable with the predictions comes first, (2) followed by the IV you want on the x-axis, then (3) the IV you want on the y-axis
+
+\*See [Appendix A7.5](appendix-a7-stata.qmd#a7.5-continuous-x-continuous-interactions) for the full Stata details
+
+```{.stata-run}
+<<dd_do>>
+//#7.5.d - 7.5.h: Contour plots //
+est restore samemod
+
+*Make predictions at all combinations of both continuous IVs
+qui margins, at(conviewSS=(1(.5)7) year1972=(1(1)52)) ///
+    saving(preds, replace)
+
+*Load dataset of predictions; rename vars to be plotted
+use preds, clear
+rename _at1 year1972
+rename _at2 conviewSS
+rename _margin pr_sameok
+
+*7.5.g - Ordinal color scheme viridis; colorpalette saves the colors in r(p)
+colorpalette viridis, n(22) reverse nograph
+
+twoway (contour pr_sameok conviewSS year1972, levels(20) ccolors(`r(p)')), ///
+    xlabel(2 "1974" 8 "1980" 18 "1990" 28 "2000" 38 "2010" 48 "2020", labsize(2.5) nogrid) ///
+    ylabel(1 `""Very" "liberal""' 2.5 "Liberal" 4 "Middle" ///
+        5.5 "Conservative" 7 `""Very" "conservative""', nogrid) ///
+    zlabel(0(0.1)1, format(%2.1f)) ztitle("Pr(Same-Sex Relationships OK)") ///
+    xtitle("") ytitle("") ysize(4) xsize(6) ///
+    title("[7.5.g] Predicted probability of thinking same-sex relationships are acceptable") ///
+    subtitle("Interaction: Political beliefs X survey year")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-07_05_g-conXcon-viridis.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-07_05_g-conXcon-viridis.png){width=80% fig-alt="[7.5.g] Contour plot in the viridis colors of the predicted probability of thinking same-sex relationships are acceptable, with survey year (1973 to 2024) on the x-axis and political views (very liberal to very conservative) on the y-axis. Probabilities are lowest (about 0.07, yellow) for conservatives in the 1970s and highest (about 0.9, dark purple) for liberals in the most recent years; the bands slant so that liberals reach each level of support years before conservatives do."}
+
+## R
+
+- **In R**, save **predictions** for all combinations of the continuous IVs
+  - Use **ggplot** and [**geom_contour_filled**](https://ggplot2.tidyverse.org/reference/geom_contour.html)
+    - Syntax: (1) IV you want on the *x*-axis, (2) the IV you want on the y-axis, then (3) z dimension is the saved estimate of Pr(*y*=1)
+
+```{r}
+#| fig-alt: "[7.5.g] Contour plot in the viridis colors of the predicted probability of thinking same-sex relationships are acceptable, with survey year (1973 to 2024) on the x-axis and political views (very liberal to very conservative) on the y-axis. Probabilities are lowest (about 0.07, yellow) for conservatives in the 1970s and highest (about 0.9, dark purple) for liberals in the most recent years; the bands slant so that liberals reach each level of support years before conservatives do."
+# 7.5.d - 7.5.h: Contour plots
+# Make predictions at all combinations of both continuous IVs (one year at a time,
+# which needs much less memory than one call for all 676 combinations)
+pr4 <- bind_rows(lapply(1:52, function(y) {
+  avg_predictions(samemod, by = c("conviewSS", "year1972"), vcov = FALSE,
+    newdata = datagrid(conviewSS = seq(1, 7, .5), year1972 = y,
+      grid_type = "counterfactual"))
+}))
+
+# 7.5.g - Ordinal color scheme viridis (the default)
+ggplot(pr4, aes(x = year1972, y = conviewSS, z = estimate)) +
+  geom_contour_filled(breaks = seq(0, 1, .05)) +
+  scale_fill_viridis_d(direction = -1, drop = FALSE) +
+  scale_x_continuous(breaks = c(2, 8, 18, 28, 38, 48),
+    labels = c(1974, 1980, 1990, 2000, 2010, 2020), expand = c(0, 0)) +
+  scale_y_continuous(breaks = c(1, 2.5, 4, 5.5, 7), labels = c("Very\nliberal",
+    "Liberal", "Middle", "Conservative", "Very\nconservative"), expand = c(0, 0)) +
+  labs(title = "[7.5.g] Predicted probability of thinking same-sex relationships are acceptable",
+    subtitle = "Interaction: Political beliefs X survey year",
+    x = NULL, y = NULL, fill = "Pr(Same-Sex\nRelationships OK)")
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*7.5.d - Rainbow colors version -- accomplished with starting color scolor(red)
+*   ending color ecolor(purple) and crule(hue)
+twoway (contour pr_sameok conviewSS year1972, levels(20) ///
+    scolor(red) ecolor(purple) crule(hue)), ///
+    xlabel(2 "1974" 8 "1980" 18 "1990" 28 "2000" 38 "2010" 48 "2020", labsize(2.5) nogrid) ///
+    ylabel(1 `""Very" "liberal""' 2.5 "Liberal" 4 "Middle" ///
+        5.5 "Conservative" 7 `""Very" "conservative""', nogrid) ///
+    zlabel(0(0.1)1, format(%2.1f)) ztitle("Pr(Same-Sex Relationships OK)") ///
+    xtitle("") ytitle("") ysize(4) xsize(6) ///
+    title("[7.5.d] Predicted probability of thinking same-sex relationships are acceptable") ///
+    subtitle("Interaction: Political beliefs X survey year")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-07_05_d-conXcon.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-07_05_d-conXcon.png){width=80% fig-alt="[7.5.d] The same contour plot in rainbow colors, from red (lowest probabilities, conservatives in the 1970s) through orange, yellow, green, and blue to purple (highest probabilities, liberals in recent years), with survey year on the x-axis and political views on the y-axis."}
+
+## R
+
+```{r}
+#| fig-alt: "[7.5.d] The same contour plot in rainbow colors, from red (lowest probabilities, conservatives in the 1970s) through orange, yellow, green, and blue to purple (highest probabilities, liberals in recent years), with survey year on the x-axis and political views on the y-axis."
+# 7.5.d - Rainbow colors version
+ggplot(pr4, aes(x = year1972, y = conviewSS, z = estimate)) +
+  geom_contour_filled(breaks = seq(0, 1, .05)) +
+  scale_fill_manual(values = rainbow(20, end = .83), drop = FALSE) +
+  scale_x_continuous(breaks = c(2, 8, 18, 28, 38, 48),
+    labels = c(1974, 1980, 1990, 2000, 2010, 2020), expand = c(0, 0)) +
+  scale_y_continuous(breaks = c(1, 2.5, 4, 5.5, 7), labels = c("Very\nliberal",
+    "Liberal", "Middle", "Conservative", "Very\nconservative"), expand = c(0, 0)) +
+  labs(title = "[7.5.d] Predicted probability of thinking same-sex relationships are acceptable",
+    subtitle = "Interaction: Political beliefs X survey year",
+    x = NULL, y = NULL, fill = "Pr(Same-Sex\nRelationships OK)")
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*7.5.e - A continuous rainbow color version accomplished by starting color scolor(red),
+*   ending color ecolor(purple), crule(hue), and specifying levels(#) instead
+*   of ccuts(). Note max levels is 500
+twoway (contour pr_sameok conviewSS year1972, levels(500) ///
+    scolor(red) ecolor(purple) crule(hue)), ///
+    xlabel(2 "1974" 8 "1980" 18 "1990" 28 "2000" 38 "2010" 48 "2020", labsize(2.5) nogrid) ///
+    ylabel(1 `""Very" "liberal""' 2.5 "Liberal" 4 "Middle" ///
+        5.5 "Conservative" 7 `""Very" "conservative""', nogrid) ///
+    zlabel(0(0.1)1, format(%2.1f)) ztitle("Pr(Same-Sex Relationships OK)") ///
+    xtitle("") ytitle("") ysize(4) xsize(6) ///
+    title("[7.5.e] Predicted probability of thinking same-sex relationships are acceptable") ///
+    subtitle("Interaction: Political beliefs X survey year")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-07_05_e-conXcon.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-07_05_e-conXcon.png){width=80% fig-alt="[7.5.e] The same contour plot with a smooth, continuous rainbow color gradient (500 levels) instead of distinct bands, from red for the lowest probabilities to purple for the highest."}
+
+## R
+
+```{r}
+#| fig-alt: "[7.5.e] The same contour plot with a smooth, continuous rainbow color gradient (500 levels) instead of distinct bands, from red for the lowest probabilities to purple for the highest."
+# 7.5.e - A continuous rainbow color version
+ggplot(pr4, aes(x = year1972, y = conviewSS, fill = estimate)) +
+  geom_raster(interpolate = TRUE) +
+  scale_fill_gradientn(colors = rainbow(7, end = .83), limits = c(0, 1),
+    breaks = seq(0, 1, .1)) +
+  scale_x_continuous(breaks = c(2, 8, 18, 28, 38, 48),
+    labels = c(1974, 1980, 1990, 2000, 2010, 2020), expand = c(0, 0)) +
+  scale_y_continuous(breaks = c(1, 2.5, 4, 5.5, 7), labels = c("Very\nliberal",
+    "Liberal", "Middle", "Conservative", "Very\nconservative"), expand = c(0, 0)) +
+  labs(title = "[7.5.e] Predicted probability of thinking same-sex relationships are acceptable",
+    subtitle = "Interaction: Political beliefs X survey year",
+    x = NULL, y = NULL, fill = "Pr(Same-Sex\nRelationships OK)") +
+  theme(legend.key.height = unit(2, "cm"))
+```
+
+:::

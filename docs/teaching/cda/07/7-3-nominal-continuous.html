@@ -1,0 +1,2066 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>7.3 Nominal X Continuous Interactions – Trenton D. Mize</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../teaching/cda/07/7-4-nominal-nominal.html" rel="next">
+<link href="../../../teaching/cda/07/7-2-second-differences.html" rel="prev">
+<script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-d1074f4552fd9e64773fe67262ebb1c3.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-FQRYLM0FY0"></script>
+
+<script type="text/javascript">
+
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
+</script>
+
+
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">Trenton D. Mize</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../cv.html"> 
+<span class="menu-text">CV</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../research.html"> 
+<span class="menu-text">Research</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../software.html"> 
+<span class="menu-text">Software</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="../../../teaching.html" aria-current="page"> 
+<span class="menu-text">Teaching</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../resources.html"> 
+<span class="menu-text">Links</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../help.html"> 
+<span class="menu-text">Asking for Help</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/tdmize"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../teaching/cda/index.html">Categorical Data Analysis (Soc 681)</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/07/index.html">07 Moderation &amp; Mediation</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/07/7-3-nominal-continuous.html">7.3 Nominal X Continuous Interactions</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Teaching</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Categorical Data Analysis (Soc 681)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/01/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">01 Introduction &amp; Linear Regression</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/1-0-categorical-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1.0 Categorical Data is Everywhere</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/1-2-linear-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1.2 Linear Regression (sans math)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/1-3-linear-regression-math.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1.3 Linear Regression (with math)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/appendix-a1-datasets.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix A1: Datasets for Assignments</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/appendix-a2-stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix A2: Stata Appendix</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/02/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">02 Nonlinearities &amp; Categorical IVs</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-1-marginal-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.1 Interpretation with Marginal Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-2-nonlinear-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.2 Marginal Effects with Nonlinearities</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-3-linear-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.3 Linear Interaction Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-4-nonlinear-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.4 Nonlinear Interaction Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-5-distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.5 Examining Distributions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-6-assessing-nonlinearities.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.6 Assessing and Modeling Complex Nonlinearities for Independent Variables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-7-categorical-ivs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.7 Categorical Independent Variables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-8-comparing-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.8 Comparing Effects Across IVs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-10-conclusion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.10 Conclusion</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/02/appendix-2a/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 2A: Stata Code and Tips</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-1-factor-syntax.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.1 Stata factor syntax</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-2-polynomials.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.2 Polynomial IVs with factor syntax</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-3-calculating-mes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.3 Calculating marginal effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-4-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.4 Interaction effect with factor syntax</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-5-nonlinear-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.5 Nonlinear interaction effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-6-distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.6 Tools for examining distributions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-7-assessing-nonlinearities.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.7 Assessing nonlinearities</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-8-splines.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.8 Splines</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-9-loglinear.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.9 Loglinear regression models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-10-transforming.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.10 Transforming variables</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2b-logged-dv.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 2B: Logged DV Regression Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2c-splines.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 2C: Splines</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/03/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">03 Binary Regression Models</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-0-linear-probability-model.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.0 Binary DVs and the Linear Probability Model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-1-binary-model-derivations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.1 Binary Model Derivations</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-2-scaling-identification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.2 Scaling and Identification</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-3-maximum-likelihood.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.3 Maximum Likelihood Estimation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-4-coefficient-interpretations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.4 Coefficient Interpretations</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-5-predictions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.5 Interpreting Predictions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-6-marginal-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.6 Marginal Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-7-effect-summary-comparison.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.7 Effect Summary Comparison</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-8-ideal-types.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.8 Predictions for Ideal Types</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-9-risk-ratios.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.9 Risk Ratios/Relative Risk (RR)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-10-tables-plots.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.10 Bonus: Tables &amp; Plots of Results</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-11-conclusion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.11 Miscellaneous &amp; Conclusion</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3a-stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3A: Stata Code and Tips</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3b-maximum-likelihood.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3B: Maximum Likelihood</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3c-or-mem.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3C: OR and MEM Comparison</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3d-me-distribution.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3D: Distribution of Marginal Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3e-functional-forms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3E: Flexible Functional Forms</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3f-ystar.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3F: Interpretation in y* Metric</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3g-marginal-odds-ratios.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3G: Marginal Odds Ratios</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/04/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">04 Nominal Models</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-0-nominal-dvs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.0 Nominal DVs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-1-multinomial-logit.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.1 Multinomial Logit Model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-2-predicted-probabilities.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.2 Predicted Probabilities</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-3-marginal-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.3 Marginal Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-4-four-category-example.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.4 Example with 4 DV Categories</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-5-conditional-odds-ratios.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.5 Conditional Odds Ratios (ORs)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-6-iia.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.6 Independence of Irrelevant Alternatives (IIA)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-7-review.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.7 Review of Nominal DVs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/appendix-4a-combining-outcomes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 4A: Combining Outcomes and Functional Forms</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/appendix-4b-stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 4B: Stata Code and Tips</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/05/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">05 Ordinal Models</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/05/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/05/5-0-ordinal-outcomes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5.0 Ordinal Outcomes</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/05/5-1-latent-variable-model.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5.1 Latent Variable Model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/05/5-2-interpretation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5.2 Interpretation in Ordinal Logit</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/05/5-3-coefficients.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5.3 Coefficients in the Ordinal Model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/05/5-4-parallel-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5.4 Parallel Regression Assumption</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/05/5-6-generalized-ordered-logit.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5.6 Generalized Ordered Logit Model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/05/5-7-overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5.7 Overview of Ordinal DVs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/05/appendix-a5-stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix A5: Stata Code and Tips</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/06/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">06 Count Models</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/06/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/06/6-1-count-distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.1 Explaining Count Distributions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/06/6-2-poisson-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.2 The Poisson Regression Model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/06/6-4-poisson-example.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.4 Poisson Regression Example</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/06/6-5-average-predictions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.5 Assessing Models with Average Predictions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/06/6-6-negative-binomial.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.6 Negative Binomial Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/06/6-7-negative-binomial-example.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.7 Another Negative Binomial Example</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/06/6-9-zero-inflated.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.9 Zero Inflated Count Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/06/6-10-model-specification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.10 Model Specification</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/06/6-11-predictions-mes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.11 Plots of Predictions &amp; MEs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/06/6-12-model-selection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.12 Model Selection Tools</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/06/6-13-review.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.13 Review of Count DVs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/06/appendix-a6-stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix A6: Stata Code and Tips</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/07/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">07 Moderation &amp; Mediation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/07/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/07/7-1-interaction-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7.1 Interaction Effects (AKA Moderation)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/07/7-2-second-differences.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7.2 Testing for Interaction: Second Differences</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/07/7-3-nominal-continuous.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">7.3 Nominal X Continuous Interactions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/07/7-4-nominal-nominal.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7.4 Nominal X Nominal Interactions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/07/7-5-continuous-continuous.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7.5 Continuous X Continuous Interactions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/07/interaction-recommendations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Summary of Recommendations (Mize 2019)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/07/7-6-count-ordinal-nominal.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7.6 Count, ordinal, and nominal models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/07/7-7-cross-model-mediation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7.7 Cross-Model Comparisons &amp; Statistical Mediation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/07/7-8-rescaling.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7.8 The Problem of Rescaling in Logit/Probit</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/07/7-9-general-framework.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7.9 A General Framework for Cross-Model Comparisons</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/07/7-10-group-comparisons.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7.10 Group Comparisons</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/07/7-11-takeaways.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7.11 Takeaway Points: Interactions and Cross-Model Comparisons</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/07/appendix-a7-stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix A7: Stata Code and Tips</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cdash.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Categorical Data Analysis (Statistical Horizons)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cdaws.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Categorical Data Analysis Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/workflow.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Management / Workflow Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/dataviz.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Visualization</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/dvs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Visualization Using Stata and LLMs</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/dmv.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data &amp; Model Visualization Workshop</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/dmv/r-output.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">R Output</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/em.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Experimental Methods: Design &amp; Analysis</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/int.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Interaction Effects Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/irt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Item Response Theory</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/lvm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Latent Variable Modeling</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/mcapsi.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Longitudinal Data Analysis</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/miss.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Missing Data Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/spgrad.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Social Psychology (Graduate)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/spug.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Social Psychology (Undergrad)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Stata Programming Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/surveys.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Survey Design Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/sew.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Survey Experiments Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/twm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Teaching Workshops &amp; Methods</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#why-you-should-ignore-the-β-coefficients-when-testing-nonlinear-interaction-effects" id="toc-why-you-should-ignore-the-β-coefficients-when-testing-nonlinear-interaction-effects" class="nav-link active" data-scroll-target="#why-you-should-ignore-the-β-coefficients-when-testing-nonlinear-interaction-effects">Why you should ignore the β coefficients when testing nonlinear interaction effects</a>
+  <ul class="collapse">
+  <li><a href="#plot-the-predictions" id="toc-plot-the-predictions" class="nav-link" data-scroll-target="#plot-the-predictions">Plot the predictions</a></li>
+  </ul></li>
+  <li><a href="#calculating-2nd-differences-in-stata-and-r" id="toc-calculating-2nd-differences-in-stata-and-r" class="nav-link" data-scroll-target="#calculating-2nd-differences-in-stata-and-r">Calculating 2<sup>nd</sup> differences in Stata and R</a></li>
+  <li><a href="#plotting-the-other-side-of-the-interaction" id="toc-plotting-the-other-side-of-the-interaction" class="nav-link" data-scroll-target="#plotting-the-other-side-of-the-interaction">Plotting the “other side” of the interaction</a></li>
+  <li><a href="#example-write-up" id="toc-example-write-up" class="nav-link" data-scroll-target="#example-write-up">Example write-up</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../teaching/cda/index.html">Categorical Data Analysis (Soc 681)</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/07/index.html">07 Moderation &amp; Mediation</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/07/7-3-nominal-continuous.html">7.3 Nominal X Continuous Interactions</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">7.3 Nominal X Continuous Interactions</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<ul>
+<li>Nominal X Continuous interactions are perhaps the prototypical interaction effect (and the examples above show: separate prediction lines where each line represents a different group)
+<ul>
+<li>Plots are the most effective way to show these</li>
+</ul></li>
+<li>Do not use the coefficient on the interaction (product) term as the test of interaction
+<ul>
+<li>Must use the 1<sup>st</sup> and 2<sup>nd</sup> difference approach for all <strong>nonlinear</strong> models (including nonlinear effects with linear regression)
+<ul>
+<li>Absent a theoretically important region of your data, average effects are appropriate</li>
+<li>But remember that the effects will vary in other regions of the data—always test for interaction where it is most relevant for your research question</li>
+</ul></li>
+</ul></li>
+</ul>
+<section id="why-you-should-ignore-the-β-coefficients-when-testing-nonlinear-interaction-effects" class="level2">
+<h2 class="anchored" data-anchor-id="why-you-should-ignore-the-β-coefficients-when-testing-nonlinear-interaction-effects">Why you should ignore the β coefficients when testing nonlinear interaction effects</h2>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="st">"https://tdmize.github.io/data/data/doan_love_SF"</span>, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(TESS03 - Analysis Dataset for TESS01 - Main Paper)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>*Binary DV: support <span class="kw">for</span> legal marriage <span class="kw">model</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">logit</span> Bmarry i.cond##c.love10 rfem age rce_wht ed_coll <span class="co">///</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    ed_hs inc_50k married childyn children ideo evangel <span class="co">///</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    mainline blackprot catholic ofaithV2, <span class="kw">or</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Iteration 0:  Log likelihood = -304.06902  
+Iteration 1:  Log likelihood = -185.27684  
+Iteration 2:  Log likelihood = -171.23187  
+Iteration 3:  Log likelihood = -169.29208  
+Iteration 4:  Log likelihood = -169.22947  
+Iteration 5:  Log likelihood =   -169.229  
+Iteration 6:  Log likelihood =   -169.229  
+
+Logistic regression                                     Number of obs =    501
+                                                        LR chi2(20)   = 269.68
+                                                        Prob &gt; chi2   = 0.0000
+Log likelihood = -169.229                               Pseudo R2     = 0.4435
+
+-------------------------------------------------------------------------------
+       Bmarry | Odds ratio   Std. err.      z    P&gt;|z|     [95% conf. interval]
+--------------+----------------------------------------------------------------
+         cond |
+         Gay  |      0.001      0.003   -2.841   0.005        0.000       0.125
+     Lesbian  |      0.009      0.021   -1.995   0.046        0.000       0.920
+              |
+       love10 |      1.198      0.429    0.504   0.614        0.593       2.418
+              |
+cond#c.love10 |
+         Gay  |      1.298      0.479    0.705   0.481        0.629       2.677
+     Lesbian  |      1.009      0.373    0.025   0.980        0.489       2.084
+              |
+         rfem |      1.495      0.426    1.410   0.159        0.855       2.615
+          age |      0.999      0.010   -0.138   0.891        0.979       1.018
+      rce_wht |      1.144      0.446    0.346   0.730        0.533       2.457
+      ed_coll |      0.877      0.458   -0.252   0.801        0.315       2.441
+        ed_hs |      0.650      0.299   -0.936   0.349        0.264       1.601
+      inc_50k |      0.973      0.324   -0.081   0.935        0.507       1.869
+      married |      1.386      0.452    1.000   0.317        0.731       2.627
+      childyn |      2.595      1.552    1.595   0.111        0.804       8.379
+     children |      0.615      0.175   -1.706   0.088        0.352       1.075
+         ideo |      0.542      0.063   -5.274   0.000        0.432       0.680
+      evangel |      0.237      0.116   -2.946   0.003        0.091       0.618
+     mainline |      0.684      0.354   -0.734   0.463        0.248       1.887
+    blackprot |      0.230      0.151   -2.246   0.025        0.064       0.830
+     catholic |      0.541      0.271   -1.227   0.220        0.203       1.443
+     ofaithV2 |      0.819      0.591   -0.277   0.781        0.199       3.368
+        _cons |   1376.326   3466.285    2.870   0.004        9.885    1.92e+05
+-------------------------------------------------------------------------------
+Note: _cons estimates baseline odds.</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> marry</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(haven)           <span class="co"># import Stata data and labels</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)           <span class="co"># data manipulation</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)         <span class="co"># graphs</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(modelsummary)    <span class="co"># regression tables</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(marginaleffects) <span class="co"># predictions and marginal effects</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(cleanplots)      <span class="co"># graph scheme</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="fu">cleanplots_defaults</span>()</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>love <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">"https://tdmize.github.io/data/data/doan_love_SF.dta"</span>)</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep model variables; drop any missing data</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>love <span class="ot">&lt;-</span> love[<span class="fu">c</span>(<span class="st">"Bmarry"</span>, <span class="st">"cond"</span>, <span class="st">"love10"</span>, <span class="st">"rfem"</span>, <span class="st">"age"</span>, <span class="st">"rce_wht"</span>, <span class="st">"ed_coll"</span>,</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="st">"ed_hs"</span>, <span class="st">"inc_50k"</span>, <span class="st">"married"</span>, <span class="st">"childyn"</span>, <span class="st">"children"</span>, <span class="st">"ideo"</span>, <span class="st">"evangel"</span>,</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  <span class="st">"mainline"</span>, <span class="st">"blackprot"</span>, <span class="st">"catholic"</span>, <span class="st">"ofaithV2"</span>)]</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>love <span class="ot">&lt;-</span> love[<span class="fu">complete.cases</span>(love), ] <span class="sc">|&gt;</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">cond =</span> <span class="fu">as_factor</span>(cond))</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Binary DV: support for legal marriage model</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>marry <span class="ot">&lt;-</span> <span class="fu">glm</span>(Bmarry <span class="sc">~</span> cond <span class="sc">*</span> love10 <span class="sc">+</span> rfem <span class="sc">+</span> age <span class="sc">+</span> rce_wht <span class="sc">+</span> ed_coll <span class="sc">+</span> ed_hs <span class="sc">+</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>  inc_50k <span class="sc">+</span> married <span class="sc">+</span> childyn <span class="sc">+</span> children <span class="sc">+</span> ideo <span class="sc">+</span> evangel <span class="sc">+</span> mainline <span class="sc">+</span> blackprot <span class="sc">+</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  catholic <span class="sc">+</span> ofaithV2, <span class="at">data =</span> love, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"logit"</span>))</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="fu">modelsummary</span>(marry, <span class="at">exponentiate =</span> <span class="cn">TRUE</span>, <span class="at">stars =</span> <span class="fu">c</span>(<span class="st">"*"</span> <span class="ot">=</span> .<span class="dv">05</span>, <span class="st">"**"</span> <span class="ot">=</span> .<span class="dv">01</span>, <span class="st">"***"</span> <span class="ot">=</span> .<span class="dv">001</span>),</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">coef_omit =</span> <span class="st">"rfem|age|rce_wht|ed_|inc_50k|married|child|ideo|evangel|mainline|blackprot|catholic|ofaith"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<!-- preamble start -->
+
+    <script src="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.js"></script>
+
+    <script>
+      // Create table-specific functions using external factory
+      const tableFns_8krcy19vrzd5c7mxgk6m = TinyTable.createTableFunctions("tinytable_8krcy19vrzd5c7mxgk6m");
+      // tinytable span after
+      window.addEventListener('load', function () {
+          var cellsToStyle = [
+            // tinytable style arrays after
+          { positions: [ { i: '18', j: 2 } ], css_id: 'tinytable_css_motj3x6ksh2cpyrv9wmv',}, 
+          { positions: [ { i: '12', j: 2 } ], css_id: 'tinytable_css_ifkmbokab2h0n200dfs4',}, 
+          { positions: [ { i: '1', j: 2 }, { i: '2', j: 2 }, { i: '3', j: 2 }, { i: '4', j: 2 }, { i: '5', j: 2 }, { i: '6', j: 2 }, { i: '7', j: 2 }, { i: '8', j: 2 }, { i: '9', j: 2 }, { i: '10', j: 2 }, { i: '11', j: 2 }, { i: '13', j: 2 }, { i: '14', j: 2 }, { i: '15', j: 2 }, { i: '16', j: 2 }, { i: '17', j: 2 } ], css_id: 'tinytable_css_bww1sn3aogfg813zmij4',}, 
+          { positions: [ { i: '0', j: 2 } ], css_id: 'tinytable_css_1y2z5tajc83o7jymrgj0',}, 
+          { positions: [ { i: '18', j: 1 } ], css_id: 'tinytable_css_nqgzspfdjdoie3q6g31q',}, 
+          { positions: [ { i: '12', j: 1 } ], css_id: 'tinytable_css_d9z8f7t0hvatj7xjz7zn',}, 
+          { positions: [ { i: '1', j: 1 }, { i: '2', j: 1 }, { i: '3', j: 1 }, { i: '4', j: 1 }, { i: '5', j: 1 }, { i: '6', j: 1 }, { i: '7', j: 1 }, { i: '8', j: 1 }, { i: '9', j: 1 }, { i: '10', j: 1 }, { i: '11', j: 1 }, { i: '13', j: 1 }, { i: '14', j: 1 }, { i: '15', j: 1 }, { i: '16', j: 1 }, { i: '17', j: 1 } ], css_id: 'tinytable_css_l8miclwhioi7e1hjp1t8',}, 
+          { positions: [ { i: '0', j: 1 } ], css_id: 'tinytable_css_sabgg2idt0dy9o722exs',}, 
+          ];
+
+          // Loop over the arrays to style the cells
+          cellsToStyle.forEach(function (group) {
+              group.positions.forEach(function (cell) {
+                  tableFns_8krcy19vrzd5c7mxgk6m.styleCell(cell.i, cell.j, group.css_id);
+              });
+          });
+      });
+    </script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.css">
+    <style>
+    /* tinytable css entries after */
+    #tinytable_8krcy19vrzd5c7mxgk6m td.tinytable_css_motj3x6ksh2cpyrv9wmv, #tinytable_8krcy19vrzd5c7mxgk6m th.tinytable_css_motj3x6ksh2cpyrv9wmv {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_8krcy19vrzd5c7mxgk6m td.tinytable_css_ifkmbokab2h0n200dfs4, #tinytable_8krcy19vrzd5c7mxgk6m th.tinytable_css_ifkmbokab2h0n200dfs4 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_8krcy19vrzd5c7mxgk6m td.tinytable_css_bww1sn3aogfg813zmij4, #tinytable_8krcy19vrzd5c7mxgk6m th.tinytable_css_bww1sn3aogfg813zmij4 { text-align: center }
+    #tinytable_8krcy19vrzd5c7mxgk6m td.tinytable_css_1y2z5tajc83o7jymrgj0, #tinytable_8krcy19vrzd5c7mxgk6m th.tinytable_css_1y2z5tajc83o7jymrgj0 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_8krcy19vrzd5c7mxgk6m td.tinytable_css_nqgzspfdjdoie3q6g31q, #tinytable_8krcy19vrzd5c7mxgk6m th.tinytable_css_nqgzspfdjdoie3q6g31q {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_8krcy19vrzd5c7mxgk6m td.tinytable_css_d9z8f7t0hvatj7xjz7zn, #tinytable_8krcy19vrzd5c7mxgk6m th.tinytable_css_d9z8f7t0hvatj7xjz7zn {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_8krcy19vrzd5c7mxgk6m td.tinytable_css_l8miclwhioi7e1hjp1t8, #tinytable_8krcy19vrzd5c7mxgk6m th.tinytable_css_l8miclwhioi7e1hjp1t8 { text-align: left }
+    #tinytable_8krcy19vrzd5c7mxgk6m td.tinytable_css_sabgg2idt0dy9o722exs, #tinytable_8krcy19vrzd5c7mxgk6m th.tinytable_css_sabgg2idt0dy9o722exs {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    </style>
+    <div class="container">
+      <table class="tinytable" id="tinytable_8krcy19vrzd5c7mxgk6m" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
+        
+        <thead>
+              <tr>
+                <th scope="col" data-row="0" data-col="1"> </th>
+                <th scope="col" data-row="0" data-col="2">(1)</th>
+              </tr>
+        </thead>
+        <tfoot><tr><td colspan="2">* p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001</td></tr></tfoot>
+        <tbody>
+                <tr>
+                  <td data-row="1" data-col="1">(Intercept)</td>
+                  <td data-row="1" data-col="2">1376.326**</td>
+                </tr>
+                <tr>
+                  <td data-row="2" data-col="1"></td>
+                  <td data-row="2" data-col="2">(3466.182)</td>
+                </tr>
+                <tr>
+                  <td data-row="3" data-col="1">condGay</td>
+                  <td data-row="3" data-col="2">0.001**</td>
+                </tr>
+                <tr>
+                  <td data-row="4" data-col="1"></td>
+                  <td data-row="4" data-col="2">(0.003)</td>
+                </tr>
+                <tr>
+                  <td data-row="5" data-col="1">condLesbian</td>
+                  <td data-row="5" data-col="2">0.009*</td>
+                </tr>
+                <tr>
+                  <td data-row="6" data-col="1"></td>
+                  <td data-row="6" data-col="2">(0.021)</td>
+                </tr>
+                <tr>
+                  <td data-row="7" data-col="1">love10</td>
+                  <td data-row="7" data-col="2">1.198</td>
+                </tr>
+                <tr>
+                  <td data-row="8" data-col="1"></td>
+                  <td data-row="8" data-col="2">(0.429)</td>
+                </tr>
+                <tr>
+                  <td data-row="9" data-col="1">condGay × love10</td>
+                  <td data-row="9" data-col="2">1.298</td>
+                </tr>
+                <tr>
+                  <td data-row="10" data-col="1"></td>
+                  <td data-row="10" data-col="2">(0.479)</td>
+                </tr>
+                <tr>
+                  <td data-row="11" data-col="1">condLesbian × love10</td>
+                  <td data-row="11" data-col="2">1.009</td>
+                </tr>
+                <tr>
+                  <td data-row="12" data-col="1"></td>
+                  <td data-row="12" data-col="2">(0.373)</td>
+                </tr>
+                <tr>
+                  <td data-row="13" data-col="1">Num.Obs.</td>
+                  <td data-row="13" data-col="2">501</td>
+                </tr>
+                <tr>
+                  <td data-row="14" data-col="1">AIC</td>
+                  <td data-row="14" data-col="2">380.5</td>
+                </tr>
+                <tr>
+                  <td data-row="15" data-col="1">BIC</td>
+                  <td data-row="15" data-col="2">469.0</td>
+                </tr>
+                <tr>
+                  <td data-row="16" data-col="1">Log.Lik.</td>
+                  <td data-row="16" data-col="2">-169.229</td>
+                </tr>
+                <tr>
+                  <td data-row="17" data-col="1">F</td>
+                  <td data-row="17" data-col="2">5.010</td>
+                </tr>
+                <tr>
+                  <td data-row="18" data-col="1">RMSE</td>
+                  <td data-row="18" data-col="2">0.33</td>
+                </tr>
+        </tbody>
+      </table>
+    </div>
+<!-- hack to avoid NA insertion in last line -->
+</div>
+</div>
+</div>
+</div>
+</div>
+<ul>
+<li><p>If we approached the interaction effect from this nonlinear model as we would for linear effects, the conclusion would be that: <em>the effect of love is no different for gay and lesbian couples, compared to the effect of love for heterosexual couple</em></p>
+<p><strong>This is wrong.</strong></p></li>
+</ul>
+<section id="plot-the-predictions" class="level3">
+<h3 class="anchored" data-anchor-id="plot-the-predictions">Plot the predictions</h3>
+<ul>
+<li>The presence of interaction terms in the model does not change the code for plotting predictions at all</li>
+</ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<ul>
+<li>In Stata, use <strong>margins</strong> for the predictions and <strong>marginsplot</strong> to make the graph</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>margins <span class="fu">cond</span>, <span class="fu">at</span>(love10=(0(0.5)10))</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>marginsplot</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<ul>
+<li>In R, use <strong>plot_predictions</strong></li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_predictions</span>(marry, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"love10"</span>, <span class="st">"cond"</span>),</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">newdata =</span> <span class="fu">datagrid</span>(<span class="at">love10 =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">10</span>, .<span class="dv">5</span>), <span class="at">cond =</span> unique, <span class="at">grid_type =</span> <span class="st">"counterfactual"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>mtable, <span class="fu">at</span>(love10=(0 10) <span class="fu">cond</span>=(1 2 3)) decimals(2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Expression: Pr(Bmarry), predict()
+
+           |     cond    love10     Pr(y)
+ ----------+-----------------------------
+         1 |        1         0      0.97
+         2 |        1        10      0.99
+         3 |        2         0      0.10
+         4 |        2        10      0.79
+         5 |        3         0      0.37
+         6 |        3        10      0.71
+
+Specified values where .n indicates no values specified with at()
+
+           |  No at()
+ ----------+---------
+   Current |       .n</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>*7.3.a</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="fu">at</span>(love10=(0(0.5)10) <span class="fu">cond</span>=(1 2 3))</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>marginsplot, recastci(rline) ciopt(lpat(<span class="kw">dash</span>) lcol(*.3)) xlab(0(2)10) ylab(0(.</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>2)1.1) <span class="co">///</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[7.3.a] Pred Prob of Supporting Legal Marriage by Perceptions of Lo</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="st">ve"</span>, <span class="kw">size</span>(medium)) <span class="co">///</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="bn">subtitle</span>(<span class="st">"Effect of Sexual Orientation of Couple"</span>) <span class="co">///</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="bn">ytitle</span>(<span class="st">"Pr(Support Marriage)"</span>) <span class="bn">xtitle</span>(<span class="st">"Perceptions of Love"</span>) <span class="co">///</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="bn">text</span>(1.03 .5 <span class="st">"Pr = .97"</span>  1.05 9.5 <span class="st">"Pr = .99"</span>, <span class="kw">size</span>(small) <span class="kw">color</span>(<span class="kw">red</span>*1.2)) </span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="co">///</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="bn">text</span>(0.05 .5 <span class="st">"Pr = .10"</span>  0.87 9.5 <span class="st">"Pr = .79"</span>, <span class="kw">size</span>(small) <span class="kw">color</span>(<span class="bn">eltblue</span>)) </span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="co">///</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    <span class="bn">text</span>(0.49 .5 <span class="st">"Pr = .37"</span>  0.58 9.5 <span class="st">"Pr = .71"</span>, <span class="kw">size</span>(small) <span class="kw">color</span>(gs6))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Variables that uniquely identify margins: love10 cond</code></pre>
+</div>
+<p><img src="fig/cda-07_03_a-love.png" class="img-fluid" style="width:80.0%" alt="[7.3.a] Predicted probability of supporting legal marriage by perceptions of love (0 to 10) for heterosexual, gay, and lesbian couples. Support for heterosexual couples is nearly flat near the top, from .97 to .99. Support for gay couples rises steeply from .10 to .79, and for lesbian couples from .37 to .71; the gay and lesbian lines cross near love = 8."></p>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_predictions</span>(marry, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"love10"</span>, <span class="st">"cond"</span>),</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">newdata =</span> <span class="fu">datagrid</span>(<span class="at">love10 =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">10</span>), <span class="at">cond =</span> unique, <span class="at">grid_type =</span> <span class="st">"counterfactual"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+ love10         cond Estimate Std. Error      z Pr(&gt;|z|)     S  2.5 % 97.5 %
+      0 Heterosexual    0.967    0.06921  13.97   &lt;0.001 144.9 0.8313  1.103
+      0 Gay             0.104    0.05017   2.07   0.0389   4.7 0.0053  0.202
+      0 Lesbian         0.366    0.12056   3.04   0.0024   8.7 0.1296  0.602
+     10 Heterosexual    0.994    0.00917 108.42   &lt;0.001   Inf 0.9762  1.012
+     10 Gay             0.793    0.05736  13.83   &lt;0.001 142.1 0.6809  0.906
+     10 Lesbian         0.714    0.05824  12.26   &lt;0.001 112.4 0.6001  0.828
+
+Type: response</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 7.3.a</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_predictions</span>(marry, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"love10"</span>, <span class="st">"cond"</span>),</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">newdata =</span> <span class="fu">datagrid</span>(<span class="at">love10 =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">10</span>, .<span class="dv">5</span>), <span class="at">cond =</span> unique, <span class="at">grid_type =</span> <span class="st">"counterfactual"</span>)) <span class="sc">+</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">annotate</span>(<span class="st">"text"</span>, <span class="at">x =</span> <span class="fu">c</span>(.<span class="dv">5</span>, <span class="fl">9.5</span>, .<span class="dv">5</span>, <span class="fl">9.5</span>, .<span class="dv">5</span>, <span class="fl">9.5</span>), <span class="at">y =</span> <span class="fu">c</span>(<span class="fl">1.03</span>, <span class="fl">1.05</span>, .<span class="dv">05</span>, .<span class="dv">87</span>, .<span class="dv">49</span>, .<span class="dv">58</span>),</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">label =</span> <span class="fu">c</span>(<span class="st">"Pr = .97"</span>, <span class="st">"Pr = .99"</span>, <span class="st">"Pr = .10"</span>, <span class="st">"Pr = .79"</span>, <span class="st">"Pr = .37"</span>, <span class="st">"Pr = .71"</span>),</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">10</span>, <span class="dv">2</span>)) <span class="sc">+</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, .<span class="dv">2</span>)) <span class="sc">+</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_cartesian</span>(<span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">1.1</span>)) <span class="sc">+</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"[7.3.a] Pred Prob of Supporting Legal Marriage by Perceptions of Love"</span>,</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Effect of Sexual Orientation of Couple"</span>,</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Perceptions of Love"</span>, <span class="at">y =</span> <span class="st">"Pr(Support Marriage)"</span>, <span class="at">color =</span> <span class="cn">NULL</span>, <span class="at">fill =</span> <span class="cn">NULL</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="7-3-nominal-continuous_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" style="width:80.0%" alt="[7.3.a] Predicted probability of supporting legal marriage by perceptions of love (0 to 10) for heterosexual, gay, and lesbian couples. Support for heterosexual couples is nearly flat near the top, from .97 to .99. Support for gay couples rises steeply from .10 to .79, and for lesbian couples from .37 to .71; the gay and lesbian lines cross near love = 8."></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="calculating-2nd-differences-in-stata-and-r" class="level2">
+<h2 class="anchored" data-anchor-id="calculating-2nd-differences-in-stata-and-r">Calculating 2<sup>nd</sup> differences in Stata and R</h2>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
+<ul>
+<li>In Stata, use <a href="../../../software/mecompare/examples/model-types.html"><strong>mecompare</strong></a> to calculate marginal effects of a focal IV (in the <em>varlist</em>) <strong>by( )</strong> levels of the moderating variable
+<ul>
+<li><a href="../../../software/mecompare/interactions/index.html">Go here for several examples of using <strong>mecompare</strong> for interactions</a></li>
+</ul></li>
+</ul>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">// MEs (1st differences) with mecompare.</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>**Focal IV goes <span class="kw">in</span> <span class="kw">varlist</span>; moderating <span class="kw">variable</span> <span class="kw">in</span> <span class="kw">by</span>( )</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>mecompare love10, <span class="kw">by</span>(<span class="fu">cond</span>) <span class="kw">model</span>(marry)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Predicting: Pr(Bmarry)
+Marginal effects (N_marry=501)
+
+                                 |  ME #   Estimate         SE      P&gt;|z|
+---------------------------------+---------------------------------------
+love10 + 1 (centered)            |                                       
+                    Heterosexual |     1      0.002      0.006      0.690
+                             Gay |     2      0.071      0.012      0.000
+                         Lesbian |     3      0.033      0.015      0.032</code></pre>
+</div>
+<ul>
+<li>Use <strong>metest</strong> for the 2<sup>nd</sup> difference: equality of any two MEs (1<sup>st</sup> differences)
+<ul>
+<li>Refer to ME # from <strong>mecompare</strong> table</li>
+</ul></li>
+</ul>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>*<span class="kw">use</span> metest <span class="kw">for</span> 2nd difference: equality <span class="kw">of</span> any <span class="kw">two</span> MEs</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>metest 2 - 1</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>                                 |  estimate         se     pvalue 
+---------------------------------+--------------------------------
+   love10_cond_2 - love10_cond_1 |     0.068      0.013      0.000 </code></pre>
+</div>
+<ul>
+<li>Can accumulate tests into a single table with <strong>metest</strong></li>
+</ul>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>*Accumulate <span class="ot">all</span> 2nd diffs into a single metest <span class="kw">table</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>metest, <span class="kw">clear</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> metest 2 - 1, add rowname(<span class="st">"Gay - Hetero"</span>)</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> metest 3 - 1, add rowname(<span class="st">"Lesbian - Hetero"</span>)</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> metest 2 - 3, add rowname(<span class="st">"Gay - Lesbian"</span>)</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>metest, <span class="bn">title</span>(<span class="st">"2nd difference of effect of love, by couple type"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>2nd difference of effect of love, by couple type
+
+                                 |  estimate         se     pvalue 
+---------------------------------+--------------------------------
+                    Gay - Hetero |     0.068      0.013      0.000 
+                Lesbian - Hetero |     0.031      0.017      0.063 
+                   Gay - Lesbian |     0.037      0.019      0.049 </code></pre>
+</div>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<ul>
+<li>In R, use <strong>avg_comparisons</strong> to calculate the MEs (1<sup>st</sup> differences)</li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Changes in continuous IVs centered on the observed values, like mecompare</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">marginaleffects_contrast_direction =</span> <span class="st">"center"</span>)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="co"># MEs (1st differences)</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(marry, <span class="at">variables =</span> <span class="st">"love10"</span>, <span class="at">by =</span> <span class="st">"cond"</span>,</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">newdata =</span> <span class="fu">datagrid</span>(<span class="at">cond =</span> unique, <span class="at">grid_type =</span> <span class="st">"counterfactual"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+         cond Estimate Std. Error     z Pr(&gt;|z|)    S    2.5 % 97.5 %
+ Heterosexual  0.00235    0.00589 0.399   0.6897  0.5 -0.00920 0.0139
+ Gay           0.07065    0.01189 5.944   &lt;0.001 28.4  0.04735 0.0939
+ Lesbian       0.03319    0.01549 2.143   0.0321  5.0  0.00284 0.0635
+
+Term: love10
+Type: response
+Comparison: +1</code></pre>
+</div>
+</div>
+<ul>
+<li>Add a <strong>hypothesis</strong> option to test for 2<sup>nd</sup> difference (the equality of any two MEs)
+<ul>
+<li>MEs named <strong>b#</strong> in order they appear in <strong>avg_comparisons</strong> output from last step</li>
+</ul></li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(marry, <span class="at">variables =</span> <span class="st">"love10"</span>, <span class="at">by =</span> <span class="st">"cond"</span>,</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">newdata =</span> <span class="fu">datagrid</span>(<span class="at">cond =</span> unique, <span class="at">grid_type =</span> <span class="st">"counterfactual"</span>),</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">hypothesis =</span> <span class="st">"b2 - b1 = 0"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+ Hypothesis Estimate Std. Error    z Pr(&gt;|z|)    S  2.5 % 97.5 %
+    b2-b1=0   0.0683     0.0132 5.18   &lt;0.001 22.1 0.0424 0.0941
+
+Type: response</code></pre>
+</div>
+</div>
+<ul>
+<li>The hypothesis option ~pairwise will calculate all 2<sup>nd</sup> differences</li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(marry, <span class="at">variables =</span> <span class="st">"love10"</span>, <span class="at">by =</span> <span class="st">"cond"</span>,</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">newdata =</span> <span class="fu">datagrid</span>(<span class="at">cond =</span> unique, <span class="at">grid_type =</span> <span class="st">"counterfactual"</span>),</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">hypothesis =</span> <span class="sc">~</span> pairwise)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code>
+                 Hypothesis Estimate Std. Error     z Pr(&gt;|z|)    S    2.5 %    97.5 %
+ (Gay) - (Heterosexual)       0.0683     0.0132  5.18   &lt;0.001 22.1  0.04245  0.094139
+ (Lesbian) - (Heterosexual)   0.0308     0.0166  1.86   0.0626  4.0 -0.00163  0.063298
+ (Lesbian) - (Gay)           -0.0375     0.0190 -1.97   0.0491  4.3 -0.07477 -0.000146
+
+Type: response</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<blockquote class="blockquote">
+<p><em>The effect of love is stronger for gay couples than for heterosexual couples, indicating an interaction effect (2<sup>nd</sup> diff. = 0.068, p &lt; .001).</em></p>
+</blockquote>
+<blockquote class="blockquote">
+<p><em>Etc.</em></p>
+</blockquote>
+<div class="callout callout-style-simple callout-note no-icon">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>See additional example interpretations under “Example write-up” below</p>
+</div>
+</div>
+</div>
+</section>
+<section id="plotting-the-other-side-of-the-interaction" class="level2">
+<h2 class="anchored" data-anchor-id="plotting-the-other-side-of-the-interaction">Plotting the “other side” of the interaction</h2>
+<ul>
+<li>Conceptually, it is useful to specify a focal IV and a moderating IV
+<ul>
+<li>This is mostly a theoretical distinction, but can influence the test with nonlinearities</li>
+</ul></li>
+<li>Usually, the variable that comes first in your research question/hypothesis is the focal IV; the variable whose effect it (may) vary across is the moderating IV</li>
+</ul>
+<blockquote class="blockquote">
+<p><em><strong>RQ ex</strong>: Do perceptions of love have different effects for varying couple types?</em></p>
+<p><em><strong>H ex</strong>: Perceptions of love should have a stronger effect for gay couples compared to its effect for heterosexual couples.</em></p>
+</blockquote>
+<blockquote class="blockquote">
+<p><em><strong>RQ ex</strong>: Does aging lead to declining physical health at equal rates for individuals from different racial-ethnic backgrounds?</em></p>
+<p><em><strong>H ex</strong>: Aging will have a stronger (more negative) effect on physical health for Black than for White adults.</em></p>
+</blockquote>
+<ul>
+<li>The examples above focus mostly on the effect of love as the focal IV, and couple type as the moderating IV</li>
+<li>It is also important to examine the effect of the moderating IV, across values of the focal IV
+<ul>
+<li>Essentially, flip the focal and moderating variable</li>
+</ul></li>
+<li>For a continuous X nominal interaction: calculate the marginal effect (ME) of the nominal IV across the range of the continuous IV and plot it
+<ul>
+<li>Note for this example because our nominal IV has 3 categories we have to pick a reference category and then plot two lines which are the differences from the reference</li>
+</ul></li>
+</ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
+<ul>
+<li>In Stata, calculate ME of nominal IV across range of continuous IV using <strong>margins</strong>
+<ul>
+<li>Plot with <strong>marginsplot</strong></li>
+</ul></li>
+</ul>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>*7.3.b - Effect <span class="kw">of</span> sexual orientation (heterosexual vs [gay &amp; lesbian])</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>*   <span class="bn">over</span> <span class="kw">range</span> <span class="kw">of</span> love</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">restore</span> marry</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(results marry are active now)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="kw">dydx</span>(<span class="fu">cond</span>) <span class="fu">at</span>(love=(0(0.5)10))</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>marginsplot, recastci(rline) ci1opts(lpat(<span class="kw">dash</span>) col(<span class="bn">eltblue</span>*.4)) <span class="co">///</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    ci2opts(lpat(<span class="kw">dash</span>) col(gs10*.4)) <span class="co">///</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    plot1op(lcol(<span class="bn">eltblue</span>) msym(<span class="kw">none</span>) lwid(<span class="bn">medthick</span>)) <span class="co">///</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>    plot2op(lcol(gs10) msym(<span class="kw">none</span>) lwid(<span class="bn">medthick</span>)) <span class="co">///</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>    ylab(-1(0.2)0.2) xlab(0(1)10) <span class="kw">yline</span>(0, lcol(<span class="bn">black</span>)) <span class="co">///</span></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[7.3.b] Difference in Support for Marriage: Gay/Lesbian vs Heterose</span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a><span class="st">xual Couple"</span>, <span class="kw">size</span>(medsmall)) <span class="co">///</span></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>    <span class="bn">subtitle</span>(<span class="st">"Effects Below Zero Indicate Lower Support for Gay/Lesbian Couple</span></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a><span class="st">'s Marriage Rights"</span>, <span class="kw">size</span>(small)) <span class="co">///</span></span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>    <span class="bn">ytitle</span>(<span class="st">"Pr(Support): Gay/Lesbian - Heterosexual"</span>) <span class="co">///</span></span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>    <span class="bn">legend</span>(<span class="kw">order</span>(3 <span class="st">"Gay vs Hetero"</span> 4 <span class="st">"Lesbian vs Hetero"</span>) pos(6) <span class="ot">row</span>(1))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Variables that uniquely identify margins: love10 _deriv</code></pre>
+</div>
+<p><img src="fig/cda-07_03_b-love.png" class="img-fluid" style="width:80.0%" alt="[7.3.b] Marginal effect of couple type (gay vs heterosexual and lesbian vs heterosexual) on the probability of supporting marriage, across perceptions of love from 0 to 10, with confidence intervals and a line at zero. Both differences are negative throughout: the gay vs heterosexual difference rises from about -0.87 at love = 0 to about -0.2 at love = 10, and the lesbian vs heterosexual difference rises from about -0.6 to about -0.28; the lines cross near love = 8."></p>
+</div>
+<div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
+<ul>
+<li>In R, use <strong>plot_comparisons</strong></li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 7.3.b - Effect of sexual orientation (heterosexual vs [gay &amp; lesbian])</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="co">#   over range of love (MEs saved and passed to ggplot to draw both lines in one panel)</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>mes <span class="ot">&lt;-</span> <span class="fu">avg_comparisons</span>(marry, <span class="at">variables =</span> <span class="st">"cond"</span>, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"love10"</span>, <span class="st">"contrast"</span>),</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">newdata =</span> <span class="fu">datagrid</span>(<span class="at">love10 =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">10</span>, .<span class="dv">5</span>), <span class="at">grid_type =</span> <span class="st">"counterfactual"</span>))</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(mes, <span class="fu">aes</span>(<span class="at">x =</span> love10, <span class="at">y =</span> estimate, <span class="at">color =</span> contrast, <span class="at">fill =</span> contrast)) <span class="sc">+</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_ribbon</span>(<span class="fu">aes</span>(<span class="at">ymin =</span> conf.low, <span class="at">ymax =</span> conf.high), <span class="at">alpha =</span> .<span class="dv">2</span>, <span class="at">color =</span> <span class="cn">NA</span>) <span class="sc">+</span></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>) <span class="sc">+</span></span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"#8FC6EB"</span>, <span class="st">"#909090"</span>),</span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Gay vs Hetero"</span>, <span class="st">"Lesbian vs Hetero"</span>)) <span class="sc">+</span></span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"#8FC6EB"</span>, <span class="st">"#909090"</span>),</span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Gay vs Hetero"</span>, <span class="st">"Lesbian vs Hetero"</span>)) <span class="sc">+</span></span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">10</span>) <span class="sc">+</span></span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">1</span>, .<span class="dv">2</span>, .<span class="dv">2</span>)) <span class="sc">+</span></span>
+<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_cartesian</span>(<span class="at">ylim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, .<span class="dv">2</span>)) <span class="sc">+</span></span>
+<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"[7.3.b] Difference in Support for Marriage: Gay/Lesbian vs Heterosexual Couple"</span>,</span>
+<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Effects Below Zero Indicate Lower Support for Gay/Lesbian Couple's Marriage Rights"</span>,</span>
+<span id="cb32-19"><a href="#cb32-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"How in love?"</span>, <span class="at">y =</span> <span class="st">"Pr(Support): Gay/Lesbian - Heterosexual"</span>, <span class="at">color =</span> <span class="cn">NULL</span>, <span class="at">fill =</span> <span class="cn">NULL</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="7-3-nominal-continuous_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" style="width:80.0%" alt="[7.3.b] Marginal effect of couple type (gay vs heterosexual and lesbian vs heterosexual) on the probability of supporting marriage, across perceptions of love from 0 to 10, with confidence intervals and a line at zero. Both differences are negative throughout: the gay vs heterosexual difference rises from about -0.87 at love = 0 to about -0.2 at love = 10, and the lesbian vs heterosexual difference rises from about -0.6 to about -0.28; the lines cross near love = 8."></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<p>*Recall this is a direct test of gay vs heterosexual couple: if the 95% confidence interval does not overlap zero: the group difference is statistically significant at <em>p</em> &lt; 0.05</p>
+</section>
+<section id="example-write-up" class="level2">
+<h2 class="anchored" data-anchor-id="example-write-up">Example write-up</h2>
+<blockquote class="blockquote">
+<p><em>Perceptions of how in love a couple is have differential effects on how supportive someone is of legal marriage rights, depending on the sexual orientation of the couple. For heterosexual couples, perceptions of love have no effect on support for marriage (∆<sub>heterosexual</sub> p = ns). This is because heterosexual couples receive overwhelming support for legal marriage regardless of whether someone sees them as not in love at all (Pr = 0.97) or whether they see them as extremely in love (Pr = 0.99; see red line in Figure 1). Perceptions of love have a relatively small but significant effect on support for marriage of lesbian couples (∆<sub>lesbian</sub> = 0.033 p &lt; 0.05). There is a large positive effect of love for gay couples (∆<sub>gay</sub> = 0.071 p &lt; 0.001). For example, support for legal marriage rises drastically over the range of love, from a low of just 0.10 to a high of 0.79 for gay couples who are viewed as extremely in love (see blue line in Figure 1). The effect of love is stronger for gay men than for heterosexual couples (2<sup>nd</sup> difference = 0.068; p &lt; 0.001) and for gay men compared to lesbian couples (2<sup>nd</sup> difference = 0.037; p &lt; 0.05). However, it is important to note that despite the strong increase in support for marriage for gay couples as perceptions of love increase, support for a gay couple’s marriage rights is never equal to support for heterosexual couple’s marriage rights (see Figure 2).</em></p>
+</blockquote>
+<p><img src="images/petts-kaufman-mize-2023-predictions.png" class="img-fluid" style="width:48.0%" alt="Figure 1 from Petts, Kaufman, and Mize (2023): perceptions of an employee as a good parent by weeks of leave offered, for fathers and mothers. Both curves rise and then fall, peaking around 9 to 11 weeks."> <img src="images/petts-kaufman-mize-2023-marginal-effects.png" class="img-fluid" style="width:48.0%" alt="Figure 3 from Petts, Kaufman, and Mize (2023): the marginal effect of parental gender (mothers minus fathers) across weeks of leave offered, with confidence intervals and a line at zero. The effect dips slightly below zero in the middle weeks and rises above zero at the longest leaves."></p>
+<p>*I like including both graphs in a single paper (often as separate panels) to help the reader follow what the second graph shows. Example from <a href="https://doi.org/10.1111/jomf.12875">Petts, Kaufman, and Mize 2023</a></p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/www\.trentonmize\.com");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../../../teaching/cda/07/7-2-second-differences.html" class="pagination-link" aria-label="7.2 Testing for Interaction: Second Differences">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">7.2 Testing for Interaction: Second Differences</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../../teaching/cda/07/7-4-nominal-nominal.html" class="pagination-link" aria-label="7.4 Nominal X Nominal Interactions">
+        <span class="nav-page-text">7.4 Nominal X Nominal Interactions</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Trenton D. Mize, Purdue University</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org">Quarto</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

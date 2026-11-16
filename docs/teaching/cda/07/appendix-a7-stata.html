@@ -1,0 +1,2475 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Appendix A7: Stata Code and Tips – Trenton D. Mize</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../teaching/cdash.html" rel="next">
+<link href="../../../teaching/cda/07/7-11-takeaways.html" rel="prev">
+<script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-d1074f4552fd9e64773fe67262ebb1c3.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-FQRYLM0FY0"></script>
+
+<script type="text/javascript">
+
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
+</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">Trenton D. Mize</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../cv.html"> 
+<span class="menu-text">CV</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../research.html"> 
+<span class="menu-text">Research</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../software.html"> 
+<span class="menu-text">Software</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="../../../teaching.html" aria-current="page"> 
+<span class="menu-text">Teaching</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../resources.html"> 
+<span class="menu-text">Links</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../help.html"> 
+<span class="menu-text">Asking for Help</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/tdmize"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../teaching/cda/index.html">Categorical Data Analysis (Soc 681)</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/07/index.html">07 Moderation &amp; Mediation</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/07/appendix-a7-stata.html">Appendix A7: Stata Code and Tips</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Teaching</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Categorical Data Analysis (Soc 681)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/01/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">01 Introduction &amp; Linear Regression</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/1-0-categorical-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1.0 Categorical Data is Everywhere</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/1-2-linear-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1.2 Linear Regression (sans math)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/1-3-linear-regression-math.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1.3 Linear Regression (with math)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/appendix-a1-datasets.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix A1: Datasets for Assignments</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/01/appendix-a2-stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix A2: Stata Appendix</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/02/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">02 Nonlinearities &amp; Categorical IVs</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-1-marginal-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.1 Interpretation with Marginal Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-2-nonlinear-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.2 Marginal Effects with Nonlinearities</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-3-linear-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.3 Linear Interaction Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-4-nonlinear-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.4 Nonlinear Interaction Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-5-distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.5 Examining Distributions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-6-assessing-nonlinearities.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.6 Assessing and Modeling Complex Nonlinearities for Independent Variables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-7-categorical-ivs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.7 Categorical Independent Variables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-8-comparing-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.8 Comparing Effects Across IVs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/2-10-conclusion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.10 Conclusion</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/02/appendix-2a/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 2A: Stata Code and Tips</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-1-factor-syntax.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.1 Stata factor syntax</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-2-polynomials.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.2 Polynomial IVs with factor syntax</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-3-calculating-mes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.3 Calculating marginal effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-4-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.4 Interaction effect with factor syntax</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-5-nonlinear-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.5 Nonlinear interaction effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-6-distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.6 Tools for examining distributions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-7-assessing-nonlinearities.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.7 Assessing nonlinearities</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-8-splines.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.8 Splines</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-9-loglinear.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.9 Loglinear regression models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2a/a2-10-transforming.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A2.10 Transforming variables</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2b-logged-dv.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 2B: Logged DV Regression Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/02/appendix-2c-splines.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 2C: Splines</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/03/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">03 Binary Regression Models</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-0-linear-probability-model.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.0 Binary DVs and the Linear Probability Model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-1-binary-model-derivations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.1 Binary Model Derivations</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-2-scaling-identification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.2 Scaling and Identification</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-3-maximum-likelihood.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.3 Maximum Likelihood Estimation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-4-coefficient-interpretations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.4 Coefficient Interpretations</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-5-predictions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.5 Interpreting Predictions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-6-marginal-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.6 Marginal Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-7-effect-summary-comparison.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.7 Effect Summary Comparison</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-8-ideal-types.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.8 Predictions for Ideal Types</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-9-risk-ratios.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.9 Risk Ratios/Relative Risk (RR)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-10-tables-plots.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.10 Bonus: Tables &amp; Plots of Results</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/3-11-conclusion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.11 Miscellaneous &amp; Conclusion</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3a-stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3A: Stata Code and Tips</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3b-maximum-likelihood.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3B: Maximum Likelihood</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3c-or-mem.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3C: OR and MEM Comparison</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3d-me-distribution.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3D: Distribution of Marginal Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3e-functional-forms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3E: Flexible Functional Forms</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3f-ystar.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3F: Interpretation in y* Metric</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/03/appendix-3g-marginal-odds-ratios.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 3G: Marginal Odds Ratios</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/04/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">04 Nominal Models</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-0-nominal-dvs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.0 Nominal DVs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-1-multinomial-logit.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.1 Multinomial Logit Model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-2-predicted-probabilities.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.2 Predicted Probabilities</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-3-marginal-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.3 Marginal Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-4-four-category-example.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.4 Example with 4 DV Categories</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-5-conditional-odds-ratios.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.5 Conditional Odds Ratios (ORs)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-6-iia.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.6 Independence of Irrelevant Alternatives (IIA)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/4-7-review.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.7 Review of Nominal DVs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/appendix-4a-combining-outcomes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 4A: Combining Outcomes and Functional Forms</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/04/appendix-4b-stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix 4B: Stata Code and Tips</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/05/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">05 Ordinal Models</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/05/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/05/5-0-ordinal-outcomes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5.0 Ordinal Outcomes</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/05/5-1-latent-variable-model.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5.1 Latent Variable Model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/05/5-2-interpretation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5.2 Interpretation in Ordinal Logit</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/05/5-3-coefficients.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5.3 Coefficients in the Ordinal Model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/05/5-4-parallel-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5.4 Parallel Regression Assumption</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/05/5-6-generalized-ordered-logit.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5.6 Generalized Ordered Logit Model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/05/5-7-overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5.7 Overview of Ordinal DVs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/05/appendix-a5-stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix A5: Stata Code and Tips</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/06/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">06 Count Models</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/06/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/06/6-1-count-distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.1 Explaining Count Distributions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/06/6-2-poisson-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.2 The Poisson Regression Model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/06/6-4-poisson-example.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.4 Poisson Regression Example</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/06/6-5-average-predictions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.5 Assessing Models with Average Predictions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/06/6-6-negative-binomial.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.6 Negative Binomial Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/06/6-7-negative-binomial-example.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.7 Another Negative Binomial Example</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/06/6-9-zero-inflated.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.9 Zero Inflated Count Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/06/6-10-model-specification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.10 Model Specification</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/06/6-11-predictions-mes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.11 Plots of Predictions &amp; MEs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/06/6-12-model-selection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.12 Model Selection Tools</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/06/6-13-review.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.13 Review of Count DVs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/06/appendix-a6-stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Appendix A6: Stata Code and Tips</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/cda/07/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">07 Moderation &amp; Mediation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/07/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/07/7-1-interaction-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7.1 Interaction Effects (AKA Moderation)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/07/7-2-second-differences.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7.2 Testing for Interaction: Second Differences</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/07/7-3-nominal-continuous.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7.3 Nominal X Continuous Interactions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/07/7-4-nominal-nominal.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7.4 Nominal X Nominal Interactions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/07/7-5-continuous-continuous.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7.5 Continuous X Continuous Interactions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/07/interaction-recommendations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Summary of Recommendations (Mize 2019)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/07/7-6-count-ordinal-nominal.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7.6 Count, ordinal, and nominal models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/07/7-7-cross-model-mediation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7.7 Cross-Model Comparisons &amp; Statistical Mediation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/07/7-8-rescaling.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7.8 The Problem of Rescaling in Logit/Probit</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/07/7-9-general-framework.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7.9 A General Framework for Cross-Model Comparisons</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/07/7-10-group-comparisons.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7.10 Group Comparisons</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/07/7-11-takeaways.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7.11 Takeaway Points: Interactions and Cross-Model Comparisons</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cda/07/appendix-a7-stata.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Appendix A7: Stata Code and Tips</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cdash.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Categorical Data Analysis (Statistical Horizons)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/cdaws.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Categorical Data Analysis Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/workflow.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Management / Workflow Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/dataviz.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Visualization</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/dvs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Visualization Using Stata and LLMs</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../teaching/dmv.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data &amp; Model Visualization Workshop</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/dmv/r-output.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">R Output</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/em.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Experimental Methods: Design &amp; Analysis</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/int.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Interaction Effects Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/irt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Item Response Theory</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/lvm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Latent Variable Modeling</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/mcapsi.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Longitudinal Data Analysis</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/miss.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Missing Data Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/spgrad.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Social Psychology (Graduate)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/spug.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Social Psychology (Undergrad)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/stata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Stata Programming Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/surveys.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Survey Design Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/sew.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Survey Experiments Workshop</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../teaching/twm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Teaching Workshops &amp; Methods</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#a7.1-is-the-interaction-product-term-necessary" id="toc-a7.1-is-the-interaction-product-term-necessary" class="nav-link active" data-scroll-target="#a7.1-is-the-interaction-product-term-necessary">A7.1 Is the interaction (product) term necessary?</a>
+  <ul class="collapse">
+  <li><a href="#effect-of-unneeded-product-term-in-model" id="toc-effect-of-unneeded-product-term-in-model" class="nav-link" data-scroll-target="#effect-of-unneeded-product-term-in-model">Effect of unneeded product term in model</a></li>
+  <li><a href="#product-terms-in-logitprobit" id="toc-product-terms-in-logitprobit" class="nav-link" data-scroll-target="#product-terms-in-logitprobit">Product terms in logit/probit</a></li>
+  <li><a href="#effect-of-omitting-needed-product-term-in-model" id="toc-effect-of-omitting-needed-product-term-in-model" class="nav-link" data-scroll-target="#effect-of-omitting-needed-product-term-in-model">Effect of omitting needed product term in model</a></li>
+  <li><a href="#type-i-errors-and-product-terms-in-logitprobit" id="toc-type-i-errors-and-product-terms-in-logitprobit" class="nav-link" data-scroll-target="#type-i-errors-and-product-terms-in-logitprobit">Type I errors and product terms in logit/probit</a></li>
+  </ul></li>
+  <li><a href="#a7.2-options-for-testing-2nd-differences" id="toc-a7.2-options-for-testing-2nd-differences" class="nav-link" data-scroll-target="#a7.2-options-for-testing-2nd-differences">A7.2 Options for testing 2<sup>nd</sup> differences</a>
+  <ul class="collapse">
+  <li><a href="#simplifying-tests-of-2nd-differences-with-dydx" id="toc-simplifying-tests-of-2nd-differences-with-dydx" class="nav-link" data-scroll-target="#simplifying-tests-of-2nd-differences-with-dydx">Simplifying tests of 2<sup>nd</sup> differences with dydx( )</a></li>
+  <li><a href="#second-differences-with-discrete-change-average-marginal-effects" id="toc-second-differences-with-discrete-change-average-marginal-effects" class="nav-link" data-scroll-target="#second-differences-with-discrete-change-average-marginal-effects">Second differences with discrete change average marginal effects</a></li>
+  </ul></li>
+  <li><a href="#a7.3-plotting-the-other-side-of-the-interaction" id="toc-a7.3-plotting-the-other-side-of-the-interaction" class="nav-link" data-scroll-target="#a7.3-plotting-the-other-side-of-the-interaction">A7.3 Plotting the “other side” of the interaction</a></li>
+  <li><a href="#a7.4-nominal-x-nominal-interactions" id="toc-a7.4-nominal-x-nominal-interactions" class="nav-link" data-scroll-target="#a7.4-nominal-x-nominal-interactions">A7.4 Nominal X nominal interactions</a>
+  <ul class="collapse">
+  <li><a href="#coefplot-with-nominal-ivs" id="toc-coefplot-with-nominal-ivs" class="nav-link" data-scroll-target="#coefplot-with-nominal-ivs">coefplot with nominal IVs</a></li>
+  <li><a href="#testing-nominal-x-nominal-interactions-multi-category-ivs" id="toc-testing-nominal-x-nominal-interactions-multi-category-ivs" class="nav-link" data-scroll-target="#testing-nominal-x-nominal-interactions-multi-category-ivs">Testing nominal X nominal interactions (multi-category IVs)</a></li>
+  </ul></li>
+  <li><a href="#a7.5-continuous-x-continuous-interactions" id="toc-a7.5-continuous-x-continuous-interactions" class="nav-link" data-scroll-target="#a7.5-continuous-x-continuous-interactions">A7.5 Continuous X continuous interactions</a>
+  <ul class="collapse">
+  <li><a href="#marginal-effects-plots" id="toc-marginal-effects-plots" class="nav-link" data-scroll-target="#marginal-effects-plots">Marginal effects plots</a></li>
+  <li><a href="#contour-plots" id="toc-contour-plots" class="nav-link" data-scroll-target="#contour-plots">Contour plots</a></li>
+  </ul></li>
+  <li><a href="#a7.7-which-observations-do-i-use-for-predictions-and-mes" id="toc-a7.7-which-observations-do-i-use-for-predictions-and-mes" class="nav-link" data-scroll-target="#a7.7-which-observations-do-i-use-for-predictions-and-mes">A7.7 Which observations do I use for predictions and MEs?</a></li>
+  <li><a href="#a7.8-tests-of-mediation" id="toc-a7.8-tests-of-mediation" class="nav-link" data-scroll-target="#a7.8-tests-of-mediation">A7.8 Tests of mediation</a></li>
+  <li><a href="#a7.9-the-khb-command-to-test-for-mediation" id="toc-a7.9-the-khb-command-to-test-for-mediation" class="nav-link" data-scroll-target="#a7.9-the-khb-command-to-test-for-mediation">A7.9 The khb command to test for mediation</a></li>
+  <li><a href="#a7.10-illustration-of-the-impact-of-the-cross-model-covariance" id="toc-a7.10-illustration-of-the-impact-of-the-cross-model-covariance" class="nav-link" data-scroll-target="#a7.10-illustration-of-the-impact-of-the-cross-model-covariance">A7.10 Illustration of the impact of the cross-model covariance</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../teaching/cda/index.html">Categorical Data Analysis (Soc 681)</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/07/index.html">07 Moderation &amp; Mediation</a></li><li class="breadcrumb-item"><a href="../../../teaching/cda/07/appendix-a7-stata.html">Appendix A7: Stata Code and Tips</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Appendix A7: Stata Code and Tips</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p><img src="images/stata-logo.png" class="img-fluid" style="width:35.0%" alt="Stata 17 logo."></p>
+<ul>
+<li>For all sets of lecture notes, there is an accompanying replication Stata do-file (<a href="https://drive.google.com/drive/folders/1E0tqULBiY1WKic3A6pSG0_vFlcP-dhcF?usp=sharing">available here</a> or on Brightspace)
+<ul>
+<li>This includes all of the Stata code necessary to recreate anything in the slides</li>
+</ul></li>
+<li>In this Appendix, I include some comments, notes, and examples for things that are new or that might be hard to follow without more detail</li>
+<li>For more streamlined, less complicated, and more notated do-files showing the basics of the types of analyses covered in this section:
+<ul>
+<li>For tests of interactions in nonlinear models, I recommend the <a href="https://drive.google.com/drive/folders/1D2FmhncUONVIYuK6tTgenGIRZn48x-dF">template Stata do-files</a> that accompany the <a href="https://www.sociologicalscience.com/articles-v6-4-81/">Mize 2019 <em>Sociological Science</em></a> article</li>
+<li>For comparing effects across models, I recommend the <a href="../../../software/mecompare/index.html">template Stata do-files in the <strong>mecompare</strong> package</a> that accompanies the <a href="https://journals.sagepub.com/doi/full/10.1177/0081175019852763">Mize, Doan, and Long 2019 <em>Sociological Methodology</em></a> article</li>
+</ul></li>
+</ul>
+<section id="a7.1-is-the-interaction-product-term-necessary" class="level2">
+<h2 class="anchored" data-anchor-id="a7.1-is-the-interaction-product-term-necessary">A7.1 Is the interaction (product) term necessary?</h2>
+<ul>
+<li>There has been an intense debate in the methodological literature as to whether it is appropriate to discuss interaction effects absent an interaction (product) term in the model
+<ul>
+<li>E.g. When “compression” of the effects is theoretically reasonable (especially within political science)
+<ul>
+<li>E.g. <a href="https://www.cambridge.org/core/journals/american-political-science-review/article/specifying-a-model-of-state-policy-innovation/F35C2A2A37C8F668958CCE38B30C7CD9">Berry and Berry 1991</a>; <a href="https://www.cambridge.org/core/journals/american-political-science-review/article/specifying-a-model-of-state-policy-innovation/F35C2A2A37C8F668958CCE38B30C7CD9">Frant et al.&nbsp;1991</a>; <a href="https://www.jstor.org/stable/1963952">Nagler 1991</a>; <a href="https://onlinelibrary.wiley.com/doi/full/10.1111/j.1540-5907.2009.00429.x">Berry, DeMeritt, and Esarey 2010</a>; <a href="https://www.cambridge.org/core/journals/political-science-research-and-methods/article/compression-and-conditional-effects-a-product-term-is-essential-when-using-logistic-regression-to-test-for-interaction/98664E6FF9AA240CCDBCFFC4B29EA7F8">Rainey 2016</a>; <a href="https://www.sociologicalscience.com/articles-v6-4-81/">Mize 2019</a></li>
+</ul></li>
+</ul></li>
+</ul>
+<p><strong>Deep Questions</strong>:</p>
+<blockquote class="blockquote">
+<p>Imagine a case where compression is theoretically reasonable and fits the data: what are the consequences <strong>of including</strong> an interaction (product) term in the model?</p>
+<p>Imagine a case where compression is not theoretically reasonable and does not fit the data: what are the consequences <strong>of not including</strong> an interaction (product) term in the model?</p>
+</blockquote>
+<section id="effect-of-unneeded-product-term-in-model" class="level3">
+<h3 class="anchored" data-anchor-id="effect-of-unneeded-product-term-in-model">Effect of unneeded product term in model</h3>
+<p>Below, I generated data where <strong>an interaction effect does not exist</strong> in the data generating process</p>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>*Simulate <span class="kw">data</span> to show effect <span class="kw">of</span> unneeded product term</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">clear</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">set</span> <span class="dv">seed</span>    30004</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">set</span> <span class="kw">obs</span>     2000</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Number of observations (_N) was 0, now 2,000.</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">matrix</span>      P = (1, 0.2 \ 0.2, 1)   <span class="co">// Small correlation</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">corr2data</span>   x1 <span class="kw">x2</span>, n(2000) cov(P)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">gen</span>         c = rnormal(0,10)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">gen</span>         b = c</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">replace</span>     b = 0 <span class="kw">in</span> 1/1000</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(1,000 real changes made)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">replace</span>     b = 1 <span class="kw">in</span> 1001/2000</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(1,000 real changes made)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">gen</span>         cXb = c*b</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">gen</span>         <span class="fu">y</span> = uniform() &lt; <span class="fu">invlogit</span>(-1 + 0.2*(c) + 2*(b) + 0*cXb)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> <span class="kw">logit</span> <span class="fu">y</span> c.c##i.b x1 <span class="kw">x2</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="fu">at</span>(c=(-30(2)30) b=(0 1))</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>marginsplot, xlab(-30(10)30) noci <span class="co">///</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"Simulated Data: No Interaction Effect Exists"</span>, <span class="kw">size</span>(medium)) <span class="co">///</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="bn">subtitle</span>(<span class="st">"Product Term cXb Included in Model"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Variables that uniquely identify margins: c b</code></pre>
+</div>
+<p><img src="fig/cda-07_a1_a-unneeded_product.png" class="img-fluid" style="width:80.0%" alt="Simulated data with no interaction effect, logit model with the product term cXb included: predicted probability of y by c from -30 to 30 for b = 0 and b = 1. Two S-shaped curves with the same shape, the b = 1 curve shifted to the left of the b = 0 curve."></p>
+</section>
+<section id="product-terms-in-logitprobit" class="level3">
+<h3 class="anchored" data-anchor-id="product-terms-in-logitprobit">Product terms in logit/probit</h3>
+<ul>
+<li>In the example above, I generated data where the interaction effect = 0 in the data generating process. What did we lose by including a product term when it is not needed? One degree of freedom—and nothing else
+<ul>
+<li>If compression fits the data, you will find it even with a product term in the model (because the coefficient on the interaction (product) term will be ≈ 0 and have no effect on the predictions)</li>
+</ul></li>
+<li>However, omitting an interaction (product) term effectively constrains the interaction effect to be zero (recall likelihood ratio test logic)
+<ul>
+<li>Without the interaction (product) term you force the overall slopes of the logit curves to be invariant across the levels of the second IV</li>
+</ul></li>
+<li>What about testing for an interaction effect (in terms of the predictions) <em>without</em> a product term in the model?
+<ul>
+<li>Below, the plots show logit models on data I generated where <strong>an interaction effect does exist</strong> in the data generating process</li>
+</ul></li>
+</ul>
+</section>
+<section id="effect-of-omitting-needed-product-term-in-model" class="level3">
+<h3 class="anchored" data-anchor-id="effect-of-omitting-needed-product-term-in-model">Effect of omitting needed product term in model</h3>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">clear</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">set</span> <span class="dv">seed</span>    30004</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">set</span> <span class="kw">obs</span>     2000</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Number of observations (_N) was 0, now 2,000.</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">matrix</span>      P = (1, 0.2 \ 0.2, 1)   <span class="co">// Small correlation</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">corr2data</span>   x1 <span class="kw">x2</span>, n(2000) cov(P)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="kw">gen</span>         c = rnormal(0,10)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="kw">gen</span>         b = c</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="kw">replace</span>     b = 0 <span class="kw">in</span> 1/1000</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(1,000 real changes made)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">replace</span>     b = 1 <span class="kw">in</span> 1001/2000</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(1,000 real changes made)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">gen</span>         cXb = c*b</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">gen</span>         <span class="fu">y</span> = uniform() &lt; <span class="fu">invlogit</span>(-1 + 0.1*(c) + 2*(b) + 0.3*cXb)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> <span class="kw">logit</span> <span class="fu">y</span> c.c##i.b x1 <span class="kw">x2</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="fu">at</span>(c=(-30(2)30) b=(0 1))</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>marginsplot, xlab(-30(10)30) noci <span class="co">///</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"Simulated Data: Interaction Effect Exists"</span>, <span class="kw">size</span>(medium)) <span class="co">///</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="bn">subtitle</span>(<span class="st">"Product Term cXb Included in Model"</span>) <span class="co">///</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    <span class="bn">legend</span>(<span class="bn">position</span>(6)) <span class="kw">saving</span>(<span class="kw">int</span>, <span class="kw">replace</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Variables that uniquely identify margins: c b
+(file int.gph not found)
+file int.gph saved</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> <span class="kw">logit</span> <span class="fu">y</span> c.c i.b x1 <span class="kw">x2</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="fu">at</span>(c=(-30(2)30) b=(0 1))</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>marginsplot, xlab(-30(10)30) noci <span class="co">///</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"Simulated Data: Interaction Effect Exists"</span>, <span class="kw">size</span>(medium)) <span class="co">///</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="bn">subtitle</span>(<span class="st">"Product Term NOT Included in Model"</span>) <span class="co">///</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="bn">legend</span>(<span class="bn">position</span>(6)) <span class="kw">saving</span>(noint, <span class="kw">replace</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Variables that uniquely identify margins: c b
+file noint.gph saved</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">graph</span> <span class="bn">combine</span> noint.gph <span class="kw">int</span>.gph</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><img src="fig/cda-07_a1_b-omitted_product.png" class="img-fluid" style="width:80.0%" alt="Simulated data where an interaction effect exists, predicted probability of y by c (-30 to 30) for b = 0 and b = 1. Left, product term not included: two S-shaped curves with the same shape, one shifted left of the other. Right, product term included: the b = 1 curve is much steeper than the b = 0 curve, and the curves cross, showing the true interaction."></p>
+</section>
+<section id="type-i-errors-and-product-terms-in-logitprobit" class="level3">
+<h3 class="anchored" data-anchor-id="type-i-errors-and-product-terms-in-logitprobit">Type I errors and product terms in logit/probit</h3>
+<p>The figure below reports simulation results for a model where an <strong>interaction should not exist</strong>. <strong>The product term is necessary to allow the effect to not be interactive.</strong> Without the product term Type I error rates are disturbingly high</p>
+<p><img src="images/rainey-2016-fig2.png" class="img-fluid" style="width:80.0%" alt="Figure 2 from Rainey (2016): fifty simulated second differences with confidence intervals from models excluding the product term (100% statistically significant) and including the product term (2% statistically significant). Although the true second difference is 0, the model without the product term consistently finds interaction."></p>
+<p>Figure from <a href="https://www.cambridge.org/core/journals/political-science-research-and-methods/article/compression-and-conditional-effects-a-product-term-is-essential-when-using-logistic-regression-to-test-for-interaction/98664E6FF9AA240CCDBCFFC4B29EA7F8">Rainey 2016 <em>PSRM</em></a></p>
+</section>
+</section>
+<section id="a7.2-options-for-testing-2nd-differences" class="level2">
+<h2 class="anchored" data-anchor-id="a7.2-options-for-testing-2nd-differences">A7.2 Options for testing 2<sup>nd</sup> differences</h2>
+<section id="simplifying-tests-of-2nd-differences-with-dydx" class="level3">
+<h3 class="anchored" data-anchor-id="simplifying-tests-of-2nd-differences-with-dydx">Simplifying tests of 2<sup>nd</sup> differences with dydx( )</h3>
+<ul>
+<li>The <strong>dydx( )</strong> option on <strong>mtable</strong> will report the <strong>average instantaneous change</strong> for continuous variables; the <strong>average 0 vs 1 effect</strong> for binary variables
+<ul>
+<li>Because this is a marginal change (first derivative) for continuous variables, you cannot say “for a one unit increase” or similar—instead, I interpret it as the effect “on average” (i.e.&nbsp;it is the <em>average slope</em> of love for each group)</li>
+</ul></li>
+<li>Instead of the arbitrary 4 and 8 I choose above for the discrete change could choose to use mean as starting value for a MEM. E.g.
+<ul>
+<li>Start value of the mean</li>
+<li>Ending value of:
+<ul>
+<li>Mean +1</li>
+<li>Mean + SD</li>
+</ul></li>
+<li>Etc.</li>
+</ul></li>
+</ul>
+</section>
+<section id="second-differences-with-discrete-change-average-marginal-effects" class="level3">
+<h3 class="anchored" data-anchor-id="second-differences-with-discrete-change-average-marginal-effects">Second differences with discrete change average marginal effects</h3>
+<ul>
+<li>The <strong>margins</strong> syntax for discrete changes is clunkier (hence why <strong>mchange</strong> was written). But need to know it for tests of second differences which require using <strong>margins</strong></li>
+<li>To get a prediction at the observed value (i.e.&nbsp;the start value) put in the <strong>at( )</strong> statement <strong><em>var</em>=gen(<em>var</em>)</strong>
+<ul>
+<li>For a prediction at an ending value simply add the number onto the end, e.g.&nbsp;<strong>var=gen(var + #)</strong></li>
+</ul></li>
+<li>Put these two predictions (start and end value) in separate <strong>at( )</strong> statements alongside the values of the nominal IV you want. E.g.</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>margins,    <span class="fu">at</span>(<span class="fu">cond</span>=(1 3) love10=<span class="kw">gen</span>(love10)) <span class="co">///</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>            <span class="fu">at</span>(<span class="fu">cond</span>=(1 3) love10=<span class="kw">gen</span>(love10 + 1))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ul>
+<li>This produces the four predictions you need for a +1 AME of love; one for heterosexuals (cond = 1) and one for lesbians (cond = 3)</li>
+</ul>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="st">"https://tdmize.github.io/data/data/doan_love_SF"</span>, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(TESS03 - Analysis Dataset for TESS01 - Main Paper)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> <span class="kw">reg</span> informal i.cond##c.love10 rfem age rce_wht ed_coll <span class="co">///</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    ed_hs inc_50k married childyn children ideo evangel <span class="co">///</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    mainline blackprot catholic ofaithV2</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> inform</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>*How to <span class="fu">get</span> AMEs from margins; the secret <span class="kw">var</span>=<span class="kw">gen</span>(<span class="kw">var</span>) method</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>margins, <span class="fu">at</span>(<span class="fu">cond</span>=(1 3) love10=<span class="kw">gen</span>(love10)) <span class="co">///</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">at</span>(<span class="fu">cond</span>=(1 3) love10=<span class="kw">gen</span>(love10 + 1))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Predictive margins                                         Number of obs = 499
+Model VCE: OLS
+
+Expression: Linear prediction, predict()
+1._at: cond   =          1
+       love10 =     love10
+2._at: cond   =          3
+       love10 =     love10
+3._at: cond   =          1
+       love10 = love10 + 1
+4._at: cond   =          3
+       love10 = love10 + 1
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |     Margin   std. err.      t    P&gt;|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         _at |
+          1  |      9.150      0.187   49.035   0.000        8.784       9.517
+          2  |      6.742      0.196   34.466   0.000        6.358       7.126
+          3  |      9.587      0.198   48.310   0.000        9.197       9.976
+          4  |      7.267      0.204   35.698   0.000        6.867       7.667
+------------------------------------------------------------------------------</code></pre>
+</div>
+<p>Now, can use <strong>mlincom</strong> as above to calculate the MEs</p>
+</section>
+</section>
+<section id="a7.3-plotting-the-other-side-of-the-interaction" class="level2">
+<h2 class="anchored" data-anchor-id="a7.3-plotting-the-other-side-of-the-interaction">A7.3 Plotting the “other side” of the interaction</h2>
+<ul>
+<li>The examples above focus mostly on the effect of love. It is also important to examine the effect of the sexual orientation of the couple (we did this in the linear regression section of the course). Syntax is identical for logit/probit, use:</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(nominalvar)</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>marginsplot</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ul>
+<li>Note I’ve excluded the lesbian couple from the model to make it easier to plot just gay men vs heterosexual couple on the graph:</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">logit</span>       Bmarry i.cond##c.love10 … <span class="kw">if</span> <span class="fu">cond</span> != 3, <span class="kw">or</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ul>
+<li>Including a line at zero with <strong>yline(0)</strong> helps interpret the plot. Remember to always include a subtitle or a note explaining how to interpret the plot:</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="kw">dydx</span>(<span class="fu">cond</span>) <span class="fu">at</span>(love=(0(0.5)10))</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>marginsplot, recastci(rline) ciopts(lpat(<span class="kw">dash</span>)) <span class="kw">yline</span>(0) <span class="co">///</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    <span class="bn">subtitle</span>(<span class="st">"Effects Below Zero Indicate Lower Support for Gay Couple's Marriage Rights"</span>) <span class="co">///</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    … options …</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="a7.4-nominal-x-nominal-interactions" class="level2">
+<h2 class="anchored" data-anchor-id="a7.4-nominal-x-nominal-interactions">A7.4 Nominal X nominal interactions</h2>
+<section id="bar-charts-of-predictions-with-coefplot" class="level4">
+<h4 class="anchored" data-anchor-id="bar-charts-of-predictions-with-coefplot">Bar charts of predictions with coefplot</h4>
+<ul>
+<li><strong>marginsplot</strong> is limited for bar charts; the user-written command <strong>coefplot</strong> is a more flexible choice
+<ul>
+<li>See more examples of what the wondrous <a href="https://www.stata.com/meeting/germany14/abstracts/materials/de14_jann.pdf"><strong>coefplot</strong> can do here</a></li>
+<li>In order to get the spacing of the bars correct and to get different colors to indicate groups, you must make two sets of predictions using margins and store them; then, use coefplot to plot the predictions</li>
+<li>I recommend copying the options I have below for a well laid out bar chart—and then adapt to your needs</li>
+</ul></li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">restore</span> alcmod</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="fu">at</span>(parrole=(0 1) woman=(0)) <span class="kw">post</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> prmen</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">restore</span> alcmod</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="fu">at</span>(parrole=(0 1) woman=(1)) <span class="kw">post</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> prwom</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>coefplot prmen prwom, <span class="co">///</span></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">recast</span>(<span class="bn">bar</span>) vertical barw(0.3) ciopts(<span class="kw">recast</span>(rcap) <span class="kw">color</span>(gs10)) citop</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="coefplot-with-nominal-ivs" class="level3">
+<h3 class="anchored" data-anchor-id="coefplot-with-nominal-ivs">coefplot with nominal IVs</h3>
+<ul>
+<li>Procedure is the same to make a bar chart with <strong>coefplot</strong> when you have a nominal IV with &gt; 2 categories—you just need to specify the categories for prediction with <strong>margins</strong>
+<ul>
+<li>A helpful bit of my code below: to have your labels on multiple lines so that they will be readable, put each line in quotations ” “—and enclose the entire text of the label in compound quotes <strong>`” text goes here “’</strong>
+<ul>
+<li>E.g. See how I have specified the label High School below</li>
+</ul></li>
+</ul></li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>*Bar chart with <span class="kw">SE</span> bars</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">restore</span> alcedmod</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="fu">at</span>(educ=(0(1)4) woman=(0)) <span class="kw">post</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> prmen</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">restore</span> alcedmod</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="fu">at</span>(educ=(0(1)4) woman=(1)) <span class="kw">post</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">store</span> prwom</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>coefplot prmen prwom, <span class="co">///</span></span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">recast</span>(<span class="bn">bar</span>) vertical barw(0.3) ciopts(<span class="kw">recast</span>(rcap) <span class="kw">color</span>(gs10)) <span class="co">///</span></span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>    citop <span class="dv">level</span>(68) ylab(0(.1)1) <span class="bn">legend</span>(<span class="kw">order</span>(1 <span class="st">"Men"</span> 3 <span class="st">"Women"</span>)) <span class="co">///</span></span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>    xlab(1 <span class="st">`"</span> <span class="st">"No HS"</span> <span class="st">"Degree"</span> <span class="st">"' 2 `"</span> <span class="st">"High"</span> <span class="st">"School"</span> <span class="st">"' ///</span></span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a><span class="st">        3 `"</span> <span class="st">"Some"</span> <span class="st">"College"</span> <span class="st">"' 4 `"</span> <span class="st">"College"</span> <span class="st">"Degree"</span> <span class="st">"' 5 `"</span> <span class="st">"Graduate"</span> <span class="st">"Degree"</span> <span class="st">"') ///</span></span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a><span class="st">    … titles …</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="testing-nominal-x-nominal-interactions-multi-category-ivs" class="level3">
+<h3 class="anchored" data-anchor-id="testing-nominal-x-nominal-interactions-multi-category-ivs">Testing nominal X nominal interactions (multi-category IVs)</h3>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="st">"https://tdmize.github.io/data/data/addhealth4"</span>, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(addhealth4_dmv.dta | Add Health Wave IV | DMV Workshop)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> <span class="kw">logit</span> alcB i.educ##i.woman c.age i.race c.income, <span class="kw">or</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> alcedmod</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>*Predictions</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>mtable, <span class="fu">at</span>(woman=(0 1) educ=(0(1)4)) <span class="kw">post</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Expression: Pr(alcB), predict()
+
+           |     educ     woman     Pr(y)
+ ----------+-----------------------------
+         1 |        0         0     0.605
+         2 |        0         1     0.317
+         3 |        1         0     0.631
+         4 |        1         1     0.527
+         5 |        2         0     0.685
+         6 |        2         1     0.549
+         7 |        3         0     0.704
+         8 |        3         1     0.642
+         9 |        4         0     0.738
+        10 |        4         1     0.611
+
+Specified values where .n indicates no values specified with at()
+
+           |  No at()
+ ----------+---------
+   Current |       .n</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>*Gender gap <span class="kw">for</span> no high school</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>mlincom 6 - 1, stat(<span class="kw">est</span> se <span class="kw">p</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>             |   lincom        se    pvalue 
+-------------+-----------------------------
+           1 |   -0.056     0.044     0.199 </code></pre>
+</div>
+<section id="nominal-x-nominal-interactions-multi-category-ivs" class="level4">
+<h4 class="anchored" data-anchor-id="nominal-x-nominal-interactions-multi-category-ivs">Nominal X Nominal Interactions (Multi-category IVs)</h4>
+<ul>
+<li>An easier way to automate calculating all of the gender gaps is to ask for the effect of gender via <strong>dydx( )</strong> and to request these to be estimated at each level of education:</li>
+</ul>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>*Gender gaps across educational groups</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">restore</span> alcedmod</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(results alcedmod are active now)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>mtable, <span class="kw">dydx</span>(woman) <span class="fu">at</span>(educ=(0(1)4)) stat(<span class="kw">est</span> se <span class="kw">p</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Expression: Pr(alcB), predict()
+
+           |     educ   d Pr(y)        se         p
+ ----------+---------------------------------------
+         1 |        0    -0.288     0.061     0.000
+         2 |        1    -0.104     0.035     0.003
+         3 |        2    -0.136     0.023     0.000
+         4 |        3    -0.062     0.029     0.033
+         5 |        4    -0.126     0.048     0.008
+
+Specified values where .n indicates no values specified with at()
+
+           |  No at()
+ ----------+---------
+   Current |       .n</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>*Test <span class="ot">all</span> contrasts</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="kw">est</span> <span class="kw">restore</span> alcedmod</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(woman) <span class="fu">at</span>(educ=(0(1)4)) pwcompare(pve)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>*The <strong>pwcompare(pve)</strong> option will calculate all of the pairwise comparisons—i.e.&nbsp;the difference in the effect of gender across each education category. The output is long and messy, but this does <em>a lot</em> of work for you</p>
+</section>
+</section>
+</section>
+<section id="a7.5-continuous-x-continuous-interactions" class="level2">
+<h2 class="anchored" data-anchor-id="a7.5-continuous-x-continuous-interactions">A7.5 Continuous X continuous interactions</h2>
+<section id="marginal-effects-plots" class="level3">
+<h3 class="anchored" data-anchor-id="marginal-effects-plots">Marginal effects plots</h3>
+<ul>
+<li>You can make ME plots with a continuous X continuous interaction in the same way you do it for a nominal X continuous
+<ul>
+<li>Note using the <strong>dydx( )</strong> option is the simple way to do this—though it gives you a marginal change rather than a discrete change so the interpretation isn’t as satisfying</li>
+</ul></li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="kw">dydx</span>(conviewSS) <span class="fu">at</span>(year1972=(1(1)52))</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>marginsplot, … options …</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="kw">dydx</span>(year1972) <span class="fu">at</span>(conviewSS=(1(.5)7))</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>marginsplot, … options …</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="contour-plots" class="level3">
+<h3 class="anchored" data-anchor-id="contour-plots">Contour plots</h3>
+<ul>
+<li>One of the primary difficulties of interpreting continuous X continuous interactions is thinking in two dimensions
+<ul>
+<li>Contour plots present the Pr(y = 1) at the intersection of the two continuous variables included in the interaction</li>
+</ul></li>
+<li>Making the plots is a little different than a <strong>marginsplot</strong>
+<ul>
+<li>First, make the predictions with <strong>margins</strong> and save the predictions as a new dataset with the <strong>saving( )</strong> option</li>
+<li><strong>margins</strong> will calculate all of the combinations of each level of your IVs</li>
+</ul></li>
+</ul>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb42"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="st">"https://tdmize.github.io/data/data/cda_gss24"</span>, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(GSS 1972-2024 CDA - Categorical Data Analysis | 2024-12-03)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="kw">drop</span> <span class="kw">if</span> <span class="fu">missing</span>(sameokB, year1972, conviewSS, age, race3, <span class="co">///</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>    woman, faminc, married, college)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(37,893 observations deleted)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> <span class="kw">logit</span> sameokB c.year1972##c.year1972##c.conviewSS c.age i.race3 <span class="co">///</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>    i.woman c.faminc i.married i.college, <span class="kw">nolog</span> <span class="kw">or</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>*Make predictions <span class="fu">at</span> <span class="ot">all</span> combinations <span class="kw">of</span> both continuous IVs</span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> margins, <span class="fu">at</span>(conviewSS=(1(.5)7) year1972=(1(1)52)) <span class="co">///</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">saving</span>(preds, <span class="kw">replace</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<ul>
+<li>The predictions are saved with unhelpful names for the new variables such as <strong>_at1</strong> and <strong>_at2</strong>—the easiest way to know for sure what these are is to look at them when you load the new dataset of predictions
+<ul>
+<li>Note that <strong>margins</strong> names these based on the order of the IVs in the original regression model; it sets the values to missing for the other IVs in the model that were not specified in the <strong>margins</strong> command</li>
+</ul></li>
+</ul>
+<section id="continuous-x-continuous-interactionscontour-plots" class="level4">
+<h4 class="anchored" data-anchor-id="continuous-x-continuous-interactionscontour-plots">Continuous X Continuous Interactions—Contour Plots</h4>
+<ul>
+<li>Load the dataset of predictions
+<ul>
+<li>Run <strong>codebook, compact</strong> immediately after loading the dataset of predictions</li>
+</ul></li>
+</ul>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb47"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>*Load dataset <span class="kw">of</span> predictions</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> preds, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(Created by command margins; also see char list)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb49"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>*Examine variables; <span class="kw">rename</span> vars to <span class="kw">be</span> plotted</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a><span class="kw">codebook</span>, c</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Variable    Obs Unique      Mean       Min       Max  Label
+--------------------------------------------------------------------------------
+_deriv        0      0         .         .         .  Derivatives w.r.t.
+_term       676      1         1         1         1  Margin term index
+_predict      0      0         .         .         .  predict() option index
+_at         676    676     338.5         1       676  Covariates fixed values...
+_atopt      676      1         1         1         1  at() option index
+_margin     676    676  .3142219  .0648411  .8933834  Pr(sameokB), predict()
+_se_margin  676    676  .0050853   .002525  .0130976  Standard error
+_statistic  676    676  61.67418  9.668413  144.0299  z-statistic
+_pvalue     676     10  6.08e-25         0  4.11e-22  P&gt;|z|
+_ci_lb      676    676   .304255  .0537794    .88116  95% Confidence interval...
+_ci_ub      676    676  .3241888  .0723443  .9056068  95% Confidence interval...
+_at1        676     52      26.5         1        52  Years since 1972
+_at2        676     13         4         1         7  Lib to Cons politics scale
+_at3          0      0         .         .         .  Age of respondent
+_at4          0      0         .         .         .  Race of respondent
+_at5          0      0         .         .         .  Woman R
+_at6          0      0         .         .         .  Family Income in 1000s
+_at7          0      0         .         .         .  Currently Married
+_at8          0      0         .         .         .  R Has College Degree
+--------------------------------------------------------------------------------</code></pre>
+</div>
+</section>
+<section id="making-contour-plots-in-stata" class="level4">
+<h4 class="anchored" data-anchor-id="making-contour-plots-in-stata">Making contour plots in Stata</h4>
+<ul>
+<li>Double-check the variables you will plot by looking at them with <strong>list</strong></li>
+</ul>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb51"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="ot">list</span> _at1 _at2 _margin <span class="kw">in</span> 1/10</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>     +--------------------------------+
+     | _at1           _at2    _margin |
+     |--------------------------------|
+  1. |    1   Most liberal   .1901978 |
+  2. |    1            1.5   .1758679 |
+  3. |    1              2   .1623425 |
+  4. |    1            2.5   .1496135 |
+  5. |    1              3   .1376677 |
+     |--------------------------------|
+  6. |    1            3.5    .126487 |
+  7. |    1         Middle   .1160495 |
+  8. |    1            4.5   .1063299 |
+  9. |    1              5   .0972999 |
+ 10. |    1            5.5   .0889295 |
+     +--------------------------------+</code></pre>
+</div>
+<ul>
+<li>Rename the variables to prevent mistakes when plotting:</li>
+</ul>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb53"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="kw">rename</span> _at1 year1972</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a><span class="kw">rename</span> _at2 conviewSS</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a><span class="kw">rename</span> _margin pr_sameok</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="making-contour-plots-in-stata-1" class="level4">
+<h4 class="anchored" data-anchor-id="making-contour-plots-in-stata-1">Making contour plots in Stata</h4>
+<ul>
+<li>Make the plot using <strong>twoway contour</strong>
+<ul>
+<li>Syntax: (1) variable with the predictions comes first, (2) followed by the IV you want on the x-axis, then (3) the IV you want on the y-axis</li>
+</ul></li>
+<li><strong>scolor( )</strong> specifies what the starting color should be; <strong>ecolor( )</strong> the ending color; all colors between the two are plotted
+<ul>
+<li>The default is to plot each color between the two with <strong>crule(hue)</strong>
+<ul>
+<li>To get gradations instead, use <strong>crule(linear)</strong></li>
+</ul></li>
+<li>For rainbow plots, use <strong>scolor(red) ecolor(purple)</strong> [or <strong>scolor(purple) ecolor(red)</strong>] and the default <strong>crule(hue)</strong></li>
+<li>For grayscale plots use <strong>scolor(gs16) ecolor(black)</strong> [or <strong>scolor(black) ecolor(gs16)</strong>] and <strong>crule(linear)</strong></li>
+</ul></li>
+<li><strong>ccuts(start(gap)end)</strong> specifies what levels of the predicted probabilities to show as different colors
+<ul>
+<li>Alternatively, you can specify the number of levels to divide evenly among the range of probabilities in the data with <strong>levels(#)</strong> where the max # of levels is 500
+<ul>
+<li>Especially useful for the smoothed rainbow plots</li>
+</ul></li>
+</ul></li>
+</ul>
+</section>
+<section id="making-contour-plots-in-stata-2" class="level4">
+<h4 class="anchored" data-anchor-id="making-contour-plots-in-stata-2">Making contour plots in Stata</h4>
+<ul>
+<li>This is the base of the command that made all of the plots shown in these notes</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb54"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="kw">twoway</span>  (contour pr_sameok conviewSS year1972, ccuts(0(0.05)1.0)) … options …</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ul>
+<li>Some example options you can try:</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb55"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="kw">twoway</span>  (contour pr_sameok conviewSS year1972, ccuts(0(0.05)1.0) <span class="co">///</span></span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>    scolor(gs16) ecolor(<span class="bn">black</span>) crule(linear)) … options …</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a><span class="kw">twoway</span>  (contour pr_sameok conviewSS year1972, ccuts(0(0.05)1.0) <span class="co">///</span></span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>    scolor(<span class="bn">black</span>) ecolor(gs16) crule(linear)) … options …</span>
+<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-7"><a href="#cb55-7" aria-hidden="true" tabindex="-1"></a><span class="kw">twoway</span>  (contour pr_sameok conviewSS year1972, ccuts(0(0.05)1.0) <span class="co">///</span></span>
+<span id="cb55-8"><a href="#cb55-8" aria-hidden="true" tabindex="-1"></a>    scolor(<span class="kw">red</span>) ecolor(<span class="bn">purple</span>)) … options …</span>
+<span id="cb55-9"><a href="#cb55-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-10"><a href="#cb55-10" aria-hidden="true" tabindex="-1"></a><span class="kw">twoway</span>  (contour pr_sameok conviewSS year1972, ccuts(0(0.05)1.0) <span class="co">///</span></span>
+<span id="cb55-11"><a href="#cb55-11" aria-hidden="true" tabindex="-1"></a>    scolor(<span class="bn">purple</span>) ecolor(<span class="kw">red</span>)) … options …</span>
+<span id="cb55-12"><a href="#cb55-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-13"><a href="#cb55-13" aria-hidden="true" tabindex="-1"></a><span class="kw">twoway</span>  (contour pr_sameok conviewSS year1972, <span class="kw">levels</span>(500) <span class="co">///</span></span>
+<span id="cb55-14"><a href="#cb55-14" aria-hidden="true" tabindex="-1"></a>    scolor(<span class="kw">red</span>) ecolor(<span class="bn">purple</span>)) … options …</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+</section>
+<section id="a7.7-which-observations-do-i-use-for-predictions-and-mes" class="level2">
+<h2 class="anchored" data-anchor-id="a7.7-which-observations-do-i-use-for-predictions-and-mes">A7.7 Which observations do I use for predictions and MEs?</h2>
+<section id="using-over-with-nominal-ivs-to-select-observations" class="level4">
+<h4 class="anchored" data-anchor-id="using-over-with-nominal-ivs-to-select-observations">Using over( ) with nominal IVs to select observations</h4>
+<ul>
+<li>The default for <strong>margins/mtable/mchange</strong> is to make predictions for all observations in the sample at specified values of the IVs (with controls at observed values) and then average the predictions</li>
+<li>To select only the observations specific to a nominal group, use the <strong>over( )</strong> option
+<ul>
+<li>This specifies that predictions/MEs be calculated separately across the observations at each level of the <strong>over( )</strong> variable</li>
+<li>E.g. <strong>over(woman)</strong> makes predictions for women = 1 using only the observations for women; women = 0 using only the observations for men</li>
+</ul></li>
+</ul>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb56"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="st">"https://tdmize.github.io/data/data/addhealth4"</span>, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(addhealth4_dmv.dta | Add Health Wave IV | DMV Workshop)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb58"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="kw">qui</span> <span class="kw">logit</span> depB c.role##i.woman i.race i.college c.hhincome</span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(role) <span class="fu">at</span>(woman=(0 1))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Average marginal effects                                 Number of obs = 4,307
+Model VCE: OIM
+
+Expression: Pr(depB), predict()
+dy/dx wrt:  role
+1._at: woman = 0
+2._at: woman = 1
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |      dy/dx   std. err.      z    P&gt;|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+role         |
+         _at |
+          1  |     -0.036      0.005   -6.839   0.000       -0.046      -0.026
+          2  |     -0.029      0.007   -4.349   0.000       -0.041      -0.016
+------------------------------------------------------------------------------</code></pre>
+</div>
+<p>This method uses all observations in the sample—both men and women—for each ME calculation</p>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb60"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(role) <span class="bn">over</span>(woman)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Average marginal effects                                 Number of obs = 4,307
+Model VCE: OIM
+
+Expression: Pr(depB), predict()
+dy/dx wrt:  role
+Over:       woman
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |      dy/dx   std. err.      z    P&gt;|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+role         |
+       woman |
+        Man  |     -0.037      0.005   -6.687   0.000       -0.047      -0.026
+      Woman  |     -0.028      0.006   -4.382   0.000       -0.041      -0.016
+------------------------------------------------------------------------------</code></pre>
+</div>
+<p>This method uses only the group specific observations (men or women) for each ME calculation</p>
+</section>
+</section>
+<section id="a7.8-tests-of-mediation" class="level2">
+<h2 class="anchored" data-anchor-id="a7.8-tests-of-mediation">A7.8 Tests of mediation</h2>
+<ul>
+<li>For the classic tests of mediation there are three options in Stata
+<ul>
+<li>Use the user-written command <strong>sgmediation2</strong>
+<ul>
+<li>*Originally written by Phil Ender; I now maintain and support the command (see the <a href="../../../software/sgmediation2/index.html">description here</a>)</li>
+</ul></li>
+<li>Fit the models separately and calculate the Sobel test yourself using the <a href="../../../teaching/cda/07/7-7-cross-model-mediation.html#statistical-mediation-the-classic-model">formulas in these notes</a></li>
+<li><a href="https://stats.idre.ucla.edu/stata/faq/how-can-i-do-mediation-analysis-with-the-sem-command/">Estimate the models simultaneously as using structural equation modeling</a> (SEM)</li>
+</ul></li>
+<li>The user-written command <strong>sgmediation2</strong> will do the test of the indirect effect for you (Sobel test). The syntax is:
+<ul>
+<li>DV listed before comma</li>
+<li>Mediating variable listed in option <strong>mv( )</strong></li>
+<li>Independent variable of interest listed in option <strong>iv( )</strong></li>
+<li>Control variables listed in option <strong>cv( )</strong></li>
+</ul></li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb62"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>sgmediation2 depscale, mv(wages) iv(edyrs)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="statistical-mediation-linear-regression-example" class="level4">
+<h4 class="anchored" data-anchor-id="statistical-mediation-linear-regression-example">Statistical mediation: linear regression example</h4>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb63"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>sgmediation2 depscale, mv(wages) iv(edyrs)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Model with dv regressed on iv (path c)
+ regress depscale edyrs , vce() 
+
+      Source |       SS           df       MS      Number of obs   =     4,307
+-------------+----------------------------------   F(1, 4305)      =    108.52
+       Model |  22.0288344         1  22.0288344   Prob &gt; F        =    0.0000
+    Residual |   873.92287     4,305  .203001828   R-squared       =    0.0246
+-------------+----------------------------------   Adj R-squared   =    0.0244
+       Total |  895.951704     4,306   .20807053   Root MSE        =    .45056
+
+------------------------------------------------------------------------------
+    depscale | Coefficient  Std. err.      t    P&gt;|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+       edyrs |     -0.032      0.003  -10.417   0.000       -0.038      -0.026
+       _cons |      1.043      0.045   23.340   0.000        0.956       1.131
+------------------------------------------------------------------------------
+
+Model with mediator regressed on iv (path a)
+ regress wages edyrs , vce() 
+
+      Source |       SS           df       MS      Number of obs   =     4,307
+-------------+----------------------------------   F(1, 4305)      =    148.22
+       Model |  74140.5856         1  74140.5856   Prob &gt; F        =    0.0000
+    Residual |  2153341.01     4,305  500.195357   R-squared       =    0.0333
+-------------+----------------------------------   Adj R-squared   =    0.0331
+       Total |   2227481.6     4,306  517.297166   Root MSE        =    22.365
+
+------------------------------------------------------------------------------
+       wages | Coefficient  Std. err.      t    P&gt;|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+       edyrs |      1.845      0.152   12.175   0.000        1.548       2.142
+       _cons |     -8.770      2.218   -3.953   0.000      -13.120      -4.421
+------------------------------------------------------------------------------
+
+Model with dv regressed on mediator and iv (paths b and c')
+ regress depscale wages edyrs , vce() 
+
+      Source |       SS           df       MS      Number of obs   =     4,307
+-------------+----------------------------------   F(2, 4304)      =     68.58
+       Model |  27.6703625         2  13.8351812   Prob &gt; F        =    0.0000
+    Residual |  868.281342     4,304   .20173823   R-squared       =    0.0309
+-------------+----------------------------------   Adj R-squared   =    0.0304
+       Total |  895.951704     4,306   .20807053   Root MSE        =    .44915
+
+------------------------------------------------------------------------------
+    depscale | Coefficient  Std. err.      t    P&gt;|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+       wages |     -0.002      0.000   -5.288   0.000       -0.002      -0.001
+       edyrs |     -0.029      0.003   -9.309   0.000       -0.035      -0.023
+       _cons |      1.029      0.045   23.053   0.000        0.941       1.116
+------------------------------------------------------------------------------
+
+Sobel-Goodman Mediation Tests
+
+                     |        Est     Std_err           z       P&gt;|z| 
+---------------------+-----------------------------------------------
+               Sobel |     -0.003       0.001      -4.850       0.000 
+              Aroian |     -0.003       0.001      -4.837       0.000 
+             Goodman |     -0.003       0.001      -4.864       0.000 
+
+Indirect, Direct, and Total Effects
+
+                     |        Est     Std_err           z       P&gt;|z| 
+---------------------+-----------------------------------------------
+       a_coefficient |      1.845       0.152      12.175       0.000 
+       b_coefficient |     -0.002       0.000      -5.288       0.000 
+ Indirect_effect_aXb |     -0.003       0.001      -4.850       0.000 
+    Direct_effect_c' |     -0.029       0.003      -9.309       0.000 
+      Total_effect_c |     -0.032       0.003     -10.417       0.000 
+
+
+Proportion of total effect that is mediated:       0.094
+Ratio of indirect to direct effect:                0.104
+Ratio of total to direct effect:                   1.104</code></pre>
+</div>
+<blockquote class="blockquote">
+<p><em>Education’s effect on depressive symptoms is partially mediated by the effect of wages. The effect of education is reduced by about 9% after accounting for the effect of wages (p &lt; 0.001)</em></p>
+</blockquote>
+</section>
+</section>
+<section id="a7.9-the-khb-command-to-test-for-mediation" class="level2">
+<h2 class="anchored" data-anchor-id="a7.9-the-khb-command-to-test-for-mediation">A7.9 The khb command to test for mediation</h2>
+<ul>
+<li>The <a href="http://fmwww.bc.edu/RePEc/bocode/k/khb.html"><strong>khb</strong> command</a> provides tests of mediation. In logit/probit, the coefficient is decomposed to account for the rescaling across models</li>
+</ul>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb65"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>khb <span class="kw">logit</span> depB c.edyrs || c.wages, summary</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Decomposition using the KHB-Method
+
+Model-Type:  logit                                 Number of obs     =    4307
+Variables of Interest: edyrs                       Pseudo R2         =    0.02
+Z-variable(s): wages
+------------------------------------------------------------------------------
+        depB | Coefficient  Std. err.      z    P&gt;|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+edyrs        |
+     Reduced |     -0.146      0.017   -8.580   0.000       -0.180      -0.113
+        Full |     -0.119      0.018   -6.781   0.000       -0.153      -0.084
+        Diff |     -0.028      0.006   -4.252   0.000       -0.040      -0.015
+------------------------------------------------------------------------------
+
+Summary of confounding
+
+        Variable | Conf_ratio    Conf_Pct   Resc_Fact  
+    -------------+-------------------------------------
+           edyrs |  1.2319681       18.83    1.036583  
+    ---------------------------------------------------</code></pre>
+</div>
+<section id="the-khb-method-to-test-for-mediation" class="level4">
+<h4 class="anchored" data-anchor-id="the-khb-method-to-test-for-mediation">The khb method to test for mediation</h4>
+<ul>
+<li>Option <strong>ape</strong> reports average partial effects (unfortunately, yet another name for the instantaneous change; i.e.&nbsp;first derivatives)</li>
+</ul>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb67"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>khb <span class="kw">logit</span> depB c.edyrs || c.wages, summary ape</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Decomposition using the APE-Method
+
+Model-Type:  logit                                 Number of obs     =    4307
+Variables of Interest: edyrs                       Pseudo R2         =    0.02
+Z-variable(s): wages
+------------------------------------------------------------------------------
+        depB | Coefficient  Std. err.      z    P&gt;|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+edyrs        |
+     Reduced |     -0.025      0.003   -8.764   0.000       -0.031      -0.020
+        Full |     -0.021      0.003   -6.875   0.000       -0.027      -0.015
+        Diff |     -0.005          .        .       .            .           .
+------------------------------------------------------------------------------
+ Note: Standard errors of difference not known for APE method
+
+Summary of confounding
+
+        Variable | Conf_ratio    Conf_Pct   Dist_Sens  
+    -------------+-------------------------------------
+           edyrs |  1.2319681       18.83   1.0309895  
+    ---------------------------------------------------</code></pre>
+</div>
+<ul>
+<li><em>Now we have effects in a metric that is somewhat helpful (marginal effect for the instantaneous change)—but we can’t get a statistical test of whether the effect is different across models</em></li>
+</ul>
+</section>
+</section>
+<section id="a7.10-illustration-of-the-impact-of-the-cross-model-covariance" class="level2">
+<h2 class="anchored" data-anchor-id="a7.10-illustration-of-the-impact-of-the-cross-model-covariance">A7.10 Illustration of the impact of the cross-model covariance</h2>
+<ul>
+<li>What is the impact of assuming the cross-model covariance is zero when it is non-zero? Two examples (<em>N</em> = 2,000 for both examples):
+<ul>
+<li><strong>Ex 1</strong>: Effect of <span class="math inline">\(x_{1}\)</span> across binary DVs <span class="math inline">\(y_{1}\)</span> and <span class="math inline">\(y_{2}\)</span></li>
+<li><strong>Ex 2</strong>: Effect of <span class="math inline">\(x_{1}\)</span> on binary DV <span class="math inline">\(y_{1}\)</span> in model with and without <span class="math inline">\(x_{2}\)</span></li>
+</ul></li>
+<li>In what follows, comparing <em>z</em>, <span class="math inline">\(z'\)</span>, and <em>z<sub>bs</sub></em> which is the z-statistic from 1,000 bootstrapped samples
+<ul>
+<li>Bootstrapping works by randomly sampling from within a sample many (1,000) times and estimating the model parameter each time
+<ul>
+<li>Illustrating logic of what we would expect over repeated samples</li>
+</ul></li>
+<li>The mean of the bootstrapped samples is the bootstrapped <strong>β</strong>; the middle 95% of those 1,000 bootstrapped samples the bootstrapped confidence intervals</li>
+</ul></li>
+<li>In addition to the graphs below, <a href="../../../research/mize_doan_long_2019_SM/gifs.html">see the logic via GIFs here</a>!</li>
+</ul>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb69"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>*NOTE: These exs are extensions <span class="kw">of</span> those <span class="kw">in</span> Mize, Doan, and Long 2019 SM</span>
+<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a><span class="kw">clear</span></span>
+<span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a><span class="kw">set</span> <span class="dv">seed</span>    30004</span>
+<span id="cb69-4"><a href="#cb69-4" aria-hidden="true" tabindex="-1"></a><span class="kw">set</span> <span class="kw">obs</span>     2000</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Number of observations (_N) was 0, now 2,000.</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb71"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="fu">matrix</span>      P = (1, 0.5 \ 0.5, 1)</span>
+<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a><span class="kw">corr2data</span>   x1 <span class="kw">x2</span>, n(2000) cov(P)</span>
+<span id="cb71-3"><a href="#cb71-3" aria-hidden="true" tabindex="-1"></a><span class="kw">gen</span>         y1 = uniform() &lt; <span class="fu">invlogit</span>(-1 + 0.4*(x1) + 0.2*(<span class="kw">x2</span>))</span>
+<span id="cb71-4"><a href="#cb71-4" aria-hidden="true" tabindex="-1"></a><span class="kw">gen</span>         y2 = uniform() &lt; <span class="fu">invlogit</span>(-1 + 0.2*(x1))</span>
+<span id="cb71-5"><a href="#cb71-5" aria-hidden="true" tabindex="-1"></a><span class="kw">save</span>        a7-sim_data, <span class="kw">replace</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(file a7-sim_data.dta not found)
+file a7-sim_data.dta saved</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb73"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="co">////////////////////////////////////////</span></span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Low covariance; e.g. different DVs //</span></span>
+<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a><span class="co">////////////////////////////////////////</span></span>
+<span id="cb73-4"><a href="#cb73-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb73-5"><a href="#cb73-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Bootstrap the individual and cross-model differences //</span></span>
+<span id="cb73-6"><a href="#cb73-6" aria-hidden="true" tabindex="-1"></a><span class="kw">capture</span> <span class="kw">program</span> <span class="kw">drop</span> bs_crossmod</span>
+<span id="cb73-7"><a href="#cb73-7" aria-hidden="true" tabindex="-1"></a><span class="kw">program</span> <span class="kw">define</span> bs_crossmod, rclass</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>  1.     logit   y1 x1
+  2.     margins, dydx(x1) post
+  3.     mat     temp1 = r(table)
+  4.     scalar  me_mod1 = temp1[1,1]
+  5. 
+.     logit   y2 x1
+  6.     margins, dydx(x1) post
+  7.     mat     temp2 = r(table)
+  8.     scalar  me_mod2 = temp2[1,1]
+  9. 
+.     scalar  diff = temp1[1,1] - temp2[1,1]
+ 10. end</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb75"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="kw">bootstrap</span> me_mod1 me_mod2 <span class="fu">diff</span>, <span class="kw">saving</span>(bs_ests-01-two_DVs, <span class="kw">replace</span>) <span class="co">///</span></span>
+<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a>    reps(1000) <span class="dv">seed</span>(6095) cformat(%6.4f) <span class="kw">nodots</span>: bs_crossmod</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(file bs_ests-01-two_DVs.dta not found)
+
+Bootstrap results                                        Number of obs = 2,000
+                                                         Replications  = 1,000
+
+      Command: bs_crossmod
+        _bs_1: me_mod1
+        _bs_2: me_mod2
+        _bs_3: diff
+
+------------------------------------------------------------------------------
+             |   Observed   Bootstrap                         Normal-based
+             | coefficient  std. err.      z    P&gt;|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+       _bs_1 |     0.0830     0.0095    8.754   0.000       0.0644      0.1016
+       _bs_2 |     0.0392     0.0098    3.981   0.000       0.0199      0.0585
+       _bs_3 |     0.0438     0.0140    3.122   0.002       0.0163      0.0714
+------------------------------------------------------------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb77"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a>*Load the dataset <span class="kw">of</span> the bootstrapped <span class="kw">estimates</span></span>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> bs_ests-01-two_DVs, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(bootstrap: bs_crossmod)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb79"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="kw">rename</span> _bs_1 me_mod1</span>
+<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a><span class="kw">rename</span> _bs_2 me_mod2</span>
+<span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a><span class="kw">rename</span> _bs_3 <span class="fu">diff</span></span>
+<span id="cb79-4"><a href="#cb79-4" aria-hidden="true" tabindex="-1"></a><span class="fu">corr</span> me*, cov</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(obs=1,000)
+
+             |  me_mod1  me_mod2
+-------------+------------------
+     me_mod1 |   .00009
+     me_mod2 | -5.2e-06  .000097</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb81"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="fu">corr</span> me*</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(obs=1,000)
+
+             |  me_mod1  me_mod2
+-------------+------------------
+     me_mod1 |   1.0000
+     me_mod2 |  -0.0555   1.0000</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb83"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="kw">twoway</span> <span class="co">///</span></span>
+<span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">scatter</span> me_mod1 me_mod2 ||  <span class="co">///</span></span>
+<span id="cb83-3"><a href="#cb83-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">lfit</span> me_mod1 me_mod2, lwid(<span class="bn">medthick</span>) <span class="bn">legend</span>(<span class="kw">off</span>) <span class="co">///</span></span>
+<span id="cb83-4"><a href="#cb83-4" aria-hidden="true" tabindex="-1"></a>    <span class="bn">ytitle</span>(<span class="st">"ME in Model 1"</span>) <span class="bn">xtitle</span>(<span class="st">"ME in Model 2"</span>) <span class="co">///</span></span>
+<span id="cb83-5"><a href="#cb83-5" aria-hidden="true" tabindex="-1"></a>    <span class="bn">subtitle</span>(<span class="st">"Low correlation (e.g. different DVs) example"</span>) <span class="co">///</span></span>
+<span id="cb83-6"><a href="#cb83-6" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"Correlation between ME in Model 1 and Model 2 across repeated sampl</span></span>
+<span id="cb83-7"><a href="#cb83-7" aria-hidden="true" tabindex="-1"></a><span class="st">es"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><img src="fig/cda-07_a10_a-scatter-low_cov.png" class="img-fluid" style="width:80.0%" alt="Scatterplot of the marginal effect of x1 in model 1 against model 2 across 1,000 bootstrapped samples, for two models with different outcomes: a shapeless cloud of points with a nearly flat fitted line, showing almost no correlation between the two estimates."></p>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb84"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a><span class="kw">twoway</span> <span class="kw">kdensity</span> me_mod1, lwid(<span class="bn">medthick</span>) lcol(<span class="kw">red</span>*1.4) || <span class="co">///</span></span>
+<span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">kdensity</span> me_mod2, lwid(<span class="bn">medthick</span>) lcol(<span class="bn">eltblue</span>*.8) || , <span class="co">///</span></span>
+<span id="cb84-3"><a href="#cb84-3" aria-hidden="true" tabindex="-1"></a>    xlab(-.02(.02).12, <span class="kw">format</span>(%3.2f) <span class="bn">nogrid</span>) ylab(, <span class="bn">nogrid</span>) <span class="co">///</span></span>
+<span id="cb84-4"><a href="#cb84-4" aria-hidden="true" tabindex="-1"></a>    <span class="bn">xtitle</span>(<span class="st">"ME Bootstrap Estimates"</span>) <span class="co">///</span></span>
+<span id="cb84-5"><a href="#cb84-5" aria-hidden="true" tabindex="-1"></a>    <span class="bn">xline</span>(0.0644, lcol(<span class="kw">red</span>*1.4) lwid(medium)) <span class="co">///</span></span>
+<span id="cb84-6"><a href="#cb84-6" aria-hidden="true" tabindex="-1"></a>    <span class="bn">xline</span>(0.1016, lcol(<span class="kw">red</span>*1.4) lwid(medium)) <span class="co">///</span></span>
+<span id="cb84-7"><a href="#cb84-7" aria-hidden="true" tabindex="-1"></a>    <span class="bn">xline</span>(0.0199, lcol(<span class="bn">eltblue</span>*.8) lwid(medium)) <span class="co">///</span></span>
+<span id="cb84-8"><a href="#cb84-8" aria-hidden="true" tabindex="-1"></a>    <span class="bn">xline</span>(0.0585, lcol(<span class="bn">eltblue</span>*.8) lwid(medium)) <span class="co">///</span></span>
+<span id="cb84-9"><a href="#cb84-9" aria-hidden="true" tabindex="-1"></a>    <span class="bn">ytitle</span>(<span class="st">"Density"</span>) <span class="bn">title</span>(<span class="st">"Panel A"</span>, pos(11)) <span class="co">///</span></span>
+<span id="cb84-10"><a href="#cb84-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">scale</span>(*1.2) <span class="bn">legend</span>(<span class="kw">off</span>) <span class="bn">name</span>(bs_mes, <span class="kw">replace</span>)</span>
+<span id="cb84-11"><a href="#cb84-11" aria-hidden="true" tabindex="-1"></a><span class="kw">twoway</span> <span class="kw">kdensity</span> <span class="fu">diff</span>, lcol(<span class="bn">purple</span>) lwid(<span class="bn">medthick</span>) <span class="co">///</span></span>
+<span id="cb84-12"><a href="#cb84-12" aria-hidden="true" tabindex="-1"></a>    xlab(-.02(.02).12, <span class="kw">format</span>(%3.2f) <span class="bn">nogrid</span>) ylab(, <span class="bn">nogrid</span>) <span class="co">///</span></span>
+<span id="cb84-13"><a href="#cb84-13" aria-hidden="true" tabindex="-1"></a>    <span class="bn">xtitle</span>(<span class="st">"Cross-Model Difference Bootstrap Estimates"</span>) <span class="co">///</span></span>
+<span id="cb84-14"><a href="#cb84-14" aria-hidden="true" tabindex="-1"></a>    <span class="bn">xline</span>(0.0163, lcol(<span class="bn">purple</span>) lwid(medium)) <span class="co">///</span></span>
+<span id="cb84-15"><a href="#cb84-15" aria-hidden="true" tabindex="-1"></a>    <span class="bn">xline</span>(0.0714, lcol(<span class="bn">purple</span>) lwid(medium)) <span class="co">///</span></span>
+<span id="cb84-16"><a href="#cb84-16" aria-hidden="true" tabindex="-1"></a>    <span class="bn">ytitle</span>(<span class="st">"Density"</span>) <span class="bn">title</span>(<span class="st">"Panel B"</span>, pos(11)) <span class="co">///</span></span>
+<span id="cb84-17"><a href="#cb84-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">scale</span>(*1.2) <span class="bn">name</span>(bs_diff, <span class="kw">replace</span>)</span>
+<span id="cb84-18"><a href="#cb84-18" aria-hidden="true" tabindex="-1"></a><span class="kw">graph</span> <span class="bn">combine</span> bs_mes bs_diff, <span class="ot">row</span>(2) <span class="co">///</span></span>
+<span id="cb84-19"><a href="#cb84-19" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"Distribution of ME estimates across 1,000 samples"</span>) <span class="co">///</span></span>
+<span id="cb84-20"><a href="#cb84-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">note</span>(<span class="st">"Vertical dashed lines are the bootstrapped 95% confidence intervals"</span></span>
+<span id="cb84-21"><a href="#cb84-21" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><img src="fig/cda-07_a10_b-kdensity-low_cov.png" class="img-fluid" style="width:80.0%" alt="Two panels of bootstrap distributions for the different-outcomes example. Panel A: density curves of the marginal effect of x1 in model 1 (centered near .08) and in model 2 (centered near .04), with lines at each 95% confidence interval. Panel B: the density of the cross-model difference, centered near .045, with its 95% confidence interval from about .016 to .071."></p>
+<p>This is <strong>Ex 1</strong>: the bootstrapped estimates of <em>ME<sub>1</sub></em> and <em>ME<sub>2</sub></em> correlate at -0.056. Similarly, covariance estimated by SUEST is very small and negative</p>
+<p><span class="math display">\[z_{bs} = 3.12 \qquad z = 3.09 \qquad z' = 3.16\]</span></p>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb85"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a><span class="co">////////////////////////////////////////</span></span>
+<span id="cb85-2"><a href="#cb85-2" aria-hidden="true" tabindex="-1"></a><span class="co">// High covariance; e.g. mediation    //</span></span>
+<span id="cb85-3"><a href="#cb85-3" aria-hidden="true" tabindex="-1"></a><span class="co">////////////////////////////////////////</span></span>
+<span id="cb85-4"><a href="#cb85-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb85-5"><a href="#cb85-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Bootstrap the individual and cross-model differences //</span></span>
+<span id="cb85-6"><a href="#cb85-6" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> a7-sim_data, <span class="kw">clear</span></span>
+<span id="cb85-7"><a href="#cb85-7" aria-hidden="true" tabindex="-1"></a><span class="kw">capture</span> <span class="kw">program</span> <span class="kw">drop</span> bs_crossmod</span>
+<span id="cb85-8"><a href="#cb85-8" aria-hidden="true" tabindex="-1"></a><span class="kw">program</span> <span class="kw">define</span> bs_crossmod, rclass</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>  1.     logit   y1 x1
+  2.     margins, dydx(x1) post
+  3.     mat     temp1 = r(table)
+  4.     scalar  me_mod1 = temp1[1,1]
+  5. 
+.     logit   y1 x1 x2
+  6.     margins, dydx(x1) post
+  7.     mat     temp2 = r(table)
+  8.     scalar  me_mod2 = temp2[1,1]
+  9. 
+.     scalar  diff = temp1[1,1] - temp2[1,1]
+ 10. end</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb87"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a><span class="kw">bootstrap</span> me_mod1 me_mod2 <span class="fu">diff</span>, <span class="kw">saving</span>(bs_ests-02-med, <span class="kw">replace</span>) <span class="co">///</span></span>
+<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a>    reps(1000) <span class="dv">seed</span>(6095) cformat(%6.4f) <span class="kw">nodots</span>: bs_crossmod</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(file bs_ests-02-med.dta not found)
+
+Bootstrap results                                        Number of obs = 2,000
+                                                         Replications  = 1,000
+
+      Command: bs_crossmod
+        _bs_1: me_mod1
+        _bs_2: me_mod2
+        _bs_3: diff
+
+------------------------------------------------------------------------------
+             |   Observed   Bootstrap                         Normal-based
+             | coefficient  std. err.      z    P&gt;|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+       _bs_1 |     0.0830     0.0095    8.754   0.000       0.0644      0.1016
+       _bs_2 |     0.0571     0.0108    5.300   0.000       0.0360      0.0781
+       _bs_3 |     0.0260     0.0056    4.675   0.000       0.0151      0.0368
+------------------------------------------------------------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb89"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a>*Load the dataset <span class="kw">of</span> the bootstrapped <span class="kw">estimates</span></span>
+<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> bs_ests-02-med, <span class="kw">clear</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(bootstrap: bs_crossmod)</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb91"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a><span class="kw">rename</span> _bs_1 me_mod1</span>
+<span id="cb91-2"><a href="#cb91-2" aria-hidden="true" tabindex="-1"></a><span class="kw">rename</span> _bs_2 me_mod2</span>
+<span id="cb91-3"><a href="#cb91-3" aria-hidden="true" tabindex="-1"></a><span class="kw">rename</span> _bs_3 <span class="fu">diff</span></span>
+<span id="cb91-4"><a href="#cb91-4" aria-hidden="true" tabindex="-1"></a><span class="fu">corr</span> me*, cov</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(obs=1,000)
+
+             |  me_mod1  me_mod2
+-------------+------------------
+     me_mod1 |   .00009
+     me_mod2 |  .000087  .000116</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb93"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a><span class="fu">corr</span> me*</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>(obs=1,000)
+
+             |  me_mod1  me_mod2
+-------------+------------------
+     me_mod1 |   1.0000
+     me_mod2 |   0.8570   1.0000</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb95"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a><span class="kw">twoway</span> <span class="co">///</span></span>
+<span id="cb95-2"><a href="#cb95-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">scatter</span> me_mod1 me_mod2 ||  <span class="co">///</span></span>
+<span id="cb95-3"><a href="#cb95-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">lfit</span> me_mod1 me_mod2, lwid(<span class="bn">medthick</span>) <span class="bn">legend</span>(<span class="kw">off</span>) <span class="co">///</span></span>
+<span id="cb95-4"><a href="#cb95-4" aria-hidden="true" tabindex="-1"></a>    <span class="bn">ytitle</span>(<span class="st">"ME in Model 1"</span>) <span class="bn">xtitle</span>(<span class="st">"ME in Model 2"</span>) <span class="co">///</span></span>
+<span id="cb95-5"><a href="#cb95-5" aria-hidden="true" tabindex="-1"></a>    <span class="bn">subtitle</span>(<span class="st">"High correlation (e.g. mediation) example"</span>) <span class="co">///</span></span>
+<span id="cb95-6"><a href="#cb95-6" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"Correlation between ME in Model 1 and Model 2 across repeated sampl</span></span>
+<span id="cb95-7"><a href="#cb95-7" aria-hidden="true" tabindex="-1"></a><span class="st">es"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><img src="fig/cda-07_a10_c-scatter-high_cov.png" class="img-fluid" style="width:80.0%" alt="Scatterplot of the marginal effect of x1 in model 1 against model 2 across 1,000 bootstrapped samples, for models with and without x2 (mediation): the points fall tightly along a rising fitted line, showing a strong positive correlation between the two estimates."></p>
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb96"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a><span class="kw">twoway</span> <span class="kw">kdensity</span> me_mod1, lwid(<span class="bn">medthick</span>) lcol(<span class="kw">red</span>*1.4) || <span class="co">///</span></span>
+<span id="cb96-2"><a href="#cb96-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">kdensity</span> me_mod2, lwid(<span class="bn">medthick</span>) lcol(<span class="bn">eltblue</span>*.8) || , <span class="co">///</span></span>
+<span id="cb96-3"><a href="#cb96-3" aria-hidden="true" tabindex="-1"></a>    xlab(-.02(.02).12, <span class="kw">format</span>(%3.2f) <span class="bn">nogrid</span>) ylab(, <span class="bn">nogrid</span>) <span class="co">///</span></span>
+<span id="cb96-4"><a href="#cb96-4" aria-hidden="true" tabindex="-1"></a>    <span class="bn">xtitle</span>(<span class="st">"ME Bootstrap Estimates"</span>) <span class="co">///</span></span>
+<span id="cb96-5"><a href="#cb96-5" aria-hidden="true" tabindex="-1"></a>    <span class="bn">xline</span>(0.0644, lcol(<span class="kw">red</span>*1.4) lwid(medium)) <span class="co">///</span></span>
+<span id="cb96-6"><a href="#cb96-6" aria-hidden="true" tabindex="-1"></a>    <span class="bn">xline</span>(0.1016, lcol(<span class="kw">red</span>*1.4) lwid(medium)) <span class="co">///</span></span>
+<span id="cb96-7"><a href="#cb96-7" aria-hidden="true" tabindex="-1"></a>    <span class="bn">xline</span>(0.0360, lcol(<span class="bn">eltblue</span>*.8) lwid(medium)) <span class="co">///</span></span>
+<span id="cb96-8"><a href="#cb96-8" aria-hidden="true" tabindex="-1"></a>    <span class="bn">xline</span>(0.0781, lcol(<span class="bn">eltblue</span>*.8) lwid(medium)) <span class="co">///</span></span>
+<span id="cb96-9"><a href="#cb96-9" aria-hidden="true" tabindex="-1"></a>    <span class="bn">ytitle</span>(<span class="st">"Density"</span>) <span class="bn">title</span>(<span class="st">"Panel A"</span>, pos(11)) <span class="bn">legend</span>(<span class="kw">off</span>) <span class="co">///</span></span>
+<span id="cb96-10"><a href="#cb96-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">scale</span>(*1.2) <span class="bn">name</span>(bs_mes, <span class="kw">replace</span>)</span>
+<span id="cb96-11"><a href="#cb96-11" aria-hidden="true" tabindex="-1"></a><span class="kw">twoway</span> <span class="kw">kdensity</span> <span class="fu">diff</span>, lcol(<span class="bn">purple</span>) lwid(<span class="bn">medthick</span>) <span class="co">///</span></span>
+<span id="cb96-12"><a href="#cb96-12" aria-hidden="true" tabindex="-1"></a>    xlab(-.02(.02).12, <span class="kw">format</span>(%3.2f) <span class="bn">nogrid</span>) ylab(, <span class="bn">nogrid</span>) <span class="co">///</span></span>
+<span id="cb96-13"><a href="#cb96-13" aria-hidden="true" tabindex="-1"></a>    <span class="bn">xtitle</span>(<span class="st">"Cross-Model Difference Bootstrap Estimates"</span>) <span class="co">///</span></span>
+<span id="cb96-14"><a href="#cb96-14" aria-hidden="true" tabindex="-1"></a>    <span class="bn">xline</span>(0.0151, lcol(<span class="bn">purple</span>) lwid(medium)) <span class="co">///</span></span>
+<span id="cb96-15"><a href="#cb96-15" aria-hidden="true" tabindex="-1"></a>    <span class="bn">xline</span>(0.0368, lcol(<span class="bn">purple</span>) lwid(medium)) <span class="co">///</span></span>
+<span id="cb96-16"><a href="#cb96-16" aria-hidden="true" tabindex="-1"></a>    <span class="bn">ytitle</span>(<span class="st">"Density"</span>) <span class="bn">title</span>(<span class="st">"Panel B"</span>, pos(11)) <span class="co">///</span></span>
+<span id="cb96-17"><a href="#cb96-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">scale</span>(*1.2) <span class="bn">name</span>(bs_diff, <span class="kw">replace</span>)</span>
+<span id="cb96-18"><a href="#cb96-18" aria-hidden="true" tabindex="-1"></a><span class="kw">graph</span> <span class="bn">combine</span> bs_mes bs_diff, <span class="ot">row</span>(2) <span class="co">///</span></span>
+<span id="cb96-19"><a href="#cb96-19" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"Distribution of ME estimates across 1,000 samples"</span>) <span class="co">///</span></span>
+<span id="cb96-20"><a href="#cb96-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">note</span>(<span class="st">"Vertical dashed lines are the bootstrapped 95% confidence intervals"</span></span>
+<span id="cb96-21"><a href="#cb96-21" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><img src="fig/cda-07_a10_d-kdensity-high_cov.png" class="img-fluid" style="width:80.0%" alt="Two panels of bootstrap distributions for the mediation example. Panel A: density curves of the marginal effect of x1 in model 1 (centered near .08) and in model 2 (centered near .06), overlapping, with lines at each 95% confidence interval. Panel B: the density of the cross-model difference, narrow and centered near .025, with its 95% confidence interval from about .015 to .037, well above zero."></p>
+<p>This is for <strong>Ex 2:</strong> the bootstrapped estimates of <em>ME<sub>1</sub></em> and <em>ME<sub>2</sub></em> correlate at 0.857. Similarly, covariance estimated by SUEST is large and positive</p>
+<p><span class="math display">\[z_{bs} = 4.68 \qquad z = 4.69 \qquad z' = 1.78\]</span></p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/www\.trentonmize\.com");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../../../teaching/cda/07/7-11-takeaways.html" class="pagination-link" aria-label="7.11 Takeaway Points: Interactions and Cross-Model Comparisons">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">7.11 Takeaway Points: Interactions and Cross-Model Comparisons</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../../teaching/cdash.html" class="pagination-link" aria-label="Categorical Data Analysis (Statistical Horizons)">
+        <span class="nav-page-text">Categorical Data Analysis (Statistical Horizons)</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Trenton D. Mize, Purdue University</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org">Quarto</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

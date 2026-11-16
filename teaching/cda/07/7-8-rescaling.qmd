@@ -1,0 +1,517 @@
+---
+title: "7.8 The Problem of Rescaling in Logit/Probit"
+---
+
+Consider the following data I simulated:
+
+- **yB** is binary 0/1; **yC** is continuous, symmetrically distributed
+- **x1** and **x2** are binary predictors
+  - **x1** and **x2** are both correlated with **yB** and **yC**
+  - **x1** and **x2** are uncorrelated with each other
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. *Create some data for rescaling example (logit vs OLS)
+. clear
+
+. set seed    30004
+
+. set obs     10000
+Number of observations (_N) was 0, now 10,000.
+
+. 
+. gen x1 = _n > _N/2      // first half = 0, second half = 1
+
+. gen x2 = mod(_n, 2)     // alternates 1/0 within each half
+
+. 
+. gen yB = uniform() < invlogit(-1 + 2.5*(x1) - 2.5*(x2))
+
+. gen yC = 0 + 2.5*(x1) - 2.5*(x2) + rnormal(0,3.5)
+
+. 
+. tabstat yB yC x1 x2, stat(mean sd min max) format(%4.2f) columns(s)
+
+    Variable |      Mean        SD       Min       Max
+-------------+----------------------------------------
+          yB |      0.35      0.48      0.00      1.00
+          yC |     -0.06      3.92    -16.53     15.84
+          x1 |      0.50      0.50      0.00      1.00
+          x2 |      0.50      0.50      0.00      1.00
+------------------------------------------------------
+
+. corr yB yC x1 x2
+(obs=10,000)
+
+             |       yB       yC       x1       x2
+-------------+------------------------------------
+          yB |   1.0000
+          yC |   0.2541   1.0000
+          x1 |   0.4090   0.3039   1.0000
+          x2 |  -0.4149  -0.3236   0.0000   1.0000
+
+
+```
+
+## R
+
+```{r}
+library(dplyr)           # data manipulation
+library(modelsummary)    # regression tables
+library(marginaleffects) # predictions and marginal effects
+library(suest)           # seemingly unrelated estimation
+
+# Create some data for rescaling example (logit vs OLS)
+# (R's random numbers differ from Stata's, so the results differ a little)
+set.seed(30004)
+n <- 10000
+sim <- data.frame(x1 = as.numeric(1:n > n / 2),  # first half = 0, second half = 1
+  x2 = (1:n) %% 2)                                 # alternates 1/0 within each half
+
+sim$yB <- as.numeric(runif(n) < plogis(-1 + 2.5 * sim$x1 - 2.5 * sim$x2))
+sim$yC <- 0 + 2.5 * sim$x1 - 2.5 * sim$x2 + rnorm(n, 0, 3.5)
+
+round(sapply(sim[c("yB", "yC", "x1", "x2")],
+  function(v) c(mean = mean(v), sd = sd(v), min = min(v), max = max(v))), 2)
+round(cor(sim[c("yB", "yC", "x1", "x2")]), 4)
+```
+
+:::
+
+## Statistical mediation & the problem of rescaling
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. *Compare Coefficients Across Models
+. qui regress yC i.x1
+
+. est store ols_x1
+
+. qui regress yC i.x2
+
+. est store ols_x2
+
+. qui regress yC i.x1 i.x2
+
+. est store ols_x1_x2
+
+. 
+. qui logit yB i.x1, or nolog
+
+. est store logit_x1
+
+. qui logit yB i.x2, or nolog
+
+. est store logit_x2
+
+. qui logit yB i.x1 i.x2, or nolog
+
+. est store logit_x1_x2
+
+. 
+. *7.8.a
+. est table ols_x1 ols_x2 ols_x1_x2, stat(r2 bic) star vsquish ///
+>     b(%4.3f) stfmt(%8.2f) title("[7.8.a] Coefficients from Linear (OLS) Models
+> ")
+
+[7.8.a] Coefficients from Linear (OLS) Models
+
+--------------------------------------------------------
+    Variable |   ols_x1        ols_x2       ols_x1_x2   
+-------------+------------------------------------------
+          x1 |
+          1  |    2.385***                    2.385***  
+          x2 |
+          1  |                 -2.540***     -2.540***  
+       _cons |   -1.256***      1.206***      0.014     
+-------------+------------------------------------------
+          r2 |     0.09          0.10          0.20     
+         bic | 54774.46      54637.30      53558.08     
+--------------------------------------------------------
+                Legend: * p<0.05; ** p<0.01; *** p<0.001
+
+. 
+. *7.8.b
+. est table logit_x1 logit_x2 logit_x1_x2, eform stat(r2_p bic) star vsquish ///
+>     b(%8.3f) stfmt(%8.2f) title("[7.8.b] Odds Ratios from Logit Models")
+
+[7.8.b] Odds Ratios from Logit Models
+
+--------------------------------------------------------
+    Variable |  logit_x1      logit_x2     logit_x1_x2  
+-------------+------------------------------------------
+          x1 |
+          1  |    6.567***                   11.641***  
+          x2 |
+          1  |                  0.147***      0.084***  
+       _cons |    0.181***      1.200***      0.380***  
+-------------+------------------------------------------
+        r2_p |     0.14          0.14          0.31     
+         bic | 11192.33      11139.17       8961.31     
+--------------------------------------------------------
+                Legend: * p<0.05; ** p<0.01; *** p<0.001
+
+```
+
+## R
+
+```{r}
+# Treat binary variables as factors
+sim <- sim |>
+  mutate(x1 = factor(x1), x2 = factor(x2))
+
+# Compare Coefficients Across Models
+ols_x1 <- lm(yC ~ x1, data = sim)
+ols_x2 <- lm(yC ~ x2, data = sim)
+ols_x1_x2 <- lm(yC ~ x1 + x2, data = sim)
+
+logit_x1 <- glm(yB ~ x1, data = sim, family = binomial(link = "logit"))
+logit_x2 <- glm(yB ~ x2, data = sim, family = binomial(link = "logit"))
+logit_x1_x2 <- glm(yB ~ x1 + x2, data = sim, family = binomial(link = "logit"))
+
+# 7.8.a
+modelsummary(list(ols_x1 = ols_x1, ols_x2 = ols_x2, ols_x1_x2 = ols_x1_x2),
+  fmt = 3, stars = c("*" = .05, "**" = .01, "***" = .001), gof_map = c("r.squared", "bic"),
+  title = "[7.8.a] Coefficients from Linear (OLS) Models")
+
+# 7.8.b
+modelsummary(list(logit_x1 = logit_x1, logit_x2 = logit_x2, logit_x1_x2 = logit_x1_x2),
+  exponentiate = TRUE, fmt = 3, stars = c("*" = .05, "**" = .01, "***" = .001),
+  gof_map = c("bic"), title = "[7.8.b] Odds Ratios from Logit Models")
+```
+
+:::
+
+::: {.callout-note icon="false" appearance="simple"}
+Note the *R^2^* from each model
+:::
+
+![](images/dog.jpeg){width=25% fig-alt="A startled dog staring at the camera with wide eyes."}
+
+**The effect size in logit is 2 times larger once we account for an orthogonal IV!?!?**
+
+### Intuitive explanation of rescaling
+
+> *"The variance of Y\* changes because estimation of the probability of success gets better and better as you add more variables, and better estimation in turn leads to more variability in the estimates. Suppose you had a single dichotomous independent variable... (gender)... All men would have the same predicted probability of success and all women would also share the same predicted probability. For example, men might have a 40% probability of success while women have a 50% chance.*
+>
+> *As you add more variables, however, there will start to be more variability in the individuals' predicted probabilities. So, among the men, after adding another variable the probabilities might now range between 35% and 45%, while for women the range might be 45%--55%. Hence, instead of the probabilities only ranging from 40% to 50%, adding another variable could cause the individual probabilities to range from 35% to 55%. If you are doing really well, adding more variables might even get you to the point where the predicted individual probabilities of success ranged from 0.0001 to 0.9999."*
+
+Quote from [Williams and Jorgensen 2023](https://doi.org/10.1016/j.ssresearch.2022.102802) p. 102802
+
+### Statistical explanation of rescaling: identification
+
+1. A logit/probit's raw coefficients are in the metric of y\*
+
+$$y^{*} = \alpha + \mathbf{\beta x} + \varepsilon$$
+
+2. The size of *y\** is not independently identified and will vary across models
+   - More explained variation $\beta$ increases *y\**
+   - The size of $\varepsilon$ will reflect both:
+     - The assumption about the distribution of the errors (ω: SD is 1 for probit; $\pi/\sqrt{3}$ for logit)
+     - Residual variation ($\sigma_{\varepsilon}$)
+       - The residual variation of the model changes with the inclusion / omission of different IVs
+3. Thus, logit/probit coefficients are said to be identified only "up to a scale factor"
+
+$$b = \frac{\beta}{s} \qquad s = \frac{\sigma_{\varepsilon}}{\omega}$$
+
+4. Thus, the coefficients change in size across models, due not only to explained variation $\beta$
+
+\*See [Williams and Jorgensen 2023](https://doi.org/10.1016/j.ssresearch.2022.102802) and [Breen, Karlson, and Holm 2018](https://doi.org/10.1146/annurev-soc-073117-041429) for excellent overviews of this issue
+
+## Solutions to the problem of rescaling: mediation
+
+- Consider the following where $b_{yx}$ is the observed coefficient for focal IV *x* in model R (reduced model without mediator) and $b_{yx \bullet z}$ is the observed coefficient for *x* in model F (full model with mediator *z* included)
+  - $\beta_{yx}$ and $\beta_{yx \bullet z}$ are the true effects
+
+$$b_{yx} - b_{yx \bullet z} = \frac{\beta_{yx}}{\sigma_{R}} - \frac{\beta_{yx \bullet z}}{\sigma_{F}} \neq \beta_{yx} - \beta_{yx \bullet z}$$
+
+- The difference $b_{yx} - b_{yx \bullet z}$ does not equal $\beta_{yx} - \beta_{yx \bullet z}$ because the scale parameters (σ) are not equal across models
+  - If the additional variables in model F explain **any** variation in the outcome then $\sigma_{R} > \sigma_{F}$ and thus $b_{yx} - b_{yx \bullet z} \neq \beta_{yx} - \beta_{yx \bullet z}$
+- [Kohler, Karlson, Holm (2011)](https://www.stata-journal.com/article.html?article=st0236) and [Karlson, Holm, and Breen (2012)](http://journals.sagepub.com/doi/abs/10.1177/0081175012444861) propose a solution (the KHB method) that uses a single scaling parameter across both models (equal to that of the full model)
+- The exact details of the KHB method are beyond the scope of this course---the key takeaway is that their solution allows the coefficients to be on the same scale so that they can be directly compared: significance tests from this method are appropriate tests of cross-model differences
+  - Though the coefficient in the reduced model no longer has its natural interpretation
+- Because the coefficient from the reduced model is no longer directly interpretable, another way to represent the cross-model difference is the ratio of the two same-scale coefficients across models
+  - Which can easily be represented as the proportion change in the size of the coefficient across the two models:
+
+$$1 - \frac{\beta_{yx \bullet z}}{\beta_{yx}}$$
+
+## Add Health example: mediation in logit pr(depress)
+
+- Example: Add Health Wave 4
+  - DV: Depressive = 1
+    - Binary version of *depressive symptoms* scale representing at risk
+  - Focal IV: *education in years*
+  - Mediating IV: *wages*
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. *KHB example
+. use "https://tdmize.github.io/data/data/addhealth4", clear
+(addhealth4_dmv.dta | Add Health Wave IV | DMV Workshop)
+
+. 
+. logit depB c.edyrs, nolog
+
+Logistic regression                                     Number of obs =  4,307
+                                                        LR chi2(1)    =  72.52
+                                                        Prob > chi2   = 0.0000
+Log likelihood = -2291.6952                             Pseudo R2     = 0.0156
+
+------------------------------------------------------------------------------
+        depB | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+       edyrs |     -0.141      0.017   -8.332   0.000       -0.174      -0.108
+       _cons |      0.814      0.242    3.367   0.001        0.340       1.287
+------------------------------------------------------------------------------
+
+. logit depB c.edyrs c.wages, nolog
+
+Logistic regression                                     Number of obs =  4,307
+                                                        LR chi2(2)    =  99.77
+                                                        Prob > chi2   = 0.0000
+Log likelihood = -2278.0708                             Pseudo R2     = 0.0214
+
+------------------------------------------------------------------------------
+        depB | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+       edyrs |     -0.119      0.018   -6.781   0.000       -0.153      -0.084
+       wages |     -0.015      0.003   -4.537   0.000       -0.021      -0.008
+       _cons |      0.736      0.242    3.039   0.002        0.262       1.211
+------------------------------------------------------------------------------
+
+```
+
+## R
+
+```{r}
+library(haven)           # import Stata data and labels
+
+ah4 <- read_dta("https://tdmize.github.io/data/data/addhealth4.dta")
+
+# KHB example
+reduced <- glm(depB ~ edyrs, data = ah4, family = binomial(link = "logit"))
+full <- glm(depB ~ edyrs + wages, data = ah4, family = binomial(link = "logit"))
+
+modelsummary(list(reduced, full), fmt = 3,
+  stars = c("*" = .05, "**" = .01, "***" = .001))
+```
+
+:::
+
+- The problem with eyeballing these effect sizes is we don't know how much of the change in the coefficient on education (-0.141 to -0.119) is due to including wages in the model, and how much is due to model rescaling
+
+## The khb method to test for mediation
+
+::: {.callout-note icon="false" appearance="simple"}
+[**khb**](http://fmwww.bc.edu/repec/bocode/k/khb.html) command in Stata; in R, calculate it by hand (see the R code)
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. khb logit depB c.edyrs || c.wages, summary
+
+Decomposition using the KHB-Method
+
+Model-Type:  logit                                 Number of obs     =    4307
+Variables of Interest: edyrs                       Pseudo R2         =    0.02
+Z-variable(s): wages
+------------------------------------------------------------------------------
+        depB | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+edyrs        |
+     Reduced |     -0.146      0.017   -8.580   0.000       -0.180      -0.113
+        Full |     -0.119      0.018   -6.781   0.000       -0.153      -0.084
+        Diff |     -0.028      0.006   -4.252   0.000       -0.040      -0.015
+------------------------------------------------------------------------------
+
+Summary of confounding
+
+        Variable | Conf_ratio    Conf_Pct   Resc_Fact  
+    -------------+-------------------------------------
+           edyrs |  1.2319681       18.83    1.036583  
+    ---------------------------------------------------
+
+```
+
+## R
+
+```{r}
+# R has no working built-in way to do the KHB method for logit models (the khb
+# function in the matchingMarkets package fits probit models only), so calculate
+# it by hand. The reduced model uses the part of the mediator (z) unrelated to the
+# focal IV (x): its residual from a regression on x. Both models are then on the
+# same scale, and the difference is the indirect effect.
+khb_logit <- function(y, x, z, data) {
+  aux <- lm(reformulate(x, z), data = data)              # z regressed on x
+  data$z_res <- resid(aux)
+  naive   <- glm(reformulate(x, y), data = data, family = binomial(link = "logit"))
+  reduced <- glm(reformulate(c(x, "z_res"), y), data = data, family = binomial(link = "logit"))
+  full    <- glm(reformulate(c(x, z), y), data = data, family = binomial(link = "logit"))
+
+  b_red <- coef(reduced)[[x]]
+  b_full <- coef(full)[[x]]
+  est <- c(Reduced = b_red, Full = b_full, Diff = b_red - b_full)
+  se <- c(sqrt(vcov(reduced)[x, x]), sqrt(vcov(full)[x, x]),
+    # Diff = (coef of z in full model) * (coef of x on z); delta method
+    sqrt(coef(aux)[[x]]^2 * vcov(full)[z, z] + coef(full)[[z]]^2 * vcov(aux)[x, x]))
+  zval <- est / se
+  print(round(cbind(Coef = est, "Std. Err." = se, z = zval, "P>|z|" = 2 * pnorm(-abs(zval)),
+    "[95% Conf." = est - qnorm(.975) * se, "Interval]" = est + qnorm(.975) * se), 3))
+
+  cat("\nSummary of confounding\n")
+  round(c(Conf_ratio = b_red / b_full, Conf_Pct = 100 * (b_red - b_full) / b_red,
+    Resc_Fact = b_red / coef(naive)[[x]]), 4)
+}
+
+khb_logit("depB", "edyrs", "wages", data = ah4)
+```
+
+:::
+
+*The effect of education is reduced after accounting for wages (p \< 0.001). About 19% of the reduction in the coefficient is due to the inclusion of wages in the model*
+
+#### khb method applied to our rescaling example
+
+- Recall the example with data I generated
+  - We know that the true effect of *x1* and *x2* should not change across models as *x1* and *x2* are orthogonal
+    - But, the odds ratios from logit changed dramatically
+      - For *x1*, from 6.567 to 11.641
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. *Simulated data from the top of this page (see the code there)
+. khb logit yB x1 || x2, summary
+
+Decomposition using the KHB-Method
+
+Model-Type:  logit                                 Number of obs     =   10000
+Variables of Interest: x1                          Pseudo R2         =    0.31
+Z-variable(s): x2
+------------------------------------------------------------------------------
+          yB | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+x1           |
+     Reduced |      2.455      0.060   41.007   0.000        2.337       2.572
+        Full |      2.455      0.060   41.007   0.000        2.337       2.572
+        Diff |      0.000      0.025    0.000   1.000       -0.049       0.049
+------------------------------------------------------------------------------
+
+Summary of confounding
+
+        Variable | Conf_ratio    Conf_Pct   Resc_Fact  
+    -------------+-------------------------------------
+              x1 |          1        0.00    1.304165  
+    ---------------------------------------------------
+
+```
+
+## R
+
+```{r}
+# KHB method with the simulated data (x1 and x2 as 0/1 numbers)
+simn <- data.frame(yB = sim$yB, x1 = as.numeric(sim$x1 == "1"),
+  x2 = as.numeric(sim$x2 == "1"))
+khb_logit("yB", "x1", "x2", data = simn)
+```
+
+:::
+
+::: {.callout-note icon="false" appearance="simple"}
+Once put on the same scale we see that the effect of *x1* did not change across the two models
+:::
+
+## Limitations of most methods for cross-model comparisons
+
+1. Coefficients are often not the effect of interest. The KHB method only tests mediation in the underlying linear *y\** metric
+   - Marginal effects are often more informative; don't want to switch between ME and *y\** metric for different parts of your analysis
+2. Many are limited to the special case of mediation
+   - Even within these, multiple mediators are often not easily incorporated
+3. Effects that include multiple linked coefficients (e.g., *age* and *age^2^*) cannot be easily incorporated into existing frameworks that focus on the βs
+4. Some additional cross-model comparisons of interest that are difficult to test with current methods:
+   - Test different specifications of an IV across models
+   - Test effects across different DVs
+   - Test differences across model types (e.g., ordinal vs multinomial logit)
+   - Tests across different samples
+     - E.g. Models fit separately across different groups
+   - And more...
+
+## An alternative solution: predictions and MEs
+
+- An alternative to the methods that "fix" the coefficients to make them comparable is to instead work in the predictions and marginal effects
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. *Compare the MEs across models
+. mecompare x1, models(logit_x1 logit_x1_x2)
+
+mecompare uses vce(robust) for all models. Standard errors from mecompare will d
+> iffer from the specified model(s) because vce(robust) was not used on at least
+>  one of the models specified in the models( ) option. We strongly recommend re
+> fitting the first (logit) and second (logit) models with vce(robust). See vce_
+> option for details on vce(robust).
+
+Predicting: Pr(yB)
+Marginal effects and cross-model differences (N_logit_x1=10000)
+(N_logit_x1_x2=10000)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+x1                               |                                       
+                       1 - 0     |                                       
+                        logit x1 |     1      0.390      0.009      0.000
+                     logit x1 x2 |     2      0.390      0.008      0.000
+                      Difference |     3      0.000      0.004      1.000
+
+. mecompare x2, models(logit_x2 logit_x1_x2)
+
+mecompare uses vce(robust) for all models. Standard errors from mecompare will d
+> iffer from the specified model(s) because vce(robust) was not used on at least
+>  one of the models specified in the models( ) option. We strongly recommend re
+> fitting the first (logit) and second (logit) models with vce(robust). See vce_
+> option for details on vce(robust).
+
+Predicting: Pr(yB)
+Marginal effects and cross-model differences (N_logit_x2=10000)
+(N_logit_x1_x2=10000)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+x2                               |                                       
+                       1 - 0     |                                       
+                        logit x2 |     1     -0.395      0.009      0.000
+                     logit x1 x2 |     2     -0.395      0.008      0.000
+                      Difference |     3     -0.000      0.004      1.000
+
+```
+
+## R
+
+```{r}
+# Compare the MEs across models
+fit_x1 <- suest(logit_x1, logit_x1_x2, model_names = c("logit x1", "logit x1 x2"))
+me_x1 <- avg_comparisons(fit_x1, variables = "x1", newdata = sim)
+me_x1
+hypotheses(me_x1, hypothesis = difference ~ revpairwise)
+
+fit_x2 <- suest(logit_x2, logit_x1_x2, model_names = c("logit x2", "logit x1 x2"))
+me_x2 <- avg_comparisons(fit_x2, variables = "x2", newdata = sim)
+me_x2
+hypotheses(me_x2, hypothesis = difference ~ revpairwise)
+```
+
+:::
+
+- **Remember**: The coefficients **are not independently identified** in logit/probit and thus cannot be directly compared across models due to rescaling
+  - The predicted probabilities and marginal effects **are identified** and thus can be compared directly across models

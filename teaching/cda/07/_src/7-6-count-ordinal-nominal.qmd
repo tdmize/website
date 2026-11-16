@@ -1,0 +1,729 @@
+---
+title: "7.6 Count, ordinal, and nominal models"
+---
+<<dd_version: 2>>
+
+- The summary recommendations from [Mize (2019)](https://sociologicalscience.com/articles-v6-4-81/) in the last section apply to **any nonlinear effects**
+  - These include nonlinear effects in linear regression models
+  - It also includes all other categorical outcome models, like count, ordinal, and nominal models
+- Count models are treated straightforwardly just like binary models
+  - But, more potential prediction quantities to calculate effects
+    - E.g., Predicted rate (count) and/or Pr(*y* = #)
+- Ordinal and nominal models present multiple options
+  - Interactions for effect on each outcome category separately
+    - Proceed identically to binary models, but for all *L* outcome categories
+  - Overall interaction effect across all outcome categories
+    - Use total marginal effects to summarize overall effect of a focal IV
+
+## Count models
+
+- **Data**: Health and Retirement Study\* (older adults)
+- **Outcome**: Count of functional limitations
+
+> *We need to understand difficulties people may have with various activities because of a health or physical problem. Please tell me whether you have any difficulty doing each of the everyday activities that I read to you. Exclude any difficulties that you expect to last less than three months.*
+>
+> - *Walking several blocks*
+> - *Walking one block*
+> - *Walking across a room*
+> - *Climbing several flights of stairs without resting*
+> - *Climbing one flight of stairs without resting*
+> - *Sitting for about two hours*
+> - *Getting up from a chair after sitting for long periods*
+> - *Stooping, kneeling, or crouching*
+> - *Pulling or pushing large objects like a living room chair*
+
+\*I'm pooling the waves and clustering the SEs on participant ID to account for repeated observations. For more serious analyses, I recommend a longitudinal/panel model
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/hrs_si", clear
+
+*Data management
+drop if missing(funclim, age, race4cat, wealth_w, collegeB, marstatB, woman, hhidpn)
+
+*7.6.a - distribution of outcome functional limiations count
+hist funclim, percent xlab(0(1)9) ///
+    title("[7.6.a] Distribution of count of functional limitations (HRS; older adults)")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-07_06_a-hist_funclim.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-07_06_a-hist_funclim.png){width=80% fig-alt="[7.6.a] Histogram of the count of functional limitations (0 to 9) among older adults in the HRS: about 34% report 0, about 16% report 1, 11% report 2, and the percentages keep falling to about 2% reporting 9."}
+
+## R
+
+```{r}
+#| fig-alt: "[7.6.a] Histogram of the count of functional limitations (0 to 9) among older adults in the HRS: about 34% report 0, about 16% report 1, 11% report 2, and the percentages keep falling to about 2% reporting 9."
+library(haven)           # import Stata data and labels
+library(dplyr)           # data manipulation
+library(ggplot2)         # graphs
+library(sjmisc)          # frequency tables
+library(marginaleffects) # predictions and marginal effects
+library(cleanplots)      # graph scheme
+cleanplots_defaults()
+
+hrs <- read_dta("https://tdmize.github.io/data/data/hrs_si.dta")
+
+# Data management
+hrs <- hrs[c("funclim", "age", "race4cat", "wealth_w", "collegeB", "marstatB", "woman",
+  "hhidpn")]
+hrs <- hrs[complete.cases(hrs), ]
+
+# 7.6.a - distribution of outcome functional limiations count
+ggplot(hrs, aes(x = funclim)) +
+  geom_bar(aes(y = after_stat(100 * count / sum(count))), width = .3, fill = "gray60") +
+  scale_x_continuous(breaks = 0:9) +
+  labs(title = "[7.6.a] Distribution of count of functional limitations (HRS; older adults)",
+    x = "Functional limitations, count 0-9", y = "Percent")
+```
+
+:::
+
+### HRS functional limitations example
+
+- **Focal IV**: Age
+  - Mean = 67
+- **Moderating IV**: College degree (=1) or not (=0)
+- **Controls**: Gender, marital status, race-ethnicity
+
+> *RQ: How does aging affect physical health? Does aging have a different effect for those with and without college degrees?*
+>
+> *RQ: Will the physical health gap between those with and without college degrees be the same across different ages? How will it change at different ages?*
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*7.6.b - distribution of focal IV age
+hist age, freq width(1) xlab(25(10)105) ylab(0(1000)10000, format(%5.0f)) ///
+    title("[7.6.b] Distribution of age (HRS; older adults)") xtitle("Age")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-07_06_b-hist_age.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-07_06_b-hist_age.png){width=80% fig-alt="[7.6.b] Histogram of age (in one-year bins) among older adults in the HRS: few respondents are under 50; the frequency jumps to about 9,000 per year of age in the mid-50s to about 60, then declines steadily through the 70s and 80s, with few respondents past 95."}
+
+## R
+
+```{r}
+#| fig-alt: "[7.6.b] Histogram of age (in one-year bins) among older adults in the HRS: few respondents are under 50; the frequency jumps to about 9,000 per year of age in the mid-50s to about 60, then declines steadily through the 70s and 80s, with few respondents past 95."
+# 7.6.b - distribution of focal IV age
+ggplot(hrs, aes(x = age)) +
+  geom_histogram(binwidth = 1, fill = "gray60", color = "black") +
+  scale_x_continuous(breaks = seq(25, 105, 10)) +
+  scale_y_continuous(breaks = seq(0, 10000, 1000)) +
+  labs(title = "[7.6.b] Distribution of age (HRS; older adults)", x = "Age", y = "Frequency")
+```
+
+:::
+
+### Interaction effects on the rate
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+// Negative binomial count model for functional limitations.
+qui nbreg funclim c.age##i.collegeB i.race4cat i.marstatB i.woman, cluster(hhidpn)
+est store flmod
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# Treat binary/nominal variables as factors
+hrs <- hrs |>
+  mutate(across(c(collegeB, race4cat, marstatB, woman), as_factor))
+
+# Negative binomial count model for functional limitations
+flmod <- MASS::glm.nb(funclim ~ age * collegeB + race4cat + marstatB + woman, data = hrs)
+```
+
+:::
+
+::: {.callout-note icon="false" appearance="simple"}
+Ignore the coefficient on the interaction (product) term. Count models are nonlinear and coefficients are in a different metric than the predictions. Graph predictions and test interaction in MEs.
+:::
+
+- Graph the predictions for the count/rate
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*7.6.c - Graph predicted rate/count of functional limitations
+est restore flmod
+qui margins collegeB, at(age=(45(2)95))
+marginsplot, ///
+    recastci(rline) ciopt(lpat(dash) col(*.5)) plotop(msym(none) lwid(*1.5)) ///
+    title("[7.6.c] Predicted number of functional limitations by age and college", size(*1.1)) ///
+    ylab(0(1)5) ytitle("# of functional limitations") ///
+    xtitle("Age") legend(order(3 "No degree" 4 "College"))
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-07_06_c-pr_funclim.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-07_06_c-pr_funclim.png){width=80% fig-alt="[7.6.c] Predicted number of functional limitations by age (45 to 95) for those with and without a college degree, with confidence intervals. Both rise with age at an increasing rate: without a degree from about 1.8 at 45 to about 4.2 at 95; with a degree from about 0.75 at 45 to about 4.3 at 95. The college advantage is large at younger ages and disappears by the mid-90s."}
+
+## R
+
+```{r}
+#| fig-alt: "[7.6.c] Predicted number of functional limitations by age (45 to 95) for those with and without a college degree, with confidence intervals. Both rise with age at an increasing rate: without a degree from about 1.8 at 45 to about 4.2 at 95; with a degree from about 0.75 at 45 to about 4.3 at 95. The college advantage is large at younger ages and disappears by the mid-90s."
+# 7.6.c - Graph predicted rate/count of functional limitations
+# (one age at a time, which needs much less memory with 270,000+ observations)
+pr <- bind_rows(lapply(seq(45, 95, 2), function(a) {
+  avg_predictions(flmod, by = c("age", "collegeB"), vcov = ~hhidpn,
+    newdata = datagrid(age = a, collegeB = unique, grid_type = "counterfactual"))
+}))
+
+ggplot(pr, aes(x = age, y = estimate, color = collegeB, fill = collegeB)) +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .2, color = NA) +
+  geom_line(linewidth = 1) +
+  scale_color_discrete(labels = c("No degree", "College")) +
+  scale_fill_discrete(labels = c("No degree", "College")) +
+  scale_y_continuous(breaks = 0:5, limits = c(0, 5)) +
+  labs(title = "[7.6.c] Predicted number of functional limitations by age and college",
+    x = "Age", y = "# of functional limitations", color = NULL, fill = NULL)
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*AME of age for those w and w/o college degrees
+mecompare age, by(collegeB) amount(10) model(flmod)
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# Changes in continuous IVs centered on the observed values, like mecompare
+options(marginaleffects_contrast_direction = "center")
+
+# AME of age for those w and w/o college degrees
+mes <- avg_comparisons(flmod, variables = list(age = 10), by = "collegeB",
+  vcov = ~hhidpn, newdata = datagrid(collegeB = unique, grid_type = "counterfactual"))
+mes
+```
+
+:::
+
+> *Aging 10 years predicts a 0.46 increase in the number of functional limitations for someone without a college degree. For someone with a college degree, the same 10-year increase in age predicts a 0.61 increase.*
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+metest 2 - 1
+<</dd_do>>
+```
+
+## R
+
+```{r}
+hypotheses(mes, hypothesis = "b2 - b1 = 0")
+```
+
+:::
+
+> *On average, aging has a significantly larger effect on the number of functional limitations for someone with a college degree than for someone without (p \< .001).*
+
+- Given the substantial nonlinearities we see in the graph, good to report interaction at different ages and not only the average effect (above)
+  - I've picked 3 theoretical ideal types of ages 45, 65, 85
+
+::: {.callout-note icon="false" appearance="simple"}
+With **mecompare**, use the **start()** option to specify conditional values of a focal IV
+
+With **avg_comparisons**, in the **newdata = datagrid()**
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*2nd diffs for age * college, at three ideal types of age
+mecompare age, by(collegeB) amount(10) start(age=(45 65 85)) model(flmod)
+<</dd_do>>
+```
+
+```{.stata-run}
+<<dd_do>>
+qui metest, clear
+qui metest 1 - 4, add rowname("at age 45")
+qui metest 2 - 5, add rowname("at age 65")
+qui metest 3 - 6, add rowname("at age 85")
+metest, title("2nd diff. of effect of age for those w and w/o college degrees")
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# 2nd diffs for age * college, at three ideal types of age
+mes <- avg_comparisons(flmod, variables = list(age = 10), by = c("collegeB", "age"),
+  vcov = ~hhidpn, newdata = datagrid(collegeB = unique, age = c(45, 65, 85),
+    grid_type = "counterfactual"))
+mes
+
+hypotheses(mes, hypothesis = ~ revpairwise | age)
+```
+
+:::
+
+> *Those without college degrees acquire more functional limitations much earlier in life than those with college degrees. But by older ages, the groups converge.*
+>
+> *For individuals in their 40s, aging is associated with a faster increase in functional limitations for someone without a college degree. However, for someone in their 60s, those with college degrees experience a larger increase in functional limitations. By their 80s, the rate is much stronger for someone with a college degree.*
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*7.6.d - Other side of interaction: effect of college, at different ages
+est restore flmod
+qui margins, dydx(college) at(age=(45(2)95))
+marginsplot, yline(0) ///
+    recastci(rline) ciopt(lpat(dash) col(black*.5)) ///
+    plotop(msym(none) lcol(black) lwid(*1.5)) ///
+    xlab(45(10)95) ylab(-1.5(.25).5) xtitle("Age") ///
+    ytitle("ME of college (vs not)") ///
+    title("[7.6.d] Marginal effect of having a college degree, across ages", size(*1.1)) ///
+    note("Negative effects mean those with college degrees have fewer functional limitations", span)
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-07_06_d-me_college.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-07_06_d-me_college.png){width=80% fig-alt="[7.6.d] Marginal effect of having a college degree on the number of functional limitations across ages 45 to 95, with confidence intervals and a line at zero. The effect is about -1.05 from age 45 to the mid-60s, then shrinks toward zero at older ages, crossing zero in the early 90s and ending slightly above zero at 95."}
+
+## R
+
+```{r}
+#| fig-alt: "[7.6.d] Marginal effect of having a college degree on the number of functional limitations across ages 45 to 95, with confidence intervals and a line at zero. The effect is about -1.05 from age 45 to the mid-60s, then shrinks toward zero at older ages, crossing zero in the early 90s and ending slightly above zero at 95."
+# 7.6.d - Other side of interaction: effect of college, at different ages
+mes <- bind_rows(lapply(seq(45, 95, 2), function(a) {
+  avg_comparisons(flmod, variables = "collegeB", by = "age", vcov = ~hhidpn,
+    newdata = datagrid(age = a, grid_type = "counterfactual"))
+}))
+
+ggplot(mes, aes(x = age, y = estimate)) +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .2) +
+  geom_line(linewidth = 1) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  scale_x_continuous(breaks = seq(45, 95, 10)) +
+  scale_y_continuous(breaks = seq(-1.5, .5, .25), limits = c(-1.5, .5)) +
+  labs(title = "[7.6.d] Marginal effect of having a college degree, across ages",
+    caption = "Negative effects mean those with college degrees have fewer functional limitations",
+    x = "Age", y = "ME of college (vs not)")
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*MEs of college, at empirical ideal types of age.
+** Moderating continuous IV values go in covariates() option of mecompare
+tabstat age, stat(p5 p50 p95)
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# MEs of college, at empirical ideal types of age
+quantile(hrs$age, c(.05, .5, .95))
+```
+
+:::
+
+::: {.callout-note icon="false" appearance="simple"}
+Empirical ideal types at 5^th^, 50^th^, and 95^th^ percentiles
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+mecompare college, covariates(age=(51 65 86)) model(flmod)
+<</dd_do>>
+```
+
+## R
+
+```{r}
+mes <- avg_comparisons(flmod, variables = "collegeB", by = "age", vcov = ~hhidpn,
+  newdata = datagrid(age = c(51, 65, 86), grid_type = "counterfactual"))
+mes
+```
+
+:::
+
+> *There is a significant education gap, with those with college degrees reporting fewer functional limitations, from the 5^th^ to 95^th^ percentile of age (age 51 to 86). However, as Figure \# shows, the gap becomes non-significant by the mid 90s.*
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*Compare all MEs using pwcompare option of metest
+metest 1 2 3, pwcompare rownames("age 51" "age 65" "age 86")
+<</dd_do>>
+```
+
+## R
+
+```{r}
+hypotheses(mes, hypothesis = ~ pairwise)
+```
+
+:::
+
+::: {.callout-note icon="false" appearance="simple"}
+The **pwcompare** option of **metest** and the **\~ pairwise** option of **hypotheses** will provide all tests of 2^nd^ differences
+:::
+
+> *The education gap shrinks at older ages. It is somewhat smaller at the median age (65) than at younger ages in the sample (51). It is over half a functional limitation smaller at the oldest ages (86), compared to at younger ages.*
+
+## Ordinal and nominal models
+
+- With multi-outcome models, you can:
+  - Test for interaction across each outcome category separately
+
+> *RQ: Does parenthood have a different effect on "excellent" health for the married and the unmarried? On "good" health, etc.*
+
+  - Or, aggregate up to total effects across each outcome category, for the effect on the DV as a holistic construct
+
+> *RQ: Does parenthood have a different effect on health for the married and the unmarried?*
+
+  - Or both
+
+### GSS self-rated health example
+
+- **Data**: GSS 2000 - 2021
+- **DV**: Self-rated health
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/cda_gss", clear
+
+**only keep var of interest
+drop if missing(healthR, married, parent, woman, race4, age)
+drop if year < 2000 | year > 2021
+
+fre healthR
+<</dd_do>>
+```
+
+## R
+
+```{r}
+gss <- read_dta("https://tdmize.github.io/data/data/cda_gss.dta")
+
+# only keep var of interest
+gss <- gss[c("healthR", "married", "parent", "woman", "race4", "age", "year")]
+gss <- gss[complete.cases(gss), ] |>
+  filter(year >= 2000, year <= 2021)
+
+frq(gss, healthR)
+```
+
+:::
+
+- **Focal IV**: Parent (=1) or not (=0)
+- **Moderating IV**: Married (=1) or not (=0)
+- **Controls**: Age, gender, race-ethnicity
+- **Model**: Using a multinomial logit model, as an ordinal model fails the Brant test, with meaningful differences in conclusions
+  - Procedure for testing interactions is identical in nominal and ordinal models
+
+### Interaction across each outcome category
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*Fit nominal model w/ interaction
+qui mlogit healthR i.married##i.parent i.woman i.race4 c.age
+est store hmod
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# Treat binary/nominal variables as factors
+gss <- gss |>
+  mutate(across(c(healthR, married, parent, woman, race4), as_factor)) |>
+  droplevels()
+
+# Fit nominal model w/ interaction
+hlthmod <- nnet::multinom(healthR ~ married * parent + woman + race4 + age, data = gss,
+  trace = FALSE)
+```
+
+:::
+
+- Plot predictions **for each outcome category**, and **at each combination** of married and parent
+  - Here, 4 \* (2\*2) = 16
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*7.6.e - Plot predictions at combos of married and parent, for each outcome
+qui margins married if parent == 0, post
+est store pr_par0
+
+est restore hmod
+qui margins married if parent == 1, post
+est store pr_par1
+
+coefplot (pr_par0, label("No Children")) (pr_par1, label("Parent")), ///
+    xtitle("Pr(Self-Rated Health)") xlab(0(.1).6) ///
+    ylab(1 `" "Pr(Poor)" "Unmarried" "' 2 `" "Pr(Poor)" "Married" "'  ///
+        3 `" "Pr(Fair)" "Unmarried" "' 4 `" "Pr(Fair)" "Married" "'  ///
+        5 `" "Pr(Good)" "Unmarried" "' 6 `" "Pr(Good)" "Married" "'  ///
+        7 `" "Pr(Excellent)" "Unmarried" "' 8 `" "Pr(Excellent)" "Married" "') ///
+    title("[7.6.e] Probability of self-rated health category, by marital and parental status") ///
+    name(pr_health, replace)
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-07_06_e-pr_health.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-07_06_e-pr_health.png){width=80% fig-alt="[7.6.e] Dot plot of the predicted probability of each self-rated health category (poor, fair, good, excellent) for unmarried and married respondents, with and without children. Poor health is about .03 to .08, fair about .14 to .24, good about .47 to .50, and excellent about .20 to .33. Unmarried parents have higher probabilities of poor and fair health and a lower probability of excellent health than unmarried non-parents; among the married the parent and non-parent dots are closer together."}
+
+## R
+
+```{r}
+#| fig-alt: "[7.6.e] Dot plot of the predicted probability of each self-rated health category (poor, fair, good, excellent) for unmarried and married respondents, with and without children. Poor health is about .03 to .08, fair about .14 to .24, good about .47 to .50, and excellent about .20 to .33. Unmarried parents have higher probabilities of poor and fair health and a lower probability of excellent health than unmarried non-parents; among the married the parent and non-parent dots are closer together."
+# 7.6.e - Plot predictions at combos of married and parent, for each outcome
+pr <- avg_predictions(hlthmod, by = c("married", "parent", "group"),
+  newdata = datagrid(married = unique, grid_type = "counterfactual")) |>
+  mutate(row = factor(paste0("Pr(", group, ")\n", married),
+    levels = paste0("Pr(", rep(levels(gss$healthR), each = 2), ")\n",
+      levels(gss$married))))
+
+ggplot(pr, aes(x = estimate, y = row, color = parent)) +
+  geom_pointrange(aes(xmin = conf.low, xmax = conf.high),
+    position = position_dodge(.4)) +
+  scale_y_discrete(limits = rev) +
+  scale_x_continuous(breaks = seq(0, .6, .1), limits = c(0, .6)) +
+  labs(title = "[7.6.e] Probability of self-rated health category, by marital and parental status",
+    x = "Pr(Self-Rated Health)", y = NULL, color = NULL)
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*7.6.f - Plot MEs of parental status
+est restore hmod
+qui margins married, dydx(parent) post
+coefplot, xlab(-.1(.05).1) xline(0) xtitle("ME(Parental Status)") ///
+    mcol(black) ciopt(col(black)) ///
+    ylab(1 `" "Pr(Poor)" "Unmarried" "' 2 `" "Pr(Poor)" "Married" "'  ///
+        3 `" "Pr(Fair)" "Unmarried" "' 4 `" "Pr(Fair)" "Married" "'  ///
+        5 `" "Pr(Good)" "Unmarried" "' 6 `" "Pr(Good)" "Married" "'  ///
+        7 `" "Pr(Excellent)" "Unmarried" "' 8 `" "Pr(Excellent)" "Married" "') ///
+    title("", span) name(mes_health, replace)
+
+*Plot 2nd diffs for married X parent
+est restore hmod
+margins r.married, dydx(parent) post
+
+matrix sec_ds = (-0.022, -0.037, -0.007 \ ///
+                 -0.004, -0.030,  0.022 \ ///
+                 -0.019, -0.053,  0.015 \ ///
+                  0.045,  0.015,  0.074)
+
+mat rownames sec_ds = Poor Fair Good Excellent
+mat colnames sec_ds = SecDiff ll95 ul95
+
+*7.6.g - 2nd differences
+coefplot (matrix(sec_ds[,1]), ci((sec_ds[,2] sec_ds[,3]))), ///
+    mcol(gs8) ciopt(col(gs8)) ///
+    xline(0) xlab(-.1(.05).1) xtitle("2nd Differences (Married * Parent)") ///
+    ylab(1 "Pr(Poor)" 2 "Pr(Fair)" 3 "Pr(Good)" 4 "Pr(Excellent)") ///
+    title("") name(sec_ds, replace)
+
+*7.6.h - Combine MEs and 2nd diff plot
+graph combine mes_health sec_ds, ysize(4) xsize(8) scale(1.1) ///
+    title("[7.6.h] Marginal effects of parental status (left), and 2nd differences") ///
+    subtitle("2nd difference is difference in size of parent gap, across marital statuses")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/cda-07_06_h-MEs_2nd_diffs.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/cda-07_06_h-MEs_2nd_diffs.png){width=80% fig-alt="[7.6.h] Two panels with a line at zero. Left: marginal effects of parental status on each self-rated health category for the unmarried and the married; for the unmarried, parenthood raises the probabilities of poor, fair, and good health by about .02 each and lowers the probability of excellent health by about .06; for the married all four effects are near zero. Right: the second differences (married minus unmarried) are about -.022 for poor, -.004 for fair, -.019 for good, and .045 for excellent; the confidence intervals for poor and excellent exclude zero."}
+
+## R
+
+```{r}
+#| fig-alt: "[7.6.h] Two panels with a line at zero. Left: marginal effects of parental status on each self-rated health category for the unmarried and the married; for the unmarried, parenthood raises the probabilities of poor, fair, and good health by about .02 each and lowers the probability of excellent health by about .06; for the married all four effects are near zero. Right: the second differences (married minus unmarried) are about -.022 for poor, -.004 for fair, -.019 for good, and .045 for excellent; the confidence intervals for poor and excellent exclude zero."
+# 7.6.f - MEs of parental status
+mes <- avg_comparisons(hlthmod, variables = "parent", by = c("group", "married"),
+  newdata = datagrid(married = unique, grid_type = "counterfactual"))
+
+# 2nd diffs for married X parent
+sec_ds <- hypotheses(mes, hypothesis = ~ pairwise | group)
+
+# 7.6.h - Combine MEs and 2nd diff plot
+panels <- c("Marginal effects of parental status", "2nd Differences (Married * Parent)")
+both <- bind_rows(
+  mes |> mutate(panel = panels[1], row = paste0("Pr(", group, ")\n", married)),
+  sec_ds |> mutate(panel = panels[2], row = paste0("Pr(", group, ")"))) |>
+  mutate(panel = factor(panel, levels = panels),
+    row = factor(row, levels = rev(c(paste0("Pr(", rep(levels(gss$healthR), each = 2), ")\n",
+      levels(gss$married)), paste0("Pr(", levels(gss$healthR), ")")))))
+
+ggplot(both, aes(x = estimate, y = row)) +
+  geom_vline(xintercept = 0) +
+  geom_pointrange(aes(xmin = conf.low, xmax = conf.high)) +
+  facet_wrap(~ panel, scales = "free_y") +
+  scale_x_continuous(breaks = seq(-.1, .1, .05), limits = c(-.1, .1)) +
+  labs(title = "[7.6.h] Marginal effects of parental status (left), and 2nd differences",
+    subtitle = "2nd difference is difference in size of parent gap, across marital statuses",
+    x = NULL, y = NULL)
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+// AMEs for each outcome category
+mecompare parent, by(married) model(hmod)
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# AMEs for each outcome category
+mes
+```
+
+:::
+
+::: {.callout-note icon="false" appearance="simple"}
+These are the marginal effects of parental status, separately for the married and unmarried, across each outcome category. 2^nd^ diff. per outcome is each pair compared (e.g. 2 - 1). See below.
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+qui metest, clear
+qui metest 2-1, add rowname("Married - Not: Poor")
+qui metest 4-3, add rowname("Married - Not: Fair")
+qui metest 6-5, add rowname("Married - Not: Good")
+qui metest 8-7, add rowname("Married - Not: Excellent")
+metest, title("2nd differences: Effect of parenthood across marital status")
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# 2nd differences: Effect of parenthood across marital status
+sec_ds
+```
+
+:::
+
+> *"The interaction effect can be tested as the second difference or equality of the two MEs of parental status---for the unmarried and the married---for each outcome (Mize 2019). The right panel of Figure 8 shows the second difference for each outcome category. Two of the four are significant, indicating that parental status has a larger effect for unmarried than for married individuals on the probability of reporting poor or excellent health (though in opposite directions). We find no evidence of interaction for the probability of reporting fair or good health."* ([Mize and Han 2025](/research/mize_han_socsci_2025.qmd), p.146)
+
+### Total marginal effects
+
+- Although the approach above provides a valid test of interaction, it provides an ambiguous answer given differences across outcome categories
+  - In addition, it answers a more nuanced question than *"is the effect of parental status on health the same for married and unmarried individuals?"*
+- If this broader question is of interest, total MEs can provide a holistic quantification of the effect of parental status to use in the test of interaction
+  - In this case, we calculate two total MEs of parental status, one for the married and one for the unmarried, and then test their equality using a second difference test
+- With multi-outcome models, an IV's total effect is its holistic effect across all outcomes
+  - The **total ME** statistic is the sum of all the marginal effects for that IV (using absolute values) divided by two
+
+$$total\ ME = \frac{\sum_{\lambda = 1}^{\Lambda}\left|\eta_{\lambda}(x_{k} = end, \mathbf{x}_{-k} = \mathbf{x}_{-k}^{*}) - \eta_{\lambda}(x_{k} = start, \mathbf{x}_{-k} = \mathbf{x}_{-k}^{*})\right|}{2}$$
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+// Calculate Total MEs to simplify interaction test //
+mecompare parent, by(married) totalme model(hmod)
+<</dd_do>>
+```
+
+## R
+
+```{r}
+# Total ME functions
+source("https://raw.githubusercontent.com/tdmize/Rfunctions/main/ME_helper_functions.R")
+
+# Calculate Total MEs to simplify interaction test
+tme <- avg_comparisons(hlthmod, variables = "parent", by = "married",
+  newdata = datagrid(married = unique, grid_type = "counterfactual"),
+  hypothesis = totalme(hlthmod))
+tme
+```
+
+:::
+
+> *The total effect of parental status is 0.061 for the unmarried; that is, parents and non-parents differ by about 6 percentage points total in terms of their self-rated health. For the married, the total effect of parenthood is only 0.017.*
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+metest 2 - 1
+<</dd_do>>
+```
+
+## R
+
+```{r}
+hypotheses(tme, hypothesis = ~ pairwise)
+```
+
+:::
+
+> *Parental status has a larger total effect for the unmarried than for the married; that is, in terms of self-rated health, parental status matters more for those who are unmarried than for those who are married (2^nd^ diff. = -0.044, p \< .01).*
