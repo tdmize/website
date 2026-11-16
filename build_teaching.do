@@ -97,6 +97,32 @@ if `dyn' & "`sections'" == "" & "`pages'" == "" {
     exit 198
 }
 
+* Drop the "(file X not found)" notes Stata prints when saving(..., replace)
+* or save, replace creates a new file
+capture mata: mata drop _drop_notfound()
+mata:
+void _drop_notfound(string scalar fn)
+{
+    string colvector L
+    real colvector keep
+    real scalar fh, i, n
+
+    L = cat(fn)
+    keep = J(rows(L), 1, 1)
+    for (i = 1; i <= rows(L); i++) {
+        L[i] = subinstr(L[i], char(13), "")
+        n = strlen(L[i])
+        if (n > 17 & substr(L[i], 1, 6) == "(file " & substr(L[i], n - 10, 11) == " not found)") keep[i] = 0
+    }
+    if (all(keep)) return
+    L = select(L, keep)
+    unlink(fn)
+    fh = fopen(fn, "w")
+    for (i = 1; i <= rows(L); i++) fput(fh, L[i])
+    fclose(fh)
+}
+end
+
 * run one source page (path relative to _src) from inside its section folder
 capture program drop _teach_page
 program define _teach_page
@@ -110,6 +136,7 @@ program define _teach_page
         capture mkdir "`sub'"
     }
     dyntext "_src/`rel'", saving("`rel'") replace
+    mata: _drop_notfound("`rel'")
 end
 
 * -------------------------------------------- 1. regenerate Stata output --
