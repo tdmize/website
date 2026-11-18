@@ -1,0 +1,273 @@
+---
+title: "1. Look at your data"
+---
+
+:::: {.columns}
+::: {.column width="60%"}
+- The first commandment of data analysis is look at your data
+  - Problems and/or quirks with the data are easily ascertained
+  - Modeling strategies often become clear only after examining the data
+:::
+::: {.column width="40%"}
+![](images/look-at-your-data.png){fig-alt="Moses holding a stone tablet that reads: Look at your data!"}
+:::
+::::
+
+## Histograms
+
+- Histograms have the advantage of being intuitive and widely used
+  - Skew is easy to ascertain via a histogram
+- Histograms "bin" values within a certain range and plot the quantity within that bin as height: higher bars represent ranges that are more frequent in the data
+
+![](images/mize-2016-histogram.png){width=60% fig-alt="Published histogram: distribution of the log of hourly wages for all employed women in the GSS."}
+
+::: {.callout-note icon="false" appearance="simple"}
+From [Mize (2016)](http://asr.sagepub.com/content/early/2016/10/24/0003122416674025.full.pdf+html)
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/gss.dta", clear
+(gss.dta | GSS 1972 - 2016 Data | DMV Workshop)
+
+. 
+. // 1.a - freq option to plot # of obs in each bin
+. hist wages, freq fcol(none) xlab(0(10)70) ///
+>     title("[1.a] Histogram of Distribution of Hourly Wages") ///
+>     subtitle("y-axis shows number of observations in bin")
+(bin=44, start=.10516854, width=1.5885189)
+
+```
+
+![](fig/dmv-01_a-hist.png){width=80% fig-alt="[1.a] Histogram of hourly wages from 0 to 70 with frequency on the y-axis: the distribution is skewed to the right, with most wages between about 5 and 25 and a small spike at the top value of 70."}
+
+## R
+
+```{r}
+#| fig-alt: "[1.a] Histogram of hourly wages from 0 to 70 with frequency on the y-axis: the distribution is skewed to the right, with most wages between about 5 and 25 and a small spike at the top value of 70."
+library(foreign)            # load Stata datasets
+library(ggplot2)            # main graphics package
+library(dplyr)              # data manipulation tools
+library(cleanplots)         # Mize's graphics scheme
+
+## Use cleanplots colors, markers, lines, and theme for all graphs ##
+cleanplots_defaults()
+theme_update(plot.title.position = "plot")   # titles start at left edge of graph
+
+# General Social Survey Data
+gss <- droplevels(read.dta("https://tdmize.github.io/data/data/gss.dta"))
+
+# 1.a - Frequency option to plot # of observations in each bin
+ggplot(gss, aes(x = wages)) +
+  geom_histogram(fill = NA, color = "gray20") +
+  labs(x = "Wages", y = "Frequency",
+       title = "[1.a] Histogram of Distribution of Hourly Wages",
+       subtitle = "y-axis shows number of observations in bin") +
+  scale_x_continuous(breaks = seq(0, 70, 10))
+```
+
+:::
+
+## Kernel density plots
+
+- Kernel density plots provide smoothed lines showing the distribution of a variable
+  - Think of these as a smoothed histogram
+  - Rather than the height of individual bins at different values showing frequency/percent, the height of the smooth line illustrates density of the data at that value
+    - NOTE: density ≈ proportion of observations near that value
+
+![](images/kernel-density-explained.png){width=70% fig-alt="A kernel density curve drawn over a row of individual data points: the curve is highest where the points are most concentrated."}
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. // 1.b - Overlay a kernel density plot on a histogram to illustrate what it do
+> es
+. *NOTE: Just pedagogical, not a graph you would usually make
+. twoway ///
+>     hist     wages, fcol(none) || ///
+>     kdensity wages, col(red)   || ///
+>     , xlab(0(10)70) legend(order(1 "Histogram" 2 "Kernel Density")) ///
+>     ytitle("Density") xtitle("Hourly Wages ($)") ///
+>     title("[1.b] Distribution of Hourly Wages") ///
+>     subtitle("Comparison of histogram and kernel density plot")
+
+```
+
+![](fig/dmv-01_b-hist_kdensity.png){width=80% fig-alt="[1.b] Histogram of hourly wages on the density scale with a red kernel density line overlaid: the smooth line follows the tops of the bars, peaking near 10 dollars and trailing off to the right."}
+
+## R
+
+```{r}
+#| fig-alt: "[1.b] Histogram of hourly wages on the density scale with a red kernel density line overlaid: the smooth line follows the tops of the bars, peaking near 10 dollars and trailing off to the right."
+# 1.b - Overlay a kernel density plot on a histogram to illustrate what it does
+# NOTE: Just pedagogical, not a graph you would usually make
+ggplot(gss, aes(x = wages)) +
+  geom_histogram(aes(y = after_stat(density)), fill = NA, color = "gray20") +
+  geom_density(color = cleanplots_colors("red")) +
+  labs(x = "Hourly Wages ($)", y = "Density",
+       title = "[1.b] Distribution of Hourly Wages",
+       subtitle = "Comparison of histogram and kernel density plot") +
+  scale_x_continuous(breaks = seq(0, 70, 10))
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. // 1.c - Usually, just want the density and not the histogram too
+. kdensity wages, xlab(0(10)70) ///
+>     ytitle("Density") xtitle("Hourly Wages ($)") ///
+>     title("[1.c] Kernel Density Plot of Hourly Wages")
+
+```
+
+![](fig/dmv-01_c-kdensity.png){width=80% fig-alt="[1.c] Kernel density plot of hourly wages: the line rises steeply to a peak near 10 dollars and then declines slowly toward 70."}
+
+## R
+
+```{r}
+#| fig-alt: "[1.c] Kernel density plot of hourly wages: the line rises steeply to a peak near 10 dollars and then declines slowly toward 70."
+# 1.c - Usually, just want the density and not the histogram too
+ggplot(gss, aes(x = wages)) +
+  geom_density() +
+  labs(x = "Hourly Wages ($)", y = "Density",
+       title = "[1.c] Kernel Density Plot of Hourly Wages") +
+  scale_x_continuous(breaks = seq(0, 70, 10))
+```
+
+:::
+
+### Published example
+
+![](images/renzulli-2023-densities.png){width=80% fig-alt="Published figure with four panels (1999, 2003, 2007, 2011), each showing kernel densities of college-going rates for traditional and charter schools."}
+
+::: {.callout-note icon="false" appearance="simple"}
+From [Renzulli, Boylan, and Paino 2023](https://doi.org/10.1016/j.ssresearch.2022.102838)
+
+Note, to make multi-panel graphs like this use [**graph combine**](https://www.stata.com/manuals/g-2graphcombine.pdf) in Stata and [ggplot2's faceting features](https://ggplot2-book.org/facet.html) in R
+:::
+
+:::: {.columns}
+::: {.column width="50%"}
+![](images/mcap-illustration.png){fig-alt="The Methodology Center illustration: small line drawings of graphs around a central MCAP circle."}
+:::
+::: {.column width="50%"}
+![](images/kernel-density-mcap-original.png){fig-alt="A person pointing at kernel density curves on a board in front of an audience: the drawing in the Methodology Center illustration."}
+:::
+::::
+
+\*[Read about The Methodology Center's graphic](https://www.purdue.edu/research/mcap/illustration/)
+
+## Box (and whisker) plots
+
+- Box plots are useful for comparing distributions across variables or across waves (or groups)
+  - Standardized rules make comparing distributions easy
+
+![](images/box-plot-example.jpeg){width=60% fig-alt="Example box plots of test scores for four groups, A through D."}
+
+### Box and whisker plot rules
+
+:::: {.columns}
+::: {.column width="65%"}
+- Rules:
+  - Line break in middle of box = median
+  - Box boundaries = interquartile range (IQR)
+    - IQR: 75^th^ percentile -- 25^th^ percentile
+  - Whiskers = range of data without outliers\*
+    - I.e., Where the vast majority of the data falls
+  - Dots = outliers
+    - NOTE: Following [Tukey (1977)](https://books.google.com/books/about/Exploratory_Data_Analysis.html?id=UT9dAAAAIAAJ), the length of the whiskers (and thus, the cutoff for outliers) is:
+      1. Upper cutoff: 75^th^ percentile + 1.5 \* IQR
+      2. Lower cutoff: 25^th^ percentile - 1.5 \* IQR
+:::
+::: {.column width="35%"}
+![](images/box-plot-rules.png){fig-alt="Diagram of adjacent values and outliers: the quartiles Q1 and Q3, the IQR between them, the upper and lower adjacent values, and the cutoffs Q3 + 1.5 IQR and Q1 - 1.5 IQR."}
+:::
+::::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/ah_si.dta", clear
+(ah-si.dta | Add Health Waves 1-6: Cleaned for MCAP SI)
+
+. 
+. * Top code drinks in the past year at 1,000
+. gen numdrinksyrT = numdrinksyr
+(432 missing values generated)
+
+. recode numdrinksyrT 1000 / 9125 = 1000
+(1,649 changes made to numdrinksyrT)
+
+. lab var numdrinksyrT "# of drinks last year (top coded at 1,000)"
+
+. 
+. // 1.d - Drinks in the past year, with separate boxes by wave
+. graph box numdrinksyrT, over(wave) ///
+>     ytitle("# of drinks in the past year") ///
+>     title("[1.d] Box plot of drinks in the past year by wave of Add Health") /
+> //
+>     subtitle("Top coded at 1,000 drinks")
+
+```
+
+![](fig/dmv-01_d-boxplot.png){width=80% fig-alt="[1.d] Box plots of the number of drinks in the past year for Add Health waves 1 to 6: waves 1 and 2 have very small boxes near zero, waves 3 and 4 have the widest boxes, and every wave has many outliers up to the top code of 1,000."}
+
+## R
+
+```{r}
+#| fig-alt: "[1.d] Box plots of the number of drinks in the past year for Add Health waves 1 to 6: waves 1 and 2 have very small boxes near zero, waves 3 and 4 have the widest boxes, and every wave has many outliers up to the top code of 1,000."
+# Add Health Data
+ah <- read.dta("https://tdmize.github.io/data/data/ah_si.dta")
+
+# Top code drinks in the past year at 1,000
+ah$numdrinksyrT <- pmin(ah$numdrinksyr, 1000)
+
+# 1.d - Drinks in the past year, with separate boxes by wave
+ggplot(ah, aes(x = wave, y = numdrinksyrT)) +
+  geom_boxplot() +
+  labs(x = "",
+       y = "# of drinks in the past year",
+       title = "[1.d] Box plot of drinks in the past year by wave of Add Health",
+       subtitle = "Top coded at 1,000 drinks")
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+. // 1.e - Add a second grouping variable
+. graph box numdrinksyrT, ///
+>     over(male) over(wave) asyvars horizontal ///
+>     ytitle("# of drinks in the past year") ///
+>     title("[1.e] Box plot of drinks in the past year by Add Health wave and ge
+> nder") ///
+>     subtitle("Top coded at 1,000 drinks")
+
+```
+
+![](fig/dmv-01_e-boxplot_by_gender.png){width=80% fig-alt="[1.e] Horizontal box plots of drinks in the past year by Add Health wave, with separate red boxes for females and light blue boxes for males: the female boxes are wider in waves 3 and 4 and the male boxes are wider in waves 5 and 6."}
+
+## R
+
+```{r}
+#| fig-alt: "[1.e] Horizontal box plots of drinks in the past year by Add Health wave, with separate red boxes for females and light blue boxes for males: the female boxes are wider in waves 3 and 4 and the male boxes are wider in waves 5 and 6."
+# 1.e - Add a second grouping variable
+ggplot(filter(ah, !is.na(male)), aes(x = wave, y = numdrinksyrT, fill = male)) +
+  geom_boxplot() +
+  coord_flip() +
+  labs(x = "",
+       y = "# of drinks in the past year", fill = "",
+       title = "[1.e] Box plot of drinks in the past year by Add Health wave and gender",
+       subtitle = "Top coded at 1,000 drinks")
+```
+
+:::

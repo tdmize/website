@@ -1,0 +1,105 @@
+---
+title: "Break 2: Group task"
+---
+<<dd_version: 2>>
+
+- Run the code below in R or Stata: it loads the data and makes a quick graph
+- Discuss with your group:
+  - What does the graph show?
+  - What would you need to change to make it better, beyond the defaults?
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+use "https://tdmize.github.io/data/data/gss.dta", clear
+
+regress occprest c.age c.income i.woman i.college i.race
+
+coefplot
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/dmv-B2_a-task.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/dmv-B2_a-task.png){width=80% fig-alt="Default coefficient plot of predictors of occupational prestige, including the constant: the constant (about 34) and the college degree effect (about 13) stretch the x-axis, so the other effects, including age and income, are squeezed together near zero."}
+
+## R
+
+```{r}
+#| fig-alt: "Default coefficient plot of predictors of occupational prestige, including the intercept: the intercept and the college degree effect stretch the x-axis, so the other effects, including age and income, are squeezed together near zero."
+library(foreign); library(modelsummary)
+
+gss <- droplevels(read.dta("https://tdmize.github.io/data/data/gss.dta"))
+
+reg_op <- lm(occprest ~ age + income + woman + college + race, data = gss)
+
+modelplot(reg_op)
+```
+
+:::
+
+## A publication-quality version
+
+Show effects of the continuous IVs for a 2 standard deviation increase
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+// B2.b - A publication-quality version
+* Show effects of the continuous IVs for a 2 standard deviation increase
+sum age if e(sample)
+global age2sd = 2*r(sd)
+sum income if e(sample)
+global inc2sd = 2*r(sd)
+
+coefplot, xline(0) baselevels ciop(col(*.6)) drop(_cons 0.woman) ///
+    rescale(age = $age2sd income = $inc2sd) ///
+    coeflabels(age = "Age (+2 SD)" income = "Income (+2 SD)") ///
+    xtitle("Difference in occupational prestige") ///
+    title("[B2.b] Predictors of Occupational Prestige - Linear Regression") ///
+    note("Age and income effects shown for a 2 standard deviation increase")
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/dmv-B2_b-task_pub.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/dmv-B2_b-task_pub.png){width=80% fig-alt="[B2.b] Coefficient plot of predictors of occupational prestige without the constant, with age and income effects shown for a 2 standard deviation increase and a dashed line at zero: a college degree (about 12.7) and a 2 SD increase in income (about 7.2) have the largest effects, women are about 2.5 points higher, and Black respondents about 2.2 points lower."}
+
+## R
+
+```{r}
+#| fig-alt: "[B2.b] Coefficient plot of predictors of occupational prestige without the intercept, with age and income effects shown for a 2 standard deviation increase and a dashed line at zero: a college degree and a 2 SD increase in income have the largest effects, women are about 2.5 points higher, and Black respondents about 2.2 points lower."
+library(dplyr); library(ggplot2)
+library(cleanplots)         # Mize's graphics scheme
+
+## Use cleanplots colors, markers, lines, and theme for all graphs ##
+cleanplots_defaults()
+theme_update(plot.title.position = "plot")   # titles start at left edge of graph
+
+# B2.b - A publication-quality version
+# Show effects of the continuous IVs for a 2 standard deviation increase
+gss_op <- filter(gss, !is.na(occprest), !is.na(age), !is.na(income), !is.na(woman),
+                 !is.na(college), !is.na(race))
+gss_op$age_2sd    <- gss_op$age / (2 * sd(gss_op$age))
+gss_op$income_2sd <- gss_op$income / (2 * sd(gss_op$income))
+reg_op2 <- lm(occprest ~ age_2sd + income_2sd + woman + college + race, data = gss_op)
+
+modelplot(reg_op2, coef_omit = "Intercept",
+          coef_rename = c("age_2sd" = "Age (+2 SD)", "income_2sd" = "Income (+2 SD)",
+                          "womanWomen" = "Women",
+                          "collegeCollege Degree" = "College degree",
+                          "raceblack" = "Black", "raceother" = "Other race")) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray20") +
+  scale_y_discrete(limits = rev) +
+  labs(x = "Difference in occupational prestige",
+       title = "[B2.b] Predictors of Occupational Prestige - Linear Regression",
+       caption = "Age and income effects shown for a 2 standard deviation increase")
+```
+
+:::
