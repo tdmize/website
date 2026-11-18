@@ -39,7 +39,7 @@ title: "5. Make groups easy to tell apart"
 ## R
 
 ```{r}
-#| fig-alt: "[5.a] Kernel density plots of hourly wages for five levels of education, each in its own color: the less than high school curve peaks highest and earliest, and each higher degree peaks lower and farther to the right, with the graduate degree curve flattest."
+#| fig-alt: "[5.a] Kernel density plots of hourly wages for five levels of education, each with its own color and line pattern: the less than high school curve peaks highest and earliest, and each higher degree peaks lower and farther to the right, with the graduate degree curve flattest."
 library(foreign)            # load Stata datasets
 library(ggplot2)            # main graphics package
 library(dplyr)              # data manipulation tools
@@ -53,13 +53,17 @@ theme_update(plot.title.position = "plot")   # titles start at left edge of grap
 gss <- droplevels(read.dta("https://tdmize.github.io/data/data/gss.dta"))
 
 # 5.a - Overlay multiple densities for different groups
-ggplot(filter(gss, !is.na(degree)), aes(x = wages, color = degree)) +
+# Use both colors and line patterns so the five groups are easy to tell apart
+degree_labels <- c("< High School", "HS Degree", "Junior College",
+                   "College Degree", "Grad Degree")
+
+ggplot(filter(gss, !is.na(degree)), aes(x = wages, color = degree, linetype = degree)) +
   geom_density(key_glyph = "path") +
-  labs(x = "Hourly Wages", y = "Density", color = "",
+  labs(x = "Hourly Wages", y = "Density", color = "", linetype = "",
        title = "[5.a] Kernel-Density Plots of Hourly Wages Based on Educational Attainment",
        subtitle = "Densities are group specific") +
-  scale_color_cleanplots(labels = c("< High School", "HS Degree", "Junior College",
-                                    "College Degree", "Grad Degree")) +
+  scale_color_cleanplots(labels = degree_labels) +
+  scale_linetype_cleanplots(labels = degree_labels) +
   scale_x_continuous(breaks = seq(0, 70, 10))
 ```
 

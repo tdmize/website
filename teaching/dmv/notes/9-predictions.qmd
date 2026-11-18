@@ -165,14 +165,15 @@ Variables that uniquely identify margins: age woman
 ## R
 
 ```{r}
-#| fig-alt: "[9.c] The same predictions with a faded rug plot along the bottom for men and for women: each tick marks a worker's jittered age, so the rug is densest between about 20 and 65."
+#| fig-alt: "[9.c] The same predictions with two rug plots along the bottom, a faded red rug for men above a faded blue rug for women: each tick marks a worker's (jittered) age, so the rugs are densest between about 20 and 65."
 # 9.c - Rug plot: "jitter" age so can better see where the data is; colors faded
 dat_rug <- insight::get_data(wage_int)                          # estimation sample
 dat_rug$age_j <- dat_rug$age + runif(nrow(dat_rug), -0.4, 0.4)  # jitter
+dat_rug$rug_y <- ifelse(dat_rug$woman == "Men", 1.2, 0)         # men's rug above women's
 
 plot_predictions(wage_int, condition = c("age", "woman")) +
-  geom_rug(data = dat_rug, aes(x = age_j, color = woman), sides = "b", alpha = 0.06,
-           inherit.aes = FALSE, show.legend = FALSE) +
+  geom_point(data = dat_rug, aes(x = age_j, y = rug_y, color = woman), shape = "|",
+             size = 3, alpha = 0.06, inherit.aes = FALSE, show.legend = FALSE) +
   labs(x = "Age in Years", y = "Hourly Wages", color = "", fill = "",
        title = "[9.c] Predicted Hourly Wages Based on Age of Worker",
        subtitle = "With rug plot to show distribution of age (jittered)") +

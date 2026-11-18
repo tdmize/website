@@ -308,13 +308,17 @@ cleanplots_save('- Figures/dmv-B1_b-task_pub.png', width = 10, height = 5.6)
 # 5 - Make groups easy to tell apart
 ######################################################
 # 5.a - Overlay multiple densities for different groups
-ggplot(filter(gss, !is.na(degree)), aes(x = wages, color = degree)) +
+# Use both colors and line patterns so the five groups are easy to tell apart
+degree_labels <- c("< High School", "HS Degree", "Junior College",
+                   "College Degree", "Grad Degree")
+
+ggplot(filter(gss, !is.na(degree)), aes(x = wages, color = degree, linetype = degree)) +
   geom_density(key_glyph = "path") +
-  labs(x = "Hourly Wages", y = "Density", color = "",
+  labs(x = "Hourly Wages", y = "Density", color = "", linetype = "",
        title = "[5.a] Kernel-Density Plots of Hourly Wages Based on Educational Attainment",
        subtitle = "Densities are group specific") +
-  scale_color_cleanplots(labels = c("< High School", "HS Degree", "Junior College",
-                                    "College Degree", "Grad Degree")) +
+  scale_color_cleanplots(labels = degree_labels) +
+  scale_linetype_cleanplots(labels = degree_labels) +
   scale_x_continuous(breaks = seq(0, 70, 10))
 
 cleanplots_save('- Figures/dmv-05_a-kdensity_groups.png', width = 10, height = 5.6)
@@ -684,10 +688,11 @@ cleanplots_save('- Figures/dmv-09_b-preds_hist.png', width = 10, height = 5.6)
 # 9.c - Rug plot: "jitter" age so can better see where the data is; colors faded
 dat_rug <- insight::get_data(wage_int)                          # estimation sample
 dat_rug$age_j <- dat_rug$age + runif(nrow(dat_rug), -0.4, 0.4)  # jitter
+dat_rug$rug_y <- ifelse(dat_rug$woman == "Men", 1.2, 0)         # men's rug above women's
 
 plot_predictions(wage_int, condition = c("age", "woman")) +
-  geom_rug(data = dat_rug, aes(x = age_j, color = woman), sides = "b", alpha = 0.06,
-           inherit.aes = FALSE, show.legend = FALSE) +
+  geom_point(data = dat_rug, aes(x = age_j, y = rug_y, color = woman), shape = "|",
+             size = 3, alpha = 0.06, inherit.aes = FALSE, show.legend = FALSE) +
   labs(x = "Age in Years", y = "Hourly Wages", color = "", fill = "",
        title = "[9.c] Predicted Hourly Wages Based on Age of Worker",
        subtitle = "With rug plot to show distribution of age (jittered)") +
