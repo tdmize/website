@@ -341,15 +341,15 @@ twoway 	scatter warmSS compSS, ///
 	graph export "- Figures/dmv-05_d-scatter_colors.png", width(3000) replace
 
 // 5.e - With so many groups, better to just directly label points
-twoway 	scatter warmSS compSS, mlabel(cond) ///
+twoway 	scatter warmSS compSS, mlabel(cond) mlabangle(35) mlabsize(*.75) ///
 		ytitle("Warmth") xtitle("Competence") ylab(3(1)7) xlab(3(1)7) ///
 		title("[5.e] Warmth and competence stereotypes of gender X racial-ethnic groups")
 
 	graph export "- Figures/dmv-05_e-scatter_labels.png", width(3000) replace
 
+// 5.f - Ordinal (viridis) colors for an ordered variable: cleanplots8v scheme
 use 	"https://tdmize.github.io/data/data/hrs_si.dta", clear
 
-// 5.f - Ordinal (viridis) colors for an ordered variable: cleanplots8v scheme
 graph bar (mean) dzcount, over(degree) asyvars showyvars legend(off) ///
     yvaroptions(label(angle(45))) ///
     ytitle("Count of chronic diseases") ///
@@ -845,10 +845,26 @@ binscatter dzcount age, linetype(none) mcolors(red*1.2) ///
     title("[10.c] Binned scatterplot for number of chronic diseases by age") ///
     subtitle("Each point is the mean in one of 20 equal-sized age groups") ///
     xtitle("Age") ytitle("Number of chronic diseases") ///
-    xlabel(20(10)100)
+    xlabel(20(10)100) ylabel(0(.5)3)
+	
+*Because so many older adults, most bins are at older ages. Create own bin
+**variable to see more of age range
+*3-year age bins, coded at the bin midpoint (18-20 = 19, 21-23 = 22, ...)
+gen 	age3 = floor(age/3)*3 + 1
+label var age3 "Age (3-year bins, midpoint)"
+
+*check: min and max age in each bin
+tabstat age, by(age3) stat(min max mean n)
+
+binscatter dzcount age, linetype(none) mcolors(red*1.2) xq(age3) ///
+    title("[10.c] Binned scatterplot for number of chronic diseases by age") ///
+    subtitle("Each bin is a 3-year range of age") ///
+    xtitle("Age") ytitle("Number of chronic diseases") ///
+    xlabel(20(10)100) ylabel(0(.5)3)	
 
 	graph export "- Figures/dmv-10_c-binscatter.png", width(3000) replace
 
+	
 ************************
 // Smoothed trend lines //
 ************************

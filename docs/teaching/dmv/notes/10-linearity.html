@@ -1138,13 +1138,13 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#scatterplots-of-two-continuous-variables" id="toc-scatterplots-of-two-continuous-variables" class="nav-link active" data-scroll-target="#scatterplots-of-two-continuous-variables">Scatterplots of two continuous variables</a></li>
-  <li><a href="#binned-scatterplots" id="toc-binned-scatterplots" class="nav-link" data-scroll-target="#binned-scatterplots">Binned scatterplots</a>
+  <li><a href="#scatterplots-of-two-continuous-variables" id="toc-scatterplots-of-two-continuous-variables" class="nav-link active" data-scroll-target="#scatterplots-of-two-continuous-variables">Scatterplots of two continuous variables</a>
   <ul class="collapse">
   <li><a href="#lowess-locally-weighted-scatterplot-smoothing" id="toc-lowess-locally-weighted-scatterplot-smoothing" class="nav-link" data-scroll-target="#lowess-locally-weighted-scatterplot-smoothing">LOWESS: locally weighted scatterplot smoothing</a></li>
   <li><a href="#published-example" id="toc-published-example" class="nav-link" data-scroll-target="#published-example">Published example</a></li>
   <li><a href="#historical-example" id="toc-historical-example" class="nav-link" data-scroll-target="#historical-example">Historical example</a></li>
   </ul></li>
+  <li><a href="#binned-scatterplots" id="toc-binned-scatterplots" class="nav-link" data-scroll-target="#binned-scatterplots">Binned scatterplots</a></li>
   </ul>
 </nav>
     </div>
@@ -1180,6 +1180,10 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 <ul>
 <li>The dependent variable (DV) or outcome is the <em>y</em>-variable</li>
 <li>The independent variable (IV) or cause is the <em>x</em>-variable</li>
+</ul></li>
+<li>Often, need to “jitter” the data points when there is substantial overlap
+<ul>
+<li>I.e., Add random <em>x</em> and <em>y</em> noise</li>
 </ul></li>
 </ul>
 </div><div class="column" style="width:40%;">
@@ -1270,54 +1274,38 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 </div>
 </div>
 </div>
-</section>
-<section id="binned-scatterplots" class="level2">
-<h2 class="anchored" data-anchor-id="binned-scatterplots">Binned scatterplots</h2>
-<ul>
-<li>Scatterplots and scatterplot smoothing methods like lowess are less useful when you have lots of data
-<ul>
-<li>Graphs become impossible to read (but could plot random subsample)</li>
-</ul></li>
-<li>A binned scatterplot is a useful tool for these and other cases (<a href="https://michaelstepner.com/binscatter/binscatter-StataConference2014.pdf">Stepner 2014</a>)
-<ul>
-<li>“bin” the <em>x</em> variable into groups (e.g., 20 age groups) and then calculate the mean of the <em>y</em> variable for each bin</li>
-</ul></li>
-</ul>
 <div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false" href="">R</a></li></ul>
 <div class="tab-content" data-group="language">
 <div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// 10.c - Binned scatterplot: mean of y within 20 equal-sized bins of x</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>binscatter dzcount age, linetype(<span class="kw">none</span>) mcolors(<span class="kw">red</span>*1.2) <span class="co">///</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[10.c] Binned scatterplot for number of chronic diseases by age"</span>) /</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="bn">subtitle</span>(<span class="st">"Each point is the mean in one of 20 equal-sized age groups"</span>) <span class="co">///</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="bn">xtitle</span>(<span class="st">"Age"</span>) <span class="bn">ytitle</span>(<span class="st">"Number of chronic diseases"</span>) <span class="co">///</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">xlabel</span>(20(10)100)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// 10.d - Linear regression line overlaid on scatterplot</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">twoway</span> <span class="co">///</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">scatter</span> dzcount age, jitter(3) mcolor(gs12)) <span class="co">///</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">lfit</span> dzcount age, lcolor(<span class="kw">red</span>)), <span class="co">///</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="bn">legend</span>(<span class="kw">off</span>) <span class="kw">xlabel</span>(20(10)100) <span class="co">///</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[10.d] Relationship between number of chronic diseases and age"</span>) <span class="co">//</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>/</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="bn">subtitle</span>(<span class="st">"With linear trend line"</span>) <span class="co">///</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="bn">xtitle</span>(<span class="st">"Age"</span>) <span class="bn">ytitle</span>(<span class="st">"Number of chronic diseases"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p><img src="fig/dmv-10_c-binscatter.png" class="img-fluid" style="width:80.0%" alt="[10.c] Binned scatterplot with one point for the mean number of chronic diseases in each of 20 equal-sized age groups: the mean rises steeply from about 1 at age 47 to about 2.3 at age 70 and then levels off near 2.6 after age 80."></p>
+<p><img src="fig/dmv-10_d-scatterplot-linear_fit.png" class="img-fluid" style="width:80.0%" alt="[10.d] The jittered scatterplot in light gray with a red linear regression line that rises steadily with age across the whole range."></p>
 </div>
 <div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 10.c - Binned scatterplot: mean of y within 20 equal-sized bins of x</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>hrs_bins <span class="ot">&lt;-</span> hrs <span class="sc">%&gt;%</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(dzcount), <span class="sc">!</span><span class="fu">is.na</span>(age)) <span class="sc">%&gt;%</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">age_bin =</span> <span class="fu">ntile</span>(age, <span class="dv">20</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(age_bin) <span class="sc">%&gt;%</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">age =</span> <span class="fu">mean</span>(age), <span class="at">dzcount =</span> <span class="fu">mean</span>(dzcount))</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(hrs_bins, <span class="fu">aes</span>(<span class="at">x =</span> age, <span class="at">y =</span> dzcount)) <span class="sc">+</span></span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Age"</span>,</span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Number of chronic diseases"</span>,</span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"[10.c] Binned scatterplot for number of chronic diseases by age"</span>,</span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"Each point is the mean in one of 20 equal-sized age groups"</span>) <span class="sc">+</span></span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">20</span>, <span class="dv">100</span>, <span class="dv">10</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 10.d - Linear regression line overlaid on scatterplot</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(hrs, <span class="fu">aes</span>(<span class="at">x =</span> age, <span class="at">y =</span> dzcount)) <span class="sc">+</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_jitter</span>(<span class="at">height =</span> .<span class="dv">25</span>, <span class="at">width =</span> .<span class="dv">25</span>, <span class="at">color =</span> <span class="st">"gray75"</span>) <span class="sc">+</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>) <span class="sc">+</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Age"</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Number of chronic diseases"</span>,</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"[10.d] Relationship between number of chronic diseases and age"</span>,</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"With linear trend line"</span>) <span class="sc">+</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">20</span>, <span class="dv">100</span>, <span class="dv">10</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="10-linearity_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" style="width:80.0%" alt="[10.c] Binned scatterplot with one point for the mean number of chronic diseases in each of 20 equal-sized age groups: the mean rises steeply from about 1 near age 47 and then levels off after age 80."></p>
+<p><img src="10-linearity_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" style="width:80.0%" alt="[10.d] The jittered scatterplot in light gray with a linear regression line that rises steadily with age across the whole range."></p>
 </figure>
 </div>
 </div>
@@ -1330,72 +1318,33 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 <div class="tab-content" data-group="language">
 <div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// 10.d - Linear regression line overlaid on scatterplot</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// 10.e - Quadratic regression line (x and x^2) overlaid on scatterplot</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">twoway</span> <span class="co">///</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">scatter</span> dzcount age, jitter(3) mcolor(gs12)) <span class="co">///</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">lfit</span> dzcount age, lcolor(<span class="kw">red</span>)), <span class="co">///</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">scatter</span> dzcount age, jitter(2) mcolor(gs12)) <span class="co">///</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    (qfit dzcount age, lcolor(<span class="kw">red</span>)), <span class="co">///</span></span>
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="bn">legend</span>(<span class="kw">off</span>) <span class="kw">xlabel</span>(20(10)100) <span class="co">///</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[10.d] Relationship between number of chronic diseases and age"</span>) <span class="co">//</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[10.e] Relationship between number of chronic diseases and age"</span>) <span class="co">//</span></span>
 <span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>/</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="bn">subtitle</span>(<span class="st">"With linear trend line"</span>) <span class="co">///</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="bn">subtitle</span>(<span class="st">"With quadratic trend line"</span>) <span class="co">///</span></span>
 <span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="bn">xtitle</span>(<span class="st">"Age"</span>) <span class="bn">ytitle</span>(<span class="st">"Number of chronic diseases"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p><img src="fig/dmv-10_d-scatterplot-linear_fit.png" class="img-fluid" style="width:80.0%" alt="[10.d] The jittered scatterplot in light gray with a red linear regression line that rises steadily with age across the whole range."></p>
+<p><img src="fig/dmv-10_e-scatterplot-quadratic_fit.png" class="img-fluid" style="width:80.0%" alt="[10.e] The jittered scatterplot with a red quadratic regression line that rises with age and flattens out at the oldest ages."></p>
 </div>
 <div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 10.d - Linear regression line overlaid on scatterplot</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 10.e - Quadratic regression line (x and x^2) overlaid on scatterplot</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(hrs, <span class="fu">aes</span>(<span class="at">x =</span> age, <span class="at">y =</span> dzcount)) <span class="sc">+</span></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_jitter</span>(<span class="at">height =</span> .<span class="dv">25</span>, <span class="at">width =</span> .<span class="dv">25</span>, <span class="at">color =</span> <span class="st">"gray75"</span>) <span class="sc">+</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>) <span class="sc">+</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">formula =</span> y <span class="sc">~</span> <span class="fu">poly</span>(x, <span class="dv">2</span>)) <span class="sc">+</span></span>
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Age"</span>,</span>
 <span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Number of chronic diseases"</span>,</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"[10.d] Relationship between number of chronic diseases and age"</span>,</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"With linear trend line"</span>) <span class="sc">+</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"[10.e] Relationship between number of chronic diseases and age"</span>,</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"With quadratic trend line"</span>) <span class="sc">+</span></span>
 <span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">20</span>, <span class="dv">100</span>, <span class="dv">10</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="10-linearity_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" style="width:80.0%" alt="[10.d] The jittered scatterplot in light gray with a linear regression line that rises steadily with age across the whole range."></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false" href="">R</a></li></ul>
-<div class="tab-content" data-group="language">
-<div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
-<div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// 10.e - Quadratic regression line (x and x^2) overlaid on scatterplot</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">twoway</span> <span class="co">///</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">scatter</span> dzcount age, jitter(2) mcolor(gs12)) <span class="co">///</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    (qfit dzcount age, lcolor(<span class="kw">red</span>)), <span class="co">///</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="bn">legend</span>(<span class="kw">off</span>) <span class="kw">xlabel</span>(20(10)100) <span class="co">///</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[10.e] Relationship between number of chronic diseases and age"</span>) <span class="co">//</span></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>/</span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="bn">subtitle</span>(<span class="st">"With quadratic trend line"</span>) <span class="co">///</span></span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="bn">xtitle</span>(<span class="st">"Age"</span>) <span class="bn">ytitle</span>(<span class="st">"Number of chronic diseases"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<p><img src="fig/dmv-10_e-scatterplot-quadratic_fit.png" class="img-fluid" style="width:80.0%" alt="[10.e] The jittered scatterplot with a red quadratic regression line that rises with age and flattens out at the oldest ages."></p>
-</div>
-<div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 10.e - Quadratic regression line (x and x^2) overlaid on scatterplot</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(hrs, <span class="fu">aes</span>(<span class="at">x =</span> age, <span class="at">y =</span> dzcount)) <span class="sc">+</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_jitter</span>(<span class="at">height =</span> .<span class="dv">25</span>, <span class="at">width =</span> .<span class="dv">25</span>, <span class="at">color =</span> <span class="st">"gray75"</span>) <span class="sc">+</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">formula =</span> y <span class="sc">~</span> <span class="fu">poly</span>(x, <span class="dv">2</span>)) <span class="sc">+</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Age"</span>,</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Number of chronic diseases"</span>,</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"[10.e] Relationship between number of chronic diseases and age"</span>,</span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"With quadratic trend line"</span>) <span class="sc">+</span></span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">20</span>, <span class="dv">100</span>, <span class="dv">10</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="10-linearity_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" style="width:80.0%" alt="[10.e] The jittered scatterplot with a quadratic regression line that rises with age and flattens out at the oldest ages."></p>
+<p><img src="10-linearity_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" style="width:80.0%" alt="[10.e] The jittered scatterplot with a quadratic regression line that rises with age and flattens out at the oldest ages."></p>
 </figure>
 </div>
 </div>
@@ -1422,37 +1371,37 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 </ul></li>
 </ul>
 <div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-6-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-1" role="tab" aria-controls="tabset-6-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-6-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-2" role="tab" aria-controls="tabset-6-2" aria-selected="false" href="">R</a></li></ul>
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false" href="">R</a></li></ul>
 <div class="tab-content" data-group="language">
-<div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
+<div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
 <div class="stata-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">// 10.f - Lowess smoothed fit line (2022 wave only)</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">twoway</span> <span class="co">///</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">scatter</span> dzcount age <span class="kw">if</span> <span class="fu">year</span> == 2022, jitter(2) mcolor(gs12)) <span class="co">///</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">lowess</span> dzcount age <span class="kw">if</span> <span class="fu">year</span> == 2022, bwidth(.4) lcolor(<span class="kw">red</span>)), <span class="co">///</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="bn">legend</span>(<span class="kw">off</span>) <span class="kw">xlabel</span>(20(10)100) <span class="co">///</span></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[10.f] Relationship between number of chronic diseases and age"</span>) <span class="co">//</span></span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>/</span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="bn">subtitle</span>(<span class="st">"With lowess trend line (bandwidth = 0.4)"</span>) <span class="co">///</span></span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="bn">xtitle</span>(<span class="st">"Age"</span>) <span class="bn">ytitle</span>(<span class="st">"Number of chronic diseases"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// 10.f - Lowess smoothed fit line (2022 wave only)</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">twoway</span> <span class="co">///</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">scatter</span> dzcount age <span class="kw">if</span> <span class="fu">year</span> == 2022, jitter(2) mcolor(gs12)) <span class="co">///</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">lowess</span> dzcount age <span class="kw">if</span> <span class="fu">year</span> == 2022, bwidth(.4) lcolor(<span class="kw">red</span>)), <span class="co">///</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="bn">legend</span>(<span class="kw">off</span>) <span class="kw">xlabel</span>(20(10)100) <span class="co">///</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[10.f] Relationship between number of chronic diseases and age"</span>) <span class="co">//</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>/</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="bn">subtitle</span>(<span class="st">"With lowess trend line (bandwidth = 0.4)"</span>) <span class="co">///</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="bn">xtitle</span>(<span class="st">"Age"</span>) <span class="bn">ytitle</span>(<span class="st">"Number of chronic diseases"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p><img src="fig/dmv-10_f-scatterplot-lowess_fit.png" class="img-fluid" style="width:80.0%" alt="[10.f] Jittered scatterplot of chronic diseases by age for the 2022 wave with a red lowess line: the line is nearly flat around 1 until about age 45, rises between 45 and 80, and levels off near 3 after age 80."></p>
 </div>
-<div id="tabset-6-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-2-tab">
+<div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 10.f - Lowess smoothed fit line (2022 wave only)</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">filter</span>(hrs, year <span class="sc">==</span> <span class="dv">2022</span>), <span class="fu">aes</span>(<span class="at">x =</span> age, <span class="at">y =</span> dzcount)) <span class="sc">+</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_jitter</span>(<span class="at">height =</span> .<span class="dv">25</span>, <span class="at">width =</span> .<span class="dv">25</span>, <span class="at">color =</span> <span class="st">"gray75"</span>) <span class="sc">+</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"loess"</span>, <span class="at">se =</span> <span class="cn">FALSE</span>, <span class="at">span =</span> .<span class="dv">4</span>) <span class="sc">+</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Age"</span>,</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Number of chronic diseases"</span>,</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"[10.f] Relationship between number of chronic diseases and age"</span>,</span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"With lowess trend line (span = 0.4)"</span>) <span class="sc">+</span></span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">20</span>, <span class="dv">100</span>, <span class="dv">10</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 10.f - Lowess smoothed fit line (2022 wave only)</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">filter</span>(hrs, year <span class="sc">==</span> <span class="dv">2022</span>), <span class="fu">aes</span>(<span class="at">x =</span> age, <span class="at">y =</span> dzcount)) <span class="sc">+</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_jitter</span>(<span class="at">height =</span> .<span class="dv">25</span>, <span class="at">width =</span> .<span class="dv">25</span>, <span class="at">color =</span> <span class="st">"gray75"</span>) <span class="sc">+</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"loess"</span>, <span class="at">se =</span> <span class="cn">FALSE</span>, <span class="at">span =</span> .<span class="dv">4</span>) <span class="sc">+</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Age"</span>,</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Number of chronic diseases"</span>,</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"[10.f] Relationship between number of chronic diseases and age"</span>,</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"With lowess trend line (span = 0.4)"</span>) <span class="sc">+</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">20</span>, <span class="dv">100</span>, <span class="dv">10</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="10-linearity_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" style="width:80.0%" alt="[10.f] Jittered scatterplot of chronic diseases by age for the 2022 wave with a lowess line: the line is nearly flat until about age 45, rises between 45 and 80, and levels off after age 80."></p>
+<p><img src="10-linearity_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" style="width:80.0%" alt="[10.f] Jittered scatterplot of chronic diseases by age for the 2022 wave with a lowess line: the line is nearly flat until about age 45, rises between 45 and 80, and levels off after age 80."></p>
 </figure>
 </div>
 </div>
@@ -1479,9 +1428,198 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 </div>
 </div>
 <p>*<a href="https://www.purdue.edu/research/mcap/illustration/">Read about The Methodology Center graphic</a></p>
-
-
 </section>
+</section>
+<section id="binned-scatterplots" class="level2">
+<h2 class="anchored" data-anchor-id="binned-scatterplots">Binned scatterplots</h2>
+<ul>
+<li>Scatterplots and scatterplot smoothing methods are less useful when you have lots of data
+<ul>
+<li>Graphs become impossible to read (but could plot random subsample)</li>
+</ul></li>
+<li>A binned scatterplot is a useful tool for these and other cases (<a href="https://michaelstepner.com/binscatter/binscatter-StataConference2014.pdf">Stepner 2014</a>)
+<ul>
+<li>“bin” the <em>x</em> variable into groups (e.g., 20 age groups) and then calculate the mean of the <em>y</em> variable for each bin</li>
+</ul></li>
+</ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-6-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-1" role="tab" aria-controls="tabset-6-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-6-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-2" role="tab" aria-controls="tabset-6-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">// 10.c - Binned scatterplot: mean of y within 20 equal-sized bins of x</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>binscatter dzcount age, linetype(<span class="kw">none</span>) mcolors(<span class="kw">red</span>*1.2) <span class="co">///</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[10.c] Binned scatterplot for number of chronic diseases by age"</span>) /</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="bn">subtitle</span>(<span class="st">"Each point is the mean in one of 20 equal-sized age groups"</span>) <span class="co">///</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="bn">xtitle</span>(<span class="st">"Age"</span>) <span class="bn">ytitle</span>(<span class="st">"Number of chronic diseases"</span>) <span class="co">///</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">xlabel</span>(20(10)100) <span class="kw">ylabel</span>(0(.5)3)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><img src="fig/dmv-10_c-binscatter-20.png" class="img-fluid" style="width:80.0%" alt="[10.c] Binned scatterplot with one point for the mean number of chronic diseases in each of 20 equal-sized age groups: the youngest group's average age is about 47, so most points are at older ages; the mean rises steeply from about 1 at age 47 to about 2.3 at age 70 and then levels off near 2.6 after age 80."></p>
+</div>
+<div id="tabset-6-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 10.c - Binned scatterplot: mean of y within 20 equal-sized bins of x</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>hrs_bins <span class="ot">&lt;-</span> hrs <span class="sc">%&gt;%</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(dzcount), <span class="sc">!</span><span class="fu">is.na</span>(age)) <span class="sc">%&gt;%</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">age_bin =</span> <span class="fu">ntile</span>(age, <span class="dv">20</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(age_bin) <span class="sc">%&gt;%</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">age =</span> <span class="fu">mean</span>(age), <span class="at">dzcount =</span> <span class="fu">mean</span>(dzcount))</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(hrs_bins, <span class="fu">aes</span>(<span class="at">x =</span> age, <span class="at">y =</span> dzcount)) <span class="sc">+</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Age"</span>,</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Number of chronic diseases"</span>,</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"[10.c] Binned scatterplot for number of chronic diseases by age"</span>,</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"Each point is the mean in one of 20 equal-sized age groups"</span>) <span class="sc">+</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">20</span>, <span class="dv">100</span>, <span class="dv">10</span>)) <span class="sc">+</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">3</span>, .<span class="dv">5</span>), <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="10-linearity_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" style="width:80.0%" alt="[10.c] Binned scatterplot with one point for the mean number of chronic diseases in each of 20 equal-sized age groups: the youngest group's average age is about 47, so most points are at older ages; the mean rises steeply from about 1 near age 47 and then levels off after age 80."></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-7-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-1" role="tab" aria-controls="tabset-7-1" aria-selected="true" href="">Stata</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-7-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-2" role="tab" aria-controls="tabset-7-2" aria-selected="false" href="">R</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-7-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-7-1-tab">
+<div class="stata-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>*Because so many older adults, most bins are <span class="fu">at</span> older ages. Create own <span class="bn">bin</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>**<span class="kw">variable</span> to see <span class="kw">more</span> <span class="kw">of</span> age <span class="kw">range</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>*3-<span class="fu">year</span> age bins, coded <span class="fu">at</span> the <span class="bn">bin</span> midpoint (18-20 = 19, 21-23 = 22, ...)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="kw">gen</span> age3 = <span class="fu">floor</span>(age/3)*3 + 1</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="kw">label</span> <span class="kw">var</span> age3 <span class="st">"Age (3-year bins, midpoint)"</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>*check: <span class="fu">min</span> and <span class="fu">max</span> age <span class="kw">in</span> each <span class="bn">bin</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="kw">tabstat</span> age, <span class="kw">by</span>(age3) stat(<span class="fu">min</span> <span class="fu">max</span> <span class="kw">mean</span> n)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="stata-output"><code>Summary for variables: age
+Group variable: age3 (Age (3-year bins, midpoint))
+
+    age3 |       Min       Max      Mean         N
+---------+----------------------------------------
+      19 |        18        20  18.66667         3
+      22 |        21        23  22.22222         9
+      25 |        24        26  25.28571        28
+      28 |        27        29  28.28358        67
+      31 |        30        32  31.10526       133
+      34 |        33        35  34.14981       267
+      37 |        36        38  37.15905       503
+      40 |        39        41  40.12639       902
+      43 |        42        44  43.13466      1656
+      46 |        45        47  46.13746      3150
+      49 |        48        50  49.23103      6761
+      52 |        51        53  52.15448     19536
+      55 |        54        56  55.04762     29650
+      58 |        57        59  57.99054     31707
+      61 |        60        62  60.97824     30378
+      64 |        63        65  63.97504     27203
+      67 |        66        68  66.97343     23411
+      70 |        69        71  69.99736     22745
+      73 |        72        74  72.98352     22203
+      76 |        75        77  75.97166     19763
+      79 |        78        80  78.96231     17167
+      82 |        81        83  81.94435     14125
+      85 |        84        86  84.92168     10508
+      88 |        87        89  87.89431      6983
+      91 |        90        92  90.85878      4178
+      94 |        93        95    93.849      2000
+      97 |        96        98  96.77035       823
+     100 |        99       101  99.69708       274
+     103 |       102       104  102.5385        52
+     106 |       105       107       106        10
+     109 |       109       109       109         2
+---------+----------------------------------------
+   Total |        18       109  66.45907    296197
+--------------------------------------------------</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode stata stata-cmd code-with-copy"><code class="sourceCode stata"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>binscatter dzcount age, linetype(<span class="kw">none</span>) mcolors(<span class="kw">red</span>*1.2) xq(age3) <span class="co">///</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"[10.c] Binned scatterplot for number of chronic diseases by age"</span>) /</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="bn">subtitle</span>(<span class="st">"Each bin is a 3-year range of age"</span>) <span class="co">///</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="bn">xtitle</span>(<span class="st">"Age"</span>) <span class="bn">ytitle</span>(<span class="st">"Number of chronic diseases"</span>) <span class="co">///</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">xlabel</span>(20(10)100) <span class="kw">ylabel</span>(0(.5)3)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><img src="fig/dmv-10_c-binscatter.png" class="img-fluid" style="width:80.0%" alt="[10.c] Binned scatterplot with one point for the mean number of chronic diseases in each 3-year age range from 18 to 109: the few people under 30 give means that jump around (2.3 at age 19, 0.3 at age 22); the mean stays near 1 or below until about age 45, rises steadily to a peak of about 2.7 at age 88, and then falls to about 2 at the oldest ages."></p>
+</div>
+<div id="tabset-7-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-7-2-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Because so many older adults, most bins are at older ages. Create own bin</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="co"># variable to see more of age range</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="co"># 3-year age bins, coded at the bin midpoint (18-20 = 19, 21-23 = 22, ...)</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>hrs <span class="ot">&lt;-</span> hrs <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">age3 =</span> <span class="fu">floor</span>(age<span class="sc">/</span><span class="dv">3</span>)<span class="sc">*</span><span class="dv">3</span> <span class="sc">+</span> <span class="dv">1</span>)</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="co"># check: min and max age in each bin</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>hrs <span class="sc">%&gt;%</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(age)) <span class="sc">%&gt;%</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(age3) <span class="sc">%&gt;%</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">min =</span> <span class="fu">min</span>(age), <span class="at">max =</span> <span class="fu">max</span>(age), <span class="at">mean =</span> <span class="fu">mean</span>(age), <span class="at">n =</span> <span class="fu">n</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="at">n =</span> <span class="cn">Inf</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="r-output"><code># A tibble: 31 × 5
+    age3   min   max  mean     n
+   &lt;dbl&gt; &lt;int&gt; &lt;int&gt; &lt;dbl&gt; &lt;int&gt;
+ 1    19    18    20  18.7     3
+ 2    22    21    23  22.2     9
+ 3    25    24    26  25.3    28
+ 4    28    27    29  28.3    67
+ 5    31    30    32  31.1   133
+ 6    34    33    35  34.1   267
+ 7    37    36    38  37.2   503
+ 8    40    39    41  40.1   902
+ 9    43    42    44  43.1  1656
+10    46    45    47  46.1  3150
+11    49    48    50  49.2  6761
+12    52    51    53  52.2 19536
+13    55    54    56  55.0 29650
+14    58    57    59  58.0 31707
+15    61    60    62  61.0 30378
+16    64    63    65  64.0 27203
+17    67    66    68  67.0 23411
+18    70    69    71  70.0 22745
+19    73    72    74  73.0 22203
+20    76    75    77  76.0 19763
+21    79    78    80  79.0 17167
+22    82    81    83  81.9 14125
+23    85    84    86  84.9 10508
+24    88    87    89  87.9  6983
+25    91    90    92  90.9  4178
+26    94    93    95  93.8  2000
+27    97    96    98  96.8   823
+28   100    99   101  99.7   274
+29   103   102   104 103.     52
+30   106   105   107 106      10
+31   109   109   109 109       2</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>hrs_bins3 <span class="ot">&lt;-</span> hrs <span class="sc">%&gt;%</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(dzcount), <span class="sc">!</span><span class="fu">is.na</span>(age)) <span class="sc">%&gt;%</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(age3) <span class="sc">%&gt;%</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">age =</span> <span class="fu">mean</span>(age), <span class="at">dzcount =</span> <span class="fu">mean</span>(dzcount))</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(hrs_bins3, <span class="fu">aes</span>(<span class="at">x =</span> age, <span class="at">y =</span> dzcount)) <span class="sc">+</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Age"</span>,</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Number of chronic diseases"</span>,</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"[10.c] Binned scatterplot for number of chronic diseases by age"</span>,</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"Each bin is a 3-year range of age"</span>) <span class="sc">+</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">20</span>, <span class="dv">100</span>, <span class="dv">10</span>)) <span class="sc">+</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">3</span>, .<span class="dv">5</span>), <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="10-linearity_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" style="width:80.0%" alt="[10.c] Binned scatterplot with one point for the mean number of chronic diseases in each 3-year age range from 18 to 109: the few people under 30 give means that jump around (2.3 at age 19, 0.3 at age 22); the mean stays near 1 or below until about age 45, rises steadily to a peak of about 2.7 at age 88, and then falls to about 2 at the oldest ages."></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
 </section>
 
 <a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->

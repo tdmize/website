@@ -378,7 +378,7 @@ cleanplots_save('- Figures/dmv-05_d-scatter_colors.png', width = 10, height = 5.
 # 5.e - With so many groups, better to just directly label points
 ggplot(means_by_condition, aes(x = mean_competence, y = mean_warmth, label = cond)) +
   geom_point(size = 3) +
-  geom_text(vjust = -0.8, size = 3.5) +
+  geom_text(angle = 35, hjust = -0.1, size = 2.6) +
   labs(x = "Competence", y = "Warmth",
        title = "[5.e] Warmth and competence stereotypes of gender X racial-ethnic groups") +
   scale_x_continuous(breaks = seq(3, 7, 1), limits = c(3, 7)) +
@@ -858,7 +858,34 @@ ggplot(hrs_bins, aes(x = age, y = dzcount)) +
        y = "Number of chronic diseases",
        title = "[10.c] Binned scatterplot for number of chronic diseases by age",
        subtitle = "Each point is the mean in one of 20 equal-sized age groups") +
-  scale_x_continuous(breaks = seq(20, 100, 10))
+  scale_x_continuous(breaks = seq(20, 100, 10)) +
+  scale_y_continuous(breaks = seq(0, 3, .5), limits = c(0, 3))
+
+# Because so many older adults, most bins are at older ages. Create own bin
+# variable to see more of age range
+# 3-year age bins, coded at the bin midpoint (18-20 = 19, 21-23 = 22, ...)
+hrs <- hrs %>% mutate(age3 = floor(age/3)*3 + 1)
+
+# check: min and max age in each bin
+hrs %>%
+  filter(!is.na(age)) %>%
+  group_by(age3) %>%
+  summarise(min = min(age), max = max(age), mean = mean(age), n = n()) %>%
+  print(n = Inf)
+
+hrs_bins3 <- hrs %>%
+  filter(!is.na(dzcount), !is.na(age)) %>%
+  group_by(age3) %>%
+  summarise(age = mean(age), dzcount = mean(dzcount))
+
+ggplot(hrs_bins3, aes(x = age, y = dzcount)) +
+  geom_point(size = 3) +
+  labs(x = "Age",
+       y = "Number of chronic diseases",
+       title = "[10.c] Binned scatterplot for number of chronic diseases by age",
+       subtitle = "Each bin is a 3-year range of age") +
+  scale_x_continuous(breaks = seq(20, 100, 10)) +
+  scale_y_continuous(breaks = seq(0, 3, .5), limits = c(0, 3))
 
 cleanplots_save('- Figures/dmv-10_c-binscatter.png', width = 10, height = 5.6)
 

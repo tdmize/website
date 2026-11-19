@@ -11,6 +11,8 @@ title: "10. Don't assume linearity"
 - Plot each individual observation by placing one variable on the *x*-axis and another on the *y*-axis, and placing a dot where each observation falls
   - The dependent variable (DV) or outcome is the *y*-variable
   - The independent variable (IV) or cause is the *x*-variable
+- Often, need to "jitter" the data points when there is substantial overlap
+  - I.e., Add random *x* and *y* noise
 :::
 ::: {.column width="40%"}
 ![](images/scatterplot-examples.jpeg){fig-alt="Three example scatterplots showing a positive correlation, a negative correlation, and no correlation."}
@@ -94,54 +96,6 @@ ggplot(hrs, aes(x = age, y = dzcount)) +
        y = "Number of chronic diseases",
        title = "[10.b] Relationship between number of chronic diseases and age",
        subtitle = "Data points have been jittered to prevent overlap") +
-  scale_x_continuous(breaks = seq(20, 100, 10))
-```
-
-:::
-
-## Binned scatterplots
-
-- Scatterplots and scatterplot smoothing methods like lowess are less useful when you have lots of data
-  - Graphs become impossible to read (but could plot random subsample)
-- A binned scatterplot is a useful tool for these and other cases ([Stepner 2014](https://michaelstepner.com/binscatter/binscatter-StataConference2014.pdf))
-  - "bin" the *x* variable into groups (e.g., 20 age groups) and then calculate the mean of the *y* variable for each bin
-
-::: {.panel-tabset group="language"}
-## Stata
-
-```{.stata-run}
-<<dd_do>>
-// 10.c - Binned scatterplot: mean of y within 20 equal-sized bins of x
-binscatter dzcount age, linetype(none) mcolors(red*1.2) ///
-    title("[10.c] Binned scatterplot for number of chronic diseases by age") ///
-    subtitle("Each point is the mean in one of 20 equal-sized age groups") ///
-    xtitle("Age") ytitle("Number of chronic diseases") ///
-    xlabel(20(10)100)
-<</dd_do>>
-<<dd_do: quietly>>
-graph export "fig/dmv-10_c-binscatter.png", replace width(1400)
-<</dd_do>>
-```
-
-![](fig/dmv-10_c-binscatter.png){width=80% fig-alt="[10.c] Binned scatterplot with one point for the mean number of chronic diseases in each of 20 equal-sized age groups: the mean rises steeply from about 1 at age 47 to about 2.3 at age 70 and then levels off near 2.6 after age 80."}
-
-## R
-
-```{r}
-#| fig-alt: "[10.c] Binned scatterplot with one point for the mean number of chronic diseases in each of 20 equal-sized age groups: the mean rises steeply from about 1 near age 47 and then levels off after age 80."
-# 10.c - Binned scatterplot: mean of y within 20 equal-sized bins of x
-hrs_bins <- hrs %>%
-  filter(!is.na(dzcount), !is.na(age)) %>%
-  mutate(age_bin = ntile(age, 20)) %>%
-  group_by(age_bin) %>%
-  summarise(age = mean(age), dzcount = mean(dzcount))
-
-ggplot(hrs_bins, aes(x = age, y = dzcount)) +
-  geom_point(size = 3) +
-  labs(x = "Age",
-       y = "Number of chronic diseases",
-       title = "[10.c] Binned scatterplot for number of chronic diseases by age",
-       subtitle = "Each point is the mean in one of 20 equal-sized age groups") +
   scale_x_continuous(breaks = seq(20, 100, 10))
 ```
 
@@ -296,3 +250,113 @@ Napoleon's march to, and retreat from, Moscow in the War of 1812
 ::::
 
 \*[Read about The Methodology Center graphic](https://www.purdue.edu/research/mcap/illustration/)
+
+
+## Binned scatterplots
+
+- Scatterplots and scatterplot smoothing methods are less useful when you have lots of data
+  - Graphs become impossible to read (but could plot random subsample)
+- A binned scatterplot is a useful tool for these and other cases ([Stepner 2014](https://michaelstepner.com/binscatter/binscatter-StataConference2014.pdf))
+  - "bin" the *x* variable into groups (e.g., 20 age groups) and then calculate the mean of the *y* variable for each bin
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+// 10.c - Binned scatterplot: mean of y within 20 equal-sized bins of x
+binscatter dzcount age, linetype(none) mcolors(red*1.2) ///
+    title("[10.c] Binned scatterplot for number of chronic diseases by age") ///
+    subtitle("Each point is the mean in one of 20 equal-sized age groups") ///
+    xtitle("Age") ytitle("Number of chronic diseases") ///
+    xlabel(20(10)100) ylabel(0(.5)3)
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/dmv-10_c-binscatter-20.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/dmv-10_c-binscatter-20.png){width=80% fig-alt="[10.c] Binned scatterplot with one point for the mean number of chronic diseases in each of 20 equal-sized age groups: the youngest group's average age is about 47, so most points are at older ages; the mean rises steeply from about 1 at age 47 to about 2.3 at age 70 and then levels off near 2.6 after age 80."}
+
+## R
+
+```{r}
+#| fig-alt: "[10.c] Binned scatterplot with one point for the mean number of chronic diseases in each of 20 equal-sized age groups: the youngest group's average age is about 47, so most points are at older ages; the mean rises steeply from about 1 near age 47 and then levels off after age 80."
+# 10.c - Binned scatterplot: mean of y within 20 equal-sized bins of x
+hrs_bins <- hrs %>%
+  filter(!is.na(dzcount), !is.na(age)) %>%
+  mutate(age_bin = ntile(age, 20)) %>%
+  group_by(age_bin) %>%
+  summarise(age = mean(age), dzcount = mean(dzcount))
+
+ggplot(hrs_bins, aes(x = age, y = dzcount)) +
+  geom_point(size = 3) +
+  labs(x = "Age",
+       y = "Number of chronic diseases",
+       title = "[10.c] Binned scatterplot for number of chronic diseases by age",
+       subtitle = "Each point is the mean in one of 20 equal-sized age groups") +
+  scale_x_continuous(breaks = seq(20, 100, 10)) +
+  scale_y_continuous(breaks = seq(0, 3, .5), limits = c(0, 3))
+```
+
+:::
+
+::: {.panel-tabset group="language"}
+## Stata
+
+```{.stata-run}
+<<dd_do>>
+*Because so many older adults, most bins are at older ages. Create own bin
+**variable to see more of age range
+*3-year age bins, coded at the bin midpoint (18-20 = 19, 21-23 = 22, ...)
+gen age3 = floor(age/3)*3 + 1
+label var age3 "Age (3-year bins, midpoint)"
+
+*check: min and max age in each bin
+tabstat age, by(age3) stat(min max mean n)
+
+binscatter dzcount age, linetype(none) mcolors(red*1.2) xq(age3) ///
+    title("[10.c] Binned scatterplot for number of chronic diseases by age") ///
+    subtitle("Each bin is a 3-year range of age") ///
+    xtitle("Age") ytitle("Number of chronic diseases") ///
+    xlabel(20(10)100) ylabel(0(.5)3)
+<</dd_do>>
+<<dd_do: quietly>>
+graph export "fig/dmv-10_c-binscatter.png", replace width(1400)
+<</dd_do>>
+```
+
+![](fig/dmv-10_c-binscatter.png){width=80% fig-alt="[10.c] Binned scatterplot with one point for the mean number of chronic diseases in each 3-year age range from 18 to 109: the few people under 30 give means that jump around (2.3 at age 19, 0.3 at age 22); the mean stays near 1 or below until about age 45, rises steadily to a peak of about 2.7 at age 88, and then falls to about 2 at the oldest ages."}
+
+## R
+
+```{r}
+#| fig-alt: "[10.c] Binned scatterplot with one point for the mean number of chronic diseases in each 3-year age range from 18 to 109: the few people under 30 give means that jump around (2.3 at age 19, 0.3 at age 22); the mean stays near 1 or below until about age 45, rises steadily to a peak of about 2.7 at age 88, and then falls to about 2 at the oldest ages."
+# Because so many older adults, most bins are at older ages. Create own bin
+# variable to see more of age range
+# 3-year age bins, coded at the bin midpoint (18-20 = 19, 21-23 = 22, ...)
+hrs <- hrs %>% mutate(age3 = floor(age/3)*3 + 1)
+
+# check: min and max age in each bin
+hrs %>%
+  filter(!is.na(age)) %>%
+  group_by(age3) %>%
+  summarise(min = min(age), max = max(age), mean = mean(age), n = n()) %>%
+  print(n = Inf)
+
+hrs_bins3 <- hrs %>%
+  filter(!is.na(dzcount), !is.na(age)) %>%
+  group_by(age3) %>%
+  summarise(age = mean(age), dzcount = mean(dzcount))
+
+ggplot(hrs_bins3, aes(x = age, y = dzcount)) +
+  geom_point(size = 3) +
+  labs(x = "Age",
+       y = "Number of chronic diseases",
+       title = "[10.c] Binned scatterplot for number of chronic diseases by age",
+       subtitle = "Each bin is a 3-year range of age") +
+  scale_x_continuous(breaks = seq(20, 100, 10)) +
+  scale_y_continuous(breaks = seq(0, 3, .5), limits = c(0, 3))
+```
+
+:::

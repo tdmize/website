@@ -325,23 +325,23 @@ Data from [Mize 2025](/research/mize_2025_spq.qmd)
 
 ```{.stata-run}
 . // 5.e - With so many groups, better to just directly label points
-. twoway scatter warmSS compSS, mlabel(cond) ///
+. twoway scatter warmSS compSS, mlabel(cond) mlabangle(35) mlabsize(*.75) ///
 >     ytitle("Warmth") xtitle("Competence") ylab(3(1)7) xlab(3(1)7) ///
 >     title("[5.e] Warmth and competence stereotypes of gender X racial-ethnic g
 > roups")
 
 ```
 
-![](fig/dmv-05_e-scatter_labels.png){width=80% fig-alt="[5.e] The same scatterplot with each point labeled directly with its group name: White Men and Asian Men are rated most competent, Pakistani, Iranian, Saudi Arabian, and Middle Eastern Women least competent, and the Middle Eastern, Saudi Arabian, Pakistani, and Iranian Men least warm."}
+![](fig/dmv-05_e-scatter_labels.png){width=80% fig-alt="[5.e] The same scatterplot with each point labeled directly with its group name, in small text at an angle: White Men and Asian Men are rated most competent, Pakistani, Iranian, Saudi Arabian, and Middle Eastern Women least competent, and the Middle Eastern, Saudi Arabian, Pakistani, and Iranian Men least warm."}
 
 ## R
 
 ```{r}
-#| fig-alt: "[5.e] The same scatterplot with each point labeled directly with its group name: White Men and Asian Men are rated most competent, Pakistani, Iranian, Saudi Arabian, and Middle Eastern Women least competent, and the Middle Eastern, Saudi Arabian, Pakistani, and Iranian Men least warm."
+#| fig-alt: "[5.e] The same scatterplot with each point labeled directly with its group name, in small text at an angle: White Men and Asian Men are rated most competent, Pakistani, Iranian, Saudi Arabian, and Middle Eastern Women least competent, and the Middle Eastern, Saudi Arabian, Pakistani, and Iranian Men least warm."
 # 5.e - With so many groups, better to just directly label points
 ggplot(means_by_condition, aes(x = mean_competence, y = mean_warmth, label = cond)) +
   geom_point(size = 3) +
-  geom_text(vjust = -0.8, size = 3.5) +
+  geom_text(angle = 35, hjust = -0.1, size = 2.6) +
   labs(x = "Competence", y = "Warmth",
        title = "[5.e] Warmth and competence stereotypes of gender X racial-ethnic groups") +
   scale_x_continuous(breaks = seq(3, 7, 1), limits = c(3, 7)) +
@@ -367,9 +367,10 @@ Data from [Mize 2025](/research/mize_2025_spq.qmd)
 
 - Most graphics themes' palettes are nominal
   - I.e., They do not imply ordering by the color choices
-  - okabe_ito and cleanplots are nominal palettes
+  - **okabe_ito** and **cleanplots** are nominal palettes
 - It is sometimes useful to use an ordinal palette to have the visual reflect the ordering in the variable (e.g., for educational degrees)
-  - The [viridis](https://bids.github.io/colormap/) and [cividis](https://doi.org/10.1371/journal.pone.0199239) palettes are my preferred ordinal palettes
+  - The [**viridis**](https://bids.github.io/colormap/) and [**cividis**](https://doi.org/10.1371/journal.pone.0199239) palettes are my preferred ordinal palettes
+    - In Stata, implemented with the [**cleanplots#** themes](/software/cleanplots/index.qmd#ordinal-color-palettes)
   - Note you should not use an ordinal palette for a nominal variable (falsely implies ordering)
 
 :::: {.columns}
@@ -390,11 +391,11 @@ Should use a nominal palette for a race-ethnicity variable
 ## Stata
 
 ```{.stata-run}
+. // 5.f - Ordinal (viridis) colors for an ordered variable: cleanplots8v scheme
 . use "https://tdmize.github.io/data/data/hrs_si.dta", clear
 (Health and Retirement Study 1992-2022 - Cleaned for MCAP SI)
 
 . 
-. // 5.f - Ordinal (viridis) colors for an ordered variable: cleanplots8v scheme
 . graph bar (mean) dzcount, over(degree) asyvars showyvars legend(off) ///
 >     yvaroptions(label(angle(45))) ///
 >     ytitle("Count of chronic diseases") ///
