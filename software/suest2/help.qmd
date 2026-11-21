@@ -80,7 +80,7 @@ The following model families are supported.
 
 ### Cox models
 
-`stcox` with Breslow ties (the default), one record per subject, and no delayed entry, weights, `strata()`, `tvc()`, `shared()`, or `vce(cluster)`, alone or with the ordinary single-level models above, including `mi estimate` results. Specify `time(`*#*`)`: the Cox model's block holds its coefficients and, as `_cons`, the log of the baseline cumulative hazard at that time, and `predict(pr)` is the probability of the event by that time. With `time()`, `predict(pr)` after `streg` is the same probability.
+`stcox` with Breslow ties (the default), one record per subject, and no delayed entry, weights, `strata()`, `tvc()`, `shared()`, or `vce(cluster)`, alone, with the ordinary single-level models above, or beside a multilevel, panel, or `ivregress 2sls` model (see below), including `mi estimate` results. Specify `time(`*#*`)`: the Cox model's block holds its coefficients and, as `_cons`, the log of the baseline cumulative hazard at that time, and `predict(pr)` is the probability of the event by that time. With `time()`, `predict(pr)` after `streg` is the same probability.
 
 ### Panel models
 
@@ -106,7 +106,7 @@ Correlated random effects models should be specified as detailed in the [CRE spe
 
 Supported `meglm` families and links are Gaussian-identity, Bernoulli-logit, Bernoulli-probit, Bernoulli-cloglog, Poisson-log, negative-binomial-log, Gamma-log, ordinal-logit, and ordinal-probit.
 
-Multilevel and panel models may also be combined with ordinary single-level models: `regress`, `logit`, `probit`, `cloglog`, `poisson`, `nbreg`, `ologit`, and `oprobit`, e.g., a `logit` with a `melogit` or `xtlogit`. Fit the ordinary model unweighted, without a prefix, and with conventional standard errors; its standard errors are clustered on the highest-level group of the multilevel or panel model.
+Multilevel and panel models, and `ivregress 2sls`, may also be combined with ordinary single-level models: `regress`, `logit`, `probit`, `cloglog`, `poisson`, `nbreg`, `ologit`, `oprobit`, `streg`, and `stcox`, e.g., a `logit` with a `melogit` or `xtlogit`. Fit the ordinary model unweighted, without a prefix, and with conventional standard errors; its standard errors are clustered on the highest-level group of the multilevel or panel model, or robust beside `ivregress 2sls`.
 
 Supported `mestreg` distributions are exponential, Weibull, lognormal, loglogistic, and gamma, including the applicable proportional-hazards and accelerated-failure-time forms.
 
@@ -130,7 +130,7 @@ estimates store s2
 suest2 s1 s2
 ```
 
-The survey route supports linearized VCEs. Survey design information is taken from `svyset`; do not specify `cluster()`, `vce()`, or `robust` on `suest2`. All models must use the same survey subpopulation specification. Replicate-weight VCEs are not supported.
+Survey design information is taken from `svyset`; do not specify `cluster()`, `vce()`, or `robust` on `suest2`. All models must use the same survey subpopulation specification. Linearized results and replicate-weight results (`svy brr`, `svy jackknife`, `svy bootstrap`, `svy sdr`) are supported. With replicate weights, every model must use the same replication method, replicate weights and options; `suest2` refits every model for each replicate, as `svy` does, to compute the covariance of all the models' coefficients.
 
 ### Pweights
 
@@ -167,7 +167,7 @@ margins, dydx(x) predict(model(me1) mu fixedonly)
 
 Options `at()`, `dydx()`, `over()`, `post`, and other standard `margins` options are supported when the constituent command supports the requested prediction. Inference uses the complete joint `suest2` covariance matrix, including the cross-model covariance.
 
-For a two-part model, fit the two parts as separate models: a `logit` or `probit` model of whether the outcome is positive, and a `glm` or `regress` model of the outcome where it is positive. `twopart(`*first* *second*`)` predicts the first model's probability times the second model's mean. With a `regress` model of the log of the outcome, add `duan` for Duan's smearing estimate or `normal` for the normal-theory retransformation:
+For a two-part model, fit the two parts as separate models: a model of whether the outcome is positive, such as `logit` or `probit`, and a `glm`, `regress`, `poisson`, or `nbreg` model of the outcome where it is positive. `twopart(`*first* *second*`)` predicts the first model's probability times the second model's mean. With a `regress` model of the log of the outcome, add `duan` for Duan's smearing estimate or `normal` for the normal-theory retransformation:
 
 ```stata
 margins, dydx(x) predict(twopart(Any Amount))
@@ -230,7 +230,8 @@ Panel models cluster at the panel identifier by default. Multilevel models clust
 | `e(suest2_resvar#)` | residual variance of a `regress` model, the mean squared residual |
 | `e(suest2_systempred#)` | whether active-system prediction is available |
 | `e(suest2_pweight)` | whether the pweight route was used |
-| `e(suest2_svy)` | whether the linearized survey route was used |
+| `e(suest2_svy)` | whether the survey route was used |
+| `e(suest2_svyrep)` | whether the models used replicate weights |
 | `e(suest2_mi_reconstruction_checked)` | whether MI source results were successfully reconstructed |
 | `e(predict)` | `suest2_p` |
 | `e(margins_cmd)` | `suest2_margins` |

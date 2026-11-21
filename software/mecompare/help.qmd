@@ -26,7 +26,7 @@ To read the help file in Stata, type `help mecompare`.
 | `groupme` | outcome difference between the two groups |
 | `groupsd` | each group's own SD for `amount(sd)` |
 | `ownsample` | average each model over its own sample |
-| `twopart`[`(`*type*`)`] | two-part models, listed in `models( )` in pairs |
+| `twopart`[`(`*spec*`)`] | two-part models, in pairs in `models( )` or named here |
 | *Amount of change* | |
 | `amount(list)` | change for continuous variables; default is **one** |
 | `centered` | centered change; the default |
@@ -178,7 +178,7 @@ o Otherwise the single model in e() is used, and it is labelled `m1` in the tabl
 
 <span id="twopart"></span>
 
-**`twopart`[`(`*type*`)`]** compares two-part models. A two-part model is two stored models: a `logit` or `probit` model of whether the outcome is positive, and a `glm` or `regress` model of the outcome where it is positive. `models( )` lists each first part, then its second part, and each pair is one model in the table, labeled by its two names (e.g. `Any+Amount`). The effects are on the expected outcome, the first part's probability times the second part's mean. With a `regress` model of the log of the outcome as each second part, `twopart(duan)` uses Duan's smearing estimate and `twopart(normal)` the normal-theory retransformation.
+**`twopart`[`(`*spec*`)`]** compares two-part models. A two-part model is two stored models: a model of whether the outcome is positive, such as `logit` or `probit`, and a `glm`, `regress`, `poisson`, or `nbreg` model of the outcome where it is positive. With `twopart` alone, `models( )` lists each first part, then its second part. To compare a two-part model with other models, name its two parts in `twopart( )`, as in `twopart(Any Amount)`; the other models in `models( )` keep their own prediction. Each pair is one model in the table, labeled by its two names (e.g. `Any+Amount`). The effects are on the expected outcome, the first part's probability times the second part's mean. With a `regress` model of the log of the outcome as a second part, `duan` uses Duan's smearing estimate and `normal` the normal-theory retransformation, as in `twopart(duan)` or `twopart(Any LnAmount, duan)`.
 
 <span id="groups"></span>
 
@@ -345,7 +345,7 @@ When the models have a multi-category outcome, the outcome categories are matche
 
 For the parametric survival models (`streg` and `mestreg`) the marginal effects are changes in a predicted survival time, and the default prediction of `margins` differs by command: after `streg` it is the predicted *median* survival time; after `mestreg` it is the predicted *mean* survival time (integrating over the random effects). `mecompare` uses those defaults unless `predict()` asks for another prediction (e.g. `predict(mean time)` after `streg`), and prints a note under the table saying which quantity the rows are on. Predicted survival times are model-based extrapolations: when spells are censored they can run well past the observed follow-up, and the mean and the median differ. Jones and Metzger (2019) and Metzger and Jones (2022) recommend interpreting duration models through survival (or transition) probabilities at chosen times instead.
 
-With `time(#)`, the marginal effects of `streg` and Cox (`stcox`) models are changes in the probability that the event has happened by time *#*, one minus the survival probability. Other models in `models( )`, such as a `logit` of the same event, keep their default prediction. A Cox model needs `time()`, and it must be fit with Breslow ties (the default), one record per subject, no delayed entry, and no weights, `svy`, `strata()`, or `tvc()`. `time()` cannot be combined with `predict()`, `mestreg`, or multilevel, panel, or `ivregress` models.
+With `time(#)`, the marginal effects of `streg` and Cox (`stcox`) models are changes in the probability that the event has happened by time *#*, one minus the survival probability. Other models in `models( )`, such as a `logit` of the same event, keep their default prediction. A Cox model needs `time()`, and it must be fit with Breslow ties (the default), one record per subject, no delayed entry, and no weights, `svy`, `strata()`, or `tvc()`. `time()` cannot be combined with `predict()` or `mestreg`.
 
 <span id="svy_mi"></span>
 
@@ -354,6 +354,8 @@ With `time(#)`, the marginal effects of `streg` and Cox (`stcox`) models are cha
 Models can be fit using the `svy:`, `mi est:`, or `mi est: svy:` prefixes. The prefix should be specified on the stored models, not on `mecompare`.
 
 For most cases, survey weights and complex sample designs should be specified using `svyset` and the `svy:` prefix should be used on the individual models before `mecompare`. For `svy:`, all models must be `svy:` and the relevant `svyset` design must be active when `mecompare` is run.
+
+After `svy, subpop()`, the marginal effects are averaged over the subpopulation, and the standard deviations, means and other quantities taken from the data are computed in the subpopulation. Models fit with replicate weights (`svy brr`, `svy jackknife`, `svy bootstrap`, `svy sdr`) are supported when every model uses the same replication method; the standard errors use the delta method, as `margins` does after each model.
 
 Weights carry through to every quantity `mecompare` computes from the data (standard deviations, means, trimmed ranges, level shares); under `mi estimate` these quantities are pooled across the imputations.
 
@@ -430,6 +432,7 @@ The following are stored in e():
 | `e(V_complete)` | 1 if every estimate and its covariances were recovered; 0 otherwise |
 | `e(k_failed)` | number of quantities that could not be computed (posted as 0 with a warning) |
 | `e(V_zeroed)` | number of covariance elements set to 0 for the same reason |
+| `e(k_noest)` | number of effects a model cannot estimate (shown as **.** in the table; posted as 0 with their rows and columns of `e(V)` zeroed) |
 | `e(cmd)` | `mecompare` |
 | `e(properties)` | `b V` |
 | `e(predict_label)` | the prediction the effects were computed from, as shown on the `Predicting:` line |
@@ -689,6 +692,14 @@ estimates store Any2
 glm exp_tot c.age i.female i.ins_unins c.pcs12 if any, family(gamma) link(log) vce(robust)
 estimates store Amount2
 mecompare ins_unins, models(Any Amount Any2 Amount2) twopart
+```
+
+*A two-part model and a Poisson model of the same outcome*
+
+```stata
+poisson exp_tot c.age i.female i.ins_unins, vce(robust)
+estimates store Pois
+mecompare ins_unins, models(Any Amount Pois) twopart(Any Amount)
 ```
 
 *A Cox model and a Weibull model: effects on the probability of death by month 10*

@@ -1,0 +1,111 @@
+---
+title: "Two-part models"
+subtitle: "Comparing effects across two-part models with different second parts"
+---
+
+A two-part model is used when an outcome is the product of a mix of two
+processes, one for observed zeroes and non-zeroes, and one for an amount among
+the non-zeroes. The expected outcome is the product of the two.
+`mecompare` with `twopart` gives effects on that expected outcome and compares
+them across models. The `suest2` [Two-part models](../../suest2/two-part.html)
+page shows the same results with `margins`.
+
+This example uses the medical expenditures of adults in the 2004 Medical
+Expenditure Panel Survey to compare two second parts: a `glm` with a gamma
+family and a log link, and Poisson pseudo-maximum likelihood (`poisson` with
+robust standard errors). Both share the first part, a logit of whether a
+person had any expenditures.
+
+```{.stata-run}
+. use "https://tdmize.github.io/data/data/meps", clear
+(MEPS 2004 adults, total medical expenditures (from R package twopartm))
+
+. generate byte any = exp_tot > 0
+
+. 
+. local x "c.age i.female c.lninc i.ins_unins"
+
+. 
+. quietly logit any `x', vce(robust)
+
+. estimates store Any
+
+. 
+. quietly glm exp_tot `x' if any, family(gamma) link(log) vce(robust)
+
+. estimates store Gamma
+
+. 
+. quietly poisson exp_tot `x' if any, vce(robust)
+
+. estimates store Poisson
+
+```
+
+`twopart()` names the two pairs, each a first part and its second part; `Any`
+is in both:
+
+```{.stata-run}
+. mecompare ins_unins age, models(Any Gamma Poisson) twopart(Any Gamma Any Poisson)
+
+Predicting: Two-part mean of exp_tot
+Marginal effects and cross-model differences (N_Any+Gamma=19386) (N_Any+Poisson=19386)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+ins unins                        |                                       
+                       1 - 0     |                                       
+                       Any+Gamma |     1  -2842.902    115.919      0.000
+                     Any+Poisson |     2  -2846.425    115.111      0.000
+                      Difference |     3      3.523     36.849      0.924
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                       Any+Gamma |     4    107.110      4.947      0.000
+                     Any+Poisson |     5     98.982      4.362      0.000
+                      Difference |     6      8.128      2.054      0.000
+
+```
+
+The two models give nearly the same effect of being uninsured: expected
+expenditures about $2,840 lower. The difference between them, about $4, is not
+significant. The effect of a year of age is about $107 with the gamma second
+part and $99 with the Poisson one, and that difference, about $8, is
+significant.
+
+A two-part model can also be compared with a single model for the outcome.
+Models not named in `twopart()` keep their own prediction -- here, a Poisson
+model fit to everyone, zeros included:
+
+```{.stata-run}
+. local x "c.age i.female c.lninc i.ins_unins"
+
+. 
+. quietly poisson exp_tot `x', vce(robust)
+
+. estimates store OnePart
+
+. 
+. mecompare ins_unins age, models(Any Poisson OnePart) twopart(Any Poisson)
+
+Predicting: Two-part mean of exp_tot (Any+Poisson), Predicted mean of exp_tot (OnePart)
+Marginal effects and cross-model differences (N_Any+Poisson=19386) (N_OnePart=19386)
+
+                                 |  ME #   Estimate  Robust SE      P>|z|
+---------------------------------+---------------------------------------
+ins unins                        |                                       
+                       1 - 0     |                                       
+                     Any+Poisson |     1  -2846.425    115.111      0.000
+                         OnePart |     2  -3028.215    109.027      0.000
+                      Difference |     3    181.789     13.693      0.000
+---------------------------------+---------------------------------------
+age + 1 (centered)               |                                       
+                     Any+Poisson |     4     98.982      4.362      0.000
+                         OnePart |     5    100.032      4.487      0.000
+                      Difference |     6     -1.050      0.299      0.000
+
+```
+
+The one-part model gives a larger effect of being uninsured, about $3,030, or
+about $180 more than the two-part model, and the difference is significant. The
+effects of age are close, about $99 and $100, though the difference of about $1
+is significant.

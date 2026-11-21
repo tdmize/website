@@ -665,6 +665,12 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
  <span class="menu-text">Survival models</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../software/mecompare/examples/two-part.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Two-part models</span></a>
+  </div>
+</li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -1406,7 +1412,7 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 </section>
 <section id="cox-models" class="level3">
 <h3 class="anchored" data-anchor-id="cox-models">Cox models</h3>
-<p><code>stcox</code> with Breslow ties (the default), one record per subject, and no delayed entry, weights, <code>strata()</code>, <code>tvc()</code>, <code>shared()</code>, or <code>vce(cluster)</code>, alone or with the ordinary single-level models above, including <code>mi estimate</code> results. Specify <code>time(</code><em>#</em><code>)</code>: the Cox model’s block holds its coefficients and, as <code>_cons</code>, the log of the baseline cumulative hazard at that time, and <code>predict(pr)</code> is the probability of the event by that time. With <code>time()</code>, <code>predict(pr)</code> after <code>streg</code> is the same probability.</p>
+<p><code>stcox</code> with Breslow ties (the default), one record per subject, and no delayed entry, weights, <code>strata()</code>, <code>tvc()</code>, <code>shared()</code>, or <code>vce(cluster)</code>, alone, with the ordinary single-level models above, or beside a multilevel, panel, or <code>ivregress 2sls</code> model (see below), including <code>mi estimate</code> results. Specify <code>time(</code><em>#</em><code>)</code>: the Cox model’s block holds its coefficients and, as <code>_cons</code>, the log of the baseline cumulative hazard at that time, and <code>predict(pr)</code> is the probability of the event by that time. With <code>time()</code>, <code>predict(pr)</code> after <code>streg</code> is the same probability.</p>
 </section>
 <section id="panel-models" class="level3">
 <h3 class="anchored" data-anchor-id="panel-models">Panel models</h3>
@@ -1423,7 +1429,7 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 <h3 class="anchored" data-anchor-id="multilevel-models">Multilevel models</h3>
 <p><code>mixed, mle</code>; <code>melogit</code>; <code>meprobit</code>; <code>mecloglog</code>; <code>mepoisson</code>; <code>menbreg</code>; <code>meologit</code>; <code>meoprobit</code>; and <code>mestreg</code>.</p>
 <p>Supported <code>meglm</code> families and links are Gaussian-identity, Bernoulli-logit, Bernoulli-probit, Bernoulli-cloglog, Poisson-log, negative-binomial-log, Gamma-log, ordinal-logit, and ordinal-probit.</p>
-<p>Multilevel and panel models may also be combined with ordinary single-level models: <code>regress</code>, <code>logit</code>, <code>probit</code>, <code>cloglog</code>, <code>poisson</code>, <code>nbreg</code>, <code>ologit</code>, and <code>oprobit</code>, e.g., a <code>logit</code> with a <code>melogit</code> or <code>xtlogit</code>. Fit the ordinary model unweighted, without a prefix, and with conventional standard errors; its standard errors are clustered on the highest-level group of the multilevel or panel model.</p>
+<p>Multilevel and panel models, and <code>ivregress 2sls</code>, may also be combined with ordinary single-level models: <code>regress</code>, <code>logit</code>, <code>probit</code>, <code>cloglog</code>, <code>poisson</code>, <code>nbreg</code>, <code>ologit</code>, <code>oprobit</code>, <code>streg</code>, and <code>stcox</code>, e.g., a <code>logit</code> with a <code>melogit</code> or <code>xtlogit</code>. Fit the ordinary model unweighted, without a prefix, and with conventional standard errors; its standard errors are clustered on the highest-level group of the multilevel or panel model, or robust beside <code>ivregress 2sls</code>.</p>
 <p>Supported <code>mestreg</code> distributions are exponential, Weibull, lognormal, loglogistic, and gamma, including the applicable proportional-hazards and accelerated-failure-time forms.</p>
 <p>Fit multilevel models with <code>intmethod(mvaghermite)</code>, the default, or <code>intmethod(mcaghermite)</code>.</p>
 <p>Supported multilevel families may be combined in one system. Every model must use the same highest-level grouping variable.</p>
@@ -1440,7 +1446,7 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">svy</span>: <span class="kw">logit</span> y2 x z</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">estimates</span> <span class="kw">store</span> s2</span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>suest2 s1 s2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The survey route supports linearized VCEs. Survey design information is taken from <code>svyset</code>; do not specify <code>cluster()</code>, <code>vce()</code>, or <code>robust</code> on <code>suest2</code>. All models must use the same survey subpopulation specification. Replicate-weight VCEs are not supported.</p>
+<p>Survey design information is taken from <code>svyset</code>; do not specify <code>cluster()</code>, <code>vce()</code>, or <code>robust</code> on <code>suest2</code>. All models must use the same survey subpopulation specification. Linearized results and replicate-weight results (<code>svy brr</code>, <code>svy jackknife</code>, <code>svy bootstrap</code>, <code>svy sdr</code>) are supported. With replicate weights, every model must use the same replication method, replicate weights and options; <code>suest2</code> refits every model for each replicate, as <code>svy</code> does, to compute the covariance of all the models’ coefficients.</p>
 </section>
 <section id="pweights" class="level3">
 <h3 class="anchored" data-anchor-id="pweights">Pweights</h3>
@@ -1468,7 +1474,7 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">predict</span>(<span class="kw">model</span>(o1) pr outcome(3))</span>
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(x) <span class="kw">predict</span>(<span class="kw">model</span>(me1) mu fixedonly)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Options <code>at()</code>, <code>dydx()</code>, <code>over()</code>, <code>post</code>, and other standard <code>margins</code> options are supported when the constituent command supports the requested prediction. Inference uses the complete joint <code>suest2</code> covariance matrix, including the cross-model covariance.</p>
-<p>For a two-part model, fit the two parts as separate models: a <code>logit</code> or <code>probit</code> model of whether the outcome is positive, and a <code>glm</code> or <code>regress</code> model of the outcome where it is positive. <code>twopart(</code><em>first</em> <em>second</em><code>)</code> predicts the first model’s probability times the second model’s mean. With a <code>regress</code> model of the log of the outcome, add <code>duan</code> for Duan’s smearing estimate or <code>normal</code> for the normal-theory retransformation:</p>
+<p>For a two-part model, fit the two parts as separate models: a model of whether the outcome is positive, such as <code>logit</code> or <code>probit</code>, and a <code>glm</code>, <code>regress</code>, <code>poisson</code>, or <code>nbreg</code> model of the outcome where it is positive. <code>twopart(</code><em>first</em> <em>second</em><code>)</code> predicts the first model’s probability times the second model’s mean. With a <code>regress</code> model of the log of the outcome, add <code>duan</code> for Duan’s smearing estimate or <code>normal</code> for the normal-theory retransformation:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(x) <span class="kw">predict</span>(twopart(Any Amount))</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>margins, <span class="kw">dydx</span>(x) <span class="kw">predict</span>(twopart(Any LnAmount) duan)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Every prediction is averaged over the <code>suest2</code> estimation sample, the observations in any model’s sample. To average over one model’s sample instead, add an <code>if</code> qualifier:</p>
@@ -1622,17 +1628,21 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 </tr>
 <tr class="even">
 <td style="text-align: left;"><code>e(suest2_svy)</code></td>
-<td style="text-align: left;">whether the linearized survey route was used</td>
+<td style="text-align: left;">whether the survey route was used</td>
 </tr>
 <tr class="odd">
+<td style="text-align: left;"><code>e(suest2_svyrep)</code></td>
+<td style="text-align: left;">whether the models used replicate weights</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;"><code>e(suest2_mi_reconstruction_checked)</code></td>
 <td style="text-align: left;">whether MI source results were successfully reconstructed</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;"><code>e(predict)</code></td>
 <td style="text-align: left;"><code>suest2_p</code></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;"><code>e(margins_cmd)</code></td>
 <td style="text-align: left;"><code>suest2_margins</code></td>
 </tr>

@@ -120,6 +120,26 @@ for women; the difference, about $810, is significant.
 
 ## Other models for the second part
 
+**A Poisson second part.** `poisson` with robust standard errors -- Poisson
+pseudo-maximum likelihood -- fits a model of the mean of any outcome that is
+zero or positive, not only counts; it needs only the model of the mean to be
+right (Santos Silva and Tenreyro 2006):
+
+```{.stata-run}
+<<dd_do>>
+local x "c.age i.female c.lninc c.pcs12 c.mcs12 i.ins_unins i.anylim"
+
+quietly poisson exp_tot `x' if any, vce(cluster duid)
+estimates store Pois
+
+quietly suest2 Any Pois
+margins, dydx(ins_unins) predict(twopart(Any Pois))
+<</dd_do>>
+```
+
+With a Poisson second part, being uninsured lowers expected expenditures by
+about $2,700, close to the $2,610 from the gamma second part.
+
 **A linear second part.** Fit `regress` among the people with any
 expenditures, and use its prediction in place of the `glm` one:
 
@@ -170,6 +190,28 @@ margins, dydx(ins_unins) expression(predict(model(Any)) * exp(predict(model(LnAm
 the uncertainty in estimating it. `predict(twopart(Any LnAmount) duan)` and
 `predict(twopart(Any LnAmount) normal)` compute the constants from the stored
 regression.
+
+## How well the model predicts
+
+The correlation between the outcome and its expected value summarizes how well
+a two-part model predicts. It depends only on the expected outcome, so it
+applies with any second part. `predict` with `twopart()` gives the expected
+outcome:
+
+```{.stata-run}
+<<dd_do>>
+quietly suest2 Any Amount
+predict double yhat_gamma if e(sample), twopart(Any Amount)
+
+quietly suest2 Any Pois
+predict double yhat_pois if e(sample), twopart(Any Pois)
+
+correlate exp_tot yhat_gamma yhat_pois
+<</dd_do>>
+```
+
+The correlation is .386 with the gamma second part and .392 with the Poisson
+one, so the two predict about equally well.
 
 ## Weights and survey data
 
@@ -245,7 +287,9 @@ Without the health measures, being uninsured lowers expected expenditures by
 about $2,840; with them, by about $2,610. The difference, about $230, is
 significant.
 
-`mecompare` with its `twopart` option gives the same comparison in one call:
+`mecompare` with its `twopart` option gives the same comparison in one call
+(the `mecompare` [Two-part models](../mecompare/examples/two-part.html) page
+compares a gamma and a Poisson second part):
 
 ```{.stata-run}
 <<dd_do>>
@@ -258,6 +302,10 @@ mecompare ins_unins, models(Any1 Amount1 Any Amount) twopart
 > Belotti, Federico, Partha Deb, Willard G. Manning, and Edward C. Norton.
 > 2015. "twopm: Two-part Models." *Stata Journal* 15(1): 3--20.
 > <https://doi.org/10.1177/1536867X1501500102>
+
+> Santos Silva, J. M. C., and Silvana Tenreyro. 2006. "The Log of Gravity."
+> *Review of Economics and Statistics* 88(4): 641--658.
+> <https://doi.org/10.1162/rest.88.4.641>
 
 > Duan, Naihua. 1983. "Smearing Estimate: A Nonparametric Retransformation
 > Method." *Journal of the American Statistical Association* 78(383):
