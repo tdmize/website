@@ -1,0 +1,2021 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Two-part models – Trenton D. Mize</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../software/suest_r/articles/model-notes.html" rel="next">
+<link href="../../../software/suest_r/articles/instrumental-variables.html" rel="prev">
+<script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-d1074f4552fd9e64773fe67262ebb1c3.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-FQRYLM0FY0"></script>
+
+<script type="text/javascript">
+
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
+</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">Trenton D. Mize</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../cv.html"> 
+<span class="menu-text">CV</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../research.html"> 
+<span class="menu-text">Research</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="../../../software.html" aria-current="page"> 
+<span class="menu-text">Software</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../teaching.html"> 
+<span class="menu-text">Teaching</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../resources.html"> 
+<span class="menu-text">Links</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../help.html"> 
+<span class="menu-text">Asking for Help</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/tdmize"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../software/suest_r/index.html">suest (R)</a></li><li class="breadcrumb-item"><a href="../../../software/suest_r/articles/chapter-groups.html">More examples</a></li><li class="breadcrumb-item"><a href="../../../software/suest_r/articles/two-part.html">Two-part models</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Software</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/balanceplot/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">balanceplot</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/balanceplot/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/balanceplot/options.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Options</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/balanceplot/tables.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tables and stored results</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/balanceplot/continuous-treatment.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Continuous treatments</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/balanceplot/matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Matching and teffects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/balanceplot/help-examples.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Examples from the help file</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/balanceplot/help.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">help balanceplot</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/cleanplots/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">cleanplots</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/cleanplots/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/cleanplots/examples.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Examples</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/cleanplots/ordinal.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Ordinal palettes</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/cleanplots/help.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">help cleanplots</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/cleanplots_r/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">cleanplots (R)</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/cleanplots_r/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/cleanplots_r/articles/cleanplots.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Getting started</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/cleanplots_r/reference/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Function reference</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/cleanplots_r/reference/cleanplots_colors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">cleanplots_colors</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/cleanplots_r/reference/cleanplots_defaults.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">cleanplots_defaults</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/cleanplots_r/reference/cleanplots_save.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">cleanplots_save</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/cleanplots_r/reference/palette_cleanplots.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">palette_cleanplots</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/cleanplots_r/reference/scale_color_cleanplots.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">scale_color_cleanplots</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/cleanplots_r/reference/scale_shape_cleanplots.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">scale_shape_cleanplots</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/cleanplots_r/reference/theme_cleanplots.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">theme_cleanplots</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/desctable/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">desctable</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/desctable/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/desctable/help-examples.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Examples from the help file</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/desctable/help.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">help desctable</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/irt_coef/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">irt_coef</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/irt_coef/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/irt_coef/help-examples.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Examples from the help file</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/irt_coef/help.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">help irt_coef</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/irt_me/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">irt_me</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/irt_me/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/irt_me/help-examples.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Examples from the help file</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/irt_me/help.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">help irt_me</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/lca_entropy/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">lca_entropy</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/lca_entropy/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/lca_entropy/help-examples.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Examples from the help file</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/lca_entropy/help.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">help lca_entropy</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/mecompare/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">mecompare</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/getting-started.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Getting started</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/options.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Options</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/plotting.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Plotting and tabulating results</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/mecompare/examples/mediation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Examples</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/mecompare/examples/mediation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Mize, Doan &amp; Long (2019)</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-11" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/examples/mediation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Curvilinear effects and mediation/attenuation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/examples/nested-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Nested logit models and mediation/attenuation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/examples/alternative-predictors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Alternative predictors</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/examples/different-outcomes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Different outcomes</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/examples/model-types.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Different model types</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/examples/groups.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Separate samples or groups</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/mecompare/examples/within-model.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Mize &amp; Han (2025)</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-12" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/examples/within-model.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Comparing effects across predictors</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/examples/meinequality-across-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Comparing ME inequalities across models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/examples/totalme-across-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Comparing Total MEs across models</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/mecompare/examples/chapter-summary-measures.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Mize &amp; Han (forthcoming)</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-13" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-13" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/examples/chapter-summary-measures.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">MEMs, AMEs, MERs, and ideal types</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/examples/chapter-interactions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tests of interaction</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/examples/chapter-groups.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Group comparisons</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/mecompare/examples/multilevel.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Multilevel and panel models</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-14" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-14" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/examples/multilevel.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Multilevel models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/examples/panel.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Panel models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/examples/within-person.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Within-person effects</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/examples/survival.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Survival models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/examples/two-part.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Two-part models</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/mecompare/interactions/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Interactions: Mize (2019)</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-15" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-15" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/interactions/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/interactions/linear-model.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Nonlinear effects in a linear model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/interactions/nominal-by-nominal.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Two nominal variables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/interactions/nominal-by-continuous.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A nominal and a continuous variable</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/interactions/continuous-by-continuous.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Two continuous variables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/interactions/joint-tests.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Bonus: Joint tests of interaction</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/generalized.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Generalized marginal effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/help-examples.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Examples from the help file</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/mecompare/help.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">help mecompare</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/meinequality/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">meinequality</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-16" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-16" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/meinequality/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/meinequality/options.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Options</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/meinequality/examples/summary-measure.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Examples</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-17" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-17" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/meinequality/examples/summary-measure.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Inequality as a summary measure</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/meinequality/examples/categorical-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Inequality in categorical models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/meinequality/examples/across-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Comparing ME inequalities across models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/meinequality/examples/across-groups.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Comparing ME inequalities across groups</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/meinequality/help-examples.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Examples from the help file</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/meinequality/help.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">help meinequality</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/meinequality_r/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">meinequality (R)</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-18" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-18" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/meinequality_r/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/meinequality_r/examples/summary-measure.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Examples</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-19" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-19" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/meinequality_r/examples/summary-measure.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Inequality as a summary measure</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/meinequality_r/examples/categorical-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Inequality in categorical models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/meinequality_r/examples/across-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Comparing ME inequalities across models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/meinequality_r/examples/across-groups.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Comparing ME inequalities across groups</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/metest/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">metest</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-20" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-20" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/metest/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/metest/usage.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Usage and examples</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/metest/many-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tests across three or more models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/metest/help.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">help metest</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/sgmediation2/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">sgmediation2</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-21" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-21" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/sgmediation2/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/sgmediation2/help-examples.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Examples from the help file</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/sgmediation2/help.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">help sgmediation2</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/suest2/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">suest2</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-22" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-22" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest2/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest2/usage.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Usage</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest2/plotting.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Predictions and graphs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest2/two-part.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Two-part models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest2/help-examples.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Examples from the help file</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest2/help.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">help suest2</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/suest_r/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">suest (R)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-23" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-23" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest_r/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest_r/articles/suest.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Getting started</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest_r/articles/predictions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Predictions and graphs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest_r/articles/tables.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Regression tables and coefficient plots</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/suest_r/articles/mediation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Examples: Mize, Doan &amp; Long (2019)</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-24" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-24" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest_r/articles/mediation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Curvilinear effects and mediation/attenuation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest_r/articles/nested-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Nested logit models and mediation/attenuation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest_r/articles/alternative-predictors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Alternative predictors</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest_r/articles/different-outcomes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Different outcomes</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest_r/articles/model-types.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Different model types</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest_r/articles/groups.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Separate samples or groups</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/suest_r/articles/chapter-groups.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">More examples</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-25" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-25" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest_r/articles/chapter-groups.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Group comparisons</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest_r/articles/multilevel.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Multilevel models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest_r/articles/panel.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Panel models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest_r/articles/within-person.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Within-person effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest_r/articles/instrumental-variables.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Instrumental-variable models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest_r/articles/two-part.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Two-part models</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest_r/articles/model-notes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notes on specific models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/suest_r/reference/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Function reference</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-26" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-26" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest_r/reference/suest-package.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">suest-package</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest_r/reference/suest.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">suest</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest_r/reference/suest_mi.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">suest_mi</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest_r/reference/suest_newdata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">suest_newdata</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest_r/reference/tidy.suest_model.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">tidy.suest_model</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/totalme/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">totalme</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-27" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-27" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/totalme/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/totalme/options.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Options</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/totalme/examples/single-model.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Examples</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-28" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-28" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/totalme/examples/single-model.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Total MEs for a single model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/totalme/examples/across-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Comparing Total MEs across models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/totalme/examples/inequalities.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Total ME inequalities for nominal independent variables</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/totalme/help-examples.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Examples from the help file</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/totalme/help.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">help totalme</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/totalme_r/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">totalme (R)</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-29" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-29" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/totalme_r/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/totalme_r/examples/single-model.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Examples</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-30" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-30" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/totalme_r/examples/single-model.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Total MEs for a single model</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/totalme_r/examples/across-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Comparing Total MEs across models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/totalme_r/examples/inequalities.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Total ME inequalities for nominal independent variables</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../software/usetdm/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">usetdm</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-31" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-31" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/usetdm/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/usetdm/help-examples.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Examples from the help file</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/usetdm/help.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">help usetdm</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#fit-the-two-parts-and-combine-them" id="toc-fit-the-two-parts-and-combine-them" class="nav-link active" data-scroll-target="#fit-the-two-parts-and-combine-them">Fit the two parts and combine them</a></li>
+  <li><a href="#expected-expenditures-and-effects-on-them" id="toc-expected-expenditures-and-effects-on-them" class="nav-link" data-scroll-target="#expected-expenditures-and-effects-on-them">Expected expenditures and effects on them</a></li>
+  <li><a href="#effects-in-each-part" id="toc-effects-in-each-part" class="nav-link" data-scroll-target="#effects-in-each-part">Effects in each part</a></li>
+  <li><a href="#how-well-the-model-predicts" id="toc-how-well-the-model-predicts" class="nav-link" data-scroll-target="#how-well-the-model-predicts">How well the model predicts</a></li>
+  <li><a href="#other-second-parts" id="toc-other-second-parts" class="nav-link" data-scroll-target="#other-second-parts">Other second parts</a></li>
+  <li><a href="#comparing-two-part-models" id="toc-comparing-two-part-models" class="nav-link" data-scroll-target="#comparing-two-part-models">Comparing two-part models</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../software/suest_r/index.html">suest (R)</a></li><li class="breadcrumb-item"><a href="../../../software/suest_r/articles/chapter-groups.html">More examples</a></li><li class="breadcrumb-item"><a href="../../../software/suest_r/articles/two-part.html">Two-part models</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Two-part models</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>A two-part model is used when an outcome is the product of a mix of two processes, one for observed zeroes and non-zeroes, and one for an amount among the non-zeroes. The expected outcome is the product of the two:</p>
+<p><span class="math display">\[E(y) = \Pr(y &gt; 0) \times E(y \mid y &gt; 0)\]</span></p>
+<p>With <a href="../reference/suest.html"><code>suest()</code></a>, fit the two parts as separate models and combine them with <code>twopart</code>. Predictions and marginal effects from <code>marginaleffects</code> are then on the expected outcome, with standard errors from the joint covariance of the two parts.</p>
+<p>The examples use the medical expenditures of 19,386 adults in the 2004 Medical Expenditure Panel Survey. The first part is a logit of whether a person had any medical expenditures. The second part is a Poisson model of expenditures among the people who had any. With the robust standard errors <a href="../reference/suest.html"><code>suest()</code></a> computes, this is Poisson pseudo-maximum likelihood: it fits a model of the mean of any outcome that is zero or positive, not only counts, and needs only the model of the mean to be right (Santos Silva and Tenreyro 2006). <code>family = quasipoisson</code> fits it without warnings about outcomes that are not whole numbers.</p>
+<section id="fit-the-two-parts-and-combine-them" class="level2">
+<h2 class="anchored" data-anchor-id="fit-the-two-parts-and-combine-them">Fit the two parts and combine them</h2>
+<p>Both parts cluster on the dwelling unit (<code>duid</code>):</p>
+<div class="r-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(suest)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(marginaleffects)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(haven)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>meps <span class="ot">&lt;-</span> <span class="fu">zap_labels</span>(<span class="fu">read_dta</span>(<span class="st">"https://tdmize.github.io/data/data/meps.dta"</span>))</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>meps[<span class="fu">c</span>(<span class="st">"female"</span>, <span class="st">"ins_unins"</span>, <span class="st">"anylim"</span>)] <span class="ot">&lt;-</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">lapply</span>(meps[<span class="fu">c</span>(<span class="st">"female"</span>, <span class="st">"ins_unins"</span>, <span class="st">"anylim"</span>)], factor)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(meps<span class="sc">$</span>exp_tot <span class="sc">&gt;</span> <span class="dv">0</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="r-output"><code>FALSE  TRUE 
+ 3440 15946</code></pre>
+</div>
+<div class="r-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>any <span class="ot">&lt;-</span> <span class="fu">glm</span>(<span class="fu">I</span>(exp_tot <span class="sc">&gt;</span> <span class="dv">0</span>) <span class="sc">~</span> age <span class="sc">+</span> female <span class="sc">+</span> lninc <span class="sc">+</span> pcs12 <span class="sc">+</span> mcs12 <span class="sc">+</span> ins_unins <span class="sc">+</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>             anylim, <span class="at">family =</span> binomial, <span class="at">data =</span> meps)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>amount <span class="ot">&lt;-</span> <span class="fu">glm</span>(exp_tot <span class="sc">~</span> age <span class="sc">+</span> female <span class="sc">+</span> lninc <span class="sc">+</span> pcs12 <span class="sc">+</span> mcs12 <span class="sc">+</span> ins_unins <span class="sc">+</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>                anylim, <span class="at">family =</span> quasipoisson, <span class="at">data =</span> meps, <span class="at">subset =</span> exp_tot <span class="sc">&gt;</span> <span class="dv">0</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">suest</span>(any, amount, <span class="at">model_names =</span> <span class="fu">c</span>(<span class="st">"Any"</span>, <span class="st">"Amount"</span>), <span class="at">cluster =</span> <span class="st">"duid"</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>             <span class="at">twopart =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="r-output"><code>Simultaneous results for Any, Amount                      Number of obs = 19,386
+                                        (Std. err. adjusted for 10,940 clusters)
+
+--------------------------------------------------------------------------------
+              |                 Robust
+              | Coefficient  std. err.        z   P&gt;|z|     [95% conf. interval]
+--------------+-----------------------------------------------------------------
+Any           |
+  (Intercept) |      -0.695      0.342   -2.033   0.042       -1.364      -0.025
+          age |       0.030      0.002   19.358   0.000        0.027       0.033
+      female1 |       0.957      0.044   21.744   0.000        0.871       1.044
+        lninc |       0.349      0.026   13.273   0.000        0.298       0.401
+        pcs12 |      -0.040      0.003  -12.130   0.000       -0.046      -0.033
+        mcs12 |      -0.016      0.003   -6.430   0.000       -0.021      -0.011
+   ins_unins1 |      -1.644      0.050  -32.946   0.000       -1.742      -1.546
+      anylim1 |       0.799      0.073   10.991   0.000        0.657       0.942
+--------------+-----------------------------------------------------------------
+Amount        |
+  (Intercept) |       9.183      0.284   32.360   0.000        8.627       9.739
+          age |       0.011      0.001    8.146   0.000        0.008       0.014
+      female1 |       0.046      0.039    1.180   0.238       -0.031       0.124
+        lninc |       0.066      0.022    3.034   0.002        0.023       0.109
+        pcs12 |      -0.036      0.002  -18.391   0.000       -0.040      -0.033
+        mcs12 |      -0.012      0.002   -6.746   0.000       -0.015      -0.009
+   ins_unins1 |      -0.910      0.064  -14.169   0.000       -1.036      -0.784
+      anylim1 |       0.362      0.040    9.146   0.000        0.284       0.439
+--------------------------------------------------------------------------------</code></pre>
+</div>
+<p>With survey data, put the weights and clusters in a <a href="https://rdrr.io/pkg/survey/man/svydesign.html"><code>svydesign()</code></a>, fit the first part to the full design and the second part to the people with any expenditures, and give <a href="../reference/suest.html"><code>suest()</code></a> the full design. <code>wts = TRUE</code> averages with the sampling weights:</p>
+<div class="r-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>design <span class="ot">&lt;-</span> survey<span class="sc">::</span><span class="fu">svydesign</span>(<span class="at">ids =</span> <span class="sc">~</span>duid, <span class="at">weights =</span> <span class="sc">~</span>wtdper, <span class="at">data =</span> meps)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>any_s <span class="ot">&lt;-</span> survey<span class="sc">::</span><span class="fu">svyglm</span>(<span class="fu">I</span>(exp_tot <span class="sc">&gt;</span> <span class="dv">0</span>) <span class="sc">~</span> age <span class="sc">+</span> female <span class="sc">+</span> ins_unins,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>                        <span class="at">design =</span> design, <span class="at">family =</span> quasibinomial)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>amount_s <span class="ot">&lt;-</span> survey<span class="sc">::</span><span class="fu">svyglm</span>(exp_tot <span class="sc">~</span> age <span class="sc">+</span> female <span class="sc">+</span> ins_unins,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>                           <span class="at">design =</span> <span class="fu">subset</span>(design, exp_tot <span class="sc">&gt;</span> <span class="dv">0</span>),</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>                           <span class="at">family =</span> quasipoisson)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>fit_s <span class="ot">&lt;-</span> <span class="fu">suest</span>(any_s, amount_s, <span class="at">survey_design =</span> design,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>               <span class="at">observation_id =</span> <span class="st">"dupersid"</span>, <span class="at">twopart =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_slopes</span>(fit_s, <span class="at">variables =</span> <span class="st">"ins_unins"</span>, <span class="at">wts =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="r-output"><code> Estimate Std. Error     z Pr(&gt;|z|)     S 2.5 % 97.5 %
+    -2566        168 -15.3   &lt;0.001 173.1 -2895  -2237
+
+Term: ins_unins
+Type: response
+Comparison: 1 - 0</code></pre>
+</div>
+</section>
+<section id="expected-expenditures-and-effects-on-them" class="level2">
+<h2 class="anchored" data-anchor-id="expected-expenditures-and-effects-on-them">Expected expenditures and effects on them</h2>
+<p>Predictions are the product of the two parts: the probability of any expenditures from <code>Any</code> times the expected expenditures of someone who has any from <code>Amount</code>:</p>
+<div class="r-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_predictions</span>(fit)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="r-output"><code> Estimate Std. Error    z Pr(&gt;|z|)   S 2.5 % 97.5 %
+     3681         65 56.7   &lt;0.001 Inf  3554   3809
+
+Type: response</code></pre>
+</div>
+<div class="r-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_slopes</span>(fit, <span class="at">variables =</span> <span class="fu">c</span>(<span class="st">"age"</span>, <span class="st">"female"</span>, <span class="st">"ins_unins"</span>, <span class="st">"anylim"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="r-output"><code>      Term Contrast Estimate Std. Error      z Pr(&gt;|z|)     S   2.5 %  97.5 %
+ age          dY/dX     48.6       4.96   9.80  &lt; 0.001  72.9    38.9    58.3
+ anylim       1 - 0   1532.8     151.64  10.11  &lt; 0.001  77.4  1235.6  1830.0
+ female       1 - 0    416.8     140.81   2.96  0.00308   8.3   140.8   692.7
+ ins_unins    1 - 0  -2701.0     113.17 -23.87  &lt; 0.001 415.8 -2922.8 -2479.2
+
+Type: response</code></pre>
+</div>
+<p>Expected expenditures average about $3,680 a year. Being uninsured is associated with $2,700 less in expenditure; each year of age predicts a $49 increase; being female, a $417 increase; and having any activity limitation, a $1,533 increase.</p>
+</section>
+<section id="effects-in-each-part" class="level2">
+<h2 class="anchored" data-anchor-id="effects-in-each-part">Effects in each part</h2>
+<p><code>type = "positive"</code> gives the effect on the probability of any expenditures, and <code>type = "amount"</code> the effect on the expected expenditures of someone who has any:</p>
+<div class="r-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(fit, <span class="at">variables =</span> <span class="st">"ins_unins"</span>, <span class="at">type =</span> <span class="st">"positive"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="r-output"><code> Estimate Std. Error     z Pr(&gt;|z|)     S  2.5 % 97.5 %
+   -0.242    0.00855 -28.4   &lt;0.001 585.7 -0.259 -0.226
+
+Term: ins_unins
+Type: positive
+Comparison: 1 - 0</code></pre>
+</div>
+<div class="r-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(fit, <span class="at">variables =</span> <span class="st">"ins_unins"</span>, <span class="at">type =</span> <span class="st">"amount"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="r-output"><code> Estimate Std. Error     z Pr(&gt;|z|)     S 2.5 % 97.5 %
+    -2603        136 -19.1   &lt;0.001 267.9 -2870  -2336
+
+Term: ins_unins
+Type: amount
+Comparison: 1 - 0</code></pre>
+</div>
+<p>Being uninsured lowers the probability of any expenditures by 24 percentage points, and the expected expenditures of someone who has any by about $2,600. Both are averaged over the whole sample, so the two effects are for the same people. <code>newdata = subset(exp_tot &gt; 0)</code> averages the amount effect over only the people with any expenditures, the observations the second part was fit to:</p>
+<div class="r-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(fit, <span class="at">variables =</span> <span class="st">"ins_unins"</span>, <span class="at">type =</span> <span class="st">"amount"</span>,</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>                <span class="at">newdata =</span> <span class="fu">subset</span>(exp_tot <span class="sc">&gt;</span> <span class="dv">0</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="r-output"><code> Estimate Std. Error     z Pr(&gt;|z|)     S 2.5 % 97.5 %
+    -2833        148 -19.2   &lt;0.001 270.3 -3122  -2544
+
+Term: ins_unins
+Type: amount
+Comparison: 1 - 0</code></pre>
+</div>
+<p>Among the people with any expenditures, being uninsured is associated with about $2,830 less in expenditure. This describes the people who spend, but it is averaged over different observations than the first part’s effect, so the two can differ partly because the observations used to calculate the marginal effect differ.</p>
+</section>
+<section id="how-well-the-model-predicts" class="level2">
+<h2 class="anchored" data-anchor-id="how-well-the-model-predicts">How well the model predicts</h2>
+<p>The correlation between the outcome and its expected value summarizes how well a two-part model predicts. It depends only on the expected outcome, so it applies with any second part:</p>
+<div class="r-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> <span class="fu">predictions</span>(fit)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(p<span class="sc">$</span>exp_tot, p<span class="sc">$</span>estimate)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="r-output"><code>[1] 0.3916091</code></pre>
+</div>
+<p>The correlation is .392.</p>
+</section>
+<section id="other-second-parts" class="level2">
+<h2 class="anchored" data-anchor-id="other-second-parts">Other second parts</h2>
+<p>The second part can also be a Gamma model with a log link (<code>glm(family = Gamma(link = "log"))</code>), a linear model (<a href="https://rdrr.io/r/stats/lm.html"><code>lm()</code></a>), or a negative binomial model (<a href="https://rdrr.io/pkg/MASS/man/glm.nb.html"><code>MASS::glm.nb()</code></a>); <code>twopart</code> works the same way with each. With a linear model of the log of the outcome, add <code>retransform = "duan"</code> for Duan’s (1983) smearing estimate or <code>retransform = "normal"</code> for the normal-theory retransformation:</p>
+<div class="r-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>meps<span class="sc">$</span>ln_exp <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(meps<span class="sc">$</span>exp_tot <span class="sc">&gt;</span> <span class="dv">0</span>, <span class="fu">log</span>(meps<span class="sc">$</span>exp_tot), <span class="cn">NA</span>)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>ln_amount <span class="ot">&lt;-</span> <span class="fu">lm</span>(ln_exp <span class="sc">~</span> age <span class="sc">+</span> female <span class="sc">+</span> lninc <span class="sc">+</span> pcs12 <span class="sc">+</span> mcs12 <span class="sc">+</span> ins_unins <span class="sc">+</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>                  anylim, <span class="at">data =</span> meps, <span class="at">subset =</span> exp_tot <span class="sc">&gt;</span> <span class="dv">0</span>)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>fit_ln <span class="ot">&lt;-</span> <span class="fu">suest</span>(any, ln_amount, <span class="at">model_names =</span> <span class="fu">c</span>(<span class="st">"Any"</span>, <span class="st">"LnAmount"</span>),</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>                <span class="at">cluster =</span> <span class="st">"duid"</span>, <span class="at">twopart =</span> <span class="cn">TRUE</span>, <span class="at">retransform =</span> <span class="st">"duan"</span>)</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_slopes</span>(fit_ln, <span class="at">variables =</span> <span class="fu">c</span>(<span class="st">"age"</span>, <span class="st">"ins_unins"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="r-output"><code>      Term Contrast Estimate Std. Error     z Pr(&gt;|z|)     S   2.5 % 97.5 %
+ age          dY/dX     94.2       3.53  26.7   &lt;0.001 517.9    87.2    101
+ ins_unins    1 - 0  -3110.5      79.90 -38.9   &lt;0.001   Inf -3267.1  -2954
+
+Type: response</code></pre>
+</div>
+</section>
+<section id="comparing-two-part-models" class="level2">
+<h2 class="anchored" data-anchor-id="comparing-two-part-models">Comparing two-part models</h2>
+<p>This example compares two second parts: a Gamma model with a log link, and Poisson pseudo-maximum likelihood. Both share the first part, a logit of whether a person had any expenditures. <code>twopart</code> names the two pairs, each a first part and its second part; <code>Any</code> is in both:</p>
+<div class="r-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>any <span class="ot">&lt;-</span> <span class="fu">glm</span>(<span class="fu">I</span>(exp_tot <span class="sc">&gt;</span> <span class="dv">0</span>) <span class="sc">~</span> age <span class="sc">+</span> female <span class="sc">+</span> lninc <span class="sc">+</span> ins_unins,</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>           <span class="at">family =</span> binomial, <span class="at">data =</span> meps)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>gamma <span class="ot">&lt;-</span> <span class="fu">glm</span>(exp_tot <span class="sc">~</span> age <span class="sc">+</span> female <span class="sc">+</span> lninc <span class="sc">+</span> ins_unins,</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">family =</span> <span class="fu">Gamma</span>(<span class="at">link =</span> <span class="st">"log"</span>), <span class="at">data =</span> meps, <span class="at">subset =</span> exp_tot <span class="sc">&gt;</span> <span class="dv">0</span>)</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>poisson <span class="ot">&lt;-</span> <span class="fu">glm</span>(exp_tot <span class="sc">~</span> age <span class="sc">+</span> female <span class="sc">+</span> lninc <span class="sc">+</span> ins_unins,</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>               <span class="at">family =</span> quasipoisson, <span class="at">data =</span> meps, <span class="at">subset =</span> exp_tot <span class="sc">&gt;</span> <span class="dv">0</span>)</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>fit2 <span class="ot">&lt;-</span> <span class="fu">suest</span>(any, gamma, poisson, <span class="at">model_names =</span> <span class="fu">c</span>(<span class="st">"Any"</span>, <span class="st">"Gamma"</span>, <span class="st">"Poisson"</span>),</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>              <span class="at">twopart =</span> <span class="fu">c</span>(<span class="st">"Any"</span>, <span class="st">"Gamma"</span>, <span class="st">"Any"</span>, <span class="st">"Poisson"</span>))</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>effects2 <span class="ot">&lt;-</span> <span class="fu">avg_comparisons</span>(fit2, <span class="at">variables =</span> <span class="fu">c</span>(<span class="st">"ins_unins"</span>, <span class="st">"age"</span>))</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>effects2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="r-output"><code>      Term       Group Contrast Estimate Std. Error     z Pr(&gt;|z|)     S   2.5 % 97.5 %
+ age       Any+Gamma      +1         108       5.07  21.4   &lt;0.001 335.1    98.5    118
+ age       Any+Poisson    +1         100       4.47  22.4   &lt;0.001 366.7    91.4    109
+ ins_unins Any+Gamma      1 - 0    -2843     115.71 -24.6   &lt;0.001 440.4 -3069.7  -2616
+ ins_unins Any+Poisson    1 - 0    -2846     115.11 -24.7   &lt;0.001 446.0 -3072.0  -2621
+
+Type: response</code></pre>
+</div>
+<div class="r-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hypotheses</span>(effects2, <span class="at">hypothesis =</span> difference <span class="sc">~</span> pairwise <span class="sc">|</span> term)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="r-output"><code>      Term                              Hypothesis Estimate Std. Error       z Pr(&gt;|z|)    S 2.5 %
+ age       (Any+Poisson +1) - (Any+Gamma +1)          -8.34       2.11 -3.9616   &lt;0.001 13.7 -12.5
+ ins_unins (Any+Poisson 1 - 0) - (Any+Gamma 1 - 0)    -3.52      36.81 -0.0956    0.924  0.1 -75.7
+ 97.5 %
+  -4.21
+  68.63</code></pre>
+</div>
+<p>The two models give nearly the same effect of being uninsured: expected expenditures about $2,840 lower. The difference between them, about $4, is not significant. The effect of a year of age is about $108 with the Gamma second part and $100 with the Poisson one, and that difference, about $8, is significant.</p>
+<p>A two-part model can also be compared with a single model for the outcome. Models not named in <code>twopart</code> keep their own prediction – here, a Poisson model fit to everyone, zeros included:</p>
+<div class="r-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>one_part <span class="ot">&lt;-</span> <span class="fu">glm</span>(exp_tot <span class="sc">~</span> age <span class="sc">+</span> female <span class="sc">+</span> lninc <span class="sc">+</span> ins_unins,</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>                <span class="at">family =</span> quasipoisson, <span class="at">data =</span> meps)</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>fit3 <span class="ot">&lt;-</span> <span class="fu">suest</span>(any, poisson, one_part, <span class="at">model_names =</span> <span class="fu">c</span>(<span class="st">"Any"</span>, <span class="st">"Poisson"</span>, <span class="st">"OnePart"</span>),</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>              <span class="at">twopart =</span> <span class="fu">c</span>(<span class="st">"Any"</span>, <span class="st">"Poisson"</span>))</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>effects3 <span class="ot">&lt;-</span> <span class="fu">avg_comparisons</span>(fit3, <span class="at">variables =</span> <span class="fu">c</span>(<span class="st">"ins_unins"</span>, <span class="st">"age"</span>))</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>effects3</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="r-output"><code>      Term       Group Contrast Estimate Std. Error     z Pr(&gt;|z|)     S   2.5 % 97.5 %
+ age       Any+Poisson    +1         100       4.47  22.4   &lt;0.001 366.7    91.4    109
+ age       OnePart        +1         101       4.60  22.0   &lt;0.001 355.3    92.4    110
+ ins_unins Any+Poisson    1 - 0    -2846     115.11 -24.7   &lt;0.001 446.0 -3072.0  -2621
+ ins_unins OnePart        1 - 0    -3028     109.03 -27.8   &lt;0.001 561.6 -3241.9  -2815
+
+Type: response</code></pre>
+</div>
+<div class="r-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hypotheses</span>(effects3, <span class="at">hypothesis =</span> difference <span class="sc">~</span> pairwise <span class="sc">|</span> term)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="r-output"><code>      Term                            Hypothesis Estimate Std. Error      z Pr(&gt;|z|)     S    2.5 %
+ age       (OnePart +1) - (Any+Poisson +1)           1.29      0.305   4.22   &lt;0.001  15.3    0.691
+ ins_unins (OnePart 1 - 0) - (Any+Poisson 1 - 0)  -181.79     13.693 -13.28   &lt;0.001 131.2 -208.626
+  97.5 %
+    1.89
+ -154.95</code></pre>
+</div>
+<p>The one-part model gives a larger effect of being uninsured, about $3,030, or about $180 more than the two-part model, and the difference is significant. The effects of age are close, about $100 and $101, though the difference of about $1 is significant.</p>
+</section>
+<section id="references" class="level2">
+<h2 class="anchored" data-anchor-id="references">References</h2>
+<p>Belotti, F., Deb, P., Manning, W. G., &amp; Norton, E. C. (2015). twopm: Two-part models. <em>Stata Journal</em>, 15(1), 3-20. <a href="https://doi.org/10.1177/1536867X1501500102" class="uri">https://doi.org/10.1177/1536867X1501500102</a></p>
+<p>Duan, N. (1983). Smearing estimate: A nonparametric retransformation method. <em>Journal of the American Statistical Association</em>, 78(383), 605-610. <a href="https://doi.org/10.2307/2288126" class="uri">https://doi.org/10.2307/2288126</a></p>
+<p>Santos Silva, J. M. C., &amp; Tenreyro, S. (2006). The log of gravity. <em>Review of Economics and Statistics</em>, 88(4), 641-658. <a href="https://doi.org/10.1162/rest.88.4.641" class="uri">https://doi.org/10.1162/rest.88.4.641</a></p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/www\.trentonmize\.com");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../../../software/suest_r/articles/instrumental-variables.html" class="pagination-link" aria-label="Instrumental-variable models">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Instrumental-variable models</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../../software/suest_r/articles/model-notes.html" class="pagination-link" aria-label="Notes on specific models">
+        <span class="nav-page-text">Notes on specific models</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Trenton D. Mize, Purdue University</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org">Quarto</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

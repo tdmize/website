@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../../../">
 <link href="../../../software/suest_r/reference/index.html" rel="next">
-<link href="../../../software/suest_r/articles/instrumental-variables.html" rel="prev">
+<link href="../../../software/suest_r/articles/two-part.html" rel="prev">
 <script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="../../../site_libs/quarto-html/popper.min.js"></script>
@@ -1092,6 +1092,12 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
  <span class="menu-text">Instrumental-variable models</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../software/suest_r/articles/two-part.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Two-part models</span></a>
+  </div>
+</li>
       </ul>
   </li>
           <li class="sidebar-item">
@@ -1301,6 +1307,7 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
   <li><a href="#bivariate-probit" id="toc-bivariate-probit" class="nav-link" data-scroll-target="#bivariate-probit">Bivariate probit</a></li>
   <li><a href="#generalized-ordered-models" id="toc-generalized-ordered-models" class="nav-link" data-scroll-target="#generalized-ordered-models">Generalized ordered models</a></li>
   <li><a href="#zero-inflated-models" id="toc-zero-inflated-models" class="nav-link" data-scroll-target="#zero-inflated-models">Zero-inflated models</a></li>
+  <li><a href="#two-part-models" id="toc-two-part-models" class="nav-link" data-scroll-target="#two-part-models">Two-part models</a></li>
   <li><a href="#mixed-models-fitted-with-glmmtmb" id="toc-mixed-models-fitted-with-glmmtmb" class="nav-link" data-scroll-target="#mixed-models-fitted-with-glmmtmb">Mixed models fitted with glmmTMB</a></li>
   <li><a href="#several-random-slopes-and-three-level-models" id="toc-several-random-slopes-and-three-level-models" class="nav-link" data-scroll-target="#several-random-slopes-and-three-level-models">Several random slopes and three-level models</a></li>
   <li><a href="#survey-models" id="toc-survey-models" class="nav-link" data-scroll-target="#survey-models">Survey models</a></li>
@@ -1440,7 +1447,7 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co"># and its difference across the two models</span></span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_slopes</span>(zi_fit, <span class="at">variables =</span> <span class="st">"ment"</span>, <span class="at">type =</span> <span class="st">"zero"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="r-output"><code> Group Estimate Std. Error     z Pr(&gt;|z|)    S   2.5 %   97.5 %
-  ZIP   -0.0178    0.00679 -2.62  0.00876  6.8 -0.0311 -0.00449
+  ZIP   -0.0178    0.00679 -2.62  0.00877  6.8 -0.0311 -0.00449
   ZINB  -0.0304    0.00791 -3.85  &lt; 0.001 13.1 -0.0459 -0.01495
 
 Term: ment
@@ -1464,6 +1471,42 @@ Type: zero</code></pre>
 
 Type: prob</code></pre>
 </div>
+</section>
+<section id="two-part-models" class="level2">
+<h2 class="anchored" data-anchor-id="two-part-models">Two-part models</h2>
+<p>With <code>twopart</code>, predictions and marginal effects take these <code>type</code> values:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th><code>type</code></th>
+<th>Prediction</th>
+<th>Stata <code>margins</code> after <code>suest2</code></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>"response"</code> (the default)</td>
+<td>Expected outcome, <code>Pr(y &gt; 0) * E(y | y &gt; 0)</code></td>
+<td><code>predict(twopart(Any Amount))</code></td>
+</tr>
+<tr class="even">
+<td><code>"positive"</code></td>
+<td>Probability of a positive outcome (the first part)</td>
+<td><code>predict(model(Any))</code></td>
+</tr>
+<tr class="odd">
+<td><code>"amount"</code></td>
+<td>Expected outcome among the positive outcomes (the second part)</td>
+<td><code>predict(model(Amount))</code></td>
+</tr>
+</tbody>
+</table>
+<p>The first part can be a logit, probit, or complementary log-log <a href="https://rdrr.io/r/stats/glm.html"><code>glm()</code></a> or survey <code>svyglm()</code>; the second part a linear model, a GLM such as a Gamma or quasi-Poisson model with a log link, a negative binomial <a href="https://rdrr.io/pkg/MASS/man/glm.nb.html"><code>MASS::glm.nb()</code></a>, or a survey quasi-Poisson <code>svyglm()</code>. Models not in a pair keep their own prediction with <code>"response"</code> and are left out with <code>"positive"</code> and <code>"amount"</code>. See <a href="two-part.html">Two-part models</a>.</p>
 </section>
 <section id="mixed-models-fitted-with-glmmtmb" class="level2">
 <h2 class="anchored" data-anchor-id="mixed-models-fitted-with-glmmtmb">Mixed models fitted with glmmTMB</h2>
@@ -2001,8 +2044,8 @@ Comparison: High - Low</code></pre>
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../../../software/suest_r/articles/instrumental-variables.html" class="pagination-link" aria-label="Instrumental-variable models">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Instrumental-variable models</span>
+      <a href="../../../software/suest_r/articles/two-part.html" class="pagination-link" aria-label="Two-part models">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Two-part models</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
