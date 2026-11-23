@@ -11,8 +11,9 @@ $$E(y) = \Pr(y > 0) \times E(y \mid y > 0)$$
 
 This is the model the `twopm` command fits (Belotti, Deb, Manning, and Norton
 2015). With `suest2`, fit the two parts as separate models, combine them, and
-give `margins` the product of the two predictions. The combined results also
-give effects within each part and comparisons across groups.
+give `margins` the product of the two predictions;
+[`mecompare`](../mecompare/examples/two-part.html) automates this calculation
+with the `twopart` option.
 
 The examples use the medical expenditures of 19,386 adults in the 2004 Medical
 Expenditure Panel Survey. The first part is a logit of whether a person had any
@@ -133,8 +134,10 @@ Note: dy/dx for factor levels is the discrete change from the base level.
 
 ```
 
-Expected expenditures average about $3,680 a year. Being uninsured lowers them
-by about $2,700, and each year of age raises them by about $49.
+Expected expenditures average about $3,680 a year. Being uninsured is
+associated with $2,700 less in expenditure; each year of age predicts a $49
+increase; being female, a $417 increase; and having any activity limitation, a
+$1,533 increase.
 
 ## Effects in each part
 
@@ -174,72 +177,34 @@ Note: dy/dx for factor levels is the discrete change from the base level.
 Being uninsured lowers the probability of any expenditures by 24 percentage
 points, and the expected expenditures of someone who has any by about $2,600.
 Both are averaged over the whole sample, so the two effects are for the same
-people.
-
-## Comparing groups
-
-`over()` gives the effect within each group, and `over(r.)` the difference
-between the groups, with its test:
+people. Adding `if any` averages the amount effect over only the people with
+any expenditures, the observations the second part was fit to, as `poisson`
+gives it on its own:
 
 ```{.stata-run}
-. margins, dydx(ins_unins) over(female) predict(twopart(Any Amount))
+. margins if any, dydx(ins_unins) predict(model(Amount))
 
-Average marginal effects                                Number of obs = 19,386
+Average marginal effects                                Number of obs = 15,946
 Model VCE: Robust
 
-Expression: Two-part prediction, predict(twopart(Any Amount))
+Expression: Predicted mean of exp_tot, predict(model(Amount))
 dy/dx wrt:  1.ins_unins
-Over:       female
 
 ------------------------------------------------------------------------------
              |            Delta-method
              |      dy/dx   std. err.      z    P>|z|     [95% conf. interval]
 -------------+----------------------------------------------------------------
-0.ins_unins  |  (base outcome)
--------------+----------------------------------------------------------------
-1.ins_unins  |
-      female |
-          0  |  -2412.088    117.599  -20.511   0.000    -2642.579   -2181.598
-          1  |  -2937.735    128.862  -22.797   0.000    -3190.301   -2685.170
+ 1.ins_unins |  -2832.947    147.594  -19.194   0.000    -3122.226   -2543.669
 ------------------------------------------------------------------------------
 Note: dy/dx for factor levels is the discrete change from the base level.
 
-. margins, dydx(ins_unins) over(r.female) predict(twopart(Any Amount))
-
-Contrasts of average marginal effects                   Number of obs = 19,386
-Model VCE: Robust
-
-Expression: Two-part prediction, predict(twopart(Any Amount))
-dy/dx wrt:  1.ins_unins
-Over:       female
-
-------------------------------------------------
-             |         df        chi2     P>chi2
--------------+----------------------------------
-0b.ins_unins |
-      female |  (omitted)
--------------+----------------------------------
-1.ins_unins  |
-      female |          1       26.84     0.0000
-------------------------------------------------
-
---------------------------------------------------------------
-             |   Contrast Delta-method
-             |      dy/dx   std. err.     [95% conf. interval]
--------------+------------------------------------------------
-0.ins_unins  |  (base outcome)
--------------+------------------------------------------------
-1.ins_unins  |
-      female |
-   (1 vs 0)  |   -525.647    101.453      -724.491    -326.803
---------------------------------------------------------------
-Note: dy/dx for factor levels is the discrete change from the
-      base level.
-
 ```
 
-Being uninsured lowers expected expenditures by about $2,410 for men and $2,940
-for women; the difference, about $530, is significant.
+Among the people with any expenditures, being uninsured is associated with
+about $2,830 less in expenditure. This describes the people who spend, but it
+is averaged over different observations than the first part's effect, so the
+two can differ partly because the observations used to calculate the marginal
+effect differ.
 
 ## How well the model predicts
 
