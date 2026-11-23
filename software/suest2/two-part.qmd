@@ -3,29 +3,28 @@ title: "Two-part models"
 subtitle: "Expected outcomes from a model of whether the outcome is positive and a model of how large it is"
 ---
 
-Outcomes such as medical expenditures are zero for many people and spread over
-a long right tail for the rest. A two-part model handles them in two steps: a
-binary model of whether the outcome is positive, and a model of its size for
-the people with a positive outcome. The expected outcome is the product of the
-two:
+A two-part model is used when an outcome is the product of a mix of two
+processes, one for observed zeroes and non-zeroes, and one for an amount among
+the non-zeroes. The expected outcome is the product of the two:
 
 $$E(y) = \Pr(y > 0) \times E(y \mid y > 0)$$
 
 This is the model the `twopm` command fits (Belotti, Deb, Manning, and Norton
 2015). With `suest2`, fit the two parts as separate models, combine them, and
-give `margins` the product of the two predictions in `expression()`. Each
-`predict()` names its model with `model()`, so the same combined results also
-give effects within each part, comparisons across groups, and comparisons
-across two-part models.
+give `margins` the product of the two predictions. The combined results also
+give effects within each part and comparisons across groups.
 
 The examples use the medical expenditures of 19,386 adults in the 2004 Medical
-Expenditure Panel Survey.
+Expenditure Panel Survey. The first part is a logit of whether a person had any
+medical expenditures. The second part is a Poisson model of expenditures among
+the people who had any. With robust standard errors, `poisson` is Poisson
+pseudo-maximum likelihood: it fits a model of the mean of any outcome that is
+zero or positive, not only counts, and needs only the model of the mean to be
+right (Santos Silva and Tenreyro 2006).
 
 ## Fit the two parts and combine them
 
-The first part is a logit of whether a person had any medical expenditures.
-The second part is a `glm` with a gamma family and a log link, fit to the
-people who had any. Both cluster on the dwelling unit (`duid`).
+Both parts cluster on the dwelling unit (`duid`):
 
 ```{.stata-run}
 . use "https://tdmize.github.io/data/data/meps", clear
@@ -51,7 +50,7 @@ people who had any. Both cluster on the dwelling unit (`duid`).
 . estimates store Any
 
 . 
-. quietly glm exp_tot `x' if any, family(gamma) link(log) vce(cluster duid)
+. quietly poisson exp_tot `x' if any, vce(cluster duid)
 
 . estimates store Amount
 
@@ -76,87 +75,66 @@ Any_any        |
          _cons |     -0.695      0.342   -2.033   0.042       -1.364      -0.025
 ---------------+----------------------------------------------------------------
 Amount_exp_tot |
-           age |      0.015      0.001   14.849   0.000        0.013       0.017
-      1.female |      0.166      0.033    5.066   0.000        0.102       0.230
-         lninc |      0.071      0.016    4.397   0.000        0.039       0.103
-         pcs12 |     -0.038      0.002  -23.361   0.000       -0.041      -0.034
-         mcs12 |     -0.013      0.001   -8.964   0.000       -0.016      -0.010
-   1.ins_unins |     -0.835      0.061  -13.712   0.000       -0.954      -0.716
-      1.anylim |      0.335      0.037    8.949   0.000        0.261       0.408
-         _cons |      8.986      0.211   42.638   0.000        8.573       9.399
+           age |      0.011      0.001    8.146   0.000        0.008       0.014
+      1.female |      0.046      0.039    1.180   0.238       -0.031       0.124
+         lninc |      0.066      0.022    3.034   0.002        0.023       0.109
+         pcs12 |     -0.036      0.002  -18.391   0.000       -0.040      -0.033
+         mcs12 |     -0.012      0.002   -6.746   0.000       -0.015      -0.009
+   1.ins_unins |     -0.910      0.064  -14.169   0.000       -1.036      -0.784
+      1.anylim |      0.362      0.040    9.146   0.000        0.284       0.439
+         _cons |      9.183      0.284   32.360   0.000        8.627       9.739
 --------------------------------------------------------------------------------
 
 ```
 
+With survey data, fit both parts with `svy:` and the second part with `if any`,
+not `subpop()`: `suest2` needs the same subpopulation in every model, and it
+computes the standard errors from the full survey design.
+
 ## Expected expenditures and effects on them
 
-`predict(model(Any))` is the probability of any expenditures and
-`predict(model(Amount))` the expected expenditures of someone who has any.
-Their product is the expected expenditures:
+`predict(twopart(Any Amount))` is the product of the two predictions: the
+probability of any expenditures from `Any` times the expected expenditures of
+someone who has any from `Amount`:
 
 ```{.stata-run}
-. local twopart "predict(model(Any)) * predict(model(Amount))"
-
-. 
-. margins, expression(`twopart')
+. margins, predict(twopart(Any Amount))
 
 Predictive margins                                      Number of obs = 19,386
 Model VCE: Robust
 
-Expression: predict(model(Any)) * predict(model(Amount))
+Expression: Two-part prediction, predict(twopart(Any Amount))
 
 ------------------------------------------------------------------------------
              |            Delta-method
              |     Margin   std. err.      z    P>|z|     [95% conf. interval]
 -------------+----------------------------------------------------------------
-       _cons |   3761.151     68.812   54.659   0.000     3626.283    3896.020
+       _cons |   3681.427     64.963   56.670   0.000     3554.102    3808.752
 ------------------------------------------------------------------------------
 
-. margins, dydx(age female ins_unins anylim) expression(`twopart')
+. margins, dydx(age female ins_unins anylim) predict(twopart(Any Amount))
 
 Average marginal effects                                Number of obs = 19,386
 Model VCE: Robust
 
-Expression: predict(model(Any)) * predict(model(Amount))
+Expression: Two-part prediction, predict(twopart(Any Amount))
 dy/dx wrt:  age 1.female 1.ins_unins 1.anylim
 
 ------------------------------------------------------------------------------
              |            Delta-method
              |      dy/dx   std. err.      z    P>|z|     [95% conf. interval]
 -------------+----------------------------------------------------------------
-         age |     62.535      3.924   15.936   0.000       54.844      70.226
-    1.female |    847.694    115.729    7.325   0.000      620.870    1074.518
- 1.ins_unins |  -2613.180    111.904  -23.352   0.000    -2832.508   -2393.852
-    1.anylim |   1442.154    143.638   10.040   0.000     1160.629    1723.680
+         age |     48.618      4.961    9.799   0.000       38.894      58.342
+    1.female |    416.758    140.808    2.960   0.003      140.779     692.736
+ 1.ins_unins |  -2700.969    113.169  -23.867   0.000    -2922.777   -2479.161
+    1.anylim |   1532.778    151.644   10.108   0.000     1235.562    1829.995
 ------------------------------------------------------------------------------
 Note: dy/dx for factor levels is the discrete change from the base level.
 
 ```
 
-Expected expenditures average about $3,760 a year. Being uninsured lowers them
-by about $2,610, and each year of age raises them by about $63.
-
-`predict(twopart(Any Amount))` is a shorter way to give `margins` the same
-product:
-
-```{.stata-run}
-. margins, dydx(ins_unins) predict(twopart(Any Amount))
-
-Average marginal effects                                Number of obs = 19,386
-Model VCE: Robust
-
-Expression: Two-part prediction, predict(twopart(Any Amount))
-dy/dx wrt:  1.ins_unins
-
-------------------------------------------------------------------------------
-             |            Delta-method
-             |      dy/dx   std. err.      z    P>|z|     [95% conf. interval]
--------------+----------------------------------------------------------------
- 1.ins_unins |  -2613.180    111.897  -23.353   0.000    -2832.494   -2393.866
-------------------------------------------------------------------------------
-Note: dy/dx for factor levels is the discrete change from the base level.
-
-```
+Expected expenditures average about $3,680 a year. Being uninsured lowers them
+by about $2,700, and each year of age raises them by about $49.
 
 ## Effects in each part
 
@@ -180,48 +158,23 @@ Note: dy/dx for factor levels is the discrete change from the base level.
 Average marginal effects                                Number of obs = 19,386
 Model VCE: Robust
 
-Expression: Predicted mean, predict(model(Amount))
+Expression: Predicted mean of exp_tot, predict(model(Amount))
 dy/dx wrt:  1.ins_unins
 
 ------------------------------------------------------------------------------
              |            Delta-method
              |      dy/dx   std. err.      z    P>|z|     [95% conf. interval]
 -------------+----------------------------------------------------------------
- 1.ins_unins |  -2483.980    133.881  -18.554   0.000    -2746.382   -2221.577
+ 1.ins_unins |  -2602.641    136.211  -19.107   0.000    -2869.610   -2335.672
 ------------------------------------------------------------------------------
 Note: dy/dx for factor levels is the discrete change from the base level.
 
 ```
 
 Being uninsured lowers the probability of any expenditures by 24 percentage
-points, and the expected expenditures of someone who has any by about $2,480.
+points, and the expected expenditures of someone who has any by about $2,600.
 Both are averaged over the whole sample, so the two effects are for the same
-people. Adding `if any` averages the amount effect over only those with any
-expenditures, as the glm gives it on its own:
-
-```{.stata-run}
-. margins if any, dydx(ins_unins) predict(model(Amount))
-
-Average marginal effects                                Number of obs = 15,946
-Model VCE: Robust
-
-Expression: Predicted mean, predict(model(Amount))
-dy/dx wrt:  1.ins_unins
-
-------------------------------------------------------------------------------
-             |            Delta-method
-             |      dy/dx   std. err.      z    P>|z|     [95% conf. interval]
--------------+----------------------------------------------------------------
- 1.ins_unins |  -2728.264    147.186  -18.536   0.000    -3016.742   -2439.785
-------------------------------------------------------------------------------
-Note: dy/dx for factor levels is the discrete change from the base level.
-
-```
-
-Among those with any expenditures, being uninsured lowers expected expenditures
-by about $2,730. This describes the people who spend, but it is averaged over
-different people than the first part's effect, so the two can differ partly
-because the people differ.
+people.
 
 ## Comparing groups
 
@@ -229,15 +182,12 @@ because the people differ.
 between the groups, with its test:
 
 ```{.stata-run}
-. local twopart "predict(model(Any)) * predict(model(Amount))"
-
-. 
-. margins, dydx(ins_unins) over(female) expression(`twopart')
+. margins, dydx(ins_unins) over(female) predict(twopart(Any Amount))
 
 Average marginal effects                                Number of obs = 19,386
 Model VCE: Robust
 
-Expression: predict(model(Any)) * predict(model(Amount))
+Expression: Two-part prediction, predict(twopart(Any Amount))
 dy/dx wrt:  1.ins_unins
 Over:       female
 
@@ -249,17 +199,17 @@ Over:       female
 -------------+----------------------------------------------------------------
 1.ins_unins  |
       female |
-          0  |  -2169.846     95.791  -22.652   0.000    -2357.593   -1982.098
-          1  |  -2976.536    139.569  -21.327   0.000    -3250.086   -2702.986
+          0  |  -2412.088    117.599  -20.511   0.000    -2642.579   -2181.598
+          1  |  -2937.735    128.862  -22.797   0.000    -3190.301   -2685.170
 ------------------------------------------------------------------------------
 Note: dy/dx for factor levels is the discrete change from the base level.
 
-. margins, dydx(ins_unins) over(r.female) expression(`twopart')
+. margins, dydx(ins_unins) over(r.female) predict(twopart(Any Amount))
 
 Contrasts of average marginal effects                   Number of obs = 19,386
 Model VCE: Robust
 
-Expression: predict(model(Any)) * predict(model(Amount))
+Expression: Two-part prediction, predict(twopart(Any Amount))
 dy/dx wrt:  1.ins_unins
 Over:       female
 
@@ -270,7 +220,7 @@ Over:       female
       female |  (omitted)
 -------------+----------------------------------
 1.ins_unins  |
-      female |          1       69.50     0.0000
+      female |          1       26.84     0.0000
 ------------------------------------------------
 
 --------------------------------------------------------------
@@ -281,396 +231,48 @@ Over:       female
 -------------+------------------------------------------------
 1.ins_unins  |
       female |
-   (1 vs 0)  |   -806.691     96.763      -996.343    -617.038
+   (1 vs 0)  |   -525.647    101.453      -724.491    -326.803
 --------------------------------------------------------------
 Note: dy/dx for factor levels is the discrete change from the
       base level.
 
 ```
 
-Being uninsured lowers expected expenditures by about $2,170 for men and $2,980
-for women; the difference, about $810, is significant.
-
-## Other models for the second part
-
-**A Poisson second part.** `poisson` with robust standard errors -- Poisson
-pseudo-maximum likelihood -- fits a model of the mean of any outcome that is
-zero or positive, not only counts; it needs only the model of the mean to be
-right (Santos Silva and Tenreyro 2006):
-
-```{.stata-run}
-. local x "c.age i.female c.lninc c.pcs12 c.mcs12 i.ins_unins i.anylim"
-
-. 
-. quietly poisson exp_tot `x' if any, vce(cluster duid)
-
-. estimates store Pois
-
-. 
-. quietly suest2 Any Pois
-
-. margins, dydx(ins_unins) predict(twopart(Any Pois))
-
-Average marginal effects                                Number of obs = 19,386
-Model VCE: Robust
-
-Expression: Two-part prediction, predict(twopart(Any Pois))
-dy/dx wrt:  1.ins_unins
-
-------------------------------------------------------------------------------
-             |            Delta-method
-             |      dy/dx   std. err.      z    P>|z|     [95% conf. interval]
--------------+----------------------------------------------------------------
- 1.ins_unins |  -2700.969    113.169  -23.867   0.000    -2922.777   -2479.161
-------------------------------------------------------------------------------
-Note: dy/dx for factor levels is the discrete change from the base level.
-
-```
-
-With a Poisson second part, being uninsured lowers expected expenditures by
-about $2,700, close to the $2,610 from the gamma second part.
-
-**A linear second part.** Fit `regress` among the people with any
-expenditures, and use its prediction in place of the `glm` one:
-
-```{.stata-run}
-. local x "c.age i.female c.lninc c.pcs12 c.mcs12 i.ins_unins i.anylim"
-
-. 
-. quietly regress exp_tot `x' if any, vce(cluster duid)
-
-. estimates store Linear
-
-. 
-. quietly suest2 Any Linear
-
-. margins, dydx(ins_unins) expression(predict(model(Any)) * predict(model(Linear)))
-
-Average marginal effects                                Number of obs = 19,386
-Model VCE: Robust
-
-Expression: predict(model(Any)) * predict(model(Linear))
-dy/dx wrt:  1.ins_unins
-
-------------------------------------------------------------------------------
-             |            Delta-method
-             |      dy/dx   std. err.      z    P>|z|     [95% conf. interval]
--------------+----------------------------------------------------------------
- 1.ins_unins |  -2287.542    109.406  -20.909   0.000    -2501.975   -2073.110
-------------------------------------------------------------------------------
-Note: dy/dx for factor levels is the discrete change from the base level.
-
-```
-
-**A regression of log expenditures.** When the second part is a regression of
-the log of the outcome, its prediction is on the log scale. Exponentiating it
-gives exp(*xb*), which understates the mean; the expected outcome is exp(*xb*)
-times the mean of the exponentiated errors. Two estimates of that constant are
-common: Duan's (1983) smearing estimate, the mean of the exponentiated
-residuals, and, if the errors are normal, exp(*s*²/2), where *s*² is the
-residual variance. Compute either one from the stored regression and include
-it in `expression()`:
-
-```{.stata-run}
-. local x "c.age i.female c.lninc c.pcs12 c.mcs12 i.ins_unins i.anylim"
-
-. 
-. generate double lnexp = ln(exp_tot) if any
-(3,440 missing values generated)
-
-. quietly regress lnexp `x' if any, vce(cluster duid)
-
-. estimates store LnAmount
-
-. local s2 = e(rss) / e(N)
-
-. 
-. predict double res if e(sample), residuals
-(3,440 missing values generated)
-
-. generate double expres = exp(res)
-(3,440 missing values generated)
-
-. summarize expres, meanonly
-
-. local duan = r(mean)
-
-. 
-. display "Smearing constant: " %5.3f `duan' _n "Normal constant:   " %5.3f exp(`s2' / 2)
-Smearing constant: 2.401
-Normal constant:   2.586
-
-. 
-. quietly suest2 Any LnAmount
-
-. margins, dydx(ins_unins) expression(predict(model(Any)) * exp(predict(model(LnAmount))) * `duan')
-
-Average marginal effects                                Number of obs = 19,386
-Model VCE: Robust
-
-Expression: predict(model(Any)) * exp(predict(model(LnAmount))) * 2.400751486817317
-dy/dx wrt:  1.ins_unins
-
-------------------------------------------------------------------------------
-             |            Delta-method
-             |      dy/dx   std. err.      z    P>|z|     [95% conf. interval]
--------------+----------------------------------------------------------------
- 1.ins_unins |  -3110.501     79.897  -38.931   0.000    -3267.096   -2953.906
-------------------------------------------------------------------------------
-Note: dy/dx for factor levels is the discrete change from the base level.
-
-. margins, dydx(ins_unins) expression(predict(model(Any)) * exp(predict(model(LnAmount)) + `s2' / 2)
-> )
-
-Average marginal effects                                Number of obs = 19,386
-Model VCE: Robust
-
-Expression: predict(model(Any)) * exp(predict(model(LnAmount)) + 1.900226370523759 / 2)
-dy/dx wrt:  1.ins_unins
-
-------------------------------------------------------------------------------
-             |            Delta-method
-             |      dy/dx   std. err.      z    P>|z|     [95% conf. interval]
--------------+----------------------------------------------------------------
- 1.ins_unins |  -3350.519     86.062  -38.931   0.000    -3519.197   -3181.841
-------------------------------------------------------------------------------
-Note: dy/dx for factor levels is the discrete change from the base level.
-
-```
-
-`margins` treats the constant as known, so the standard errors do not include
-the uncertainty in estimating it. `predict(twopart(Any LnAmount) duan)` and
-`predict(twopart(Any LnAmount) normal)` compute the constants from the stored
-regression.
+Being uninsured lowers expected expenditures by about $2,410 for men and $2,940
+for women; the difference, about $530, is significant.
 
 ## How well the model predicts
 
 The correlation between the outcome and its expected value summarizes how well
 a two-part model predicts. It depends only on the expected outcome, so it
-applies with any second part. `predict` with `twopart()` gives the expected
-outcome:
+applies with any second part:
 
 ```{.stata-run}
-. quietly suest2 Any Amount
+. predict double yhat if e(sample), twopart(Any Amount)
 
-. predict double yhat_gamma if e(sample), twopart(Any Amount)
-
-. 
-. quietly suest2 Any Pois
-
-. predict double yhat_pois if e(sample), twopart(Any Pois)
-
-. 
-. correlate exp_tot yhat_gamma yhat_pois
+. correlate exp_tot yhat
 (obs=19,386)
 
-             |  exp_tot yhat_g~a yhat_p~s
--------------+---------------------------
+             |  exp_tot     yhat
+-------------+------------------
      exp_tot |   1.0000
-  yhat_gamma |   0.3856   1.0000
-   yhat_pois |   0.3916   0.9951   1.0000
+        yhat |   0.3916   1.0000
 
 
 ```
 
-The correlation is .386 with the gamma second part and .392 with the Poisson
-one, so the two predict about equally well.
+The correlation is .392.
 
-## Weights and survey data
+## Other second parts and comparisons
 
-**Sampling weights.** Fit each part with the weights but without `vce()`, and
-give the clustering to `suest2` with `cluster()`:
-
-```{.stata-run}
-. local x "c.age i.female c.lninc c.pcs12 c.mcs12 i.ins_unins i.anylim"
-
-. 
-. quietly logit any `x' [pw = wtdper]
-
-. estimates store AnyW
-
-. 
-. quietly glm exp_tot `x' if any [pw = wtdper], family(gamma) link(log)
-
-. estimates store AmountW
-
-. 
-. quietly suest2 AnyW AmountW, cluster(duid)
-
-. margins, dydx(ins_unins) expression(predict(model(AnyW)) * predict(model(AmountW)))
-
-Average marginal effects                                Number of obs = 19,386
-Model VCE: Robust
-
-Expression: predict(model(AnyW)) * predict(model(AmountW))
-dy/dx wrt:  1.ins_unins
-
-------------------------------------------------------------------------------
-             |            Delta-method
-             |      dy/dx   std. err.      z    P>|z|     [95% conf. interval]
--------------+----------------------------------------------------------------
- 1.ins_unins |  -2480.770    163.599  -15.164   0.000    -2801.418   -2160.122
-------------------------------------------------------------------------------
-Note: dy/dx for factor levels is the discrete change from the base level.
-
-```
-
-**Survey data.** `svyset` the data and fit each part with `svy:`. Fit the
-second part with `if any`, as above, not with `subpop()`; `suest2` computes the
-standard errors from the full survey design.
-
-```{.stata-run}
-. local x "c.age i.female c.lninc c.pcs12 c.mcs12 i.ins_unins i.anylim"
-
-. 
-. svyset duid [pw = wtdper]
-
-Sampling weights: wtdper
-             VCE: linearized
-      Subpop. df: off
-     Single unit: missing
-        Strata 1: <one>
- Sampling unit 1: duid
-           FPC 1: <zero>
-
-. 
-. quietly svy: logit any `x'
-
-. estimates store AnyS
-
-. 
-. quietly svy: glm exp_tot `x' if any, family(gamma) link(log)
-
-. estimates store AmountS
-
-. 
-. quietly suest2 AnyS AmountS
-
-. margins, dydx(ins_unins) expression(predict(model(AnyS)) * predict(model(AmountS)))
-
-Average marginal effects
-
-Number of strata =      1                        Number of obs   =      19,386
-Number of PSUs   = 10,940                        Population size = 187,973,715
-Model VCE: Linearized                            Design df       =      10,939
-
-Expression: predict(model(AnyS)) * predict(model(AmountS))
-dy/dx wrt:  1.ins_unins
-
-------------------------------------------------------------------------------
-             |            Delta-method
-             |      dy/dx   std. err.      t    P>|t|     [95% conf. interval]
--------------+----------------------------------------------------------------
- 1.ins_unins |  -2480.770    163.599  -15.164   0.000    -2801.454   -2160.087
-------------------------------------------------------------------------------
-Note: dy/dx for factor levels is the discrete change from the base level.
-
-```
-
-## Comparing two two-part models
-
-`suest2` can combine more than one two-part model. Here a two-part model
-without the health measures (`pcs12`, `mcs12`, and `anylim`) is combined with
-the full one, to ask how much the effect of being uninsured changes when health
-is held constant. The difference between the two expected outcomes goes in one
-`expression()`:
-
-```{.stata-run}
-. local x1 "c.age i.female c.lninc i.ins_unins"
-
-. 
-. quietly logit any `x1', vce(cluster duid)
-
-. estimates store Any1
-
-. 
-. quietly glm exp_tot `x1' if any, family(gamma) link(log) vce(cluster duid)
-
-. estimates store Amount1
-
-. 
-. quietly suest2 Any1 Amount1 Any Amount
-
-. 
-. local tp1 "predict(model(Any1)) * predict(model(Amount1))"
-
-. local tp2 "predict(model(Any)) * predict(model(Amount))"
-
-. 
-. margins, dydx(ins_unins) expression(`tp1')
-
-Average marginal effects                                Number of obs = 19,386
-Model VCE: Robust
-
-Expression: predict(model(Any1)) * predict(model(Amount1))
-dy/dx wrt:  1.ins_unins
-
-------------------------------------------------------------------------------
-             |            Delta-method
-             |      dy/dx   std. err.      z    P>|z|     [95% conf. interval]
--------------+----------------------------------------------------------------
- 1.ins_unins |  -2842.902    119.446  -23.801   0.000    -3077.013   -2608.792
-------------------------------------------------------------------------------
-Note: dy/dx for factor levels is the discrete change from the base level.
-
-. margins, dydx(ins_unins) expression(`tp2')
-
-Average marginal effects                                Number of obs = 19,386
-Model VCE: Robust
-
-Expression: predict(model(Any)) * predict(model(Amount))
-dy/dx wrt:  1.ins_unins
-
-------------------------------------------------------------------------------
-             |            Delta-method
-             |      dy/dx   std. err.      z    P>|z|     [95% conf. interval]
--------------+----------------------------------------------------------------
- 1.ins_unins |  -2613.180    111.904  -23.352   0.000    -2832.508   -2393.852
-------------------------------------------------------------------------------
-Note: dy/dx for factor levels is the discrete change from the base level.
-
-. margins, dydx(ins_unins) expression(`tp1' - `tp2')
-
-Average marginal effects                                Number of obs = 19,386
-Model VCE: Robust
-
-Expression: predict(model(Any1)) * predict(model(Amount1)) - predict(model(Any)) *
-            predict(model(Amount))
-dy/dx wrt:  1.ins_unins
-
-------------------------------------------------------------------------------
-             |            Delta-method
-             |      dy/dx   std. err.      z    P>|z|     [95% conf. interval]
--------------+----------------------------------------------------------------
- 1.ins_unins |   -229.722     65.246   -3.521   0.000     -357.602    -101.842
-------------------------------------------------------------------------------
-Note: dy/dx for factor levels is the discrete change from the base level.
-
-```
-
-Without the health measures, being uninsured lowers expected expenditures by
-about $2,840; with them, by about $2,610. The difference, about $230, is
-significant.
-
-`mecompare` with its `twopart` option gives the same comparison in one call
-(the `mecompare` [Two-part models](../mecompare/examples/two-part.html) page
-compares a gamma and a Poisson second part):
-
-```{.stata-run}
-. mecompare ins_unins, models(Any1 Amount1 Any Amount) twopart
-
-Predicting: Two-part mean of exp_tot
-Marginal effects and cross-model differences (N_Any1+Amount1=19386) (N_Any+Amount=19386)
-
-                                 |  ME #   Estimate  Robust SE      P>|z|
----------------------------------+---------------------------------------
-ins unins                        |                                       
-                       1 - 0     |                                       
-                    Any1+Amount1 |     1  -2842.902    119.446      0.000
-                      Any+Amount |     2  -2613.180    111.897      0.000
-                      Difference |     3   -229.722     65.246      0.000
-
-```
+The second part can also be a `glm`, such as a gamma family with a log link,
+`regress`, or `nbreg`; `predict(twopart())` works the same way with each. With
+a regression of the log of the outcome, add `duan` for Duan's (1983) smearing
+estimate or `normal` for the normal-theory retransformation, as in
+`predict(twopart(Any LnAmount) duan)`. The `mecompare` [Two-part
+models](../mecompare/examples/two-part.html) page compares effects across
+two-part models with different second parts, and between a two-part model and
+a single model for the outcome.
 
 ## References
 
