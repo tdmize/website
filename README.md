@@ -31,7 +31,7 @@ Images are in `images/`.
 - **Ordinary pages** (home, research, teaching, ...): edit the `.qmd` file, then render.
 - **Stata documentation** (`software/<pkg>/`): edit only the files in `software/<pkg>/_src/`, then run `build.do` in Stata, which runs the Stata code, fills in the output, and renders. The `.qmd` files next to `_src/` are generated.
 - **Teaching sections with Stata code** (`teaching/<course>/<section>/`, e.g. `teaching/cda/02/`): edit only the files in `_src/`, then run `build_teaching.do` in Stata (`do build_teaching.do cda 02`), which runs the Stata code, fills in the output, and renders. A new section is drafted from its Word slides with `python tools/slides2qmd.py cda 03 "path/to/slides.docx"` (writes drafts to `teaching/cda/03/_draft/`; copy them into `_src/` and put the do-file code in place of each `slide-output` block). One-time setup for the tool: `python -m pip install lxml`. Pages that use restricted data switch to its folder in hidden code (fastcd `c rarc` for Stata, the full path for R), so the data never goes in the repository. Each example has a Stata tab and an R tab; Quarto runs the R code when it renders, and saves the results in `_freeze/` (commit it), so a page's R code reruns only when that page changes. One-time setup for the R tabs, in R: `install.packages(c("knitr", "rmarkdown", "haven", "dplyr", "sjmisc", "ggplot2", "modelsummary", "marginaleffects", "sandwich", "lme4", "survey", "lspline", "olsrr", "questionr", "car", "brant", "ordinal", "tidyr", "pscl", "foreign", "Hmisc"))` and `remotes::install_github(c("tdmize/cleanplots", "tdmize/suest"))`.
-- **R package documentation** (`software/cleanplots_r/`, `software/suest_r/`): written in the R packages themselves. After a package's pkgdown site is rebuilt, run `python tools/pkgdown2qmd.py cleanplots` (or `suest`) to bring the new version in, then render. Don't edit these folders by hand; the tool replaces them. One-time setup for the tool: `python -m pip install beautifulsoup4 pyyaml`.
+- **R package documentation** (`software/cleanplots_r/`, `software/suest_r/`): written in the R packages themselves. After a package's pkgdown site is rebuilt, run `python tools/pkgdown2qmd.py cleanplots` (or `suest`) to bring the new version in, then render the changed pages (see Building). Don't edit these folders by hand; the tool replaces them. One-time setup for the tool: `python -m pip install beautifulsoup4 pyyaml`.
 - **Look of the site**: `theme.scss` (colors, font, Stata output blocks). Menus and sidebars: `_quarto.yml`.
 
 ## Building
@@ -43,5 +43,19 @@ quarto render
 ```
 
 or, in Stata, `do build.do render` (render only) / `do build.do mecompare` (rerun one package's Stata output, then render) / `do build_teaching.do cda 02` (rerun one teaching section's Stata output, then render; the Data Visualization workshop notes are `do build_teaching.do dmv notes`). Then commit and push, including `docs/`.
+
+When only the content of some pages changed, render just those pages; Quarto updates each page, the search index, and the sitemap:
+
+```
+quarto render software/suest_r/articles/two-part.qmd
+```
+
+or, for every changed page under `software/` (for example after `pkgdown2qmd.py`):
+
+```
+git diff --name-only -- software | grep '\.qmd$' | xargs -n 1 quarto render
+```
+
+Render the whole site when `_quarto.yml` changes (`git status` lists it) or a page is added, removed, or renamed, since every page carries the menu.
 
 `python tools/preview_nostata.py --serve` builds a preview without Stata and serves it at http://127.0.0.1:8765/.
