@@ -1361,7 +1361,7 @@ window.Quarto = {
 
 <p>A two-part model is used when an outcome is the product of a mix of two processes, one for observed zeroes and non-zeroes, and one for an amount among the non-zeroes. The expected outcome is the product of the two:</p>
 <p><span class="math display">\[E(y) = \Pr(y &gt; 0) \times E(y \mid y &gt; 0)\]</span></p>
-<p>With <a href="../reference/suest.html"><code>suest()</code></a>, fit the two parts as separate models and combine them with <code>twopart</code>. Predictions and marginal effects from <code>marginaleffects</code> are then on the expected outcome, with standard errors from the joint covariance of the two parts.</p>
+<p>In R, fit the two parts as separate models and combine them with <a href="../reference/suest.html"><code>suest()</code></a> and the <code>twopart</code> option. Predictions and marginal effects from <code>marginaleffects</code> are then on the expected outcome, with standard errors from the joint covariance of the two parts.</p>
 <p>The examples use the medical expenditures of 19,386 adults in the 2004 Medical Expenditure Panel Survey. The first part is a logit of whether a person had any medical expenditures. The second part is a Poisson model of expenditures among the people who had any. With the robust standard errors <a href="../reference/suest.html"><code>suest()</code></a> computes, this is Poisson pseudo-maximum likelihood: it fits a model of the mean of any outcome that is zero or positive, not only counts, and needs only the model of the mean to be right (Santos Silva and Tenreyro 2006). <code>family = quasipoisson</code> fits it without warnings about outcomes that are not whole numbers.</p>
 <section id="fit-the-two-parts-and-combine-them" class="level2">
 <h2 class="anchored" data-anchor-id="fit-the-two-parts-and-combine-them">Fit the two parts and combine them</h2>
@@ -1418,20 +1418,21 @@ Amount        |
 <p>With survey data, put the weights and clusters in a <a href="https://rdrr.io/pkg/survey/man/svydesign.html"><code>svydesign()</code></a>, fit the first part to the full design and the second part to the people with any expenditures, and give <a href="../reference/suest.html"><code>suest()</code></a> the full design. <code>wts = TRUE</code> averages with the sampling weights:</p>
 <div class="r-run">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>design <span class="ot">&lt;-</span> survey<span class="sc">::</span><span class="fu">svydesign</span>(<span class="at">ids =</span> <span class="sc">~</span>duid, <span class="at">weights =</span> <span class="sc">~</span>wtdper, <span class="at">data =</span> meps)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>any_s <span class="ot">&lt;-</span> survey<span class="sc">::</span><span class="fu">svyglm</span>(<span class="fu">I</span>(exp_tot <span class="sc">&gt;</span> <span class="dv">0</span>) <span class="sc">~</span> age <span class="sc">+</span> female <span class="sc">+</span> ins_unins,</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>                        <span class="at">design =</span> design, <span class="at">family =</span> quasibinomial)</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>amount_s <span class="ot">&lt;-</span> survey<span class="sc">::</span><span class="fu">svyglm</span>(exp_tot <span class="sc">~</span> age <span class="sc">+</span> female <span class="sc">+</span> ins_unins,</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>                           <span class="at">design =</span> <span class="fu">subset</span>(design, exp_tot <span class="sc">&gt;</span> <span class="dv">0</span>),</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>                           <span class="at">family =</span> quasipoisson)</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>fit_s <span class="ot">&lt;-</span> <span class="fu">suest</span>(any_s, amount_s, <span class="at">survey_design =</span> design,</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>               <span class="at">observation_id =</span> <span class="st">"dupersid"</span>, <span class="at">twopart =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_slopes</span>(fit_s, <span class="at">variables =</span> <span class="st">"ins_unins"</span>, <span class="at">wts =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<pre class="r-output"><code> Estimate Std. Error     z Pr(&gt;|z|)     S 2.5 % 97.5 %
-    -2566        168 -15.3   &lt;0.001 173.1 -2895  -2237
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>any_s <span class="ot">&lt;-</span> survey<span class="sc">::</span><span class="fu">svyglm</span>(<span class="fu">I</span>(exp_tot <span class="sc">&gt;</span> <span class="dv">0</span>) <span class="sc">~</span> age <span class="sc">+</span> female <span class="sc">+</span> lninc <span class="sc">+</span> pcs12 <span class="sc">+</span> mcs12 <span class="sc">+</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>                          ins_unins <span class="sc">+</span> anylim, <span class="at">design =</span> design,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>                        <span class="at">family =</span> quasibinomial)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>amount_s <span class="ot">&lt;-</span> survey<span class="sc">::</span><span class="fu">svyglm</span>(exp_tot <span class="sc">~</span> age <span class="sc">+</span> female <span class="sc">+</span> lninc <span class="sc">+</span> pcs12 <span class="sc">+</span> mcs12 <span class="sc">+</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>                             ins_unins <span class="sc">+</span> anylim,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>                           <span class="at">design =</span> <span class="fu">subset</span>(design, exp_tot <span class="sc">&gt;</span> <span class="dv">0</span>),</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>                           <span class="at">family =</span> quasipoisson)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>fit_s <span class="ot">&lt;-</span> <span class="fu">suest</span>(any_s, amount_s, <span class="at">survey_design =</span> design,</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>               <span class="at">observation_id =</span> <span class="st">"dupersid"</span>, <span class="at">twopart =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_slopes</span>(fit_s, <span class="at">variables =</span> <span class="fu">c</span>(<span class="st">"age"</span>, <span class="st">"ins_unins"</span>), <span class="at">wts =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="r-output"><code>      Term Contrast Estimate Std. Error     z Pr(&gt;|z|)     S   2.5 %  97.5 %
+ age          dY/dX     55.3       5.42  10.2   &lt;0.001  78.9    44.7    65.9
+ ins_unins    1 - 0  -2595.1     163.67 -15.9   &lt;0.001 185.7 -2915.9 -2274.3
 
-Term: ins_unins
-Type: response
-Comparison: 1 - 0</code></pre>
+Type: response</code></pre>
 </div>
 </section>
 <section id="expected-expenditures-and-effects-on-them" class="level2">
