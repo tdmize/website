@@ -76,7 +76,7 @@ avg_slopes(zi_fit, variables = "ment", type = "zero")
 ```
 ```{.r-output}
  Group Estimate Std. Error     z Pr(>|z|)    S   2.5 %   97.5 %
-  ZIP   -0.0178    0.00679 -2.62  0.00876  6.8 -0.0311 -0.00449
+  ZIP   -0.0178    0.00679 -2.62  0.00877  6.8 -0.0311 -0.00449
   ZINB  -0.0304    0.00791 -3.85  < 0.001 13.1 -0.0459 -0.01495
 
 Term: ment
@@ -126,7 +126,7 @@ The first part can be a logit, probit, or complementary log-log [`glm()`](https:
 
 ## Mixed models fitted with glmmTMB
 
-- Predictions and marginal effects average over the random intercept, and over the random slope when there is one.
+- Predictions and marginal effects average over the random effects: the random intercept and any random slopes.
 - Center continuous predictors and keep them in well-scaled units. glmmTMB’s covariance matrix can be inaccurate with extreme predictor units even when the model reports convergence, and `suest` uses that covariance as supplied.
 - For slopes of continuous predictors in logit random-slope models, use `numderiv = list("fdcenter", eps = 1e-4)` in [`avg_slopes()`](https://rdrr.io/pkg/marginaleffects/man/slopes.html) for more stable standard errors, and check that nearby step sizes (such as `5e-5` and `2e-4`) give similar answers.
 
@@ -144,6 +144,32 @@ The first part can be a logit, probit, or complementary log-log [`glm()`](https:
 - These fits stop at fairly loose tolerances. For results that agree closely with Stata, tighten them: `control = list(reltol = 1e-12)` in `svyolr()` and `control = VGAM::vglm.control(criterion = "coefficients", epsilon = 1e-9)` in `svy_vglm()`.
 - `svy_vglm()` multinomial models use the last category as the reference unless `multinomial(refLevel = )` says otherwise.
 - [`suest()`](../reference/suest.html) finds an `svyivreg()` model’s design from its call, so keep that design object available.
+
+## Predictions and Stata’s predict() options
+
+For most models, the default prediction (`type = "response"`) is the quantity that `margins` reports after `suest2` in Stata. For these models, it is another of Stata’s predictions:
+
+| R model | R’s default prediction | The same prediction in Stata |
+|------------------------|------------------------|------------------------|
+| Random-effects logit and probit, [`pglm::pglm()`](https://rdrr.io/pkg/pglm/man/pglm.html) | Probability averaged over the random effect | `predict(pr)` after `xtlogit, re` or `xtprobit, re` (also what `margins` gives after `suest2`) |
+| Random-effects Poisson, [`pglm::pglm()`](https://rdrr.io/pkg/pglm/man/pglm.html) | Expected count with the random effect at zero | `predict(nu0)` after `xtpoisson, re`; R’s `type = "link"` is Stata’s default, the linear prediction |
+| Fixed-effects Poisson, [`fixest::fepois()`](https://lrberge.github.io/fixest/reference/feglm.html) | Expected count, including the fixed effects | None: Stata’s predictions after `xtpoisson, fe` leave out the fixed effects. Effects on the linear prediction are the same |
+| IV probit, [`Rchoice::ivpml()`](https://rdrr.io/pkg/Rchoice/man/ivpml.html) | Probability from the outcome equation | `predict(pr fixedasf)` after `ivprobit` (after `suest2`, Stata gives only the linear prediction) |
+
+After fixed-effects models (`plm()` within models and [`fixest::fepois()`](https://lrberge.github.io/fixest/reference/feglm.html)), the average prediction over the estimation sample equals the average outcome, so it has no standard error. Compare slopes and changes instead.
+
+Two standard errors differ from Stata’s for reasons on Stata’s side:
+
+- Random-effects Poisson (`pglm()`): `suest` uses one score per panel for the dispersion parameter. Stata’s `xtpoisson, re vce(robust)` and `suest2` repeat that score on every observation in the panel, so their standard errors are larger, much larger for `lnalpha`.
+- Heteroskedastic probit ([`Rchoice::hetprob()`](https://rdrr.io/pkg/Rchoice/man/hetprob.html)): after `hetprobit`, Stata’s `margins, dydx()` can give a slightly smaller standard error with its default chain rule. With `nochainrule`, it gives the same standard error as R.
+
+## Truncated regression
+
+[`truncreg::truncreg()`](https://rdrr.io/pkg/truncreg/man/truncreg.html) uses the BFGS optimizer by default, which can stop just short of the maximum (about 1e-4 in the coefficients). Use `method = "nr"` to reach it:
+
+```r
+truncreg::truncreg(y ~ x + z, data = d, point = 0, direction = "left", method = "nr")
+```
 
 ## Stata models without an R version
 

@@ -1311,6 +1311,8 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
   <li><a href="#mixed-models-fitted-with-glmmtmb" id="toc-mixed-models-fitted-with-glmmtmb" class="nav-link" data-scroll-target="#mixed-models-fitted-with-glmmtmb">Mixed models fitted with glmmTMB</a></li>
   <li><a href="#several-random-slopes-and-three-level-models" id="toc-several-random-slopes-and-three-level-models" class="nav-link" data-scroll-target="#several-random-slopes-and-three-level-models">Several random slopes and three-level models</a></li>
   <li><a href="#survey-models" id="toc-survey-models" class="nav-link" data-scroll-target="#survey-models">Survey models</a></li>
+  <li><a href="#predictions-and-statas-predict-options" id="toc-predictions-and-statas-predict-options" class="nav-link" data-scroll-target="#predictions-and-statas-predict-options">Predictions and Stata’s predict() options</a></li>
+  <li><a href="#truncated-regression" id="toc-truncated-regression" class="nav-link" data-scroll-target="#truncated-regression">Truncated regression</a></li>
   <li><a href="#stata-models-without-an-r-version" id="toc-stata-models-without-an-r-version" class="nav-link" data-scroll-target="#stata-models-without-an-r-version">Stata models without an R version</a></li>
   <li><a href="#models-fitted-with-different-packages" id="toc-models-fitted-with-different-packages" class="nav-link" data-scroll-target="#models-fitted-with-different-packages">Models fitted with different packages</a></li>
   </ul>
@@ -1447,7 +1449,7 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co"># and its difference across the two models</span></span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_slopes</span>(zi_fit, <span class="at">variables =</span> <span class="st">"ment"</span>, <span class="at">type =</span> <span class="st">"zero"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="r-output"><code> Group Estimate Std. Error     z Pr(&gt;|z|)    S   2.5 %   97.5 %
-  ZIP   -0.0178    0.00679 -2.62  0.00876  6.8 -0.0311 -0.00449
+  ZIP   -0.0178    0.00679 -2.62  0.00877  6.8 -0.0311 -0.00449
   ZINB  -0.0304    0.00791 -3.85  &lt; 0.001 13.1 -0.0459 -0.01495
 
 Term: ment
@@ -1511,7 +1513,7 @@ Type: prob</code></pre>
 <section id="mixed-models-fitted-with-glmmtmb" class="level2">
 <h2 class="anchored" data-anchor-id="mixed-models-fitted-with-glmmtmb">Mixed models fitted with glmmTMB</h2>
 <ul>
-<li>Predictions and marginal effects average over the random intercept, and over the random slope when there is one.</li>
+<li>Predictions and marginal effects average over the random effects: the random intercept and any random slopes.</li>
 <li>Center continuous predictors and keep them in well-scaled units. glmmTMB’s covariance matrix can be inaccurate with extreme predictor units even when the model reports convergence, and <code>suest</code> uses that covariance as supplied.</li>
 <li>For slopes of continuous predictors in logit random-slope models, use <code>numderiv = list("fdcenter", eps = 1e-4)</code> in <a href="https://rdrr.io/pkg/marginaleffects/man/slopes.html"><code>avg_slopes()</code></a> for more stable standard errors, and check that nearby step sizes (such as <code>5e-5</code> and <code>2e-4</code>) give similar answers.</li>
 </ul>
@@ -1534,6 +1536,52 @@ Type: prob</code></pre>
 <li><code>svy_vglm()</code> multinomial models use the last category as the reference unless <code>multinomial(refLevel = )</code> says otherwise.</li>
 <li><a href="../reference/suest.html"><code>suest()</code></a> finds an <code>svyivreg()</code> model’s design from its call, so keep that design object available.</li>
 </ul>
+</section>
+<section id="predictions-and-statas-predict-options" class="level2">
+<h2 class="anchored" data-anchor-id="predictions-and-statas-predict-options">Predictions and Stata’s predict() options</h2>
+<p>For most models, the default prediction (<code>type = "response"</code>) is the quantity that <code>margins</code> reports after <code>suest2</code> in Stata. For these models, it is another of Stata’s predictions:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>R model</th>
+<th>R’s default prediction</th>
+<th>The same prediction in Stata</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Random-effects logit and probit, <a href="https://rdrr.io/pkg/pglm/man/pglm.html"><code>pglm::pglm()</code></a></td>
+<td>Probability averaged over the random effect</td>
+<td><code>predict(pr)</code> after <code>xtlogit, re</code> or <code>xtprobit, re</code> (also what <code>margins</code> gives after <code>suest2</code>)</td>
+</tr>
+<tr class="even">
+<td>Random-effects Poisson, <a href="https://rdrr.io/pkg/pglm/man/pglm.html"><code>pglm::pglm()</code></a></td>
+<td>Expected count with the random effect at zero</td>
+<td><code>predict(nu0)</code> after <code>xtpoisson, re</code>; R’s <code>type = "link"</code> is Stata’s default, the linear prediction</td>
+</tr>
+<tr class="odd">
+<td>Fixed-effects Poisson, <a href="https://lrberge.github.io/fixest/reference/feglm.html"><code>fixest::fepois()</code></a></td>
+<td>Expected count, including the fixed effects</td>
+<td>None: Stata’s predictions after <code>xtpoisson, fe</code> leave out the fixed effects. Effects on the linear prediction are the same</td>
+</tr>
+<tr class="even">
+<td>IV probit, <a href="https://rdrr.io/pkg/Rchoice/man/ivpml.html"><code>Rchoice::ivpml()</code></a></td>
+<td>Probability from the outcome equation</td>
+<td><code>predict(pr fixedasf)</code> after <code>ivprobit</code> (after <code>suest2</code>, Stata gives only the linear prediction)</td>
+</tr>
+</tbody>
+</table>
+<p>After fixed-effects models (<code>plm()</code> within models and <a href="https://lrberge.github.io/fixest/reference/feglm.html"><code>fixest::fepois()</code></a>), the average prediction over the estimation sample equals the average outcome, so it has no standard error. Compare slopes and changes instead.</p>
+<p>Two standard errors differ from Stata’s for reasons on Stata’s side:</p>
+<ul>
+<li>Random-effects Poisson (<code>pglm()</code>): <code>suest</code> uses one score per panel for the dispersion parameter. Stata’s <code>xtpoisson, re vce(robust)</code> and <code>suest2</code> repeat that score on every observation in the panel, so their standard errors are larger, much larger for <code>lnalpha</code>.</li>
+<li>Heteroskedastic probit (<a href="https://rdrr.io/pkg/Rchoice/man/hetprob.html"><code>Rchoice::hetprob()</code></a>): after <code>hetprobit</code>, Stata’s <code>margins, dydx()</code> can give a slightly smaller standard error with its default chain rule. With <code>nochainrule</code>, it gives the same standard error as R.</li>
+</ul>
+</section>
+<section id="truncated-regression" class="level2">
+<h2 class="anchored" data-anchor-id="truncated-regression">Truncated regression</h2>
+<p><a href="https://rdrr.io/pkg/truncreg/man/truncreg.html"><code>truncreg::truncreg()</code></a> uses the BFGS optimizer by default, which can stop just short of the maximum (about 1e-4 in the coefficients). Use <code>method = "nr"</code> to reach it:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>truncreg<span class="sc">::</span><span class="fu">truncreg</span>(y <span class="sc">~</span> x <span class="sc">+</span> z, <span class="at">data =</span> d, <span class="at">point =</span> <span class="dv">0</span>, <span class="at">direction =</span> <span class="st">"left"</span>, <span class="at">method =</span> <span class="st">"nr"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="stata-models-without-an-r-version" class="level2">
 <h2 class="anchored" data-anchor-id="stata-models-without-an-r-version">Stata models without an R version</h2>
@@ -1590,19 +1638,19 @@ Type: prob</code></pre>
 <section id="models-fitted-with-different-packages" class="level2">
 <h2 class="anchored" data-anchor-id="models-fitted-with-different-packages">Models fitted with different packages</h2>
 <p>Models fitted by different packages can be combined, as long as they are supported models.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(suest)</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(marginaleffects)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(suest)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(marginaleffects)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><a href="https://rdrr.io/r/stats/glm.html"><code>glm()</code></a> and <a href="https://rdrr.io/pkg/glm2/man/glm2.html"><code>glm2::glm2()</code></a>:</p>
 <div class="r-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(glm2)</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> mtcars</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>dat<span class="sc">$</span>am <span class="ot">&lt;-</span> <span class="fu">factor</span>(dat<span class="sc">$</span>am)</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>standard <span class="ot">&lt;-</span> <span class="fu">glm</span>(am <span class="sc">~</span> wt <span class="sc">+</span> hp, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="st">"logit"</span>), <span class="at">data =</span> dat)</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>alternative <span class="ot">&lt;-</span> <span class="fu">glm2</span>(am <span class="sc">~</span> wt <span class="sc">+</span> hp, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="st">"logit"</span>), <span class="at">data =</span> dat)</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>engine_fit <span class="ot">&lt;-</span> <span class="fu">suest</span>(standard, alternative, <span class="at">model_names =</span> <span class="fu">c</span>(<span class="st">"glm"</span>, <span class="st">"glm2"</span>))</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(engine_fit, <span class="at">variables =</span> <span class="st">"wt"</span>, <span class="at">newdata =</span> dat)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(glm2)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> mtcars</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>dat<span class="sc">$</span>am <span class="ot">&lt;-</span> <span class="fu">factor</span>(dat<span class="sc">$</span>am)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>standard <span class="ot">&lt;-</span> <span class="fu">glm</span>(am <span class="sc">~</span> wt <span class="sc">+</span> hp, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="st">"logit"</span>), <span class="at">data =</span> dat)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>alternative <span class="ot">&lt;-</span> <span class="fu">glm2</span>(am <span class="sc">~</span> wt <span class="sc">+</span> hp, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="st">"logit"</span>), <span class="at">data =</span> dat)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>engine_fit <span class="ot">&lt;-</span> <span class="fu">suest</span>(standard, alternative, <span class="at">model_names =</span> <span class="fu">c</span>(<span class="st">"glm"</span>, <span class="st">"glm2"</span>))</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(engine_fit, <span class="at">variables =</span> <span class="st">"wt"</span>, <span class="at">newdata =</span> dat)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="r-output"><code> Group Estimate Std. Error     z Pr(&gt;|z|)     S  2.5 % 97.5 %
   glm    -0.355     0.0184 -19.3   &lt;0.001 273.3 -0.391 -0.319
   glm2   -0.355     0.0184 -19.3   &lt;0.001 273.3 -0.391 -0.319
@@ -1613,18 +1661,18 @@ Comparison: +1</code></pre>
 </div>
 <p><a href="https://rdrr.io/pkg/ordinal/man/clm.html"><code>ordinal::clm()</code></a> and <a href="https://rdrr.io/pkg/MASS/man/polr.html"><code>MASS::polr()</code></a>. <a href="https://rdrr.io/pkg/ordinal/man/clm.html"><code>clm()</code></a> models need flexible thresholds and no scale or nominal-effects formula.</p>
 <div class="r-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ordinal)</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>housing <span class="ot">&lt;-</span> MASS<span class="sc">::</span>housing[<span class="fu">rep</span>(<span class="fu">seq_len</span>(<span class="fu">nrow</span>(MASS<span class="sc">::</span>housing)), MASS<span class="sc">::</span>housing<span class="sc">$</span>Freq),</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>                         <span class="fu">c</span>(<span class="st">"Sat"</span>, <span class="st">"Infl"</span>, <span class="st">"Type"</span>, <span class="st">"Cont"</span>)]</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(housing) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>housing<span class="sc">$</span>Sat <span class="ot">&lt;-</span> <span class="fu">ordered</span>(housing<span class="sc">$</span>Sat, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Low"</span>, <span class="st">"Medium"</span>, <span class="st">"High"</span>))</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>clm_model <span class="ot">&lt;-</span> <span class="fu">clm</span>(Sat <span class="sc">~</span> Cont <span class="sc">+</span> Infl <span class="sc">+</span> Type, <span class="at">data =</span> housing, <span class="at">link =</span> <span class="st">"logit"</span>)</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>polr_model <span class="ot">&lt;-</span> MASS<span class="sc">::</span><span class="fu">polr</span>(Sat <span class="sc">~</span> Cont <span class="sc">+</span> Infl <span class="sc">+</span> Type, <span class="at">data =</span> housing,</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>                         <span class="at">method =</span> <span class="st">"logistic"</span>, <span class="at">Hess =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>ordinal_fit <span class="ot">&lt;-</span> <span class="fu">suest</span>(clm_model, polr_model, <span class="at">model_names =</span> <span class="fu">c</span>(<span class="st">"clm"</span>, <span class="st">"polr"</span>))</span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(ordinal_fit, <span class="at">variables =</span> <span class="st">"Cont"</span>, <span class="at">newdata =</span> housing)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ordinal)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>housing <span class="ot">&lt;-</span> MASS<span class="sc">::</span>housing[<span class="fu">rep</span>(<span class="fu">seq_len</span>(<span class="fu">nrow</span>(MASS<span class="sc">::</span>housing)), MASS<span class="sc">::</span>housing<span class="sc">$</span>Freq),</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>                         <span class="fu">c</span>(<span class="st">"Sat"</span>, <span class="st">"Infl"</span>, <span class="st">"Type"</span>, <span class="st">"Cont"</span>)]</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(housing) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>housing<span class="sc">$</span>Sat <span class="ot">&lt;-</span> <span class="fu">ordered</span>(housing<span class="sc">$</span>Sat, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Low"</span>, <span class="st">"Medium"</span>, <span class="st">"High"</span>))</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>clm_model <span class="ot">&lt;-</span> <span class="fu">clm</span>(Sat <span class="sc">~</span> Cont <span class="sc">+</span> Infl <span class="sc">+</span> Type, <span class="at">data =</span> housing, <span class="at">link =</span> <span class="st">"logit"</span>)</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>polr_model <span class="ot">&lt;-</span> MASS<span class="sc">::</span><span class="fu">polr</span>(Sat <span class="sc">~</span> Cont <span class="sc">+</span> Infl <span class="sc">+</span> Type, <span class="at">data =</span> housing,</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>                         <span class="at">method =</span> <span class="st">"logistic"</span>, <span class="at">Hess =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>ordinal_fit <span class="ot">&lt;-</span> <span class="fu">suest</span>(clm_model, polr_model, <span class="at">model_names =</span> <span class="fu">c</span>(<span class="st">"clm"</span>, <span class="st">"polr"</span>))</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(ordinal_fit, <span class="at">variables =</span> <span class="st">"Cont"</span>, <span class="at">newdata =</span> housing)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="r-output"><code>        Group Estimate Std. Error     z Pr(&gt;|z|)    S    2.5 %    97.5 %
  clm::Low     -0.07504    0.02010 -3.73   &lt;0.001 12.4 -0.11443 -0.035653
  clm::Medium  -0.00374    0.00176 -2.13    0.033  4.9 -0.00718 -0.000303

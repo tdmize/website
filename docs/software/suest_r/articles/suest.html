@@ -1346,7 +1346,7 @@ gtag('config', 'G-FQRYLM0FY0', { 'anonymize_ip': true});
 <h2 class="anchored" data-anchor-id="functions-at-a-glance">Functions at a glance</h2>
 <ul>
 <li><a href="../reference/suest.html"><code>suest()</code></a> combines two or more fitted models and calculates their joint covariance matrix. Its <code>twopart</code> option combines the two parts of <a href="two-part.html">two-part models</a>.</li>
-<li><a href="../reference/suest_newdata.html"><code>suest_newdata()</code></a> stacks the models’ estimation samples so each model’s effects can be averaged over its own sample.</li>
+<li><a href="../reference/suest_newdata.html"><code>suest_newdata()</code></a> stacks the models’ estimation samples, one block of rows per model.</li>
 <li><a href="../reference/suest_mi.html"><code>suest_mi()</code></a> pools <a href="../reference/suest.html"><code>suest()</code></a> results across multiply imputed datasets.</li>
 <li>The usual <code>marginaleffects</code> functions, including <a href="https://rdrr.io/pkg/marginaleffects/man/predictions.html"><code>predictions()</code></a>, <a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html"><code>avg_comparisons()</code></a>, <a href="https://rdrr.io/pkg/marginaleffects/man/slopes.html"><code>avg_slopes()</code></a>, <a href="https://rdrr.io/pkg/marginaleffects/man/hypotheses.html"><code>hypotheses()</code></a>, and the plotting functions, work with the combined object, and <code>modelsummary()</code> makes tables from it.</li>
 </ul>
@@ -1594,31 +1594,28 @@ Comparison: 1 - 0</code></pre>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Linear random-intercept</td>
+<td>Linear, random intercept</td>
 <td><code>nlme::lme(method = "ML")</code></td>
 </tr>
 <tr class="even">
-<td>Random-intercept logit, probit, cloglog, Poisson, negative binomial (mean or constant dispersion), linear, and Gamma (log link)</td>
-<td><a href="https://rdrr.io/pkg/glmmTMB/man/glmmTMB.html"><code>glmmTMB::glmmTMB()</code></a></td>
-</tr>
-<tr class="odd">
-<td>Random intercept and slope, <code>(1 + x | id)</code>, for the same families</td>
-<td><a href="https://rdrr.io/pkg/glmmTMB/man/glmmTMB.html"><code>glmmTMB::glmmTMB()</code></a></td>
-</tr>
-<tr class="even">
-<td>Linear random intercept or slope (ML)</td>
+<td>Linear (maximum likelihood)</td>
 <td><code>lme4::lmer(REML = FALSE)</code></td>
 </tr>
 <tr class="odd">
-<td>Random-intercept or slope logit, probit, cloglog, and Poisson</td>
-<td><a href="https://rdrr.io/pkg/lme4/man/glmer.html"><code>lme4::glmer()</code></a>, any <code>nAGQ</code></td>
+<td>Logit, probit, complementary log-log, and Poisson</td>
+<td><a href="https://rdrr.io/pkg/lme4/man/glmer.html"><code>lme4::glmer()</code></a>; with only a random intercept, any <code>nAGQ</code></td>
 </tr>
 <tr class="even">
-<td>Random-intercept ordered logit and probit</td>
+<td>Logit, probit, complementary log-log, Poisson, negative binomial (mean or constant dispersion), linear, and Gamma (log link)</td>
+<td><a href="https://rdrr.io/pkg/glmmTMB/man/glmmTMB.html"><code>glmmTMB::glmmTMB()</code></a></td>
+</tr>
+<tr class="odd">
+<td>Ordered logit and probit</td>
 <td><a href="https://rdrr.io/pkg/ordinal/man/clmm.html"><code>ordinal::clmm()</code></a></td>
 </tr>
 </tbody>
 </table>
+<p>Except for <a href="https://rdrr.io/pkg/nlme/man/lme.html"><code>nlme::lme()</code></a>, these models can have random slopes, several of them, and a level nested in the grouping variable (three-level models); see <a href="model-notes.html#several-random-slopes-and-three-level-models">Notes on specific models</a>.</p>
 </section>
 <section id="survey-models" class="level3">
 <h3 class="anchored" data-anchor-id="survey-models">Survey models</h3>
@@ -1672,13 +1669,15 @@ Comparison: 1 - 0</code></pre>
 </section>
 <section id="combining-models" class="level3">
 <h3 class="anchored" data-anchor-id="combining-models">Combining models</h3>
-<p>Models can use the same, partially overlapping, or completely different samples. Any single-level models can be combined, including models for different outcomes and models for categorical outcomes. Results on different scales are labeled separately rather than treated as directly comparable. Random-effects models (<a href="https://rdrr.io/pkg/nlme/man/lme.html"><code>nlme::lme()</code></a>, <code>pglm()</code>, <code>glmmTMB()</code>, lme4, <a href="https://rdrr.io/pkg/ordinal/man/clmm.html"><code>clmm()</code></a>) can be combined with each other, including different families, and with linear, binary, count, and ordered models, such as a logit model with a random-intercept logit model. They must share one grouping variable (for three-level models, the top level), which the system is clustered on, and must be unweighted. Random-effects models can have several random slopes and a level nested in the grouping variable. Other panel models (<a href="https://rdrr.io/pkg/plm/man/plm.html"><code>plm()</code></a>, <code>geeglm()</code>) can be combined only with models of the same kind. Offsets are supported, except in <code>pglm()</code> and <code>glmmTMB()</code> models.</p>
+<p>Models can use the same, partially overlapping, or completely different samples. Any single-level models can be combined, including models for different outcomes and models for categorical outcomes. Results on different scales are labeled separately rather than treated as directly comparable.</p>
+<p>Random-effects models (<a href="https://rdrr.io/pkg/nlme/man/lme.html"><code>nlme::lme()</code></a>, <code>pglm()</code>, <code>glmmTMB()</code>, lme4, <a href="https://rdrr.io/pkg/ordinal/man/clmm.html"><code>clmm()</code></a>) can be combined with each other, including different families, and with linear, logit, probit, complementary log-log, Poisson, negative binomial, and ordered logit and probit models, such as a logit model with a random-intercept logit model. They must be unweighted and share one grouping variable (for three-level models, the top level), and the system is clustered on that variable. Other panel models (<a href="https://rdrr.io/pkg/plm/man/plm.html"><code>plm()</code></a>, <code>geeglm()</code>) can be combined only with models of the same kind.</p>
+<p>Offsets work in most models, written in the formula or given in the <code>offset</code> argument. They are not supported in <code>glmmTMB()</code>, lme4, <a href="https://rdrr.io/pkg/ordinal/man/clmm.html"><code>clmm()</code></a>, <code>pglm()</code>, <a href="https://lrberge.github.io/fixest/reference/feglm.html"><code>fixest::fepois()</code></a>, <a href="https://rdrr.io/pkg/VGAM/man/vglm.html"><code>VGAM::vglm()</code></a>, <a href="https://chjackson.github.io/flexsurv/reference/flexsurvreg.html"><code>flexsurv::flexsurvreg()</code></a>, and <a href="https://rdrr.io/pkg/GJRM/man/gjrm.html"><code>GJRM::gjrm()</code></a> models. Survey models need them in the formula, as <a href="https://rdrr.io/r/stats/offset.html"><code>offset()</code></a>.</p>
 <p>A few models have settings worth knowing about; see <a href="model-notes.html">Notes on specific models</a>.</p>
 </section>
 </section>
 <section id="different-samples-or-groups" class="level2">
 <h2 class="anchored" data-anchor-id="different-samples-or-groups">Different samples or groups</h2>
-<p>When the models are fitted to different samples, such as separate groups, use <a href="../reference/suest_newdata.html"><code>suest_newdata()</code></a> so each model’s effects are averaged over its own sample:</p>
+<p>When the models are fitted to different samples, such as separate groups, each model’s effects are averaged over its own sample. That is the default when <code>newdata</code> is left out; <code>newdata = suest_newdata(fit)</code> says the same thing explicitly:</p>
 <div class="r-run">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>south_model <span class="ot">&lt;-</span> <span class="fu">glm</span>(union <span class="sc">~</span> age <span class="sc">+</span> hours <span class="sc">+</span> collgrad, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="st">"logit"</span>),</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>                   <span class="at">data =</span> nlsw, <span class="at">subset =</span> south <span class="sc">==</span> <span class="dv">1</span>)</span>
@@ -1706,28 +1705,51 @@ Comparison: 1 - 0</code></pre>
 </section>
 <section id="cluster-robust-standard-errors" class="level2">
 <h2 class="anchored" data-anchor-id="cluster-robust-standard-errors">Cluster-robust standard errors</h2>
-<p>Supply a cluster variable to get cluster-robust standard errors for the combined models:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>fit_clustered <span class="ot">&lt;-</span> <span class="fu">suest</span>(base, adjusted, <span class="at">cluster =</span> <span class="st">"person_id"</span>)</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(fit_clustered, <span class="at">variables =</span> <span class="st">"x"</span>, <span class="at">newdata =</span> dat)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Supply a cluster variable to get cluster-robust standard errors for the combined models. The National Longitudinal Survey of Young Women follows the same women over many years, so the same two models of union membership, fitted to all the years, cluster on each woman’s ID:</p>
+<div class="r-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>nlswork <span class="ot">&lt;-</span> <span class="fu">zap_labels</span>(<span class="fu">read_dta</span>(<span class="st">"https://tdmize.github.io/data/data/nlswork.dta"</span>))</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>base_p <span class="ot">&lt;-</span> <span class="fu">glm</span>(union <span class="sc">~</span> collgrad <span class="sc">+</span> age <span class="sc">+</span> south, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="st">"logit"</span>),</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>              <span class="at">data =</span> nlswork)</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>adjusted_p <span class="ot">&lt;-</span> <span class="fu">glm</span>(union <span class="sc">~</span> collgrad <span class="sc">+</span> age <span class="sc">+</span> south <span class="sc">+</span> ln_wage <span class="sc">+</span> ttl_exp,</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>                  <span class="at">family =</span> <span class="fu">binomial</span>(<span class="st">"logit"</span>), <span class="at">data =</span> nlswork)</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>fit_clustered <span class="ot">&lt;-</span> <span class="fu">suest</span>(base_p, adjusted_p, <span class="at">model_names =</span> <span class="fu">c</span>(<span class="st">"Base"</span>, <span class="st">"Adjusted"</span>),</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>                       <span class="at">cluster =</span> <span class="st">"idcode"</span>)</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>effects_clustered <span class="ot">&lt;-</span> <span class="fu">avg_comparisons</span>(fit_clustered, <span class="at">variables =</span> <span class="st">"collgrad"</span>)</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>effects_clustered</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="r-output"><code>    Group Estimate Std. Error      z Pr(&gt;|z|)    S   2.5 % 97.5 %
+ Base      0.06226     0.0151  4.115   &lt;0.001 14.7  0.0326 0.0919
+ Adjusted -0.00436     0.0148 -0.294    0.768  0.4 -0.0333 0.0246
+
+Term: collgrad
+Type: response
+Comparison: 1 - 0</code></pre>
+</div>
+<div class="r-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hypotheses</span>(effects_clustered, <span class="at">hypothesis =</span> difference <span class="sc">~</span> revpairwise)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="r-output"><code>          Hypothesis Estimate Std. Error    z Pr(&gt;|z|)     S 2.5 % 97.5 %
+ (Base) - (Adjusted)   0.0666    0.00542 12.3   &lt;0.001 112.9 0.056 0.0772</code></pre>
+</div>
 <p><code>cluster</code> takes one or more column names, or a list with one vector, matrix, or data frame matched to each model’s estimation sample. An observation that appears in more than one model must have the same cluster ID in each. Observations in completely different samples can belong to the same cluster, in which case the covariance between models can be nonzero.</p>
 <p>Panel models cluster on the panel identifier by default. A cluster you supply must contain whole panels.</p>
 </section>
 <section id="probability-weights" class="level2">
 <h2 class="anchored" data-anchor-id="probability-weights">Probability weights</h2>
-<p><code>suest</code> supports probability weights for linear, binary logit and probit, Poisson, negative binomial, ordered logit and probit, and multinomial logit models. Fit each model with <code>weights=</code>, and tell <a href="../reference/suest.html"><code>suest()</code></a> that they are probability weights with <code>weight_type = "pweight"</code>:</p>
+<p><code>suest</code> supports probability weights for linear, binary (logit, probit, complementary log-log), fractional, Poisson, negative binomial, ordered logit and probit, and multinomial logit models, and for other GLMs such as Gamma and quasi-Poisson models. Fit each model with <code>weights =</code>, and tell <a href="../reference/suest.html"><code>suest()</code></a> that they are probability weights with <code>weight_type = "pweight"</code>. <code>wts = TRUE</code> averages with the weights:</p>
 <div class="r-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">376</span>)</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>weighted <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">x =</span> <span class="fu">rnorm</span>(<span class="dv">500</span>), <span class="at">z =</span> <span class="fu">rnorm</span>(<span class="dv">500</span>))</span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>weighted<span class="sc">$</span>mediator <span class="ot">&lt;-</span> <span class="fl">0.5</span> <span class="sc">*</span> weighted<span class="sc">$</span>x <span class="sc">-</span> <span class="fl">0.3</span> <span class="sc">*</span> weighted<span class="sc">$</span>z <span class="sc">+</span> <span class="fu">rnorm</span>(<span class="dv">500</span>)</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>weighted<span class="sc">$</span>pw <span class="ot">&lt;-</span> <span class="fu">exp</span>(<span class="fl">0.2</span> <span class="sc">*</span> weighted<span class="sc">$</span>z <span class="sc">+</span> <span class="fl">0.1</span> <span class="sc">*</span> <span class="fu">rnorm</span>(<span class="dv">500</span>))</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>weighted<span class="sc">$</span>y <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fl">0.7</span> <span class="sc">*</span> weighted<span class="sc">$</span>x <span class="sc">-</span> <span class="fl">0.4</span> <span class="sc">*</span> weighted<span class="sc">$</span>z <span class="sc">+</span></span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="fl">0.6</span> <span class="sc">*</span> weighted<span class="sc">$</span>mediator <span class="sc">+</span> <span class="fu">rnorm</span>(<span class="dv">500</span>)</span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>base_w <span class="ot">&lt;-</span> <span class="fu">lm</span>(y <span class="sc">~</span> x <span class="sc">+</span> z, <span class="at">weights =</span> pw, <span class="at">data =</span> weighted)</span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>adjusted_w <span class="ot">&lt;-</span> <span class="fu">lm</span>(y <span class="sc">~</span> x <span class="sc">+</span> z <span class="sc">+</span> mediator, <span class="at">weights =</span> pw, <span class="at">data =</span> weighted)</span>
-<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>fit_w <span class="ot">&lt;-</span> <span class="fu">suest</span>(base_w, adjusted_w, <span class="at">model_names =</span> <span class="fu">c</span>(<span class="st">"Base"</span>, <span class="st">"Adjusted"</span>),</span>
-<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>               <span class="at">weight_type =</span> <span class="st">"pweight"</span>)</span>
-<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>fit_w</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">376</span>)</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>weighted <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">x =</span> <span class="fu">rnorm</span>(<span class="dv">500</span>), <span class="at">z =</span> <span class="fu">rnorm</span>(<span class="dv">500</span>))</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>weighted<span class="sc">$</span>mediator <span class="ot">&lt;-</span> <span class="fl">0.5</span> <span class="sc">*</span> weighted<span class="sc">$</span>x <span class="sc">-</span> <span class="fl">0.3</span> <span class="sc">*</span> weighted<span class="sc">$</span>z <span class="sc">+</span> <span class="fu">rnorm</span>(<span class="dv">500</span>)</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>weighted<span class="sc">$</span>pw <span class="ot">&lt;-</span> <span class="fu">exp</span>(<span class="fl">0.2</span> <span class="sc">*</span> weighted<span class="sc">$</span>z <span class="sc">+</span> <span class="fl">0.1</span> <span class="sc">*</span> <span class="fu">rnorm</span>(<span class="dv">500</span>))</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>weighted<span class="sc">$</span>y <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fl">0.7</span> <span class="sc">*</span> weighted<span class="sc">$</span>x <span class="sc">-</span> <span class="fl">0.4</span> <span class="sc">*</span> weighted<span class="sc">$</span>z <span class="sc">+</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>  <span class="fl">0.6</span> <span class="sc">*</span> weighted<span class="sc">$</span>mediator <span class="sc">+</span> <span class="fu">rnorm</span>(<span class="dv">500</span>)</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>base_w <span class="ot">&lt;-</span> <span class="fu">lm</span>(y <span class="sc">~</span> x <span class="sc">+</span> z, <span class="at">weights =</span> pw, <span class="at">data =</span> weighted)</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>adjusted_w <span class="ot">&lt;-</span> <span class="fu">lm</span>(y <span class="sc">~</span> x <span class="sc">+</span> z <span class="sc">+</span> mediator, <span class="at">weights =</span> pw, <span class="at">data =</span> weighted)</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>fit_w <span class="ot">&lt;-</span> <span class="fu">suest</span>(base_w, adjusted_w, <span class="at">model_names =</span> <span class="fu">c</span>(<span class="st">"Base"</span>, <span class="st">"Adjusted"</span>),</span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>               <span class="at">weight_type =</span> <span class="st">"pweight"</span>)</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>fit_w</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="r-output"><code>Seemingly Unrelated Estimation
 Models: Base + Adjusted 
 Model types: Base=lm, Adjusted=lm 
@@ -1740,8 +1762,8 @@ Union observations: 500
 Parameters: 9</code></pre>
 </div>
 <div class="r-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>effects_w <span class="ot">&lt;-</span> <span class="fu">avg_comparisons</span>(fit_w, <span class="at">variables =</span> <span class="st">"x"</span>, <span class="at">newdata =</span> weighted, <span class="at">wts =</span> <span class="st">"pw"</span>)</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>effects_w</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>effects_w <span class="ot">&lt;-</span> <span class="fu">avg_comparisons</span>(fit_w, <span class="at">variables =</span> <span class="st">"x"</span>, <span class="at">wts =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>effects_w</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="r-output"><code>    Group Estimate Std. Error    z Pr(&gt;|z|)     S 2.5 % 97.5 %
  Base        1.003     0.0537 18.7   &lt;0.001 255.9 0.898  1.108
  Adjusted    0.722     0.0480 15.0   &lt;0.001 167.3 0.628  0.816
@@ -1751,39 +1773,109 @@ Type: response
 Comparison: +1</code></pre>
 </div>
 <div class="r-run">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hypotheses</span>(effects_w, <span class="at">hypothesis =</span> difference <span class="sc">~</span> revpairwise)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hypotheses</span>(effects_w, <span class="at">hypothesis =</span> difference <span class="sc">~</span> revpairwise)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <pre class="r-output"><code>          Hypothesis Estimate Std. Error    z Pr(&gt;|z|)    S 2.5 % 97.5 %
  (Base) - (Adjusted)    0.281     0.0322 8.74   &lt;0.001 58.6 0.218  0.345</code></pre>
 </div>
-<p>Weights must be positive and finite. An observation that appears in more than one model must have the same weight in each; weights can differ for observations in only one model, including completely different samples. When the models have different estimation samples, <a href="../reference/suest_newdata.html"><code>suest_newdata()</code></a> includes the weights as <code>.suest_weight</code>:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>nd_w <span class="ot">&lt;-</span> <span class="fu">suest_newdata</span>(fit_w)</span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(fit_w, <span class="at">variables =</span> <span class="st">"x"</span>, <span class="at">newdata =</span> nd_w, <span class="at">wts =</span> <span class="st">".suest_weight"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Weights must be positive and finite. An observation that appears in more than one model must have the same weight in each; weights can differ for observations in only one model, including completely different samples. When the models have different samples, <code>wts = TRUE</code> averages each model over its own sample with its own weights.</p>
 </section>
 <section id="survey-data" class="level2">
 <h2 class="anchored" data-anchor-id="survey-data">Survey data</h2>
-<p><code>suest</code> supports the survey models in the table above, fitted from one common one-stage survey design, in any combination:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(survey)</span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>design <span class="ot">&lt;-</span> <span class="fu">svydesign</span>(<span class="sc">~</span>psu, <span class="at">strata =</span> <span class="sc">~</span>strata, <span class="at">weights =</span> <span class="sc">~</span>w, <span class="at">data =</span> dat)</span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>m1 <span class="ot">&lt;-</span> <span class="fu">svyglm</span>(yb <span class="sc">~</span> x, design, <span class="at">family =</span> <span class="fu">quasibinomial</span>(<span class="st">"logit"</span>))</span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>m2 <span class="ot">&lt;-</span> <span class="fu">svyglm</span>(yb <span class="sc">~</span> x <span class="sc">+</span> z, design, <span class="at">family =</span> <span class="fu">quasibinomial</span>(<span class="st">"logit"</span>))</span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">suest</span>(m1, m2, <span class="at">survey_design =</span> design, <span class="at">observation_id =</span> <span class="st">"id"</span>)</span>
-<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_slopes</span>(fit, <span class="at">variables =</span> <span class="st">"x"</span>, <span class="at">newdata =</span> <span class="fu">suest_newdata</span>(fit), <span class="at">wts =</span> <span class="st">".suest_weight"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>If either model uses a subset (domain) of the data, keep <code>design</code> as the full sampled design. The joint covariance accounts for strata, PSUs, and optional one-stage finite population corrections. Replicate weights, multistage designs, calibration, and PPS designs are not supported.</p>
+<p><code>suest</code> supports the survey models in the table above, fitted from one common one-stage survey design, in any combination. Give <a href="../reference/suest.html"><code>suest()</code></a> the design and a variable that identifies each observation. The example uses the stratified sample of California schools that comes with the <code>survey</code> package: does the effect of the percentage of English language learners on a school’s academic performance index shrink once the percentage of students eligible for free meals is held constant?</p>
+<div class="r-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(survey)</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(api)</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>design <span class="ot">&lt;-</span> <span class="fu">svydesign</span>(<span class="at">ids =</span> <span class="sc">~</span><span class="dv">1</span>, <span class="at">strata =</span> <span class="sc">~</span>stype, <span class="at">weights =</span> <span class="sc">~</span>pw, <span class="at">fpc =</span> <span class="sc">~</span>fpc,</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>                    <span class="at">data =</span> apistrat)</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>base_s <span class="ot">&lt;-</span> <span class="fu">svyglm</span>(api00 <span class="sc">~</span> ell, design)</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>adjusted_s <span class="ot">&lt;-</span> <span class="fu">svyglm</span>(api00 <span class="sc">~</span> ell <span class="sc">+</span> meals, design)</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>fit_survey <span class="ot">&lt;-</span> <span class="fu">suest</span>(base_s, adjusted_s, <span class="at">model_names =</span> <span class="fu">c</span>(<span class="st">"Base"</span>, <span class="st">"Adjusted"</span>),</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>                    <span class="at">survey_design =</span> design, <span class="at">observation_id =</span> <span class="st">"snum"</span>)</span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>effects_survey <span class="ot">&lt;-</span> <span class="fu">avg_slopes</span>(fit_survey, <span class="at">variables =</span> <span class="st">"ell"</span>, <span class="at">wts =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>effects_survey</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="r-output"><code>    Group Estimate Std. Error     z Pr(&gt;|z|)     S 2.5 % 97.5 %
+ Base       -3.729      0.318 -11.7   &lt;0.001 103.1 -4.35 -3.106
+ Adjusted   -0.506      0.388  -1.3    0.192   2.4 -1.27  0.255
+
+Term: ell
+Type: response
+Comparison: dY/dX</code></pre>
+</div>
+<div class="r-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hypotheses</span>(effects_survey, <span class="at">hypothesis =</span> difference <span class="sc">~</span> revpairwise)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="r-output"><code>          Hypothesis Estimate Std. Error     z Pr(&gt;|z|)    S 2.5 % 97.5 %
+ (Base) - (Adjusted)    -3.22      0.356 -9.06   &lt;0.001 62.7 -3.92  -2.53</code></pre>
+</div>
+<p>If a model uses a subset (domain) of the data, fit it to <code>subset(design, ...)</code> and still give <a href="../reference/suest.html"><code>suest()</code></a> the full design. The joint covariance accounts for strata, primary sampling units, and one-stage finite population corrections. Replicate weights, multistage designs, calibration, and probability-proportional-to-size designs are not supported.</p>
 </section>
 <section id="multiple-imputation" class="level2">
 <h2 class="anchored" data-anchor-id="multiple-imputation">Multiple imputation</h2>
-<p>To combine results across imputed datasets, fit the same <code>suest</code> system in each one. With <code>mice</code>, <a href="https://rdrr.io/r/base/with.html"><code>with()</code></a> does this, and <code>marginaleffects</code> functions then estimate within each imputation and pool the results with Rubin’s rules, including cross-model differences:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>analyses <span class="ot">&lt;-</span> <span class="fu">with</span>(imp, <span class="fu">suest</span>(</span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">glm</span>(y <span class="sc">~</span> x, <span class="at">family =</span> binomial),</span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">glm</span>(y <span class="sc">~</span> x <span class="sc">+</span> z, <span class="at">family =</span> binomial),</span>
-<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">model_names =</span> <span class="fu">c</span>(<span class="st">"Base"</span>, <span class="st">"Adjusted"</span>)</span>
-<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>))</span>
-<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(analyses, <span class="at">variables =</span> <span class="st">"x"</span>,</span>
-<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">hypothesis =</span> difference <span class="sc">~</span> revpairwise)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><code>mice</code> warns “Large sample assumed.” here. That is expected: SUEST reports large-sample statistics, so the pooled degrees of freedom are Rubin’s large-sample values.</p>
+<p>To combine results across imputed datasets, fit the same <code>suest</code> system in each one. With <code>mice</code>, <a href="https://rdrr.io/r/base/with.html"><code>with()</code></a> does this, and <code>marginaleffects</code> functions then estimate within each imputation and pool the results with Rubin’s rules, including cross-model differences. The example imputes missing wages, education, and occupation in an extract of the National Longitudinal Study of Adolescent to Adult Health (Add Health), then asks whether the effect of education on wages is smaller once part-time work and occupation are held constant:</p>
+<div class="r-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>ah <span class="ot">&lt;-</span> <span class="fu">zap_labels</span>(<span class="fu">read_dta</span>(<span class="st">"https://tdmize.github.io/data/data/addhealth4_mcar.dta"</span>))</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>ah <span class="ot">&lt;-</span> ah[<span class="fu">c</span>(<span class="st">"wages"</span>, <span class="st">"edyrs"</span>, <span class="st">"woman"</span>, <span class="st">"age"</span>, <span class="st">"parttime"</span>, <span class="st">"occcat"</span>)]</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>ah<span class="sc">$</span>occcat <span class="ot">&lt;-</span> <span class="fu">factor</span>(ah<span class="sc">$</span>occcat)</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>imp <span class="ot">&lt;-</span> mice<span class="sc">::</span><span class="fu">mice</span>(ah, <span class="at">m =</span> <span class="dv">10</span>, <span class="at">seed =</span> <span class="dv">2307</span>, <span class="at">printFlag =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>analyses <span class="ot">&lt;-</span> <span class="fu">with</span>(imp, <span class="fu">suest</span>(</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">lm</span>(wages <span class="sc">~</span> edyrs <span class="sc">+</span> woman <span class="sc">+</span> age),</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">lm</span>(wages <span class="sc">~</span> edyrs <span class="sc">+</span> woman <span class="sc">+</span> age <span class="sc">+</span> parttime <span class="sc">+</span> occcat),</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">model_names =</span> <span class="fu">c</span>(<span class="st">"Base"</span>, <span class="st">"Adjusted"</span>)</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(analyses, <span class="at">variables =</span> <span class="st">"edyrs"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="r-output"><code>    Group Estimate Std. Error    t Pr(&gt;|t|)     S 2.5 % 97.5 %  Df
+ Base         1.64     0.0995 16.5   &lt;0.001 150.6  1.44   1.84 365
+ Adjusted     1.45     0.1043 13.9   &lt;0.001 118.9  1.25   1.66 421
+
+Term: edyrs
+Type: response
+Comparison: +1</code></pre>
+</div>
+<div class="r-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(analyses, <span class="at">variables =</span> <span class="st">"edyrs"</span>,</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>                <span class="at">hypothesis =</span> difference <span class="sc">~</span> revpairwise)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="r-output"><code>          Hypothesis Estimate Std. Error    t Pr(&gt;|t|)    S 2.5 % 97.5 %  Df
+ (Base) - (Adjusted)    0.188       0.04 4.71   &lt;0.001 17.3 0.109  0.267 138
+
+Type: response</code></pre>
+</div>
+<p><code>mice</code> warns “Large sample assumed.” here. That is expected: <code>suest</code> reports large-sample statistics, so the pooled degrees of freedom are Rubin’s large-sample values.</p>
 <p><a href="../reference/suest_mi.html"><code>suest_mi()</code></a> pools the coefficients and their joint covariance:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>pooled <span class="ot">&lt;-</span> <span class="fu">suest_mi</span>(analyses)</span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(pooled)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="r-run">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>pooled <span class="ot">&lt;-</span> <span class="fu">suest_mi</span>(analyses)</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(pooled)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="r-output"><code>Multiple-imputation estimates for Base, Adjusted           Number of obs = 4,307
+                                                                Imputations = 10
+                                                     DF: min = 19.1, max = 784.7
+
+--------------------------------------------------------------------------------
+              | Coefficient  std. err.        t   P&gt;|t|     [95% conf. interval]
+--------------+-----------------------------------------------------------------
+Base          |
+  (Intercept) |     -18.324      3.469   -5.282   0.000      -25.142     -11.506
+        edyrs |       1.641      0.099   16.491   0.000        1.445       1.836
+        woman |      -4.893      0.429  -11.392   0.000       -5.740      -4.045
+          age |       0.495      0.111    4.461   0.000        0.276       0.713
+        lnvar |       4.966      0.049  100.387   0.000        4.869       5.064
+--------------+-----------------------------------------------------------------
+Adjusted      |
+  (Intercept) |     -12.464      3.735   -3.338   0.001      -19.822      -5.107
+        edyrs |       1.453      0.104   13.929   0.000        1.248       1.658
+        woman |      -4.948      0.485  -10.195   0.000       -5.907      -3.989
+          age |       0.485      0.110    4.388   0.000        0.267       0.702
+     parttime |       2.491      0.743    3.354   0.001        1.033       3.949
+      occcat2 |      -2.098      0.879   -2.388   0.018       -3.835      -0.361
+      occcat3 |      -6.387      1.114   -5.733   0.000       -8.585      -4.189
+      occcat4 |      -1.134      1.432   -0.792   0.429       -3.955       1.688
+      occcat5 |      -2.833      1.166   -2.429   0.016       -5.130      -0.535
+      occcat6 |      -5.107      1.047   -4.879   0.000       -7.164      -3.049
+      occcat7 |      -5.508      9.722   -0.567   0.578      -25.849      14.832
+      occcat8 |      -5.167      1.134   -4.556   0.000       -7.406      -2.928
+      occcat9 |      -4.809      0.920   -5.226   0.000       -6.625      -2.993
+        lnvar |       4.945      0.049  100.149   0.000        4.848       5.042
+--------------------------------------------------------------------------------</code></pre>
+</div>
 <p><code>marginaleffects</code> functions give the same results on <code>pooled</code> as on <code>analyses</code>. A list of <a href="../reference/suest.html"><code>suest()</code></a> results, one per imputation, or the result of <code>with(mitools::imputationList(...), suest(...))</code> can also be passed to <a href="../reference/suest_mi.html"><code>suest_mi()</code></a>; <code>marginaleffects</code> then warns that it could not recover the original data from a <code>mids</code> object, which does not affect <a href="../reference/suest.html"><code>suest()</code></a> results.</p>
 </section>
 <section id="examples" class="level2">
